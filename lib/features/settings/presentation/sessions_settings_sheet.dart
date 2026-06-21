@@ -33,12 +33,29 @@ class _SessionsSheetState extends ConsumerState<_SessionsSheet> {
       title: 'Signed-in sessions',
       child: sessions.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => SettingsInlineMessage(
+        error: (error, _) => _sessionError(error),
+        data: _sessionList,
+      ),
+    );
+  }
+
+  Widget _sessionError(Object error) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingsInlineMessage(
           message: settingsErrorMessage(error),
           isError: true,
         ),
-        data: _sessionList,
-      ),
+        const SizedBox(height: AffluenaSpacing.space3),
+        OutlinedButton.icon(
+          key: const Key('settings-sessions-retry-button'),
+          onPressed: () => ref.invalidate(settingsSessionsProvider),
+          icon: const Icon(Icons.refresh),
+          label: const Text('Retry'),
+        ),
+      ],
     );
   }
 

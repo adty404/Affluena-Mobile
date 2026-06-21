@@ -1,3 +1,4 @@
+import 'package:affluena_mobile/app/provider_retry.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
@@ -104,6 +105,7 @@ Widget lookupTestApp({
   required TagRepository tagRepository,
 }) {
   return ProviderScope(
+    retry: noProviderRetry,
     overrides: [
       walletRepositoryProvider.overrideWithValue(walletRepository),
       categoryRepositoryProvider.overrideWithValue(categoryRepository),

@@ -6,6 +6,9 @@ import '../storage/secure_token_store.dart';
 import 'api_error.dart';
 import 'api_json.dart';
 
+const _networkErrorMessage =
+    'Unable to reach Affluena. Check your connection and try again.';
+
 final dioProvider = Provider<Dio>((ref) {
   final tokenStore = ref.watch(secureTokenStoreProvider);
   return createAffluenaDio(tokenStore: tokenStore);
@@ -185,7 +188,7 @@ DioException _mapApiError(DioException error) {
       requestOptions: error.requestOptions,
       type: error.type,
       error: ApiException(
-        message: error.message ?? 'Network request failed.',
+        message: _networkErrorMessage,
         path: error.requestOptions.path,
       ),
     );
