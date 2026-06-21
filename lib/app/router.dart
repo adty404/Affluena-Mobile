@@ -10,6 +10,7 @@ import '../features/debts/presentation/debt_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/shared/presentation/app_shell.dart';
+import '../features/trackers/presentation/tracker_screen.dart';
 import '../features/transactions/presentation/transactions_screen.dart';
 import '../features/wallets/presentation/wallets_screen.dart';
 
@@ -110,6 +111,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: DebtScreen.path,
                 pageBuilder: _fadePage((_) => const DebtScreen()),
+              ),
+              GoRoute(
+                path: TrackerScreen.path,
+                pageBuilder: _fadePage((_) => const TrackerScreen()),
               ),
             ],
           ),
