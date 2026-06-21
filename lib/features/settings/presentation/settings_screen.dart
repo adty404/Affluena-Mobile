@@ -3,24 +3,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../auth/data/auth_models.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/section_header.dart';
+import '../application/settings_controller.dart';
+import 'settings_screen_widgets.dart';
+import 'settings_sheets.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   static const path = '/settings';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  String? _feedback;
+
+  @override
+  Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final authState = ref.watch(authControllerProvider);
-    final user = authState.user;
-    final displayName = user?.name.isNotEmpty == true ? user!.name : 'Affluena';
-    final email = user?.email ?? 'Signed in';
-    final initial = displayName.trim().isEmpty
-        ? 'A'
-        : displayName.trim().characters.first.toUpperCase();
+    final profile = ref.watch(settingsProfileProvider);
+    final user = profile.asData?.value ?? authState.user;
 
     return SafeArea(
       child: ListView(
@@ -33,55 +40,46 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           Text('Profile', style: textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: AffluenaColors.forest,
-                  child: Text(
-                    initial,
-                    style: textTheme.titleLarge?.copyWith(
-                      color: AffluenaColors.surfaceElevated,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AffluenaSpacing.space4),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(displayName, style: textTheme.titleMedium),
-                      const SizedBox(height: AffluenaSpacing.space1),
-                      Text(email, style: textTheme.bodySmall),
-                    ],
-                  ),
-                ),
-              ],
+          SettingsProfileCard(user: user, isLoading: profile.isLoading),
+          if (profile.hasError) ...[
+            const SizedBox(height: AffluenaSpacing.space3),
+            SettingsMessage(
+              message: settingsErrorMessage(profile.error!),
+              isError: true,
             ),
-          ),
+          ],
+          if (_feedback != null) ...[
+            const SizedBox(height: AffluenaSpacing.space3),
+            SettingsMessage(message: _feedback!, isError: false),
+          ],
           const SizedBox(height: AffluenaSpacing.space6),
           const SectionHeader(title: 'Security'),
           const SizedBox(height: AffluenaSpacing.space3),
           AffluenaCard(
             child: Column(
               children: [
-                const _SettingsRow(
+                SettingsRow(
+                  key: const Key('settings-account-row'),
                   icon: Icons.person_outline,
                   title: 'Account',
-                  value: 'Name and email',
+                  value: 'Name and avatar',
+                  onTap: user == null ? null : () => _openAccount(user),
                 ),
                 const Divider(height: 1),
-                const _SettingsRow(
+                SettingsRow(
+                  key: const Key('settings-password-row'),
                   icon: Icons.lock_outline,
                   title: 'Password',
-                  value: 'Last updated recently',
+                  value: 'Change your password',
+                  onTap: _openPassword,
                 ),
                 const Divider(height: 1),
-                const _SettingsRow(
+                SettingsRow(
+                  key: const Key('settings-sessions-row'),
                   icon: Icons.devices_outlined,
                   title: 'Sessions',
                   value: 'Manage signed-in devices',
+                  onTap: _openSessions,
                 ),
                 const Divider(height: 1),
                 Material(
@@ -106,15 +104,15 @@ class SettingsScreen extends ConsumerWidget {
           const AffluenaCard(
             child: Column(
               children: [
-                _NotificationRule(title: 'Budget alerts', channel: 'Both'),
+                NotificationRule(title: 'Budget alerts', channel: 'Both'),
                 Divider(height: 1),
-                _NotificationRule(title: 'Due reminders', channel: 'In-app'),
+                NotificationRule(title: 'Due reminders', channel: 'In-app'),
                 Divider(height: 1),
-                _NotificationRule(title: 'Recurring runs', channel: 'Email'),
+                NotificationRule(title: 'Recurring runs', channel: 'Email'),
                 Divider(height: 1),
-                _NotificationRule(title: 'Security alerts', channel: 'Both'),
+                NotificationRule(title: 'Security alerts', channel: 'Both'),
                 Divider(height: 1),
-                _NotificationRule(title: 'Weekly summary', channel: 'Email'),
+                NotificationRule(title: 'Weekly summary', channel: 'Email'),
               ],
             ),
           ),
@@ -131,55 +129,20 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
-}
 
-class _SettingsRow extends StatelessWidget {
-  const _SettingsRow({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String title;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Material(
-      type: MaterialType.transparency,
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(icon, color: AffluenaColors.forest),
-        title: Text(title, style: textTheme.bodyLarge),
-        subtitle: Text(value, style: textTheme.bodySmall),
-        trailing: const Icon(Icons.chevron_right),
-      ),
-    );
+  Future<void> _openAccount(AuthUser user) async {
+    final message = await showAccountSettingsSheet(context, user);
+    if (!mounted || message == null) return;
+    setState(() => _feedback = message);
   }
-}
 
-class _NotificationRule extends StatelessWidget {
-  const _NotificationRule({required this.title, required this.channel});
+  Future<void> _openPassword() async {
+    final message = await showPasswordSettingsSheet(context);
+    if (!mounted || message == null) return;
+    setState(() => _feedback = message);
+  }
 
-  final String title;
-  final String channel;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Material(
-      type: MaterialType.transparency,
-      child: SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        value: true,
-        onChanged: (_) {},
-        title: Text(title, style: textTheme.bodyLarge),
-        subtitle: Text(channel, style: textTheme.bodySmall),
-      ),
-    );
+  Future<void> _openSessions() async {
+    await showSessionSettingsSheet(context);
   }
 }

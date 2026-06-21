@@ -1,0 +1,135 @@
+import 'package:affluena_mobile/core/api/api_error.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/auth_test_helpers.dart';
+
+void main() {
+  testWidgets('loads profile and session list from auth API', (tester) async {
+    final authRepository = FakeAuthRepository();
+
+    await pumpAuthTestApp(
+      tester,
+      tokenStore: authenticatedTokenStore(),
+      authRepository: authRepository,
+    );
+    await _openSettings(tester);
+
+    expect(find.text('Demo User'), findsOneWidget);
+    expect(find.text('demo@affluena.com'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('settings-sessions-row')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Signed-in sessions'), findsOneWidget);
+    expect(find.text('Chrome on macOS'), findsOneWidget);
+    expect(find.textContaining('ab12'), findsOneWidget);
+    expect(authRepository.meCalls, 2);
+    expect(authRepository.listSessionsCalls, 1);
+  });
+
+  testWidgets('updates account and refreshes visible profile copy', (
+    tester,
+  ) async {
+    final authRepository = FakeAuthRepository();
+
+    await pumpAuthTestApp(
+      tester,
+      tokenStore: authenticatedTokenStore(),
+      authRepository: authRepository,
+    );
+    await _openSettings(tester);
+
+    await tester.tap(find.byKey(const Key('settings-account-row')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('settings-name-field')),
+      'Ayu Finance',
+    );
+    await tester.tap(find.byKey(const Key('settings-account-save-button')));
+    await tester.pumpAndSettle();
+
+    expect(authRepository.updateAccountRequests, hasLength(1));
+    expect(authRepository.updateAccountRequests.single.name, 'Ayu Finance');
+    expect(find.text('Ayu Finance'), findsOneWidget);
+    expect(find.text('Account updated.'), findsOneWidget);
+  });
+
+  testWidgets('validates password and surfaces API errors', (tester) async {
+    final authRepository = FakeAuthRepository(
+      changePasswordError: const ApiException(
+        message: 'current password is incorrect',
+      ),
+    );
+
+    await pumpAuthTestApp(
+      tester,
+      tokenStore: authenticatedTokenStore(),
+      authRepository: authRepository,
+    );
+    await _openSettings(tester);
+
+    await tester.tap(find.byKey(const Key('settings-password-row')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('settings-current-password-field')),
+      'password123',
+    );
+    await tester.enterText(
+      find.byKey(const Key('settings-new-password-field')),
+      'short',
+    );
+    await tester.tap(find.byKey(const Key('settings-password-save-button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Password must be at least 8 characters.'),
+      findsOneWidget,
+    );
+    expect(authRepository.changePasswordRequests, isEmpty);
+
+    await tester.enterText(
+      find.byKey(const Key('settings-new-password-field')),
+      'newpassword123',
+    );
+    await tester.tap(find.byKey(const Key('settings-password-save-button')));
+    await tester.pumpAndSettle();
+
+    expect(authRepository.changePasswordRequests, hasLength(1));
+    expect(find.text('current password is incorrect'), findsOneWidget);
+  });
+
+  testWidgets('revokes a session only after confirmation', (tester) async {
+    final authRepository = FakeAuthRepository();
+
+    await pumpAuthTestApp(
+      tester,
+      tokenStore: authenticatedTokenStore(),
+      authRepository: authRepository,
+    );
+    await _openSettings(tester);
+
+    await tester.tap(find.byKey(const Key('settings-sessions-row')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-revoke-session-99999999')));
+    await tester.pumpAndSettle();
+
+    expect(authRepository.revokedSessionIds, isEmpty);
+    expect(find.text('Revoke this session?'), findsOneWidget);
+    expect(
+      find.textContaining('If this is your current session'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('settings-confirm-revoke-button')));
+    await tester.pumpAndSettle();
+
+    expect(authRepository.revokedSessionIds, [seededAuthSession.id]);
+    expect(find.text('Session revoked.'), findsOneWidget);
+  });
+}
+
+Future<void> _openSettings(WidgetTester tester) async {
+  await tester.tap(find.text('More'));
+  await tester.pumpAndSettle();
+}

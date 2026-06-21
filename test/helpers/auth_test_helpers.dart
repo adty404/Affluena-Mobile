@@ -140,14 +140,36 @@ class FakeAuthRepository implements AuthRepository {
     this.meError,
     this.loginSession = demoSession,
     this.loginError,
-  });
+    List<AuthSessionRecord> sessions = const [seededAuthSession],
+    this.updateAccountError,
+    this.changePasswordError,
+    this.listSessionsError,
+    this.revokeSessionError,
+  }) {
+    _seedSessions(sessions);
+  }
 
   AuthUser? meUser;
   Object? meError;
   AuthSession? loginSession;
   Object? loginError;
+  Object? updateAccountError;
+  Object? changePasswordError;
+  Object? listSessionsError;
+  Object? revokeSessionError;
+  final List<AuthSessionRecord> sessions = [];
+  final updateAccountRequests = <UpdateAccountRequest>[];
+  final changePasswordRequests = <ChangePasswordRequest>[];
+  final revokedSessionIds = <String>[];
   int meCalls = 0;
   int loginCalls = 0;
+  int listSessionsCalls = 0;
+
+  void _seedSessions(List<AuthSessionRecord> records) {
+    sessions
+      ..clear()
+      ..addAll(records);
+  }
 
   @override
   Future<AuthSession> login(LoginRequest request) async {
@@ -175,19 +197,40 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<AuthUser> updateAccount(UpdateAccountRequest request) async {
-    return meUser ?? demoUser;
+    updateAccountRequests.add(request);
+    if (updateAccountError != null) throw updateAccountError!;
+    final current = meUser ?? demoUser;
+    final updated = AuthUser(
+      id: current.id,
+      email: current.email,
+      name: request.name,
+      avatarUrl: request.avatarUrl,
+      createdAt: current.createdAt,
+      updatedAt: current.updatedAt,
+    );
+    meUser = updated;
+    return updated;
   }
 
   @override
-  Future<void> changePassword(ChangePasswordRequest request) async {}
+  Future<void> changePassword(ChangePasswordRequest request) async {
+    changePasswordRequests.add(request);
+    if (changePasswordError != null) throw changePasswordError!;
+  }
 
   @override
   Future<List<AuthSessionRecord>> listSessions() async {
-    return const [];
+    listSessionsCalls += 1;
+    if (listSessionsError != null) throw listSessionsError!;
+    return sessions;
   }
 
   @override
-  Future<void> revokeSession(String sessionId) async {}
+  Future<void> revokeSession(String sessionId) async {
+    revokedSessionIds.add(sessionId);
+    if (revokeSessionError != null) throw revokeSessionError!;
+    sessions.removeWhere((session) => session.id == sessionId);
+  }
 
   @override
   Future<void> requestPasswordReset(String email) async {}
@@ -410,6 +453,17 @@ const demoSession = AuthSession(
     accessToken: 'fresh-access-token',
     refreshToken: 'fresh-refresh-token',
   ),
+);
+
+const seededAuthSession = AuthSessionRecord(
+  id: '99999999-9999-9999-9999-999999990001',
+  userId: '11111111-1111-1111-1111-111111111111',
+  tokenSuffix: 'ab12',
+  userAgent: 'Chrome on macOS',
+  ipAddress: '127.0.0.1',
+  expiresAt: '2026-06-30T10:00:00Z',
+  createdAt: '2026-06-21T10:00:00Z',
+  lastUsedAt: '2026-06-21T11:00:00Z',
 );
 
 const seededSummary = DashboardSummary(

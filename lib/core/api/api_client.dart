@@ -58,19 +58,21 @@ Dio createAffluenaDio({
       onError: (error, handler) async {
         final response = error.response;
         final options = error.requestOptions;
-        if (response?.statusCode == 401 &&
-            !_isAnonymous(options) &&
-            !_wasRetried(options)) {
+        if (_shouldRefreshOnUnauthorized(options, response)) {
           final refreshed = await refreshTokens();
           if (refreshed) {
             final accessToken = await tokenStore.readAccessToken();
             if (accessToken != null) {
-              final retryResponse = await _retryWithAccessToken(
-                dio,
-                options,
-                accessToken,
-              );
-              handler.resolve(retryResponse);
+              try {
+                final retryResponse = await _retryWithAccessToken(
+                  dio,
+                  options,
+                  accessToken,
+                );
+                handler.resolve(retryResponse);
+              } on DioException catch (retryError) {
+                handler.reject(_mapApiError(retryError));
+              }
               return;
             }
           }
@@ -112,6 +114,15 @@ bool _isAnonymous(RequestOptions options) {
 
 bool _wasRetried(RequestOptions options) {
   return options.extra[AffluenaApiOptions.retriedKey] == true;
+}
+
+bool _shouldRefreshOnUnauthorized(
+  RequestOptions options,
+  Response<dynamic>? response,
+) {
+  if (response?.statusCode != 401) return false;
+  if (_isAnonymous(options) || _wasRetried(options)) return false;
+  return options.path != '/auth/password';
 }
 
 Future<bool> _refreshTokens({
