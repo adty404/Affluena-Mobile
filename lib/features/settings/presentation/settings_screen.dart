@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   static const path = '/settings';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
+    final authState = ref.watch(authControllerProvider);
+    final user = authState.user;
+    final displayName = user?.name.isNotEmpty == true ? user!.name : 'Affluena';
+    final email = user?.email ?? 'Signed in';
+    final initial = displayName.trim().isEmpty
+        ? 'A'
+        : displayName.trim().characters.first.toUpperCase();
 
     return SafeArea(
       child: ListView(
@@ -31,7 +40,7 @@ class SettingsScreen extends StatelessWidget {
                   radius: 28,
                   backgroundColor: AffluenaColors.forest,
                   child: Text(
-                    'A',
+                    initial,
                     style: textTheme.titleLarge?.copyWith(
                       color: AffluenaColors.surfaceElevated,
                     ),
@@ -42,9 +51,9 @@ class SettingsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Affluena Demo', style: textTheme.titleMedium),
+                      Text(displayName, style: textTheme.titleMedium),
                       const SizedBox(height: AffluenaSpacing.space1),
-                      Text('demo@affluena.com', style: textTheme.bodySmall),
+                      Text(email, style: textTheme.bodySmall),
                     ],
                   ),
                 ),
@@ -75,14 +84,17 @@ class SettingsScreen extends StatelessWidget {
                   value: 'Manage signed-in devices',
                 ),
                 const Divider(height: 1),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: true,
-                  onChanged: (_) {},
-                  title: Text('Biometric lock', style: textTheme.bodyLarge),
-                  subtitle: Text(
-                    'Face ID or fingerprint',
-                    style: textTheme.bodySmall,
+                Material(
+                  type: MaterialType.transparency,
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: true,
+                    onChanged: (_) {},
+                    title: Text('Biometric lock', style: textTheme.bodyLarge),
+                    subtitle: Text(
+                      'Face ID or fingerprint',
+                      style: textTheme.bodySmall,
+                    ),
                   ),
                 ),
               ],
@@ -107,7 +119,14 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AffluenaSpacing.space6),
-          OutlinedButton(onPressed: () {}, child: const Text('Log out')),
+          OutlinedButton.icon(
+            key: const Key('settings-logout-button'),
+            onPressed: authState.isSubmitting
+                ? null
+                : () => ref.read(authControllerProvider.notifier).logout(),
+            icon: const Icon(Icons.logout),
+            label: Text(authState.isSubmitting ? 'Logging out' : 'Log out'),
+          ),
         ],
       ),
     );
@@ -129,12 +148,15 @@ class _SettingsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: AffluenaColors.forest),
-      title: Text(title, style: textTheme.bodyLarge),
-      subtitle: Text(value, style: textTheme.bodySmall),
-      trailing: const Icon(Icons.chevron_right),
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(icon, color: AffluenaColors.forest),
+        title: Text(title, style: textTheme.bodyLarge),
+        subtitle: Text(value, style: textTheme.bodySmall),
+        trailing: const Icon(Icons.chevron_right),
+      ),
     );
   }
 }
@@ -149,12 +171,15 @@ class _NotificationRule extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      value: true,
-      onChanged: (_) {},
-      title: Text(title, style: textTheme.bodyLarge),
-      subtitle: Text(channel, style: textTheme.bodySmall),
+    return Material(
+      type: MaterialType.transparency,
+      child: SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        value: true,
+        onChanged: (_) {},
+        title: Text(title, style: textTheme.bodyLarge),
+        subtitle: Text(channel, style: textTheme.bodySmall),
+      ),
     );
   }
 }

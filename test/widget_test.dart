@@ -1,11 +1,11 @@
-import 'package:affluena_mobile/app/affluena_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'helpers/auth_test_helpers.dart';
 
 void main() {
   testWidgets('renders Affluena dashboard shell', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: AffluenaApp()));
+    await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
 
     expect(find.text('Affluena'), findsOneWidget);
     expect(find.text('Good morning'), findsOneWidget);
@@ -13,7 +13,7 @@ void main() {
   });
 
   testWidgets('navigates to quick entry from bottom nav', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: AffluenaApp()));
+    await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
 
     await tester.tap(find.byIcon(Icons.add_circle_outline));
     await tester.pumpAndSettle();
