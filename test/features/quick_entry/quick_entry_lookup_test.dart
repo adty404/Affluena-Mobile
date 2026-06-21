@@ -1,9 +1,13 @@
 import 'package:affluena_mobile/core/api/pagination.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
+import 'package:affluena_mobile/features/quick_entry/data/quick_entry_models.dart';
+import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository.dart';
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_screen.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
+import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
+import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:flutter/material.dart';
@@ -104,9 +108,72 @@ Widget lookupTestApp({
       walletRepositoryProvider.overrideWithValue(walletRepository),
       categoryRepositoryProvider.overrideWithValue(categoryRepository),
       tagRepositoryProvider.overrideWithValue(tagRepository),
+      transactionRepositoryProvider.overrideWithValue(
+        const LookupTransactionRepository(),
+      ),
+      quickEntryRepositoryProvider.overrideWithValue(
+        const LookupQuickEntryRepository(),
+      ),
     ],
     child: const MaterialApp(home: Scaffold(body: QuickEntryScreen())),
   );
+}
+
+class LookupTransactionRepository implements TransactionRepository {
+  const LookupTransactionRepository();
+
+  @override
+  Future<Transaction> createTransaction(TransactionRequest request) async {
+    return lookupTransaction;
+  }
+
+  @override
+  Future<void> deleteTransaction(String id) async {}
+
+  @override
+  Future<Transaction> getTransaction(String id) async => lookupTransaction;
+
+  @override
+  Future<TransactionListResponse> listTransactions({
+    TransactionType? type,
+    String? walletId,
+    String? categoryId,
+    String? tagId,
+    String? from,
+    String? to,
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    return const TransactionListResponse(
+      transactions: [],
+      pagination: Pagination(total: 0, limit: 0, offset: 0),
+    );
+  }
+}
+
+class LookupQuickEntryRepository implements QuickEntryRepository {
+  const LookupQuickEntryRepository();
+
+  @override
+  Future<ExecuteQuickEntryResponse> executeTemplate(
+    String id,
+    ExecuteQuickEntryRequest request,
+  ) async {
+    return const ExecuteQuickEntryResponse(transaction: lookupTransaction);
+  }
+
+  @override
+  Future<QuickEntryTemplateListResponse> listTemplates({
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    return const QuickEntryTemplateListResponse(
+      templates: [],
+      pagination: Pagination(total: 0, limit: 0, offset: 0),
+    );
+  }
 }
 
 class LookupWalletRepository implements WalletRepository {
@@ -261,4 +328,18 @@ const lookupMonthlyTag = Tag(
   name: '#MonthlyBill',
   createdAt: '2026-06-01T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
+);
+
+const lookupTransaction = Transaction(
+  id: 'created-lookup-transaction',
+  userId: '11111111-1111-1111-1111-111111111111',
+  type: TransactionType.expense,
+  walletId: lookupGoPayWalletId,
+  categoryId: lookupExpenseCategoryId,
+  amountMinor: 35000,
+  tagIds: [],
+  transactionAt: '2026-06-21T10:00:00Z',
+  note: 'Lookup transaction',
+  createdAt: '2026-06-21T10:00:00Z',
+  updatedAt: '2026-06-21T10:00:00Z',
 );
