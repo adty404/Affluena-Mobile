@@ -9,6 +9,7 @@ import '../../budgets/presentation/budget_screen.dart';
 import '../../debts/presentation/debt_screen.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/section_header.dart';
+import '../../trackers/presentation/tracker_screen.dart';
 import '../application/settings_controller.dart';
 import 'settings_screen_widgets.dart';
 import 'settings_sheets.dart';
@@ -119,6 +120,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: 'Debt & Tracker',
                   value: 'Payable, receivable, and payments',
                   onTap: () => context.go(DebtScreen.path),
+                ),
+                const Divider(height: 1),
+                SettingsRow(
+                  icon: Icons.receipt_long_outlined,
+                  title: 'Installments & Subscriptions',
+                  value: 'Tenor plans and recurring bills',
+                  onTap: () => context.go(TrackerScreen.path),
                 ),
               ],
             ),
