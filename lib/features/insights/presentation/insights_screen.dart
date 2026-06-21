@@ -10,13 +10,56 @@ import '../../shared/presentation/widgets/section_header.dart';
 import '../application/insights_controller.dart';
 import '../data/insight_models.dart';
 
-class InsightsScreen extends ConsumerWidget {
-  const InsightsScreen({super.key});
+class InsightsScreen extends ConsumerStatefulWidget {
+  const InsightsScreen({this.initialTab = InsightTab.reports, super.key});
 
   static const path = '/insights';
 
+  static String location(InsightTab tab) {
+    return tab == InsightTab.reports ? path : '$path?tab=${tab.name}';
+  }
+
+  static InsightTab tabFromQuery(String? value) {
+    return InsightTab.values.firstWhere(
+      (tab) => tab.name == value,
+      orElse: () => InsightTab.reports,
+    );
+  }
+
+  final InsightTab initialTab;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InsightsScreen> createState() => _InsightsScreenState();
+}
+
+class _InsightsScreenState extends ConsumerState<InsightsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _syncInitialTab();
+  }
+
+  @override
+  void didUpdateWidget(covariant InsightsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialTab != widget.initialTab) {
+      _syncInitialTab();
+    }
+  }
+
+  void _syncInitialTab() {
+    Future<void>.microtask(() {
+      if (!mounted) return;
+      final controller = ref.read(insightsControllerProvider.notifier);
+      final state = ref.read(insightsControllerProvider);
+      if (state.selectedTab != widget.initialTab) {
+        controller.setTab(widget.initialTab);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(insightsControllerProvider);
     final controller = ref.read(insightsControllerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;

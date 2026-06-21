@@ -147,17 +147,11 @@ class _TrackerTabs extends StatelessWidget {
       segments: const [
         ButtonSegment(
           value: TrackerTab.installments,
-          label: Text(
-            'Installments',
-            key: Key('tracker-installments-tab'),
-          ),
+          label: Text('Installments', key: Key('tracker-installments-tab')),
         ),
         ButtonSegment(
           value: TrackerTab.subscriptions,
-          label: Text(
-            'Subscriptions',
-            key: Key('tracker-subscriptions-tab'),
-          ),
+          label: Text('Subscriptions', key: Key('tracker-subscriptions-tab')),
         ),
       ],
       selected: {selected},

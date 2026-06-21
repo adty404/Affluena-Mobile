@@ -129,7 +129,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: InsightsScreen.path,
-                pageBuilder: _fadePage((_) => const InsightsScreen()),
+                pageBuilder: _fadePage(
+                  (state) => InsightsScreen(
+                    initialTab: InsightsScreen.tabFromQuery(
+                      state.uri.queryParameters['tab'],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
