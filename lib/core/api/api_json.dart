@@ -18,6 +18,7 @@ abstract final class ApiJson {
 
   static List<JsonMap> readObjectList(JsonMap json, String key) {
     final value = json[key];
+    if (value == null) return const [];
     if (value is! List) {
       throw FormatException('Expected "$key" to be a list.');
     }
