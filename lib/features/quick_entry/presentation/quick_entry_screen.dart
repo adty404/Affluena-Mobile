@@ -349,6 +349,7 @@ class _QuickEntryContent extends StatelessWidget {
     final selectedTag = lookup.tagById(selectedTagId);
     final categories = lookup.categoriesFor(type);
     final amountMinor = _parseAmount(amountController.text);
+    final setupGuidance = _lookupGuidanceMessage(lookup, type);
 
     return SafeArea(
       child: ListView(
@@ -385,6 +386,29 @@ class _QuickEntryContent extends StatelessWidget {
             onSelectionChanged: (selection) => onTypeChanged(selection.first),
           ),
           const SizedBox(height: AffluenaSpacing.space5),
+          if (setupGuidance != null) ...[
+            AffluenaCard(
+              backgroundColor: colors.surfaceTintSoft,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, color: colors.forest, size: 20),
+                  const SizedBox(width: AffluenaSpacing.space3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Finish setup first', style: textTheme.titleSmall),
+                        const SizedBox(height: AffluenaSpacing.space1),
+                        Text(setupGuidance, style: textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+          ],
           AffluenaCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,6 +646,29 @@ String _categoryMissingMessage(TransactionType type) {
     TransactionType.transfer => 'Choose destination wallet',
     TransactionType.adjustment => 'Add a category before saving.',
   };
+}
+
+String? _lookupGuidanceMessage(QuickEntryLookup lookup, TransactionType type) {
+  final needsWallet = lookup.wallets.isEmpty;
+  final needsCategory =
+      type != TransactionType.transfer && lookup.categoriesFor(type).isEmpty;
+  final needsSecondWallet =
+      type == TransactionType.transfer && lookup.wallets.length < 2;
+
+  if (needsWallet && needsCategory) {
+    final category = type == TransactionType.income ? 'income' : 'expense';
+    return 'Add at least one wallet and an $category category before saving.';
+  }
+  if (needsWallet) {
+    return 'Add at least one wallet before saving.';
+  }
+  if (needsCategory) {
+    return _categoryMissingMessage(type);
+  }
+  if (needsSecondWallet) {
+    return 'Add another wallet before recording transfers.';
+  }
+  return null;
 }
 
 String _categoryTypeLabel(CategoryType type) {
