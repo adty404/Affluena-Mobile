@@ -248,6 +248,14 @@ class FakeTransactionRepository implements TransactionRepository {
       ),
     );
   }
+
+  @override
+  Future<Transaction> getTransaction(String id) async {
+    return transactions.firstWhere((transaction) => transaction.id == id);
+  }
+
+  @override
+  Future<void> deleteTransaction(String id) async {}
 }
 
 class FakeWalletRepository implements WalletRepository {
