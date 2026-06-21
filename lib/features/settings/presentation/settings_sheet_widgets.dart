@@ -55,12 +55,17 @@ class SettingsInlineMessage extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: isError ? colors.coral.withAlpha(32) : colors.forestSoft,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AffluenaRadii.lg),
         border: Border.all(color: isError ? colors.coral : colors.borderSubtle),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space3),
-        child: Text(message),
+        child: Text(
+          message,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: colors.ink),
+        ),
       ),
     );
   }

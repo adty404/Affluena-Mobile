@@ -24,39 +24,58 @@ class SettingsProfileCard extends StatelessWidget {
         ? 'A'
         : displayName.trim().characters.first.toUpperCase();
 
-    return AffluenaCard(
-      child: Column(
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: colors.forest,
-                child: Text(
-                  initial,
-                  style: textTheme.titleLarge?.copyWith(
-                    color: colors.surfaceCanvas,
+    return Semantics(
+      container: true,
+      child: AffluenaCard(
+        child: Column(
+          children: [
+            Row(
+              children: [
+                ExcludeSemantics(
+                  child: CircleAvatar(
+                    radius: 28,
+                    backgroundColor: colors.forest,
+                    child: Text(
+                      initial,
+                      style: textTheme.titleLarge?.copyWith(
+                        color: colors.surfaceCanvas,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AffluenaSpacing.space4),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(displayName, style: textTheme.titleMedium),
-                    const SizedBox(height: AffluenaSpacing.space1),
-                    Text(email, style: textTheme.bodySmall),
-                  ],
+                const SizedBox(width: AffluenaSpacing.space4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AffluenaSpacing.space1),
+                      Text(
+                        email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
+              ],
+            ),
+            if (isLoading) ...[
+              const SizedBox(height: AffluenaSpacing.space4),
+              LinearProgressIndicator(
+                minHeight: 2,
+                color: colors.forest,
+                backgroundColor: colors.surfaceTintSoft,
               ),
             ],
-          ),
-          if (isLoading) ...[
-            const SizedBox(height: AffluenaSpacing.space4),
-            const LinearProgressIndicator(minHeight: 2),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -80,17 +99,71 @@ class SettingsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
+    final enabled = onTap != null;
 
-    return Material(
-      type: MaterialType.transparency,
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        enabled: onTap != null,
-        onTap: onTap,
-        leading: Icon(icon, color: colors.forest),
-        title: Text(title, style: textTheme.bodyLarge),
-        subtitle: Text(value, style: textTheme.bodySmall),
-        trailing: const Icon(Icons.chevron_right),
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AffluenaRadii.md),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 64),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AffluenaSpacing.space2,
+              ),
+              child: Row(
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: enabled
+                          ? colors.forestSoft
+                          : colors.surfaceTintSoft,
+                      borderRadius: BorderRadius.circular(AffluenaRadii.md),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AffluenaSpacing.space2),
+                      child: Icon(
+                        icon,
+                        color: enabled ? colors.forest : colors.inkMuted,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AffluenaSpacing.space3),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: enabled ? colors.ink : colors.inkMuted,
+                          ),
+                        ),
+                        const SizedBox(height: AffluenaSpacing.space1),
+                        Text(
+                          value,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (enabled)
+                    Icon(Icons.chevron_right, color: colors.inkMuted),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -116,8 +189,18 @@ class NotificationRule extends StatelessWidget {
         contentPadding: EdgeInsets.zero,
         value: true,
         onChanged: (_) {},
-        title: Text(title, style: textTheme.bodyLarge),
-        subtitle: Text(channel, style: textTheme.bodySmall),
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: textTheme.bodyLarge,
+        ),
+        subtitle: Text(
+          channel,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: textTheme.bodySmall,
+        ),
       ),
     );
   }
@@ -140,12 +223,17 @@ class SettingsMessage extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: isError ? colors.coral.withAlpha(32) : colors.forestSoft,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AffluenaRadii.lg),
         border: Border.all(color: isError ? colors.coral : colors.borderSubtle),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space3),
-        child: Text(message),
+        child: Text(
+          message,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: colors.ink),
+        ),
       ),
     );
   }

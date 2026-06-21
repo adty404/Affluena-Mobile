@@ -22,43 +22,65 @@ class SelectorRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
+    final isInteractive = enabled && onTap != null;
 
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space3),
-        child: Row(
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.forestSoft,
-                borderRadius: BorderRadius.circular(14),
+    return Semantics(
+      button: onTap != null,
+      enabled: enabled,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: isInteractive ? onTap : null,
+          borderRadius: BorderRadius.circular(AffluenaRadii.md),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AffluenaSpacing.space2,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(AffluenaSpacing.space2),
-                child: Icon(icon, color: colors.forest, size: 18),
-              ),
-            ),
-            const SizedBox(width: AffluenaSpacing.space3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(label, style: textTheme.bodySmall),
-                  const SizedBox(height: AffluenaSpacing.space1),
-                  Text(
-                    value,
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: enabled ? null : colors.inkMuted,
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: enabled
+                          ? colors.forestSoft
+                          : colors.surfaceTintSoft,
+                      borderRadius: BorderRadius.circular(AffluenaRadii.md),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AffluenaSpacing.space2),
+                      child: Icon(
+                        icon,
+                        color: enabled ? colors.forest : colors.inkMuted,
+                        size: 18,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: AffluenaSpacing.space3),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(label, style: textTheme.bodySmall),
+                        const SizedBox(height: AffluenaSpacing.space1),
+                        Text(
+                          value,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: enabled ? colors.ink : colors.inkMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isInteractive)
+                    Icon(Icons.chevron_right, color: colors.inkMuted),
                 ],
               ),
             ),
-            if (onTap != null)
-              Icon(Icons.chevron_right, color: colors.inkMuted),
-          ],
+          ),
         ),
       ),
     );
