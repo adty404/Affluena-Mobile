@@ -120,6 +120,50 @@ void main() {
     expect(await store.readAccessToken(), isNull);
     expect(await store.readRefreshToken(), isNull);
   });
+
+  test('password 401 maps api error without refreshing session', () async {
+    final store = memoryTokenStore(
+      accessToken: 'access-1',
+      refreshToken: 'refresh-1',
+    );
+    final pathCounts = <String, int>{};
+    final adapter = HandlerAdapter((options) {
+      final count = (pathCounts[options.path] ?? 0) + 1;
+      pathCounts[options.path] = count;
+      if (options.path == '/auth/password') {
+        return jsonResponse({
+          'error': 'current password is incorrect',
+        }, statusCode: 401);
+      }
+      return jsonResponse({
+        'user': userJson,
+        'tokens': {
+          'access_token': 'fresh-access',
+          'refresh_token': 'fresh-refresh',
+        },
+      });
+    });
+    final dio = createTestDio(store: store, adapter: adapter);
+
+    await expectLater(
+      dio.put('/auth/password', data: const {'current_password': 'wrong'}),
+      throwsA(
+        isA<DioException>().having(
+          (error) => error.error,
+          'error',
+          isA<ApiException>().having(
+            (error) => error.message,
+            'message',
+            'current password is incorrect',
+          ),
+        ),
+      ),
+    );
+    expect(pathCounts['/auth/refresh'], isNull);
+    expect(pathCounts['/auth/password'], 1);
+    expect(await store.readAccessToken(), 'access-1');
+    expect(await store.readRefreshToken(), 'refresh-1');
+  });
 }
 
 Dio createTestDio({

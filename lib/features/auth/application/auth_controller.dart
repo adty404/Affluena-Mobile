@@ -124,6 +124,11 @@ class AuthController extends Notifier<AuthState> {
     state = const AuthState.unauthenticated(message: 'You have logged out.');
   }
 
+  void replaceUser(AuthUser user) {
+    if (!state.isAuthenticated) return;
+    state = AuthState.authenticated(user, isSubmitting: state.isSubmitting);
+  }
+
   Future<void> _restoreSession() async {
     final tokenStore = ref.read(secureTokenStoreProvider);
     final accessToken = await tokenStore.readAccessToken();
