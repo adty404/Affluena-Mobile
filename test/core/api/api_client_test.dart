@@ -164,6 +164,34 @@ void main() {
     expect(await store.readAccessToken(), 'access-1');
     expect(await store.readRefreshToken(), 'refresh-1');
   });
+
+  test('network failure maps to stable friendly api error', () async {
+    final store = memoryTokenStore(accessToken: 'access-1');
+    final adapter = HandlerAdapter((options) {
+      throw DioException(
+        requestOptions: options,
+        type: DioExceptionType.connectionError,
+        message:
+            'The connection errored: Connection refused This indicates an error which most likely cannot be solved by the library.',
+      );
+    });
+    final dio = createTestDio(store: store, adapter: adapter);
+
+    await expectLater(
+      dio.get('/wallets'),
+      throwsA(
+        isA<DioException>().having(
+          (error) => error.error,
+          'error',
+          isA<ApiException>().having(
+            (error) => error.message,
+            'message',
+            'Unable to reach Affluena. Check your connection and try again.',
+          ),
+        ),
+      ),
+    );
+  });
 }
 
 Dio createTestDio({

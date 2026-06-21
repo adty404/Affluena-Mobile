@@ -127,6 +127,42 @@ void main() {
     expect(authRepository.revokedSessionIds, [seededAuthSession.id]);
     expect(find.text('Session revoked.'), findsOneWidget);
   });
+
+  testWidgets('session list error can retry', (tester) async {
+    final authRepository = FakeAuthRepository(
+      listSessionsError: const ApiException(
+        message:
+            'Unable to reach Affluena. Check your connection and try again.',
+      ),
+    );
+
+    await pumpAuthTestApp(
+      tester,
+      tokenStore: authenticatedTokenStore(),
+      authRepository: authRepository,
+    );
+    await _openSettings(tester);
+
+    await tester.tap(find.byKey(const Key('settings-sessions-row')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Unable to reach Affluena. Check your connection and try again.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('settings-sessions-retry-button')),
+      findsOneWidget,
+    );
+    authRepository.listSessionsError = null;
+    await tester.tap(find.byKey(const Key('settings-sessions-retry-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chrome on macOS'), findsOneWidget);
+    expect(authRepository.listSessionsCalls, 2);
+  });
 }
 
 Future<void> _openSettings(WidgetTester tester) async {

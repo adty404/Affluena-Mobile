@@ -1,3 +1,4 @@
+import 'package:affluena_mobile/app/provider_retry.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
@@ -117,6 +118,7 @@ Widget transactionsTestApp({
   required RecordingTransactionRepository transactionRepository,
 }) {
   return ProviderScope(
+    retry: noProviderRetry,
     overrides: [
       transactionRepositoryProvider.overrideWithValue(transactionRepository),
       walletRepositoryProvider.overrideWithValue(

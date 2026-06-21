@@ -1,4 +1,5 @@
 import 'package:affluena_mobile/app/affluena_app.dart';
+import 'package:affluena_mobile/app/provider_retry.dart';
 import 'package:affluena_mobile/core/api/api_error.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
 import 'package:affluena_mobile/core/storage/secure_token_store.dart';
@@ -26,6 +27,7 @@ Widget authTestApp({
   required FakeAuthRepository authRepository,
 }) {
   return ProviderScope(
+    retry: noProviderRetry,
     overrides: [
       secureTokenStoreProvider.overrideWithValue(tokenStore),
       authRepositoryProvider.overrideWithValue(authRepository),

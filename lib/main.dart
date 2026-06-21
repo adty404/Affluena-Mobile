@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/affluena_app.dart';
+import 'app/provider_retry.dart';
 
 void main() {
-  runApp(const ProviderScope(child: AffluenaApp()));
+  runApp(const ProviderScope(retry: noProviderRetry, child: AffluenaApp()));
 }

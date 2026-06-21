@@ -1,3 +1,4 @@
+import 'package:affluena_mobile/app/provider_retry.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
@@ -53,6 +54,7 @@ void main() {
 
 Widget walletsTestApp(WalletRepository walletRepository) {
   return ProviderScope(
+    retry: noProviderRetry,
     overrides: [walletRepositoryProvider.overrideWithValue(walletRepository)],
     child: const MaterialApp(home: Scaffold(body: WalletsScreen())),
   );
