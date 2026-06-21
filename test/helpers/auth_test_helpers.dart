@@ -8,6 +8,8 @@ import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_repository.dart';
+import 'package:affluena_mobile/features/tags/data/tag_models.dart';
+import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
@@ -35,6 +37,7 @@ Widget authTestApp({
       categoryRepositoryProvider.overrideWithValue(
         const FakeCategoryRepository(),
       ),
+      tagRepositoryProvider.overrideWithValue(const FakeTagRepository()),
     ],
     child: const AffluenaApp(),
   );
@@ -267,6 +270,16 @@ class FakeWalletRepository implements WalletRepository {
       ),
     );
   }
+
+  @override
+  Future<Wallet> createWallet(WalletRequest request) async {
+    return wallets.first;
+  }
+
+  @override
+  Future<Wallet> updateWallet(String id, WalletRequest request) async {
+    return wallets.firstWhere((wallet) => wallet.id == id);
+  }
 }
 
 class FakeCategoryRepository implements CategoryRepository {
@@ -289,6 +302,48 @@ class FakeCategoryRepository implements CategoryRepository {
         offset: offset ?? 0,
       ),
     );
+  }
+
+  @override
+  Future<Category> createCategory(CategoryRequest request) async {
+    return categories.first;
+  }
+
+  @override
+  Future<Category> updateCategory(String id, CategoryRequest request) async {
+    return categories.firstWhere((category) => category.id == id);
+  }
+}
+
+class FakeTagRepository implements TagRepository {
+  const FakeTagRepository({this.tags = const [seededTag]});
+
+  final List<Tag> tags;
+
+  @override
+  Future<TagListResponse> listTags({
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    return TagListResponse(
+      tags: tags,
+      pagination: Pagination(
+        total: tags.length,
+        limit: limit ?? tags.length,
+        offset: offset ?? 0,
+      ),
+    );
+  }
+
+  @override
+  Future<Tag> createTag(TagRequest request) async {
+    return tags.first;
+  }
+
+  @override
+  Future<Tag> updateTag(String id, TagRequest request) async {
+    return tags.firstWhere((tag) => tag.id == id);
   }
 }
 
@@ -347,6 +402,14 @@ const seededCategory = Category(
   userId: '11111111-1111-1111-1111-111111111111',
   name: 'Food & Dining',
   type: CategoryType.expense,
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+const seededTag = Tag(
+  id: '55555555-5555-5555-5555-555555550002',
+  userId: '11111111-1111-1111-1111-111111111111',
+  name: '#MonthlyBill',
   createdAt: '2026-06-01T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
 );

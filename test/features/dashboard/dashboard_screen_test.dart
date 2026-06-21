@@ -225,6 +225,16 @@ class FakeWalletRepository implements WalletRepository {
       ),
     );
   }
+
+  @override
+  Future<Wallet> createWallet(WalletRequest request) async {
+    return wallets.first;
+  }
+
+  @override
+  Future<Wallet> updateWallet(String id, WalletRequest request) async {
+    return wallets.firstWhere((wallet) => wallet.id == id);
+  }
 }
 
 class FakeCategoryRepository implements CategoryRepository {
@@ -247,6 +257,16 @@ class FakeCategoryRepository implements CategoryRepository {
         offset: offset ?? 0,
       ),
     );
+  }
+
+  @override
+  Future<Category> createCategory(CategoryRequest request) async {
+    return categories.first;
+  }
+
+  @override
+  Future<Category> updateCategory(String id, CategoryRequest request) async {
+    return categories.firstWhere((category) => category.id == id);
   }
 }
 
