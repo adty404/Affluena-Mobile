@@ -21,6 +21,10 @@ abstract interface class TransactionRepository {
     int? offset,
     String? sort,
   });
+
+  Future<Transaction> getTransaction(String id);
+
+  Future<void> deleteTransaction(String id);
 }
 
 class DioTransactionRepository implements TransactionRepository {
@@ -55,6 +59,17 @@ class DioTransactionRepository implements TransactionRepository {
       }),
     );
     return TransactionListResponse.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<Transaction> getTransaction(String id) async {
+    final response = await _dio.get<Map<String, Object?>>('/transactions/$id');
+    return Transaction.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<void> deleteTransaction(String id) async {
+    await _dio.delete<void>('/transactions/$id');
   }
 }
 
