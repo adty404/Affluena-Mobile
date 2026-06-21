@@ -25,6 +25,9 @@ import 'package:flutter_test/flutter_test.dart';
 Widget authTestApp({
   required MemoryTokenStore tokenStore,
   required FakeAuthRepository authRepository,
+  WalletRepository? walletRepository,
+  CategoryRepository? categoryRepository,
+  List<dynamic> extraOverrides = const [],
 }) {
   return ProviderScope(
     retry: noProviderRetry,
@@ -37,14 +40,17 @@ Widget authTestApp({
       transactionRepositoryProvider.overrideWithValue(
         const FakeTransactionRepository(),
       ),
-      walletRepositoryProvider.overrideWithValue(const FakeWalletRepository()),
+      walletRepositoryProvider.overrideWithValue(
+        walletRepository ?? const FakeWalletRepository(),
+      ),
       categoryRepositoryProvider.overrideWithValue(
-        const FakeCategoryRepository(),
+        categoryRepository ?? const FakeCategoryRepository(),
       ),
       tagRepositoryProvider.overrideWithValue(const FakeTagRepository()),
       quickEntryRepositoryProvider.overrideWithValue(
         const FakeQuickEntryRepository(),
       ),
+      ...extraOverrides,
     ],
     child: const AffluenaApp(),
   );
@@ -54,11 +60,17 @@ Future<void> pumpAuthTestApp(
   WidgetTester tester, {
   MemoryTokenStore? tokenStore,
   FakeAuthRepository? authRepository,
+  WalletRepository? walletRepository,
+  CategoryRepository? categoryRepository,
+  List<dynamic> extraOverrides = const [],
 }) async {
   await tester.pumpWidget(
     authTestApp(
       tokenStore: tokenStore ?? MemoryTokenStore(),
       authRepository: authRepository ?? FakeAuthRepository(),
+      walletRepository: walletRepository,
+      categoryRepository: categoryRepository,
+      extraOverrides: extraOverrides,
     ),
   );
   await tester.pumpAndSettle();

@@ -8,6 +8,7 @@ import '../../auth/data/auth_models.dart';
 import '../../budgets/presentation/budget_screen.dart';
 import '../../debts/presentation/debt_screen.dart';
 import '../../goals/presentation/goal_screen.dart';
+import '../../insights/application/insights_controller.dart';
 import '../../insights/presentation/insights_screen.dart';
 import '../../recurring/presentation/recurring_screen.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
@@ -158,21 +159,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   icon: Icons.analytics_outlined,
                   title: 'Reports & Exports',
                   value: 'Monthly reports and transaction CSV',
-                  onTap: () => context.go(InsightsScreen.path),
+                  onTap: () =>
+                      context.go(InsightsScreen.location(InsightTab.exports)),
                 ),
                 const Divider(height: 1),
                 SettingsRow(
                   icon: Icons.notifications_active_outlined,
                   title: 'Alerts & Activity',
                   value: 'Budget alerts and account audit trail',
-                  onTap: () => context.go(InsightsScreen.path),
+                  onTap: () =>
+                      context.go(InsightsScreen.location(InsightTab.alerts)),
                 ),
                 const Divider(height: 1),
                 SettingsRow(
                   icon: Icons.tune_outlined,
                   title: 'Notification rules',
                   value: 'Budget, due, recurring, security, summary',
-                  onTap: () => context.go(InsightsScreen.path),
+                  onTap: () =>
+                      context.go(InsightsScreen.location(InsightTab.rules)),
                 ),
               ],
             ),
