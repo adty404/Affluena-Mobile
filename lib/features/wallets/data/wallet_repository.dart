@@ -15,6 +15,10 @@ abstract interface class WalletRepository {
     int? offset,
     String? sort,
   });
+
+  Future<Wallet> createWallet(WalletRequest request);
+
+  Future<Wallet> updateWallet(String id, WalletRequest request);
 }
 
 class DioWalletRepository implements WalletRepository {
@@ -33,6 +37,24 @@ class DioWalletRepository implements WalletRepository {
       queryParameters: _query({'limit': limit, 'offset': offset, 'sort': sort}),
     );
     return WalletListResponse.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<Wallet> createWallet(WalletRequest request) async {
+    final response = await _dio.post<Map<String, Object?>>(
+      '/wallets',
+      data: request.toCreateJson(),
+    );
+    return Wallet.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<Wallet> updateWallet(String id, WalletRequest request) async {
+    final response = await _dio.put<Map<String, Object?>>(
+      '/wallets/$id',
+      data: request.toUpdateJson(),
+    );
+    return Wallet.fromJson(_responseMap(response.data));
   }
 }
 
