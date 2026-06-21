@@ -342,6 +342,7 @@ class _QuickEntryContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
     final selectedWallet = lookup.walletById(selectedWalletId);
     final selectedToWallet = lookup.walletById(selectedToWalletId);
     final selectedCategory = lookup.categoryById(type, selectedCategoryId);
@@ -469,8 +470,8 @@ class _QuickEntryContent extends StatelessWidget {
             const SizedBox(height: AffluenaSpacing.space4),
             AffluenaCard(
               backgroundColor: message != null
-                  ? AffluenaColors.forestSoft
-                  : AffluenaColors.surfaceTintSoft,
+                  ? colors.forestSoft
+                  : colors.surfaceTintSoft,
               child: Text(message ?? error!),
             ),
           ],

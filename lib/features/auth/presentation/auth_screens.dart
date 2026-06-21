@@ -439,16 +439,18 @@ class _BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AffluenaColors.forest,
+        color: colors.forest,
         borderRadius: BorderRadius.circular(size * 0.28),
       ),
       child: Icon(
         Icons.account_balance_wallet_rounded,
-        color: AffluenaColors.surfaceElevated,
+        color: colors.surfaceCanvas,
         size: size * 0.5,
       ),
     );
@@ -463,14 +465,15 @@ class _AuthMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AffluenaSpacing.space3),
       decoration: BoxDecoration(
-        color: AffluenaColors.forestSoft,
+        color: colors.forestSoft,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AffluenaColors.borderSubtle),
+        border: Border.all(color: colors.borderSubtle),
       ),
       child: Text(message, style: textTheme.bodySmall),
     );

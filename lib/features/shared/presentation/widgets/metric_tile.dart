@@ -19,11 +19,12 @@ class MetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return Expanded(
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AffluenaColors.surfaceTintSoft,
+          color: colors.surfaceTintSoft,
           borderRadius: BorderRadius.circular(18),
         ),
         child: Padding(
@@ -32,7 +33,7 @@ class MetricTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (icon != null) ...[
-                Icon(icon, color: AffluenaColors.forest, size: 18),
+                Icon(icon, color: colors.forest, size: 18),
                 const SizedBox(height: AffluenaSpacing.space2),
               ],
               Text(label, style: textTheme.labelMedium),

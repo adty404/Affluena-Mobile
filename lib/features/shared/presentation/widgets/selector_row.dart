@@ -21,6 +21,7 @@ class SelectorRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return InkWell(
       onTap: enabled ? onTap : null,
@@ -31,12 +32,12 @@ class SelectorRow extends StatelessWidget {
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
-                color: AffluenaColors.forestSoft,
+                color: colors.forestSoft,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(AffluenaSpacing.space2),
-                child: Icon(icon, color: AffluenaColors.forest, size: 18),
+                child: Icon(icon, color: colors.forest, size: 18),
               ),
             ),
             const SizedBox(width: AffluenaSpacing.space3),
@@ -49,14 +50,14 @@ class SelectorRow extends StatelessWidget {
                   Text(
                     value,
                     style: textTheme.bodyLarge?.copyWith(
-                      color: enabled ? null : AffluenaColors.inkMuted,
+                      color: enabled ? null : colors.inkMuted,
                     ),
                   ),
                 ],
               ),
             ),
             if (onTap != null)
-              const Icon(Icons.chevron_right, color: AffluenaColors.inkMuted),
+              Icon(Icons.chevron_right, color: colors.inkMuted),
           ],
         ),
       ),

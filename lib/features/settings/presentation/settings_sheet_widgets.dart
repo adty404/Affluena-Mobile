@@ -50,15 +50,13 @@ class SettingsInlineMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isError
-            ? AffluenaColors.coral.withAlpha(24)
-            : AffluenaColors.forestSoft,
+        color: isError ? colors.coral.withAlpha(32) : colors.forestSoft,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isError ? AffluenaColors.coral : AffluenaColors.borderSubtle,
-        ),
+        border: Border.all(color: isError ? colors.coral : colors.borderSubtle),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space3),

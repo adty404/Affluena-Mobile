@@ -10,11 +10,13 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: DecoratedBox(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AffluenaColors.borderSubtle)),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: colors.borderSubtle)),
         ),
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,

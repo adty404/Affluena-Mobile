@@ -17,6 +17,7 @@ class SettingsProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
     final displayName = user?.name.isNotEmpty == true ? user!.name : 'Affluena';
     final email = user?.email ?? 'Signed in';
     final initial = displayName.trim().isEmpty
@@ -30,11 +31,11 @@ class SettingsProfileCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: AffluenaColors.forest,
+                backgroundColor: colors.forest,
                 child: Text(
                   initial,
                   style: textTheme.titleLarge?.copyWith(
-                    color: AffluenaColors.surfaceElevated,
+                    color: colors.surfaceCanvas,
                   ),
                 ),
               ),
@@ -78,6 +79,7 @@ class SettingsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return Material(
       type: MaterialType.transparency,
@@ -85,7 +87,7 @@ class SettingsRow extends StatelessWidget {
         contentPadding: EdgeInsets.zero,
         enabled: onTap != null,
         onTap: onTap,
-        leading: Icon(icon, color: AffluenaColors.forest),
+        leading: Icon(icon, color: colors.forest),
         title: Text(title, style: textTheme.bodyLarge),
         subtitle: Text(value, style: textTheme.bodySmall),
         trailing: const Icon(Icons.chevron_right),
@@ -133,15 +135,13 @@ class SettingsMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isError
-            ? AffluenaColors.coral.withAlpha(24)
-            : AffluenaColors.forestSoft,
+        color: isError ? colors.coral.withAlpha(32) : colors.forestSoft,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isError ? AffluenaColors.coral : AffluenaColors.borderSubtle,
-        ),
+        border: Border.all(color: isError ? colors.coral : colors.borderSubtle),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space3),

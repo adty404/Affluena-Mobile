@@ -19,12 +19,13 @@ class AffluenaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = context.affluenaColors;
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor ?? theme.cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor ?? AffluenaColors.borderSubtle),
+        border: Border.all(color: borderColor ?? colors.borderSubtle),
       ),
       child: Padding(padding: padding, child: child),
     );

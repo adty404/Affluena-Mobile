@@ -47,6 +47,7 @@ class _DashboardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
     final summary = home.summary;
 
     return SafeArea(
@@ -76,11 +77,11 @@ class _DashboardContent extends StatelessWidget {
               ),
               const SizedBox(width: AffluenaSpacing.space2),
               CircleAvatar(
-                backgroundColor: AffluenaColors.forest,
+                backgroundColor: colors.forest,
                 child: Text(
                   'A',
                   style: textTheme.bodyLarge?.copyWith(
-                    color: AffluenaColors.surfaceElevated,
+                    color: colors.surfaceCanvas,
                   ),
                 ),
               ),
@@ -88,7 +89,7 @@ class _DashboardContent extends StatelessWidget {
           ),
           const SizedBox(height: AffluenaSpacing.space6),
           AffluenaCard(
-            backgroundColor: AffluenaColors.surfaceSoft,
+            backgroundColor: colors.surfaceSoft,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -233,6 +234,7 @@ class _QuickAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return Expanded(
       child: Semantics(
@@ -247,7 +249,7 @@ class _QuickAction extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(icon, color: AffluenaColors.forest),
+                Icon(icon, color: colors.forest),
                 const SizedBox(height: AffluenaSpacing.space2),
                 Text(label, style: textTheme.labelMedium),
               ],
@@ -267,14 +269,15 @@ class _BudgetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
     final hasBudget = summary.budget.limitMinor > 0;
 
     return AffluenaCard(
-      backgroundColor: AffluenaColors.forestSoft,
-      borderColor: AffluenaColors.forestSoft,
+      backgroundColor: colors.forestSoft,
+      borderColor: colors.forestSoft,
       child: Row(
         children: [
-          const Icon(Icons.pie_chart_outline, color: AffluenaColors.amber),
+          Icon(Icons.pie_chart_outline, color: colors.amber),
           const SizedBox(width: AffluenaSpacing.space3),
           Expanded(
             child: Column(
@@ -363,10 +366,11 @@ class _EmptyDashboardState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return AffluenaCard(
-      backgroundColor: AffluenaColors.forestSoft,
-      borderColor: AffluenaColors.forestSoft,
+      backgroundColor: colors.forestSoft,
+      borderColor: colors.forestSoft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
