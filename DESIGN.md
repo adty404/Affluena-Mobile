@@ -73,6 +73,16 @@ All spacing derives from a base of 4.
 | `space6` | 24 | Major block gaps |
 | `space8` | 32 | Screen section separation |
 
+### Radius
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `radiusMd` | 14 | Selector row ink, compact icon marks |
+| `radiusLg` | 16 | Status messages, compact grouped controls |
+| `radiusControl` | 18 | Buttons, inputs, selected navigation pills |
+| `radiusCard` | 20 | Cards and grouped list containers |
+| `radiusSheet` | 24 | Modal bottom sheet top corners |
+
 ### Grid
 
 - Primary layout: single-column mobile scroll with safe-area top and bottom.

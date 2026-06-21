@@ -24,7 +24,7 @@ class AffluenaCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor ?? theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AffluenaRadii.card),
         border: Border.all(color: borderColor ?? colors.borderSubtle),
       ),
       child: Padding(padding: padding, child: child),

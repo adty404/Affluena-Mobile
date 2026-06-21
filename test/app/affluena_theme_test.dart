@@ -32,6 +32,40 @@ void main() {
     );
   });
 
+  test('shared mobile chrome follows design surface tokens', () {
+    for (final theme in [AffluenaTheme.light, AffluenaTheme.dark]) {
+      final colors = theme.extension<AffluenaSemanticColors>()!;
+
+      final cardShape = theme.cardTheme.shape as RoundedRectangleBorder;
+      expect(theme.cardTheme.color, colors.surfaceSoft);
+      expect(cardShape.borderRadius, BorderRadius.circular(20));
+      expect(cardShape.side.color, colors.borderSubtle);
+
+      final navigationIndicatorShape =
+          theme.navigationBarTheme.indicatorShape as RoundedRectangleBorder;
+      expect(theme.navigationBarTheme.backgroundColor, colors.surfaceSoft);
+      expect(theme.navigationBarTheme.height, 72);
+      expect(navigationIndicatorShape.borderRadius, BorderRadius.circular(16));
+
+      final bottomSheetShape =
+          theme.bottomSheetTheme.shape as RoundedRectangleBorder;
+      expect(theme.bottomSheetTheme.backgroundColor, colors.surfaceElevated);
+      expect(
+        theme.bottomSheetTheme.modalBackgroundColor,
+        colors.surfaceElevated,
+      );
+      expect(theme.bottomSheetTheme.dragHandleColor, colors.borderSubtle);
+      expect(
+        bottomSheetShape.borderRadius,
+        const BorderRadius.vertical(top: Radius.circular(24)),
+      );
+
+      expect(theme.inputDecorationTheme.fillColor, colors.surfaceSoft);
+      expect(theme.inputDecorationTheme.hintStyle?.color, colors.inkMuted);
+      expect(theme.inputDecorationTheme.prefixIconColor, colors.inkMuted);
+    }
+  });
+
   testWidgets('MaterialApp resolves the dark theme from platform brightness', (
     tester,
   ) async {

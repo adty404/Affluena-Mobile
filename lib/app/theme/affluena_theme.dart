@@ -162,6 +162,14 @@ abstract final class AffluenaSpacing {
   static const double space8 = 32;
 }
 
+abstract final class AffluenaRadii {
+  static const double md = 14;
+  static const double lg = 16;
+  static const double control = 18;
+  static const double card = 20;
+  static const double sheet = 24;
+}
+
 abstract final class AffluenaTheme {
   static ThemeData get light {
     const colors = AffluenaSemanticColors.light;
@@ -234,9 +242,14 @@ abstract final class AffluenaTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AffluenaRadii.card),
           side: BorderSide(color: colors.borderSubtle),
         ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: colors.borderSubtle,
+        thickness: 1,
+        space: 1,
       ),
       chipTheme: base.chipTheme.copyWith(
         backgroundColor: colors.surfaceTintSoft,
@@ -254,30 +267,85 @@ abstract final class AffluenaTheme {
           foregroundColor: colorScheme.onPrimary,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AffluenaRadii.control),
           ),
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colors.surfaceElevated,
+        modalBackgroundColor: colors.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: colors.ink.withAlpha(24),
+        elevation: 8,
+        modalElevation: 12,
+        showDragHandle: true,
+        dragHandleColor: colors.borderSubtle,
+        dragHandleSize: const Size(44, 4),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AffluenaRadii.sheet),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surfaceSoft,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AffluenaSpacing.space4,
+          vertical: AffluenaSpacing.space3,
+        ),
+        hintStyle: TextStyle(color: colors.inkMuted),
+        prefixIconColor: colors.inkMuted,
+        suffixIconColor: colors.inkMuted,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AffluenaRadii.control),
           borderSide: BorderSide(color: colors.borderSubtle),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AffluenaRadii.control),
           borderSide: BorderSide(color: colors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AffluenaRadii.control),
           borderSide: BorderSide(color: colorScheme.primary, width: 1.4),
         ),
       ),
+      listTileTheme: ListTileThemeData(
+        iconColor: colors.forest,
+        textColor: colors.ink,
+        contentPadding: EdgeInsets.zero,
+        minLeadingWidth: 36,
+        horizontalTitleGap: AffluenaSpacing.space3,
+        titleTextStyle: TextStyle(
+          color: colors.ink,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          height: 1.45,
+        ),
+        subtitleTextStyle: TextStyle(
+          color: colors.inkMuted,
+          fontSize: 13,
+          height: 1.4,
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
+        height: 72,
         backgroundColor: colors.surfaceSoft,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         indicatorColor: colors.forestSoft,
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AffluenaRadii.lg),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: isSelected ? colorScheme.primary : colors.inkMuted,
+            size: isSelected ? 25 : 24,
+          );
+        }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
           return TextStyle(
