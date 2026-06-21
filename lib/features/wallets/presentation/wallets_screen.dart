@@ -106,21 +106,19 @@ class _WalletCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return AffluenaCard(
       child: Row(
         children: [
           DecoratedBox(
             decoration: BoxDecoration(
-              color: AffluenaColors.forestSoft,
+              color: colors.forestSoft,
               borderRadius: BorderRadius.circular(18),
             ),
             child: Padding(
               padding: const EdgeInsets.all(AffluenaSpacing.space4),
-              child: Icon(
-                _walletIcon(wallet.type),
-                color: AffluenaColors.forest,
-              ),
+              child: Icon(_walletIcon(wallet.type), color: colors.forest),
             ),
           ),
           const SizedBox(width: AffluenaSpacing.space4),
@@ -167,10 +165,11 @@ class _EmptyWalletState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return AffluenaCard(
-      backgroundColor: AffluenaColors.forestSoft,
-      borderColor: AffluenaColors.forestSoft,
+      backgroundColor: colors.forestSoft,
+      borderColor: colors.forestSoft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

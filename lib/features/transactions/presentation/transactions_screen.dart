@@ -19,6 +19,7 @@ class TransactionsScreen extends ConsumerWidget {
     final state = ref.watch(transactionsControllerProvider);
     final controller = ref.read(transactionsControllerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     if (state.isLoading && state.transactions.isEmpty) {
       return const _TransactionsLoading();
@@ -78,7 +79,7 @@ class TransactionsScreen extends ConsumerWidget {
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
             AffluenaCard(
-              backgroundColor: AffluenaColors.surfaceTintSoft,
+              backgroundColor: colors.surfaceTintSoft,
               child: Text(state.actionError!),
             ),
             const SizedBox(height: AffluenaSpacing.space3),
@@ -221,10 +222,11 @@ class _EmptyTransactionsState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return AffluenaCard(
-      backgroundColor: AffluenaColors.forestSoft,
-      borderColor: AffluenaColors.forestSoft,
+      backgroundColor: colors.forestSoft,
+      borderColor: colors.forestSoft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

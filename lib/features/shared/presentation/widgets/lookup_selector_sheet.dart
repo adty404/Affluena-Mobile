@@ -58,6 +58,7 @@ class _LookupSelectorSheetState<T> extends State<LookupSelectorSheet<T>> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
     final normalizedQuery = _query.trim().toLowerCase();
     final filtered = widget.options
         .where((option) {
@@ -112,16 +113,13 @@ class _LookupSelectorSheetState<T> extends State<LookupSelectorSheet<T>> {
                           contentPadding: EdgeInsets.zero,
                           leading: option.icon == null
                               ? null
-                              : Icon(option.icon, color: AffluenaColors.forest),
+                              : Icon(option.icon, color: colors.forest),
                           title: Text(option.label),
                           subtitle: option.subtitle == null
                               ? null
                               : Text(option.subtitle!),
                           trailing: selected
-                              ? const Icon(
-                                  Icons.check,
-                                  color: AffluenaColors.forest,
-                                )
+                              ? Icon(Icons.check, color: colors.forest)
                               : null,
                           onTap: () => Navigator.of(context).pop(option.value),
                         );

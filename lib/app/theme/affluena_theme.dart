@@ -17,8 +17,139 @@ abstract final class AffluenaColors {
   static const darkCanvas = Color(0xFF151411);
   static const darkSurface = Color(0xFF211F1A);
   static const darkSurfaceElevated = Color(0xFF2A261F);
+  static const darkSurfaceTintSoft = Color(0xFF342F26);
   static const darkInk = Color(0xFFF8F3EA);
   static const darkMuted = Color(0xFFBFB6AA);
+  static const darkBorderSubtle = Color(0xFF3B352C);
+  static const darkForest = Color(0xFF7EB694);
+  static const darkForestSoft = Color(0xFF20382D);
+  static const darkAmber = Color(0xFFE0A552);
+  static const darkCoral = Color(0xFFF09483);
+  static const darkSuccess = Color(0xFF88C28F);
+}
+
+@immutable
+class AffluenaSemanticColors extends ThemeExtension<AffluenaSemanticColors> {
+  const AffluenaSemanticColors({
+    required this.surfaceCanvas,
+    required this.surfaceSoft,
+    required this.surfaceElevated,
+    required this.surfaceTintSoft,
+    required this.ink,
+    required this.inkMuted,
+    required this.borderSubtle,
+    required this.forest,
+    required this.forestSoft,
+    required this.amber,
+    required this.coral,
+    required this.success,
+  });
+
+  final Color surfaceCanvas;
+  final Color surfaceSoft;
+  final Color surfaceElevated;
+  final Color surfaceTintSoft;
+  final Color ink;
+  final Color inkMuted;
+  final Color borderSubtle;
+  final Color forest;
+  final Color forestSoft;
+  final Color amber;
+  final Color coral;
+  final Color success;
+
+  static const light = AffluenaSemanticColors(
+    surfaceCanvas: AffluenaColors.surfaceCanvas,
+    surfaceSoft: AffluenaColors.surfaceSoft,
+    surfaceElevated: AffluenaColors.surfaceElevated,
+    surfaceTintSoft: AffluenaColors.surfaceTintSoft,
+    ink: AffluenaColors.ink,
+    inkMuted: AffluenaColors.inkMuted,
+    borderSubtle: AffluenaColors.borderSubtle,
+    forest: AffluenaColors.forest,
+    forestSoft: AffluenaColors.forestSoft,
+    amber: AffluenaColors.amber,
+    coral: AffluenaColors.coral,
+    success: AffluenaColors.success,
+  );
+
+  static const dark = AffluenaSemanticColors(
+    surfaceCanvas: AffluenaColors.darkCanvas,
+    surfaceSoft: AffluenaColors.darkSurface,
+    surfaceElevated: AffluenaColors.darkSurfaceElevated,
+    surfaceTintSoft: AffluenaColors.darkSurfaceTintSoft,
+    ink: AffluenaColors.darkInk,
+    inkMuted: AffluenaColors.darkMuted,
+    borderSubtle: AffluenaColors.darkBorderSubtle,
+    forest: AffluenaColors.darkForest,
+    forestSoft: AffluenaColors.darkForestSoft,
+    amber: AffluenaColors.darkAmber,
+    coral: AffluenaColors.darkCoral,
+    success: AffluenaColors.darkSuccess,
+  );
+
+  @override
+  AffluenaSemanticColors copyWith({
+    Color? surfaceCanvas,
+    Color? surfaceSoft,
+    Color? surfaceElevated,
+    Color? surfaceTintSoft,
+    Color? ink,
+    Color? inkMuted,
+    Color? borderSubtle,
+    Color? forest,
+    Color? forestSoft,
+    Color? amber,
+    Color? coral,
+    Color? success,
+  }) {
+    return AffluenaSemanticColors(
+      surfaceCanvas: surfaceCanvas ?? this.surfaceCanvas,
+      surfaceSoft: surfaceSoft ?? this.surfaceSoft,
+      surfaceElevated: surfaceElevated ?? this.surfaceElevated,
+      surfaceTintSoft: surfaceTintSoft ?? this.surfaceTintSoft,
+      ink: ink ?? this.ink,
+      inkMuted: inkMuted ?? this.inkMuted,
+      borderSubtle: borderSubtle ?? this.borderSubtle,
+      forest: forest ?? this.forest,
+      forestSoft: forestSoft ?? this.forestSoft,
+      amber: amber ?? this.amber,
+      coral: coral ?? this.coral,
+      success: success ?? this.success,
+    );
+  }
+
+  @override
+  AffluenaSemanticColors lerp(
+    ThemeExtension<AffluenaSemanticColors>? other,
+    double t,
+  ) {
+    if (other is! AffluenaSemanticColors) return this;
+    return AffluenaSemanticColors(
+      surfaceCanvas: Color.lerp(surfaceCanvas, other.surfaceCanvas, t)!,
+      surfaceSoft: Color.lerp(surfaceSoft, other.surfaceSoft, t)!,
+      surfaceElevated: Color.lerp(surfaceElevated, other.surfaceElevated, t)!,
+      surfaceTintSoft: Color.lerp(surfaceTintSoft, other.surfaceTintSoft, t)!,
+      ink: Color.lerp(ink, other.ink, t)!,
+      inkMuted: Color.lerp(inkMuted, other.inkMuted, t)!,
+      borderSubtle: Color.lerp(borderSubtle, other.borderSubtle, t)!,
+      forest: Color.lerp(forest, other.forest, t)!,
+      forestSoft: Color.lerp(forestSoft, other.forestSoft, t)!,
+      amber: Color.lerp(amber, other.amber, t)!,
+      coral: Color.lerp(coral, other.coral, t)!,
+      success: Color.lerp(success, other.success, t)!,
+    );
+  }
+}
+
+extension AffluenaThemeContext on BuildContext {
+  AffluenaSemanticColors get affluenaColors {
+    final theme = Theme.of(this);
+    return theme.extension<AffluenaSemanticColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AffluenaSemanticColors.dark
+            : AffluenaSemanticColors.light);
+  }
 }
 
 abstract final class AffluenaSpacing {
@@ -33,95 +164,86 @@ abstract final class AffluenaSpacing {
 
 abstract final class AffluenaTheme {
   static ThemeData get light {
+    const colors = AffluenaSemanticColors.light;
     return _theme(
       colorScheme:
           ColorScheme.fromSeed(
-            seedColor: AffluenaColors.forest,
+            seedColor: colors.forest,
             brightness: Brightness.light,
-            surface: AffluenaColors.surfaceSoft,
+            surface: colors.surfaceSoft,
           ).copyWith(
-            primary: AffluenaColors.forest,
-            onPrimary: AffluenaColors.surfaceElevated,
-            secondary: AffluenaColors.amber,
-            surface: AffluenaColors.surfaceSoft,
-            onSurface: AffluenaColors.ink,
-            error: AffluenaColors.coral,
+            primary: colors.forest,
+            onPrimary: colors.surfaceElevated,
+            secondary: colors.amber,
+            surface: colors.surfaceSoft,
+            onSurface: colors.ink,
+            error: colors.coral,
           ),
-      scaffoldBackground: AffluenaColors.surfaceCanvas,
-      cardColor: AffluenaColors.surfaceSoft,
-      textColor: AffluenaColors.ink,
-      mutedColor: AffluenaColors.inkMuted,
-      borderColor: AffluenaColors.borderSubtle,
+      colors: colors,
     );
   }
 
   static ThemeData get dark {
+    const colors = AffluenaSemanticColors.dark;
     return _theme(
       colorScheme:
           ColorScheme.fromSeed(
-            seedColor: AffluenaColors.forest,
+            seedColor: colors.forest,
             brightness: Brightness.dark,
-            surface: AffluenaColors.darkSurface,
+            surface: colors.surfaceSoft,
           ).copyWith(
-            primary: const Color(0xFF7EB694),
-            onPrimary: AffluenaColors.darkCanvas,
-            secondary: const Color(0xFFE0A552),
-            surface: AffluenaColors.darkSurface,
-            onSurface: AffluenaColors.darkInk,
-            error: const Color(0xFFF09483),
+            primary: colors.forest,
+            onPrimary: colors.surfaceCanvas,
+            secondary: colors.amber,
+            surface: colors.surfaceSoft,
+            onSurface: colors.ink,
+            error: colors.coral,
           ),
-      scaffoldBackground: AffluenaColors.darkCanvas,
-      cardColor: AffluenaColors.darkSurface,
-      textColor: AffluenaColors.darkInk,
-      mutedColor: AffluenaColors.darkMuted,
-      borderColor: const Color(0xFF3B352C),
+      colors: colors,
     );
   }
 
   static ThemeData _theme({
     required ColorScheme colorScheme,
-    required Color scaffoldBackground,
-    required Color cardColor,
-    required Color textColor,
-    required Color mutedColor,
-    required Color borderColor,
+    required AffluenaSemanticColors colors,
   }) {
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: scaffoldBackground,
-      cardColor: cardColor,
+      scaffoldBackgroundColor: colors.surfaceCanvas,
+      cardColor: colors.surfaceSoft,
       fontFamily: null,
     );
 
     return base.copyWith(
+      extensions: [colors],
       appBarTheme: AppBarTheme(
-        backgroundColor: scaffoldBackground,
-        foregroundColor: textColor,
+        backgroundColor: colors.surfaceCanvas,
+        foregroundColor: colors.ink,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          color: textColor,
+          color: colors.ink,
           fontSize: 22,
           fontWeight: FontWeight.w700,
           height: 1.25,
         ),
       ),
       cardTheme: CardThemeData(
-        color: cardColor,
+        color: colors.surfaceSoft,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: borderColor),
+          side: BorderSide(color: colors.borderSubtle),
         ),
       ),
       chipTheme: base.chipTheme.copyWith(
-        backgroundColor: AffluenaColors.surfaceTintSoft,
-        selectedColor: AffluenaColors.forestSoft,
-        side: BorderSide(color: borderColor),
+        backgroundColor: colors.surfaceTintSoft,
+        selectedColor: colors.forestSoft,
+        side: BorderSide(color: colors.borderSubtle),
         labelStyle: TextStyle(
-          color: textColor,
+          color: colors.ink,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
@@ -139,14 +261,14 @@ abstract final class AffluenaTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: cardColor,
+        fillColor: colors.surfaceSoft,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: borderColor),
+          borderSide: BorderSide(color: colors.borderSubtle),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: borderColor),
+          borderSide: BorderSide(color: colors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
@@ -154,12 +276,12 @@ abstract final class AffluenaTheme {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: cardColor,
-        indicatorColor: AffluenaColors.forestSoft,
+        backgroundColor: colors.surfaceSoft,
+        indicatorColor: colors.forestSoft,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
           return TextStyle(
-            color: isSelected ? colorScheme.primary : mutedColor,
+            color: isSelected ? colorScheme.primary : colors.inkMuted,
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           );
@@ -167,39 +289,39 @@ abstract final class AffluenaTheme {
       ),
       textTheme: base.textTheme.copyWith(
         displaySmall: TextStyle(
-          color: textColor,
+          color: colors.ink,
           fontSize: 34,
           fontWeight: FontWeight.w700,
           height: 1.12,
         ),
         headlineMedium: TextStyle(
-          color: textColor,
+          color: colors.ink,
           fontSize: 28,
           fontWeight: FontWeight.w700,
           height: 1.18,
         ),
         titleLarge: TextStyle(
-          color: textColor,
+          color: colors.ink,
           fontSize: 22,
           fontWeight: FontWeight.w700,
           height: 1.25,
         ),
         titleMedium: TextStyle(
-          color: textColor,
+          color: colors.ink,
           fontSize: 18,
           fontWeight: FontWeight.w700,
           height: 1.3,
         ),
         bodyLarge: TextStyle(
-          color: textColor,
+          color: colors.ink,
           fontSize: 16,
           fontWeight: FontWeight.w500,
           height: 1.45,
         ),
-        bodyMedium: TextStyle(color: textColor, fontSize: 14, height: 1.45),
-        bodySmall: TextStyle(color: mutedColor, fontSize: 13, height: 1.4),
+        bodyMedium: TextStyle(color: colors.ink, fontSize: 14, height: 1.45),
+        bodySmall: TextStyle(color: colors.inkMuted, fontSize: 13, height: 1.4),
         labelMedium: TextStyle(
-          color: mutedColor,
+          color: colors.inkMuted,
           fontSize: 12,
           fontWeight: FontWeight.w600,
           height: 1.35,

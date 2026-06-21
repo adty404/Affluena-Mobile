@@ -21,7 +21,8 @@ class TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final amountColor = isIncome ? AffluenaColors.success : AffluenaColors.ink;
+    final colors = context.affluenaColors;
+    final amountColor = isIncome ? colors.success : colors.ink;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space3),
@@ -29,14 +30,12 @@ class TransactionTile extends StatelessWidget {
         children: [
           DecoratedBox(
             decoration: BoxDecoration(
-              color: isIncome
-                  ? AffluenaColors.forestSoft
-                  : AffluenaColors.surfaceTintSoft,
+              color: isIncome ? colors.forestSoft : colors.surfaceTintSoft,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Padding(
               padding: const EdgeInsets.all(AffluenaSpacing.space3),
-              child: Icon(icon, color: AffluenaColors.forest, size: 20),
+              child: Icon(icon, color: colors.forest, size: 20),
             ),
           ),
           const SizedBox(width: AffluenaSpacing.space3),

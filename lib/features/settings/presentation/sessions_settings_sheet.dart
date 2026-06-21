@@ -78,6 +78,7 @@ class _SessionsSheetState extends ConsumerState<_SessionsSheet> {
 
   Widget _sessionRow({required AuthSessionRecord session}) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
     final userAgent = session.userAgent?.trim().isNotEmpty == true
         ? session.userAgent!
         : 'Unknown device';
@@ -85,7 +86,7 @@ class _SessionsSheetState extends ConsumerState<_SessionsSheet> {
       padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space2),
       child: Row(
         children: [
-          const Icon(Icons.devices_outlined, color: AffluenaColors.forest),
+          Icon(Icons.devices_outlined, color: colors.forest),
           const SizedBox(width: AffluenaSpacing.space3),
           Expanded(
             child: Column(
