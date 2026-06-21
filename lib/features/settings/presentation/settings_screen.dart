@@ -7,6 +7,8 @@ import '../../auth/application/auth_controller.dart';
 import '../../auth/data/auth_models.dart';
 import '../../budgets/presentation/budget_screen.dart';
 import '../../debts/presentation/debt_screen.dart';
+import '../../goals/presentation/goal_screen.dart';
+import '../../recurring/presentation/recurring_screen.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../trackers/presentation/tracker_screen.dart';
@@ -127,6 +129,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: 'Installments & Subscriptions',
                   value: 'Tenor plans and recurring bills',
                   onTap: () => context.go(TrackerScreen.path),
+                ),
+                const Divider(height: 1),
+                SettingsRow(
+                  icon: Icons.autorenew,
+                  title: 'Recurring',
+                  value: 'Scheduled income, expenses, and transfers',
+                  onTap: () => context.go(RecurringScreen.path),
+                ),
+                const Divider(height: 1),
+                SettingsRow(
+                  icon: Icons.flag_outlined,
+                  title: 'Goals',
+                  value: 'Saving targets and shared invites',
+                  onTap: () => context.go(GoalScreen.path),
                 ),
               ],
             ),
