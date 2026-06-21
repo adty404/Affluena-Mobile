@@ -96,6 +96,31 @@ void main() {
     expect(MoneyFormatter.signedIdr(-125000), '-Rp 125.000');
   });
 
+  test('parses nullable empty dashboard collections from API payloads', () {
+    final summary = DashboardSummary.fromJson(
+      jsonMap({
+        'month': '2026-06',
+        'net_worth_minor': 0,
+        'monthly_income_minor': 0,
+        'monthly_expense_minor': 0,
+        'monthly_cashflow_minor': 0,
+        'budget': {
+          'limit_minor': 0,
+          'spent_minor': 0,
+          'remaining_minor': 0,
+          'usage_percent': 0,
+        },
+        'upcoming_subscriptions': null,
+        'upcoming_installments': null,
+        'upcoming_debts': null,
+      }),
+    );
+
+    expect(summary.upcomingSubscriptions, isEmpty);
+    expect(summary.upcomingInstallments, isEmpty);
+    expect(summary.upcomingDebts, isEmpty);
+  });
+
   test('throws deterministic parse failure for malformed fields', () {
     expect(
       () =>
