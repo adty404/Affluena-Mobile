@@ -7,6 +7,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/api/api_error.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../budgets/presentation/budget_screen.dart';
 import '../../quick_entry/presentation/quick_entry_screen.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
@@ -121,7 +122,7 @@ class _DashboardContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AffluenaSpacing.space5),
-          _QuickActions(summary: summary),
+          const _QuickActions(),
           const SizedBox(height: AffluenaSpacing.space6),
           home.isEmpty
               ? const _EmptyDashboardState()
@@ -141,9 +142,7 @@ class _DashboardContent extends StatelessWidget {
 }
 
 class _QuickActions extends StatelessWidget {
-  const _QuickActions({required this.summary});
-
-  final DashboardSummary summary;
+  const _QuickActions();
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +163,7 @@ class _QuickActions extends StatelessWidget {
         _QuickAction(
           icon: Icons.pie_chart_outline,
           label: 'Budget',
-          onTap: () => _showBudgetSheet(context, summary),
+          onTap: () => context.go(BudgetScreen.path),
         ),
         const SizedBox(width: AffluenaSpacing.space3),
         _QuickAction(
@@ -175,49 +174,6 @@ class _QuickActions extends StatelessWidget {
       ],
     );
   }
-}
-
-void _showBudgetSheet(BuildContext context, DashboardSummary summary) {
-  final textTheme = Theme.of(context).textTheme;
-  final hasBudget = summary.budget.limitMinor > 0;
-
-  showModalBottomSheet<void>(
-    context: context,
-    showDragHandle: true,
-    builder: (context) {
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AffluenaSpacing.space5,
-            AffluenaSpacing.space2,
-            AffluenaSpacing.space5,
-            AffluenaSpacing.space6,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Budget this month', style: textTheme.titleLarge),
-              const SizedBox(height: AffluenaSpacing.space4),
-              Text(
-                hasBudget
-                    ? '${summary.budget.usagePercent.round()}% used'
-                    : 'No budget set yet',
-                style: textTheme.headlineMedium,
-              ),
-              const SizedBox(height: AffluenaSpacing.space2),
-              Text(
-                hasBudget
-                    ? '${MoneyFormatter.idr(summary.budget.remainingMinor)} remaining from ${MoneyFormatter.idr(summary.budget.limitMinor)}'
-                    : 'Budgets will appear here once category budgets are available.',
-                style: textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
 }
 
 class _QuickAction extends StatelessWidget {
