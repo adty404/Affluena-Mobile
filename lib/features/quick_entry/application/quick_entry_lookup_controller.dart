@@ -2,8 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
+import '../../quick_entry/data/quick_entry_models.dart';
+import '../../quick_entry/data/quick_entry_repository.dart';
 import '../../tags/data/tag_models.dart';
 import '../../tags/data/tag_repository.dart';
+import '../../transactions/data/transaction_models.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
 
@@ -11,14 +14,21 @@ final quickEntryLookupProvider = FutureProvider<QuickEntryLookup>((ref) async {
   final walletRepository = ref.watch(walletRepositoryProvider);
   final categoryRepository = ref.watch(categoryRepositoryProvider);
   final tagRepository = ref.watch(tagRepositoryProvider);
+  final quickEntryRepository = ref.watch(quickEntryRepositoryProvider);
 
   final walletsFuture = walletRepository.listWallets(
     limit: 100,
     offset: 0,
     sort: 'name_asc',
   );
-  final categoriesFuture = categoryRepository.listCategories(
+  final expenseCategoriesFuture = categoryRepository.listCategories(
     type: CategoryType.expense,
+    limit: 100,
+    offset: 0,
+    sort: 'name_asc',
+  );
+  final incomeCategoriesFuture = categoryRepository.listCategories(
+    type: CategoryType.income,
     limit: 100,
     offset: 0,
     sort: 'name_asc',
@@ -28,15 +38,24 @@ final quickEntryLookupProvider = FutureProvider<QuickEntryLookup>((ref) async {
     offset: 0,
     sort: 'name_asc',
   );
+  final templatesFuture = quickEntryRepository.listTemplates(
+    limit: 20,
+    offset: 0,
+    sort: 'name_asc',
+  );
 
   final wallets = await walletsFuture;
-  final categories = await categoriesFuture;
+  final expenseCategories = await expenseCategoriesFuture;
+  final incomeCategories = await incomeCategoriesFuture;
   final tags = await tagsFuture;
+  final templates = await templatesFuture;
 
   return QuickEntryLookup(
     wallets: wallets.wallets,
-    expenseCategories: categories.categories,
+    expenseCategories: expenseCategories.categories,
+    incomeCategories: incomeCategories.categories,
     tags: tags.tags,
+    templates: templates.templates,
   );
 });
 
@@ -44,18 +63,24 @@ class QuickEntryLookup {
   const QuickEntryLookup({
     required this.wallets,
     required this.expenseCategories,
+    required this.incomeCategories,
     required this.tags,
+    required this.templates,
   });
 
   final List<Wallet> wallets;
   final List<Category> expenseCategories;
+  final List<Category> incomeCategories;
   final List<Tag> tags;
+  final List<QuickEntryTemplate> templates;
 
   bool get canSaveExpense => wallets.isNotEmpty && expenseCategories.isNotEmpty;
 
   Wallet? walletById(String? id) => _findById(wallets, id);
 
-  Category? categoryById(String? id) => _findById(expenseCategories, id);
+  Category? categoryById(TransactionType type, String? id) {
+    return _findById(categoriesFor(type), id);
+  }
 
   Tag? tagById(String? id) => _findById(tags, id);
 
@@ -69,9 +94,30 @@ class QuickEntryLookup {
         (expenseCategories.isEmpty ? null : expenseCategories.first);
   }
 
+  Category? get defaultIncomeCategory {
+    return _preferredByName(incomeCategories, 'Salary') ??
+        (incomeCategories.isEmpty ? null : incomeCategories.first);
+  }
+
   Tag? get defaultTag {
     return _preferredByName(tags, '#MonthlyBill') ??
         (tags.isEmpty ? null : tags.first);
+  }
+
+  List<Category> categoriesFor(TransactionType type) {
+    return switch (type) {
+      TransactionType.income => incomeCategories,
+      TransactionType.expense => expenseCategories,
+      TransactionType.transfer || TransactionType.adjustment => const [],
+    };
+  }
+
+  Category? defaultCategoryFor(TransactionType type) {
+    return switch (type) {
+      TransactionType.income => defaultIncomeCategory,
+      TransactionType.expense => defaultExpenseCategory,
+      TransactionType.transfer || TransactionType.adjustment => null,
+    };
   }
 }
 

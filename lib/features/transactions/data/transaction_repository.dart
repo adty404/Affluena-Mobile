@@ -24,6 +24,8 @@ abstract interface class TransactionRepository {
 
   Future<Transaction> getTransaction(String id);
 
+  Future<Transaction> createTransaction(TransactionRequest request);
+
   Future<void> deleteTransaction(String id);
 }
 
@@ -64,6 +66,15 @@ class DioTransactionRepository implements TransactionRepository {
   @override
   Future<Transaction> getTransaction(String id) async {
     final response = await _dio.get<Map<String, Object?>>('/transactions/$id');
+    return Transaction.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<Transaction> createTransaction(TransactionRequest request) async {
+    final response = await _dio.post<Map<String, Object?>>(
+      '/transactions',
+      data: request.toJson(),
+    );
     return Transaction.fromJson(_responseMap(response.data));
   }
 

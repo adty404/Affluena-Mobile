@@ -8,6 +8,8 @@ import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_repository.dart';
+import 'package:affluena_mobile/features/quick_entry/data/quick_entry_models.dart';
+import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
@@ -38,6 +40,9 @@ Widget authTestApp({
         const FakeCategoryRepository(),
       ),
       tagRepositoryProvider.overrideWithValue(const FakeTagRepository()),
+      quickEntryRepositoryProvider.overrideWithValue(
+        const FakeQuickEntryRepository(),
+      ),
     ],
     child: const AffluenaApp(),
   );
@@ -255,7 +260,42 @@ class FakeTransactionRepository implements TransactionRepository {
   }
 
   @override
+  Future<Transaction> createTransaction(TransactionRequest request) async {
+    return transactions.first;
+  }
+
+  @override
   Future<void> deleteTransaction(String id) async {}
+}
+
+class FakeQuickEntryRepository implements QuickEntryRepository {
+  const FakeQuickEntryRepository({this.templates = const [seededTemplate]});
+
+  final List<QuickEntryTemplate> templates;
+
+  @override
+  Future<QuickEntryTemplateListResponse> listTemplates({
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    return QuickEntryTemplateListResponse(
+      templates: templates,
+      pagination: Pagination(
+        total: templates.length,
+        limit: limit ?? templates.length,
+        offset: offset ?? 0,
+      ),
+    );
+  }
+
+  @override
+  Future<ExecuteQuickEntryResponse> executeTemplate(
+    String id,
+    ExecuteQuickEntryRequest request,
+  ) async {
+    return const ExecuteQuickEntryResponse(transaction: seededTransaction);
+  }
 }
 
 class FakeWalletRepository implements WalletRepository {
@@ -434,4 +474,17 @@ const seededTransaction = Transaction(
   note: 'Lunch meeting',
   createdAt: '2026-06-21T10:00:00Z',
   updatedAt: '2026-06-21T10:00:00Z',
+);
+
+const seededTemplate = QuickEntryTemplate(
+  id: '77777777-7777-7777-7777-777777770001',
+  userId: '11111111-1111-1111-1111-111111111111',
+  name: 'Daily Coffee',
+  type: TransactionType.expense,
+  walletId: seededWalletId,
+  categoryId: seededCategoryId,
+  amountMinor: 35000,
+  note: 'Daily Coffee',
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
 );

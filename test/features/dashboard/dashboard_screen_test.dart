@@ -210,6 +210,11 @@ class FakeTransactionRepository implements TransactionRepository {
   }
 
   @override
+  Future<Transaction> createTransaction(TransactionRequest request) async {
+    return transactions.first;
+  }
+
+  @override
   Future<void> deleteTransaction(String id) async {}
 }
 
