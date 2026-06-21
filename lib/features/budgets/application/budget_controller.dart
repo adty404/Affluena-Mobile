@@ -1,0 +1,219 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/formatters/date_formatter.dart';
+import '../../categories/data/category_models.dart';
+import '../../categories/data/category_repository.dart';
+import '../data/budget_models.dart';
+import '../data/budget_repository.dart';
+
+const budgetPageSize = 20;
+
+final budgetControllerProvider =
+    NotifierProvider<BudgetController, BudgetState>(BudgetController.new);
+
+class BudgetController extends Notifier<BudgetState> {
+  @override
+  BudgetState build() {
+    final month = AffluenaDateFormatter.monthKey(DateTime.now());
+    Future<void>.microtask(() => load(month: month));
+    return BudgetState(month: month);
+  }
+
+  Future<void> load({String? month}) async {
+    final targetMonth = month ?? state.month;
+    state = state.copyWith(
+      month: targetMonth,
+      isLoading: true,
+      loadError: null,
+      actionError: null,
+    );
+
+    try {
+      final budgetsFuture = ref
+          .read(budgetRepositoryProvider)
+          .listBudgets(month: targetMonth, limit: budgetPageSize, offset: 0);
+      final reportFuture = ref
+          .read(budgetRepositoryProvider)
+          .getReport(month: targetMonth);
+      final alertsFuture = ref
+          .read(budgetRepositoryProvider)
+          .getAlerts(month: targetMonth);
+      final categoriesFuture = ref
+          .read(categoryRepositoryProvider)
+          .listCategories(
+            type: CategoryType.expense,
+            limit: 100,
+            offset: 0,
+            sort: 'name_asc',
+          );
+
+      final budgetResponse = await budgetsFuture;
+      final reportResponse = await reportFuture;
+      final alertResponse = await alertsFuture;
+      final categoryResponse = await categoriesFuture;
+
+      state = state.copyWith(
+        isLoading: false,
+        budgets: budgetResponse.budgets,
+        total: budgetResponse.pagination.total,
+        report: reportResponse.report,
+        reportSummary: reportResponse.summary,
+        alerts: alertResponse.alerts,
+        categories: categoryResponse.categories,
+        categoryNames: {
+          for (final category in categoryResponse.categories)
+            category.id: category.name,
+        },
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        loadError: 'Budgets could not be loaded.',
+      );
+    }
+  }
+
+  void setMonth(String month) {
+    if (month == state.month) return;
+    unawaited(load(month: month));
+  }
+
+  Future<void> createBudget({
+    required String categoryId,
+    required int limitMinor,
+  }) async {
+    await _saveBudget(
+      BudgetRequest(
+        categoryId: categoryId,
+        month: state.month,
+        limitMinor: limitMinor,
+      ),
+    );
+  }
+
+  Future<void> updateBudget(BudgetSummary budget, {required int limitMinor}) {
+    return _saveBudget(
+      BudgetRequest(
+        categoryId: budget.categoryId,
+        month: state.month,
+        limitMinor: limitMinor,
+      ),
+      id: budget.id,
+    );
+  }
+
+  Future<void> _saveBudget(BudgetRequest request, {String? id}) async {
+    state = state.copyWith(isSaving: true, actionError: null);
+    try {
+      if (id == null) {
+        await ref.read(budgetRepositoryProvider).createBudget(request);
+      } else {
+        await ref.read(budgetRepositoryProvider).updateBudget(id, request);
+      }
+      state = state.copyWith(isSaving: false);
+      await load();
+    } catch (_) {
+      state = state.copyWith(
+        isSaving: false,
+        actionError: id == null
+            ? 'Budget could not be created.'
+            : 'Budget could not be updated.',
+      );
+    }
+  }
+
+  Future<void> deleteBudget(BudgetSummary budget) async {
+    state = state.copyWith(actionError: null);
+    try {
+      await ref.read(budgetRepositoryProvider).deleteBudget(budget.id);
+      state = state.copyWith(
+        budgets: state.budgets
+            .where((item) => item.id != budget.id)
+            .toList(growable: false),
+        total: state.total > 0 ? state.total - 1 : 0,
+      );
+      await load();
+    } catch (_) {
+      state = state.copyWith(actionError: 'Budget could not be deleted.');
+    }
+  }
+}
+
+class BudgetState {
+  const BudgetState({
+    required this.month,
+    this.budgets = const [],
+    this.total = 0,
+    this.report = const [],
+    this.alerts = const [],
+    this.categories = const [],
+    this.categoryNames = const {},
+    this.reportSummary,
+    this.isLoading = false,
+    this.isSaving = false,
+    this.loadError,
+    this.actionError,
+  });
+
+  final String month;
+  final List<BudgetSummary> budgets;
+  final int total;
+  final List<BudgetReportItem> report;
+  final List<BudgetAlert> alerts;
+  final List<Category> categories;
+  final Map<String, String> categoryNames;
+  final BudgetReportSummary? reportSummary;
+  final bool isLoading;
+  final bool isSaving;
+  final String? loadError;
+  final String? actionError;
+
+  String categoryName(String id) => categoryNames[id] ?? 'Unknown category';
+
+  BudgetReportItem? reportFor(BudgetSummary budget) {
+    for (final item in report) {
+      if (item.id == budget.id) return item;
+    }
+    return null;
+  }
+
+  BudgetState copyWith({
+    String? month,
+    List<BudgetSummary>? budgets,
+    int? total,
+    List<BudgetReportItem>? report,
+    List<BudgetAlert>? alerts,
+    List<Category>? categories,
+    Map<String, String>? categoryNames,
+    Object? reportSummary = _unchanged,
+    bool? isLoading,
+    bool? isSaving,
+    Object? loadError = _unchanged,
+    Object? actionError = _unchanged,
+  }) {
+    return BudgetState(
+      month: month ?? this.month,
+      budgets: budgets ?? this.budgets,
+      total: total ?? this.total,
+      report: report ?? this.report,
+      alerts: alerts ?? this.alerts,
+      categories: categories ?? this.categories,
+      categoryNames: categoryNames ?? this.categoryNames,
+      reportSummary: identical(reportSummary, _unchanged)
+          ? this.reportSummary
+          : reportSummary as BudgetReportSummary?,
+      isLoading: isLoading ?? this.isLoading,
+      isSaving: isSaving ?? this.isSaving,
+      loadError: identical(loadError, _unchanged)
+          ? this.loadError
+          : loadError as String?,
+      actionError: identical(actionError, _unchanged)
+          ? this.actionError
+          : actionError as String?,
+    );
+  }
+}
+
+const _unchanged = Object();

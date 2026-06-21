@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/budgets/presentation/budget_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/auth_screens.dart';
@@ -100,6 +101,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: SettingsScreen.path,
                 pageBuilder: _fadePage((_) => const SettingsScreen()),
+              ),
+              GoRoute(
+                path: BudgetScreen.path,
+                pageBuilder: _fadePage((_) => const BudgetScreen()),
               ),
             ],
           ),

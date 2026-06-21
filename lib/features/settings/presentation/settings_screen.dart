@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/data/auth_models.dart';
+import '../../budgets/presentation/budget_screen.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../application/settings_controller.dart';
@@ -96,6 +98,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space6),
+          const SectionHeader(title: 'Planning'),
+          const SizedBox(height: AffluenaSpacing.space3),
+          AffluenaCard(
+            child: SettingsRow(
+              icon: Icons.pie_chart_outline,
+              title: 'Budgets',
+              value: 'Monthly category limits and alerts',
+              onTap: () => context.go(BudgetScreen.path),
             ),
           ),
           const SizedBox(height: AffluenaSpacing.space6),
