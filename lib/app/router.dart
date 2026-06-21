@@ -8,6 +8,7 @@ import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/auth_screens.dart';
 import '../features/debts/presentation/debt_screen.dart';
 import '../features/goals/presentation/goal_screen.dart';
+import '../features/insights/presentation/insights_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/recurring/presentation/recurring_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
@@ -125,6 +126,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: GoalScreen.path,
                 pageBuilder: _fadePage((_) => const GoalScreen()),
+              ),
+              GoRoute(
+                path: InsightsScreen.path,
+                pageBuilder: _fadePage((_) => const InsightsScreen()),
               ),
             ],
           ),
