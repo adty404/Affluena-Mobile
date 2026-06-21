@@ -38,37 +38,17 @@ class InsightsController extends Notifier<InsightsState> {
     );
     try {
       final repository = ref.read(insightsRepositoryProvider);
-      final reportFuture = repository.getReport(
-        kind: state.reportKind,
-        month: state.month,
-      );
-      final exportJobsFuture = repository.listExportJobs(
-        limit: insightsPageSize,
-        offset: 0,
-      );
-      final activitiesFuture = repository.listActivities(
-        limit: insightsPageSize,
-        offset: 0,
-        sort: 'created_at_desc',
-      );
-      final alertsFuture = repository.listAlerts(month: state.month);
-      final rulesFuture = repository.listNotificationRules();
-
-      final report = await reportFuture;
-      final exportJobs = await exportJobsFuture;
-      final activities = await activitiesFuture;
-      final alerts = await alertsFuture;
-      final rules = await rulesFuture;
+      final sections = await _fetchSections(repository);
 
       state = state.copyWith(
         isLoading: false,
-        report: report,
-        exportJobs: exportJobs.jobs,
-        exportJobTotal: exportJobs.pagination.total,
-        activities: activities.activities,
-        activityTotal: activities.pagination.total,
-        alerts: alerts.alerts,
-        rules: rules.rules,
+        report: sections.report,
+        exportJobs: sections.exportJobs.jobs,
+        exportJobTotal: sections.exportJobs.pagination.total,
+        activities: sections.activities.activities,
+        activityTotal: sections.activities.pagination.total,
+        alerts: sections.alerts.alerts,
+        rules: sections.rules.rules,
       );
     } catch (_) {
       state = state.copyWith(
@@ -142,25 +122,102 @@ class InsightsController extends Notifier<InsightsState> {
       actionError: null,
       actionMessage: null,
     );
+    final repository = ref.read(insightsRepositoryProvider);
+    late final NotificationRule updated;
     try {
-      final updated = await ref
-          .read(insightsRepositoryProvider)
-          .updateNotificationRule(rule.id, update);
-      state = state.copyWith(
-        isSaving: false,
-        rules: [
-          for (final current in state.rules)
-            if (current.id == updated.id) updated else current,
-        ],
-        actionMessage: 'Notification rule updated.',
-      );
+      updated = await repository.updateNotificationRule(rule.id, update);
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
         actionError: 'Notification rule could not be updated.',
       );
+      return;
+    }
+
+    try {
+      final sections = await _fetchSections(repository);
+      state = state.copyWith(
+        isSaving: false,
+        report: sections.report,
+        exportJobs: sections.exportJobs.jobs,
+        exportJobTotal: sections.exportJobs.pagination.total,
+        activities: sections.activities.activities,
+        activityTotal: sections.activities.pagination.total,
+        alerts: sections.alerts.alerts,
+        rules: sections.rules.rules,
+        actionMessage: 'Notification rule updated.',
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isSaving: false,
+        rules: _replaceNotificationRule(state.rules, updated),
+        actionError:
+            'Notification rule updated, but insights could not be refreshed.',
+      );
     }
   }
+
+  Future<_InsightSections> _fetchSections(InsightsRepository repository) async {
+    final reportFuture = repository.getReport(
+      kind: state.reportKind,
+      month: state.month,
+    );
+    final exportJobsFuture = repository.listExportJobs(
+      limit: insightsPageSize,
+      offset: 0,
+    );
+    final activitiesFuture = repository.listActivities(
+      limit: insightsPageSize,
+      offset: 0,
+      sort: 'created_at_desc',
+    );
+    final alertsFuture = repository.listAlerts(month: state.month);
+    final rulesFuture = repository.listNotificationRules();
+
+    return _InsightSections(
+      report: await reportFuture,
+      exportJobs: await exportJobsFuture,
+      activities: await activitiesFuture,
+      alerts: await alertsFuture,
+      rules: await rulesFuture,
+    );
+  }
+}
+
+class _InsightSections {
+  const _InsightSections({
+    required this.report,
+    required this.exportJobs,
+    required this.activities,
+    required this.alerts,
+    required this.rules,
+  });
+
+  final ReportResponse report;
+  final ExportJobsResponse exportJobs;
+  final ActivityListResponse activities;
+  final AlertsResponse alerts;
+  final NotificationRulesResponse rules;
+}
+
+List<NotificationRule> _replaceNotificationRule(
+  List<NotificationRule> rules,
+  NotificationRule updated,
+) {
+  var replaced = false;
+  final nextRules = <NotificationRule>[];
+  for (final current in rules) {
+    if (current.id == updated.id) {
+      nextRules.add(updated);
+      replaced = true;
+    } else {
+      nextRules.add(current);
+    }
+  }
+  if (!replaced) {
+    nextRules.add(updated);
+  }
+  return nextRules;
 }
 
 class InsightsState {

@@ -65,8 +65,15 @@ void main() {
     await tester.enterText(find.byKey(const Key('lookup-search-field')), 'go');
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(ListTile, 'GoPay'), findsOneWidget);
-    expect(find.widgetWithText(ListTile, 'BCA Primary'), findsNothing);
+    final sheet = find.byType(BottomSheet);
+    expect(
+      find.descendant(of: sheet, matching: find.text('GoPay')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('BCA Primary')),
+      findsNothing,
+    );
   });
 
   testWidgets('empty lookup data explains the blocker and disables save', (
@@ -81,11 +88,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('Finish setup first'), findsOneWidget);
     expect(
-      find.text('Add a wallet before recording transactions.'),
+      find.text(
+        'Add at least one wallet and an expense category before saving.',
+      ),
       findsOneWidget,
     );
-    expect(find.text('Add an expense category before saving.'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.byKey(const Key('quick-entry-save-button')),

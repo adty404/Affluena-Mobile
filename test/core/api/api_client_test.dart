@@ -165,6 +165,31 @@ void main() {
     expect(await store.readRefreshToken(), 'refresh-1');
   });
 
+  test('api errors prefer message then error then stable fallback', () async {
+    final store = memoryTokenStore(accessToken: 'access-1');
+    final adapter = HandlerAdapter((options) {
+      return switch (options.path) {
+        '/message-error' => jsonResponse({
+          'message': 'Backend message wins',
+          'error': 'Backend error loses',
+        }, statusCode: 400),
+        '/error-only' => jsonResponse({
+          'error': 'Backend error wins',
+        }, statusCode: 400),
+        '/empty-message' => jsonResponse({
+          'message': '',
+          'error': '',
+        }, statusCode: 400),
+        _ => jsonResponse({'ok': true}),
+      };
+    });
+    final dio = createTestDio(store: store, adapter: adapter);
+
+    expect(await _apiMessageFor(dio, '/message-error'), 'Backend message wins');
+    expect(await _apiMessageFor(dio, '/error-only'), 'Backend error wins');
+    expect(await _apiMessageFor(dio, '/empty-message'), 'Request failed.');
+  });
+
   test('network failure maps to stable friendly api error', () async {
     final store = memoryTokenStore(accessToken: 'access-1');
     final adapter = HandlerAdapter((options) {
@@ -192,6 +217,15 @@ void main() {
       ),
     );
   });
+}
+
+Future<String> _apiMessageFor(Dio dio, String path) async {
+  try {
+    await dio.get(path);
+    fail('Expected $path to throw a DioException.');
+  } on DioException catch (error) {
+    return (error.error! as ApiException).message;
+  }
 }
 
 Dio createTestDio({

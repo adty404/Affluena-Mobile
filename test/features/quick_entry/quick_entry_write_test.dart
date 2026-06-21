@@ -79,7 +79,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('quick-entry-to-wallet-row')));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ListTile, 'BCA Primary'));
+    await tester.tap(find.text('BCA Primary').last);
     await tester.pumpAndSettle();
 
     expect(find.text('BCA Primary'), findsOneWidget);
@@ -95,18 +95,39 @@ void main() {
 
     await tester.tap(find.byKey(const Key('quick-entry-wallet-row')));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ListTile, 'BCA Primary'));
+    await tester.tap(find.text('BCA Primary').last);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('quick-entry-category-row')));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ListTile, 'Transportation'));
+    await tester.tap(find.text('Transportation').last);
     await tester.pumpAndSettle();
 
     expect(find.text('BCA Primary'), findsOneWidget);
     expect(find.text('Transportation'), findsOneWidget);
     expect(find.text(gopayWallet.id), findsNothing);
     expect(find.text(foodCategory.id), findsNothing);
+  });
+
+  testWidgets('shows setup guidance when lookup data is empty', (tester) async {
+    await tester.pumpWidget(
+      quickEntryWriteApp(
+        walletRepository: const WriteWalletRepository(wallets: []),
+        categoryRepository: const WriteCategoryRepository(categories: []),
+        tagRepository: const WriteTagRepository(tags: []),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Finish setup first'), findsOneWidget);
+    expect(
+      find.text(
+        'Add at least one wallet and an expense category before saving.',
+      ),
+      findsOneWidget,
+    );
+    await _scrollToSave(tester);
+    expect(_saveButton(tester).onPressed, isNull);
   });
 
   testWidgets('template execute records success without manual create call', (
@@ -156,20 +177,29 @@ Future<void> _scrollToSave(WidgetTester tester) async {
 Widget quickEntryWriteApp({
   WriteTransactionRepository? transactionRepository,
   WriteQuickEntryRepository? quickEntryRepository,
+  WalletRepository? walletRepository,
+  CategoryRepository? categoryRepository,
+  TagRepository? tagRepository,
 }) {
   return ProviderScope(
     retry: noProviderRetry,
     overrides: [
       walletRepositoryProvider.overrideWithValue(
-        const WriteWalletRepository(wallets: [gopayWallet, bcaWallet]),
+        walletRepository ??
+            const WriteWalletRepository(wallets: [gopayWallet, bcaWallet]),
       ),
       categoryRepositoryProvider.overrideWithValue(
-        const WriteCategoryRepository(
-          categories: [foodCategory, transportationCategory, salaryCategory],
-        ),
+        categoryRepository ??
+            const WriteCategoryRepository(
+              categories: [
+                foodCategory,
+                transportationCategory,
+                salaryCategory,
+              ],
+            ),
       ),
       tagRepositoryProvider.overrideWithValue(
-        const WriteTagRepository(tags: [monthlyTag]),
+        tagRepository ?? const WriteTagRepository(tags: [monthlyTag]),
       ),
       transactionRepositoryProvider.overrideWithValue(
         transactionRepository ?? WriteTransactionRepository(),

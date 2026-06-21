@@ -95,12 +95,7 @@ class TransactionsController extends Notifier<TransactionsState> {
       await ref
           .read(transactionRepositoryProvider)
           .deleteTransaction(transaction.id);
-      state = state.copyWith(
-        transactions: state.transactions
-            .where((item) => item.id != transaction.id)
-            .toList(growable: false),
-        total: state.total > 0 ? state.total - 1 : 0,
-      );
+      await load(reset: true);
     } catch (_) {
       state = state.copyWith(actionError: 'Transaction could not be deleted.');
     }

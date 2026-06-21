@@ -93,6 +93,37 @@ void main() {
     expect(find.text('Groceries at Indomaret'), findsNothing);
   });
 
+  testWidgets('delete success refreshes the first page from backend state', (
+    tester,
+  ) async {
+    final repository = RecordingTransactionRepository(
+      transactions: [
+        groceriesTransaction,
+        fuelTransaction,
+        coffeeTransaction,
+        lunchTransaction,
+        electricityTransaction,
+        entertainmentTransaction,
+      ],
+    );
+
+    await tester.pumpWidget(
+      transactionsTestApp(transactionRepository: repository),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Movie Night'), findsNothing);
+
+    await tester.tap(find.text('Groceries at Indomaret'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete transaction'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Groceries at Indomaret'), findsNothing);
+    expect(find.text('Movie Night'), findsOneWidget);
+    expect(find.text('Load more'), findsNothing);
+  });
+
   testWidgets('delete failure preserves row and shows error', (tester) async {
     final repository = RecordingTransactionRepository(
       transactions: [groceriesTransaction],
@@ -136,11 +167,11 @@ Widget transactionsTestApp({
 
 class RecordingTransactionRepository implements TransactionRepository {
   RecordingTransactionRepository({
-    required this.transactions,
+    required List<Transaction> transactions,
     this.deleteError,
-  });
+  }) : _transactions = List<Transaction>.of(transactions);
 
-  final List<Transaction> transactions;
+  final List<Transaction> _transactions;
   final Object? deleteError;
   final requestedTypes = <TransactionType?>[];
   final requestedOffsets = <int?>[];
@@ -161,8 +192,8 @@ class RecordingTransactionRepository implements TransactionRepository {
     requestedTypes.add(type);
     requestedOffsets.add(offset);
     final filtered = type == null
-        ? transactions
-        : transactions
+        ? _transactions
+        : _transactions
               .where((transaction) => transaction.type == type)
               .toList(growable: false);
     final start = offset ?? 0;
@@ -180,18 +211,19 @@ class RecordingTransactionRepository implements TransactionRepository {
 
   @override
   Future<Transaction> getTransaction(String id) async {
-    return transactions.firstWhere((transaction) => transaction.id == id);
+    return _transactions.firstWhere((transaction) => transaction.id == id);
   }
 
   @override
   Future<Transaction> createTransaction(TransactionRequest request) async {
-    return transactions.first;
+    return _transactions.first;
   }
 
   @override
   Future<void> deleteTransaction(String id) async {
     deletedIds.add(id);
     if (deleteError != null) throw deleteError!;
+    _transactions.removeWhere((transaction) => transaction.id == id);
   }
 }
 
