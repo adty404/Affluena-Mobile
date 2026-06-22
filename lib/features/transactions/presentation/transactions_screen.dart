@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
+import 'split_bill_screen.dart';
 import 'transaction_detail_sheet.dart';
 import 'transaction_display.dart';
 
@@ -45,6 +47,13 @@ class TransactionsScreen extends ConsumerWidget {
               prefixIcon: Icon(Icons.search),
               hintText: 'Search note, wallet, or category',
             ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+          FilledButton.tonalIcon(
+            key: const Key('split-bill-entry-button'),
+            onPressed: () => context.go(SplitBillScreen.path),
+            icon: const Icon(Icons.call_split_outlined),
+            label: const Text('Split bill'),
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           Wrap(
