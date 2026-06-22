@@ -163,6 +163,21 @@ void main() {
     expect(find.text('Chrome on macOS'), findsOneWidget);
     expect(authRepository.listSessionsCalls, 2);
   });
+
+  testWidgets('biometric lock is shown as unavailable, not enabled', (
+    tester,
+  ) async {
+    await pumpAuthTestApp(
+      tester,
+      tokenStore: authenticatedTokenStore(),
+      authRepository: FakeAuthRepository(),
+    );
+    await _openSettings(tester);
+
+    expect(find.text('Biometric lock'), findsOneWidget);
+    expect(find.text('Unavailable in this build'), findsOneWidget);
+    expect(find.byType(SwitchListTile), findsNothing);
+  });
 }
 
 Future<void> _openSettings(WidgetTester tester) async {

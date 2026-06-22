@@ -89,6 +89,27 @@ class TransactionsController extends Notifier<TransactionsState> {
     unawaited(load(reset: true));
   }
 
+  Future<bool> updateTransaction(
+    Transaction transaction,
+    TransactionRequest request,
+  ) async {
+    state = state.copyWith(actionError: null);
+    final repository = ref.read(transactionRepositoryProvider);
+    if (repository is! TransactionMutationRepository) {
+      state = state.copyWith(actionError: 'Transaction could not be updated.');
+      return false;
+    }
+
+    try {
+      await repository.updateTransaction(transaction.id, request);
+      await load(reset: true);
+      return true;
+    } catch (_) {
+      state = state.copyWith(actionError: 'Transaction could not be updated.');
+      return false;
+    }
+  }
+
   Future<void> deleteTransaction(Transaction transaction) async {
     state = state.copyWith(actionError: null);
     try {
