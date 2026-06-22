@@ -314,43 +314,6 @@ class SettingsDeviceLockRow extends StatelessWidget {
   }
 }
 
-class NotificationRule extends StatelessWidget {
-  const NotificationRule({
-    required this.title,
-    required this.channel,
-    super.key,
-  });
-
-  final String title;
-  final String channel;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Material(
-      type: MaterialType.transparency,
-      child: SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        value: true,
-        onChanged: (_) {},
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: textTheme.bodyLarge,
-        ),
-        subtitle: Text(
-          channel,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: textTheme.bodySmall,
-        ),
-      ),
-    );
-  }
-}
-
 class SettingsMessage extends StatelessWidget {
   const SettingsMessage({
     required this.message,

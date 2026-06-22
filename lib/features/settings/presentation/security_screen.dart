@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/data/auth_models.dart';
+import '../../insights/application/insights_controller.dart';
+import '../../insights/presentation/insights_screen.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../application/settings_controller.dart';
@@ -97,6 +100,47 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
                   onChanged: (enabled) => ref
                       .read(securityPreferencesProvider.notifier)
                       .setDeviceLockEnabled(enabled),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space6),
+          const SectionHeader(title: 'Advanced protection'),
+          const SizedBox(height: AffluenaSpacing.space3),
+          AffluenaCard(
+            child: Column(
+              children: [
+                SettingsRow(
+                  key: const Key('security-notification-rules-row'),
+                  icon: Icons.notification_important_outlined,
+                  title: 'Security alerts',
+                  value: 'Managed in notification rules',
+                  onTap: () =>
+                      context.go(InsightsScreen.location(InsightTab.rules)),
+                ),
+                const Divider(height: 1),
+                const SettingsRow(
+                  key: Key('security-two-factor-row'),
+                  icon: Icons.verified_user_outlined,
+                  title: 'Two-factor authentication',
+                  value: 'Not available in this API build',
+                  onTap: null,
+                ),
+                const Divider(height: 1),
+                const SettingsRow(
+                  key: Key('security-push-row'),
+                  icon: Icons.notifications_outlined,
+                  title: 'Push notifications',
+                  value: 'Waiting for push provider support',
+                  onTap: null,
+                ),
+                const Divider(height: 1),
+                const SettingsRow(
+                  key: Key('security-login-alerts-row'),
+                  icon: Icons.mark_email_unread_outlined,
+                  title: 'Login email alerts',
+                  value: 'No dedicated login-alert endpoint yet',
+                  onTap: null,
                 ),
               ],
             ),
