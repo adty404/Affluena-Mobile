@@ -131,6 +131,22 @@ All spacing derives from a base of 4.
 - **States**: default, focused, error.
 - **Accessibility**: selected values must be names, never raw IDs.
 
+### Settings Row
+
+- **Structure**: leading icon mark, title, short status/value, optional trailing chevron.
+- **Variants**: route-backed action, disabled unavailable item.
+- **Spacing**: minimum 64 height with `space2` vertical padding and `space3` icon/text gap.
+- **States**: enabled rows use forest soft icon treatment; disabled rows use muted text and no chevron.
+- **Accessibility**: disabled unsupported features remain readable but cannot mutate preferences.
+
+### Settings Switch Row
+
+- **Structure**: leading icon mark, title, status/value, trailing adaptive switch or busy indicator.
+- **Variants**: device lock, future route-backed local toggles.
+- **Spacing**: same rhythm as Settings Row for grouped-list consistency.
+- **States**: off, on, disabled unsupported, saving.
+- **Accessibility**: use switch rows only for behavior backed by an API route or safe local-device capability.
+
 ### Parity Surface
 
 - **Structure**: screen title, compact contextual summary card, and a grouped list of route-backed modules.
