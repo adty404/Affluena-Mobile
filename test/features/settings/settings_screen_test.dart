@@ -164,19 +164,44 @@ void main() {
     expect(authRepository.listSessionsCalls, 2);
   });
 
-  testWidgets('biometric lock is shown as unavailable, not enabled', (
+  testWidgets('device lock is configurable from settings and security center', (
     tester,
   ) async {
+    final securityRepository = MemorySecurityPreferencesRepository();
+    final deviceAuth = FakeDeviceAuthService();
+
     await pumpAuthTestApp(
       tester,
       tokenStore: authenticatedTokenStore(),
       authRepository: FakeAuthRepository(),
+      securityPreferencesRepository: securityRepository,
+      deviceAuthService: deviceAuth,
     );
     await _openSettings(tester);
 
-    expect(find.text('Biometric lock'), findsOneWidget);
-    expect(find.text('Unavailable in this build'), findsOneWidget);
-    expect(find.byType(SwitchListTile), findsNothing);
+    expect(find.text('Device lock'), findsOneWidget);
+    expect(find.text('Off • device authentication'), findsOneWidget);
+    expect(find.byKey(const Key('settings-device-lock-row')), findsOneWidget);
+    expect(find.text('Unavailable in this build'), findsNothing);
+
+    await tester.drag(find.byType(ListView).first, const Offset(0, -120));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Switch).first);
+    await tester.pumpAndSettle();
+
+    expect(deviceAuth.authenticateCalls, 1);
+    expect(securityRepository.savedPreferences.single.deviceLockEnabled, true);
+    expect(find.text('Device lock enabled.'), findsOneWidget);
+    expect(find.text('On • device authentication'), findsOneWidget);
+
+    await tester.tap(find.text('Security center'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Security center'), findsOneWidget);
+    expect(find.text('Device lock'), findsOneWidget);
+    expect(find.text('On • device authentication'), findsOneWidget);
+    expect(find.byKey(const Key('security-device-lock-row')), findsOneWidget);
+    expect(find.text('Unavailable in this build'), findsNothing);
   });
 }
 

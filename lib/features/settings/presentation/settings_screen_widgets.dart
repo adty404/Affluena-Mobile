@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../auth/data/auth_models.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../application/settings_controller.dart';
 
 class SettingsProfileCard extends StatelessWidget {
   const SettingsProfileCard({
@@ -166,6 +168,149 @@ class SettingsRow extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class SettingsSwitchRow extends StatelessWidget {
+  const SettingsSwitchRow({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.switchValue,
+    required this.onChanged,
+    this.isBusy = false,
+    super.key,
+  });
+
+  final IconData icon;
+  final String title;
+  final String value;
+  final bool switchValue;
+  final ValueChanged<bool>? onChanged;
+  final bool isBusy;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+    final enabled = onChanged != null && !isBusy;
+
+    return Semantics(
+      enabled: enabled,
+      toggled: switchValue,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: enabled ? () => onChanged!(!switchValue) : null,
+          borderRadius: BorderRadius.circular(AffluenaRadii.md),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 64),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AffluenaSpacing.space2,
+              ),
+              child: Row(
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: enabled
+                          ? colors.forestSoft
+                          : colors.surfaceTintSoft,
+                      borderRadius: BorderRadius.circular(AffluenaRadii.md),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AffluenaSpacing.space2),
+                      child: Icon(
+                        icon,
+                        color: enabled ? colors.forest : colors.inkMuted,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AffluenaSpacing.space3),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: enabled ? colors.ink : colors.inkMuted,
+                          ),
+                        ),
+                        const SizedBox(height: AffluenaSpacing.space1),
+                        Text(
+                          value,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isBusy)
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colors.forest,
+                      ),
+                    )
+                  else
+                    Switch.adaptive(
+                      value: switchValue,
+                      onChanged: enabled ? onChanged : null,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsDeviceLockRow extends StatelessWidget {
+  const SettingsDeviceLockRow({
+    required this.securityPreferences,
+    required this.onChanged,
+    super.key,
+  });
+
+  final AsyncValue<SecurityPreferencesState> securityPreferences;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (securityPreferences) {
+      AsyncData(:final value) => SettingsSwitchRow(
+        icon: Icons.fingerprint,
+        title: 'Device lock',
+        value: value.deviceLockValue,
+        switchValue: value.preferences.deviceLockEnabled,
+        isBusy: value.isSaving,
+        onChanged: value.canConfigureDeviceLock ? onChanged : null,
+      ),
+      AsyncError() => const SettingsRow(
+        icon: Icons.fingerprint,
+        title: 'Device lock',
+        value: 'Could not load device authentication',
+        onTap: null,
+      ),
+      _ => const SettingsSwitchRow(
+        icon: Icons.fingerprint,
+        title: 'Device lock',
+        value: 'Checking device authentication',
+        switchValue: false,
+        isBusy: true,
+        onChanged: null,
+      ),
+    };
   }
 }
 

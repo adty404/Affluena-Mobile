@@ -27,7 +27,9 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
     final textTheme = Theme.of(context).textTheme;
     final authState = ref.watch(authControllerProvider);
     final profile = ref.watch(settingsProfileProvider);
+    final securityPreferences = ref.watch(securityPreferencesProvider);
     final user = profile.asData?.value ?? authState.user;
+    final securityState = securityPreferences.asData?.value;
 
     return SafeArea(
       child: ListView(
@@ -44,6 +46,20 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
           if (_feedback != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
             SettingsMessage(message: _feedback!, isError: false),
+          ],
+          if (securityState?.actionError != null) ...[
+            const SizedBox(height: AffluenaSpacing.space3),
+            SettingsMessage(
+              message: securityState!.actionError!,
+              isError: true,
+            ),
+          ],
+          if (securityState?.actionMessage != null) ...[
+            const SizedBox(height: AffluenaSpacing.space3),
+            SettingsMessage(
+              message: securityState!.actionMessage!,
+              isError: false,
+            ),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
           const SectionHeader(title: 'Security'),
@@ -75,12 +91,12 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
                   onTap: _openSessions,
                 ),
                 const Divider(height: 1),
-                const SettingsRow(
-                  key: Key('security-biometric-row'),
-                  icon: Icons.fingerprint,
-                  title: 'Biometric lock',
-                  value: 'Unavailable in this build',
-                  onTap: null,
+                SettingsDeviceLockRow(
+                  key: const Key('security-device-lock-row'),
+                  securityPreferences: securityPreferences,
+                  onChanged: (enabled) => ref
+                      .read(securityPreferencesProvider.notifier)
+                      .setDeviceLockEnabled(enabled),
                 ),
               ],
             ),
