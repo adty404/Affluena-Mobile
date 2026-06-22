@@ -213,9 +213,20 @@ class TestCategoryRepository implements CategoryRepository {
       foodCategory;
 
   @override
+  Future<Category> getCategory(String id) async {
+    return [
+      foodCategory,
+      transportCategory,
+    ].firstWhere((category) => category.id == id);
+  }
+
+  @override
   Future<Category> updateCategory(String id, CategoryRequest request) async {
     return foodCategory;
   }
+
+  @override
+  Future<void> deleteCategory(String id) async {}
 }
 
 const foodCategory = Category(

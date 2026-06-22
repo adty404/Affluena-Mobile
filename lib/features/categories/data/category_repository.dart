@@ -19,7 +19,11 @@ abstract interface class CategoryRepository {
 
   Future<Category> createCategory(CategoryRequest request);
 
+  Future<Category> getCategory(String id);
+
   Future<Category> updateCategory(String id, CategoryRequest request);
+
+  Future<void> deleteCategory(String id);
 }
 
 class DioCategoryRepository implements CategoryRepository {
@@ -56,12 +60,23 @@ class DioCategoryRepository implements CategoryRepository {
   }
 
   @override
+  Future<Category> getCategory(String id) async {
+    final response = await _dio.get<Map<String, Object?>>('/categories/$id');
+    return Category.fromJson(_responseMap(response.data));
+  }
+
+  @override
   Future<Category> updateCategory(String id, CategoryRequest request) async {
     final response = await _dio.put<Map<String, Object?>>(
       '/categories/$id',
       data: request.toJson(),
     );
     return Category.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<void> deleteCategory(String id) async {
+    await _dio.delete<void>('/categories/$id');
   }
 }
 

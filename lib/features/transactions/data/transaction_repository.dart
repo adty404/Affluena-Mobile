@@ -26,6 +26,8 @@ abstract interface class TransactionRepository {
 
   Future<Transaction> createTransaction(TransactionRequest request);
 
+  Future<SplitTransactionResponse> splitBill(SplitTransactionRequest request);
+
   Future<void> deleteTransaction(String id);
 }
 
@@ -81,6 +83,17 @@ class DioTransactionRepository implements TransactionMutationRepository {
       data: request.toJson(),
     );
     return Transaction.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<SplitTransactionResponse> splitBill(
+    SplitTransactionRequest request,
+  ) async {
+    final response = await _dio.post<Map<String, Object?>>(
+      '/transactions/split',
+      data: request.toJson(),
+    );
+    return SplitTransactionResponse.fromJson(_responseMap(response.data));
   }
 
   @override

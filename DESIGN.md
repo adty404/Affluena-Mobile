@@ -131,6 +131,14 @@ All spacing derives from a base of 4.
 - **States**: default, focused, error.
 - **Accessibility**: selected values must be names, never raw IDs.
 
+### Parity Surface
+
+- **Structure**: screen title, compact contextual summary card, and a grouped list of route-backed modules.
+- **Variants**: wallet detail, sharing, category/tag, quick-entry templates, split bill, audit logs.
+- **Spacing**: `space5` screen padding, `space6` major section breaks, `space3` row gaps.
+- **States**: static route shell, later replaced by module-specific loading/empty/error states.
+- **Accessibility**: rows use visible text labels and Material icons; parameter IDs are not shown as user-facing copy.
+
 ## 6. Motion & Interaction
 
 ### Timing

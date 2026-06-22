@@ -231,8 +231,47 @@ class TestWalletRepository implements WalletRepository {
   Future<Wallet> createWallet(WalletRequest request) async => mainWallet;
 
   @override
+  Future<Wallet> getWallet(String id) async => mainWallet;
+
+  @override
   Future<Wallet> updateWallet(String id, WalletRequest request) async =>
       mainWallet;
+
+  @override
+  Future<void> deleteWallet(String id) async {}
+
+  @override
+  Future<WalletInviteResponse> inviteMember(
+    String id,
+    WalletInviteRequest request,
+  ) async {
+    return const WalletInviteResponse(status: WalletShareStatus.pending);
+  }
+
+  @override
+  Future<WalletInviteResponse> respondInvite(
+    String id,
+    String memberId,
+    WalletInviteResponse response,
+  ) async {
+    return response;
+  }
+
+  @override
+  Future<WalletMembersResponse> listMembers(String id) async {
+    return const WalletMembersResponse(members: []);
+  }
+
+  @override
+  Future<WalletAnalytics> getAnalytics(String id, {String? month}) async {
+    return WalletAnalytics(
+      walletId: id,
+      month: month ?? '2026-06',
+      inflowMinor: 0,
+      outflowMinor: 0,
+      transactionCount: 0,
+    );
+  }
 }
 
 class TestCategoryRepository implements CategoryRepository {
@@ -256,8 +295,14 @@ class TestCategoryRepository implements CategoryRepository {
       foodCategory;
 
   @override
+  Future<Category> getCategory(String id) async => foodCategory;
+
+  @override
   Future<Category> updateCategory(String id, CategoryRequest request) async =>
       foodCategory;
+
+  @override
+  Future<void> deleteCategory(String id) async {}
 }
 
 const mainWallet = Wallet(

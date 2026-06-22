@@ -18,7 +18,26 @@ abstract interface class WalletRepository {
 
   Future<Wallet> createWallet(WalletRequest request);
 
+  Future<Wallet> getWallet(String id);
+
   Future<Wallet> updateWallet(String id, WalletRequest request);
+
+  Future<void> deleteWallet(String id);
+
+  Future<WalletInviteResponse> inviteMember(
+    String id,
+    WalletInviteRequest request,
+  );
+
+  Future<WalletInviteResponse> respondInvite(
+    String id,
+    String memberId,
+    WalletInviteResponse response,
+  );
+
+  Future<WalletMembersResponse> listMembers(String id);
+
+  Future<WalletAnalytics> getAnalytics(String id, {String? month});
 }
 
 class DioWalletRepository implements WalletRepository {
@@ -49,12 +68,65 @@ class DioWalletRepository implements WalletRepository {
   }
 
   @override
+  Future<Wallet> getWallet(String id) async {
+    final response = await _dio.get<Map<String, Object?>>('/wallets/$id');
+    return Wallet.fromJson(_responseMap(response.data));
+  }
+
+  @override
   Future<Wallet> updateWallet(String id, WalletRequest request) async {
     final response = await _dio.put<Map<String, Object?>>(
       '/wallets/$id',
       data: request.toUpdateJson(),
     );
     return Wallet.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<void> deleteWallet(String id) async {
+    await _dio.delete<void>('/wallets/$id');
+  }
+
+  @override
+  Future<WalletInviteResponse> inviteMember(
+    String id,
+    WalletInviteRequest request,
+  ) async {
+    final response = await _dio.post<Map<String, Object?>>(
+      '/wallets/$id/invites',
+      data: request.toJson(),
+    );
+    return WalletInviteResponse.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<WalletInviteResponse> respondInvite(
+    String id,
+    String memberId,
+    WalletInviteResponse response,
+  ) async {
+    final result = await _dio.patch<Map<String, Object?>>(
+      '/wallets/$id/members/$memberId',
+      data: response.toJson(),
+    );
+    return WalletInviteResponse.fromJson(_responseMap(result.data));
+  }
+
+  @override
+  Future<WalletMembersResponse> listMembers(String id) async {
+    final response = await _dio.get<Map<String, Object?>>(
+      '/wallets/$id/members',
+    );
+    return WalletMembersResponse.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<WalletAnalytics> getAnalytics(String id, {String? month}) async {
+    final response = await _dio.get<Map<String, Object?>>(
+      '/wallets/$id/analytics',
+      queryParameters: _query({'month': month}),
+    );
+    return WalletAnalytics.fromJson(_responseMap(response.data));
   }
 }
 
