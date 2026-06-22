@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
@@ -9,6 +10,7 @@ import '../../shared/presentation/widgets/section_header.dart';
 import '../application/wallets_controller.dart';
 import '../data/wallet_models.dart';
 import '../data/wallet_repository.dart';
+import 'wallet_detail_screen.dart';
 
 class WalletsScreen extends ConsumerWidget {
   const WalletsScreen({super.key});
@@ -84,6 +86,8 @@ class _WalletsContent extends ConsumerWidget {
             for (final wallet in wallets) ...[
               _WalletCard(
                 wallet: wallet,
+                onOpen: () =>
+                    context.go(WalletDetailScreen.location(wallet.id)),
                 onEdit: wallet.isGoal
                     ? null
                     : () => _showWalletForm(context, ref, wallet),
@@ -98,9 +102,10 @@ class _WalletsContent extends ConsumerWidget {
 }
 
 class _WalletCard extends StatelessWidget {
-  const _WalletCard({required this.wallet, this.onEdit});
+  const _WalletCard({required this.wallet, required this.onOpen, this.onEdit});
 
   final Wallet wallet;
+  final VoidCallback onOpen;
   final VoidCallback? onEdit;
 
   @override
@@ -108,52 +113,56 @@ class _WalletCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
 
-    return AffluenaCard(
-      child: Row(
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.forestSoft,
-              borderRadius: BorderRadius.circular(18),
+    return InkWell(
+      borderRadius: BorderRadius.circular(AffluenaRadii.card),
+      onTap: onOpen,
+      child: AffluenaCard(
+        child: Row(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.forestSoft,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AffluenaSpacing.space4),
+                child: Icon(_walletIcon(wallet.type), color: colors.forest),
+              ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(AffluenaSpacing.space4),
-              child: Icon(_walletIcon(wallet.type), color: colors.forest),
-            ),
-          ),
-          const SizedBox(width: AffluenaSpacing.space4),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(wallet.name, style: textTheme.titleMedium),
-                    ),
-                    if (_isShared(wallet)) const Icon(Icons.group, size: 18),
-                    if (onEdit != null)
-                      IconButton(
-                        key: Key('edit-wallet-${_walletKey(wallet)}'),
-                        onPressed: onEdit,
-                        icon: const Icon(Icons.edit_outlined),
+            const SizedBox(width: AffluenaSpacing.space4),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(wallet.name, style: textTheme.titleMedium),
                       ),
-                  ],
-                ),
-                const SizedBox(height: AffluenaSpacing.space1),
-                Text(
-                  '${_walletTypeLabel(wallet.type)} · ${_walletDescription(wallet)}',
-                  style: textTheme.bodySmall,
-                ),
-                const SizedBox(height: AffluenaSpacing.space2),
-                Text(
-                  MoneyFormatter.idr(wallet.balanceMinor),
-                  style: textTheme.bodyLarge,
-                ),
-              ],
+                      if (_isShared(wallet)) const Icon(Icons.group, size: 18),
+                      if (onEdit != null)
+                        IconButton(
+                          key: Key('edit-wallet-${_walletKey(wallet)}'),
+                          onPressed: onEdit,
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AffluenaSpacing.space1),
+                  Text(
+                    '${_walletTypeLabel(wallet.type)} · ${_walletDescription(wallet)}',
+                    style: textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: AffluenaSpacing.space2),
+                  Text(
+                    MoneyFormatter.idr(wallet.balanceMinor),
+                    style: textTheme.bodyLarge,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

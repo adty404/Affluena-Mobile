@@ -19,14 +19,28 @@ class TestWalletRepository implements WalletRepository {
     required List<Wallet> wallets,
     this.createError,
     this.updateError,
+    this.getError,
+    this.inviteError,
+    this.deleteError,
+    this.analytics,
   }) : wallets = List<Wallet>.of(wallets);
 
   final List<Wallet> wallets;
   final Object? createError;
   final Object? updateError;
+  final Object? getError;
+  final Object? inviteError;
+  final Object? deleteError;
+  final WalletAnalytics? analytics;
   final createRequests = <WalletRequest>[];
   final updateIds = <String>[];
   final updateRequests = <WalletRequest>[];
+  final getWalletIds = <String>[];
+  final memberWalletIds = <String>[];
+  final analyticsWalletIds = <String>[];
+  final inviteWalletIds = <String>[];
+  final inviteRequests = <WalletInviteRequest>[];
+  final deletedIds = <String>[];
 
   @override
   Future<WalletListResponse> listWallets({
@@ -66,6 +80,8 @@ class TestWalletRepository implements WalletRepository {
 
   @override
   Future<Wallet> getWallet(String id) async {
+    getWalletIds.add(id);
+    if (getError != null) throw getError!;
     return wallets.firstWhere((wallet) => wallet.id == id);
   }
 
@@ -98,6 +114,8 @@ class TestWalletRepository implements WalletRepository {
 
   @override
   Future<void> deleteWallet(String id) async {
+    deletedIds.add(id);
+    if (deleteError != null) throw deleteError!;
     wallets.removeWhere((wallet) => wallet.id == id);
   }
 
@@ -106,6 +124,40 @@ class TestWalletRepository implements WalletRepository {
     String id,
     WalletInviteRequest request,
   ) async {
+    inviteWalletIds.add(id);
+    inviteRequests.add(request);
+    if (inviteError != null) throw inviteError!;
+    final index = wallets.indexWhere((wallet) => wallet.id == id);
+    if (index != -1) {
+      final wallet = wallets[index];
+      wallets[index] = Wallet(
+        id: wallet.id,
+        userId: wallet.userId,
+        name: wallet.name,
+        type: wallet.type,
+        currencyCode: wallet.currencyCode,
+        balanceMinor: wallet.balanceMinor,
+        color: wallet.color,
+        description: wallet.description,
+        goalId: wallet.goalId,
+        role: wallet.role,
+        shareStatus: wallet.shareStatus,
+        members: [
+          ...wallet.members,
+          WalletMember(
+            walletId: wallet.id,
+            userId: 'invited-${inviteRequests.length}',
+            email: request.email,
+            role: 'viewer',
+            status: WalletShareStatus.pending,
+            createdAt: '2026-06-22T00:00:00Z',
+            updatedAt: '2026-06-22T00:00:00Z',
+          ),
+        ],
+        createdAt: wallet.createdAt,
+        updatedAt: '2026-06-22T00:00:00Z',
+      );
+    }
     return const WalletInviteResponse(status: WalletShareStatus.pending);
   }
 
@@ -120,19 +172,22 @@ class TestWalletRepository implements WalletRepository {
 
   @override
   Future<WalletMembersResponse> listMembers(String id) async {
+    memberWalletIds.add(id);
     final wallet = await getWallet(id);
     return WalletMembersResponse(members: wallet.members);
   }
 
   @override
   Future<WalletAnalytics> getAnalytics(String id, {String? month}) async {
-    return WalletAnalytics(
-      walletId: id,
-      month: month ?? '2026-06',
-      inflowMinor: 0,
-      outflowMinor: 0,
-      transactionCount: 0,
-    );
+    analyticsWalletIds.add(id);
+    return analytics ??
+        WalletAnalytics(
+          walletId: id,
+          month: month ?? '2026-06',
+          inflowMinor: 0,
+          outflowMinor: 0,
+          transactionCount: 0,
+        );
   }
 }
 
