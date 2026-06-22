@@ -29,7 +29,12 @@ abstract interface class TransactionRepository {
   Future<void> deleteTransaction(String id);
 }
 
-class DioTransactionRepository implements TransactionRepository {
+abstract interface class TransactionMutationRepository
+    implements TransactionRepository {
+  Future<Transaction> updateTransaction(String id, TransactionRequest request);
+}
+
+class DioTransactionRepository implements TransactionMutationRepository {
   const DioTransactionRepository(this._dio);
 
   final Dio _dio;
@@ -73,6 +78,18 @@ class DioTransactionRepository implements TransactionRepository {
   Future<Transaction> createTransaction(TransactionRequest request) async {
     final response = await _dio.post<Map<String, Object?>>(
       '/transactions',
+      data: request.toJson(),
+    );
+    return Transaction.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<Transaction> updateTransaction(
+    String id,
+    TransactionRequest request,
+  ) async {
+    final response = await _dio.put<Map<String, Object?>>(
+      '/transactions/$id',
       data: request.toJson(),
     );
     return Transaction.fromJson(_responseMap(response.data));

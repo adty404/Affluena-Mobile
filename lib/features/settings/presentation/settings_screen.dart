@@ -90,18 +90,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: _openSessions,
                 ),
                 const Divider(height: 1),
-                Material(
-                  type: MaterialType.transparency,
-                  child: SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: true,
-                    onChanged: (_) {},
-                    title: Text('Biometric lock', style: textTheme.bodyLarge),
-                    subtitle: Text(
-                      'Face ID or fingerprint',
-                      style: textTheme.bodySmall,
-                    ),
-                  ),
+                const SettingsRow(
+                  key: Key('settings-biometric-row'),
+                  icon: Icons.fingerprint,
+                  title: 'Biometric lock',
+                  value: 'Unavailable in this build',
+                  onTap: null,
                 ),
               ],
             ),

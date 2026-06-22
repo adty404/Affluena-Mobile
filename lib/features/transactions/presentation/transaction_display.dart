@@ -1,0 +1,47 @@
+import 'package:flutter/material.dart';
+
+import '../../../core/formatters/date_formatter.dart';
+import '../../../core/formatters/money_formatter.dart';
+import '../application/transactions_controller.dart';
+import '../data/transaction_models.dart';
+
+String transactionTitle(TransactionsState state, Transaction transaction) {
+  return transaction.note.isEmpty
+      ? state.categoryName(transaction)
+      : transaction.note;
+}
+
+String transactionMetadata(TransactionsState state, Transaction transaction) {
+  final date = AffluenaDateFormatter.shortDate(transaction.transactionAt);
+  final walletName = state.walletName(transaction.walletId);
+  if (transaction.type == TransactionType.transfer) {
+    final toWalletName = transaction.toWalletId == null
+        ? 'Unknown wallet'
+        : state.walletName(transaction.toWalletId!);
+    return 'Transfer · $walletName to $toWalletName · $date';
+  }
+  return '${state.categoryName(transaction)} · $walletName · $date';
+}
+
+String transactionAmount(Transaction transaction) {
+  return switch (transaction.type) {
+    TransactionType.income => MoneyFormatter.signedIdr(transaction.amountMinor),
+    TransactionType.expense => MoneyFormatter.signedIdr(
+      -transaction.amountMinor.abs(),
+    ),
+    TransactionType.transfer => MoneyFormatter.idr(transaction.amountMinor),
+    TransactionType.adjustment => MoneyFormatter.idr(transaction.amountMinor),
+  };
+}
+
+IconData transactionIcon(TransactionsState state, Transaction transaction) {
+  if (transaction.type == TransactionType.transfer) {
+    return Icons.swap_horiz_rounded;
+  }
+  if (transaction.type == TransactionType.income) return Icons.work_outline;
+  final category = state.categoryName(transaction).toLowerCase();
+  if (category.contains('food')) return Icons.restaurant_outlined;
+  if (category.contains('transport')) return Icons.local_gas_station_outlined;
+  if (category.contains('bill')) return Icons.bolt_outlined;
+  return Icons.receipt_long_outlined;
+}

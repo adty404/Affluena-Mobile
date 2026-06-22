@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
-import '../../../core/formatters/date_formatter.dart';
-import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
+import 'transaction_detail_sheet.dart';
+import 'transaction_display.dart';
 
 class TransactionsScreen extends ConsumerWidget {
   const TransactionsScreen({super.key});
@@ -93,12 +93,12 @@ class TransactionsScreen extends ConsumerWidget {
                   for (final entry in state.transactions.indexed) ...[
                     InkWell(
                       onTap: () =>
-                          _showTransactionDetail(context, ref, state, entry.$2),
+                          showTransactionDetail(context, ref, state, entry.$2),
                       child: TransactionTile(
-                        title: _transactionTitle(state, entry.$2),
-                        metadata: _transactionMetadata(state, entry.$2),
-                        amount: _transactionAmount(entry.$2),
-                        icon: _transactionIcon(state, entry.$2),
+                        title: transactionTitle(state, entry.$2),
+                        metadata: transactionMetadata(state, entry.$2),
+                        amount: transactionAmount(entry.$2),
+                        icon: transactionIcon(state, entry.$2),
                         isIncome: entry.$2.type == TransactionType.income,
                       ),
                     ),
@@ -242,140 +242,4 @@ class _EmptyTransactionsState extends StatelessWidget {
       ),
     );
   }
-}
-
-void _showTransactionDetail(
-  BuildContext context,
-  WidgetRef ref,
-  TransactionsState state,
-  Transaction transaction,
-) {
-  final textTheme = Theme.of(context).textTheme;
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (context) {
-      return SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              AffluenaSpacing.space5,
-              AffluenaSpacing.space2,
-              AffluenaSpacing.space5,
-              MediaQuery.viewInsetsOf(context).bottom + AffluenaSpacing.space6,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Transaction detail', style: textTheme.titleLarge),
-                const SizedBox(height: AffluenaSpacing.space4),
-                Text(
-                  _transactionTitle(state, transaction),
-                  style: textTheme.headlineMedium,
-                ),
-                const SizedBox(height: AffluenaSpacing.space2),
-                Text(
-                  _transactionAmount(transaction),
-                  style: textTheme.titleLarge,
-                ),
-                const SizedBox(height: AffluenaSpacing.space4),
-                _DetailLine(
-                  label: 'Wallet',
-                  value: state.walletName(transaction.walletId),
-                ),
-                _DetailLine(
-                  label: 'Category',
-                  value: state.categoryName(transaction),
-                ),
-                _DetailLine(
-                  label: 'Date',
-                  value: AffluenaDateFormatter.shortDate(
-                    transaction.transactionAt,
-                  ),
-                ),
-                const SizedBox(height: AffluenaSpacing.space5),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      ref
-                          .read(transactionsControllerProvider.notifier)
-                          .deleteTransaction(transaction);
-                    },
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Delete transaction'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
-
-class _DetailLine extends StatelessWidget {
-  const _DetailLine({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
-      child: Row(
-        children: [
-          SizedBox(width: 88, child: Text(label, style: textTheme.bodySmall)),
-          Expanded(child: Text(value, style: textTheme.bodyLarge)),
-        ],
-      ),
-    );
-  }
-}
-
-String _transactionTitle(TransactionsState state, Transaction transaction) {
-  return transaction.note.isEmpty
-      ? state.categoryName(transaction)
-      : transaction.note;
-}
-
-String _transactionMetadata(TransactionsState state, Transaction transaction) {
-  final date = AffluenaDateFormatter.shortDate(transaction.transactionAt);
-  final walletName = state.walletName(transaction.walletId);
-  if (transaction.type == TransactionType.transfer) {
-    final toWalletName = transaction.toWalletId == null
-        ? 'Unknown wallet'
-        : state.walletName(transaction.toWalletId!);
-    return 'Transfer · $walletName to $toWalletName · $date';
-  }
-  return '${state.categoryName(transaction)} · $walletName · $date';
-}
-
-String _transactionAmount(Transaction transaction) {
-  return switch (transaction.type) {
-    TransactionType.income => MoneyFormatter.signedIdr(transaction.amountMinor),
-    TransactionType.expense => MoneyFormatter.signedIdr(
-      -transaction.amountMinor.abs(),
-    ),
-    TransactionType.transfer => MoneyFormatter.idr(transaction.amountMinor),
-    TransactionType.adjustment => MoneyFormatter.idr(transaction.amountMinor),
-  };
-}
-
-IconData _transactionIcon(TransactionsState state, Transaction transaction) {
-  if (transaction.type == TransactionType.transfer) {
-    return Icons.swap_horiz_rounded;
-  }
-  if (transaction.type == TransactionType.income) return Icons.work_outline;
-  final category = state.categoryName(transaction).toLowerCase();
-  if (category.contains('food')) return Icons.restaurant_outlined;
-  if (category.contains('transport')) return Icons.local_gas_station_outlined;
-  if (category.contains('bill')) return Icons.bolt_outlined;
-  return Icons.receipt_long_outlined;
 }
