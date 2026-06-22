@@ -6,6 +6,7 @@ import 'package:affluena_mobile/features/budgets/presentation/budget_screen.dart
 import 'package:affluena_mobile/features/categories/presentation/category_tag_management_screen.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
+import 'package:affluena_mobile/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:affluena_mobile/features/debts/data/debt_repository.dart';
 import 'package:affluena_mobile/features/debts/presentation/debt_screen.dart';
 import 'package:affluena_mobile/features/goals/data/goal_repository.dart';
@@ -14,6 +15,7 @@ import 'package:affluena_mobile/features/insights/application/insights_controlle
 import 'package:affluena_mobile/features/insights/data/insights_repository.dart';
 import 'package:affluena_mobile/features/insights/presentation/audit_log_screen.dart';
 import 'package:affluena_mobile/features/insights/presentation/insights_screen.dart';
+import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_screen.dart';
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import 'package:affluena_mobile/features/recurring/data/recurring_repository.dart';
 import 'package:affluena_mobile/features/recurring/presentation/recurring_screen.dart';
@@ -22,8 +24,10 @@ import 'package:affluena_mobile/features/settings/presentation/settings_screen.d
 import 'package:affluena_mobile/features/trackers/data/tracker_repository.dart';
 import 'package:affluena_mobile/features/trackers/presentation/tracker_screen.dart';
 import 'package:affluena_mobile/features/transactions/presentation/split_bill_screen.dart';
+import 'package:affluena_mobile/features/transactions/presentation/transactions_screen.dart';
 import 'package:affluena_mobile/features/wallets/presentation/wallet_detail_screen.dart';
 import 'package:affluena_mobile/features/wallets/presentation/wallet_sharing_screen.dart';
+import 'package:affluena_mobile/features/wallets/presentation/wallets_screen.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:flutter/material.dart';
@@ -99,6 +103,20 @@ void main() {
       expect(find.byKey(const Key('login-email-field')), findsOneWidget);
     }
   });
+
+  testWidgets('parity surfaces never render raw resource ids', (tester) async {
+    await tester.pumpWidget(_navigationApp(authenticated: true));
+    await tester.pumpAndSettle();
+
+    final router = _router(tester);
+    for (final location in _rawIdSmokeLocations) {
+      router.go(location);
+      await tester.pump();
+      await tester.pump();
+      await tester.pumpAndSettle();
+      await _expectNoRawResourceIds(tester);
+    }
+  });
 }
 
 Widget _navigationApp({required bool authenticated}) {
@@ -165,6 +183,18 @@ Future<void> _expectVisibleText(WidgetTester tester, String text) async {
     await tester.pumpAndSettle();
   }
   expect(finder, findsAtLeastNWidgets(1));
+}
+
+Future<void> _expectNoRawResourceIds(WidgetTester tester) async {
+  for (var attempt = 0; attempt < 6; attempt += 1) {
+    for (final token in _rawResourceIdTokens) {
+      expect(find.textContaining(token), findsNothing);
+    }
+    final scrollable = find.byType(Scrollable);
+    if (scrollable.evaluate().isEmpty) return;
+    await tester.drag(scrollable.first, const Offset(0, -320));
+    await tester.pumpAndSettle();
+  }
 }
 
 class _NavigationScenario {
@@ -258,6 +288,42 @@ final _directNavigationScenarios = [
     location: WalletSharingScreen.location('wallet-main'),
     expected: 'Wallet sharing',
   ),
+];
+
+final _rawIdSmokeLocations = [
+  DashboardScreen.path,
+  WalletsScreen.path,
+  WalletDetailScreen.location('wallet-main'),
+  WalletSharingScreen.location('wallet-main'),
+  QuickEntryScreen.path,
+  QuickEntryTemplatesScreen.path,
+  TransactionsScreen.path,
+  SplitBillScreen.path,
+  SettingsScreen.path,
+  SecurityScreen.path,
+  BudgetScreen.path,
+  DebtScreen.path,
+  TrackerScreen.path,
+  RecurringScreen.path,
+  GoalScreen.path,
+  CategoryTagManagementScreen.path,
+  InsightsScreen.location(InsightTab.reports),
+  InsightsScreen.location(InsightTab.exports),
+  InsightsScreen.location(InsightTab.alerts),
+  InsightsScreen.location(InsightTab.rules),
+  AuditLogScreen.path,
+];
+
+const _rawResourceIdTokens = [
+  'wallet-main',
+  'wallet-save',
+  'wallet-goal',
+  'category-food',
+  'category-transport',
+  'category-rent',
+  'category-salary',
+  '22222222-2222',
+  '44444444-4444',
 ];
 
 class _NavigationWalletRepository implements WalletRepository {
