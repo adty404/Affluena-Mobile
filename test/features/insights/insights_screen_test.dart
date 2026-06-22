@@ -183,6 +183,7 @@ class TestInsightsRepository implements InsightsRepository {
   ReportResponse report = seededReport;
   List<ExportJob> exportJobs = const [seededExportJob];
   List<ActivityItem> activities = const [seededActivity];
+  List<SystemLog> systemLogs = const [seededSystemLog];
   List<InsightAlert> alerts = const [seededAlert];
   List<NotificationRule> rules = const [seededRule];
   bool failAlertsReload = false;
@@ -231,6 +232,14 @@ class TestInsightsRepository implements InsightsRepository {
 
   @override
   Future<ActivityItem> getActivity(String id) async => seededActivity;
+
+  @override
+  Future<SystemLogsResponse> listSystemLogs({int? limit}) async {
+    return SystemLogsResponse(logs: systemLogs);
+  }
+
+  @override
+  Future<SystemLog> getSystemLog(String id) async => seededSystemLog;
 
   @override
   Future<AlertsResponse> listAlerts({String? month}) async {
@@ -342,6 +351,19 @@ const seededActivity = ActivityItem(
   entityType: 'transaction',
   entityId: 'transaction-1',
   description: 'Created transaction Lunch',
+  createdAt: '2026-06-22T08:00:00Z',
+);
+
+const seededSystemLog = SystemLog(
+  id: 'log-1',
+  method: 'GET',
+  path: '/api/v1/wallets',
+  statusCode: 200,
+  latencyMs: 12,
+  clientIp: '127.0.0.1',
+  userAgent: 'Flutter test',
+  userId: 'user-1',
+  responsePayload: '{"ok":true}',
   createdAt: '2026-06-22T08:00:00Z',
 );
 

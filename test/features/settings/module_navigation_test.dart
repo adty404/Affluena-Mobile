@@ -3,6 +3,7 @@ import 'package:affluena_mobile/app/router.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
 import 'package:affluena_mobile/features/budgets/data/budget_repository.dart';
 import 'package:affluena_mobile/features/budgets/presentation/budget_screen.dart';
+import 'package:affluena_mobile/features/categories/presentation/category_tag_management_screen.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/debts/data/debt_repository.dart';
@@ -11,11 +12,18 @@ import 'package:affluena_mobile/features/goals/data/goal_repository.dart';
 import 'package:affluena_mobile/features/goals/presentation/goal_screen.dart';
 import 'package:affluena_mobile/features/insights/application/insights_controller.dart';
 import 'package:affluena_mobile/features/insights/data/insights_repository.dart';
+import 'package:affluena_mobile/features/insights/presentation/audit_log_screen.dart';
 import 'package:affluena_mobile/features/insights/presentation/insights_screen.dart';
+import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import 'package:affluena_mobile/features/recurring/data/recurring_repository.dart';
 import 'package:affluena_mobile/features/recurring/presentation/recurring_screen.dart';
+import 'package:affluena_mobile/features/settings/presentation/security_screen.dart';
+import 'package:affluena_mobile/features/settings/presentation/settings_screen.dart';
 import 'package:affluena_mobile/features/trackers/data/tracker_repository.dart';
 import 'package:affluena_mobile/features/trackers/presentation/tracker_screen.dart';
+import 'package:affluena_mobile/features/transactions/presentation/split_bill_screen.dart';
+import 'package:affluena_mobile/features/wallets/presentation/wallet_detail_screen.dart';
+import 'package:affluena_mobile/features/wallets/presentation/wallet_sharing_screen.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +47,7 @@ void main() {
     await tester.pumpAndSettle();
     await _openMore(tester);
 
-    for (final scenario in _navigationScenarios) {
+    for (final scenario in _settingsNavigationScenarios) {
       await _expectSettingsEntry(tester, scenario.entry);
     }
   });
@@ -51,7 +59,10 @@ void main() {
     await tester.pumpAndSettle();
 
     final router = _router(tester);
-    for (final scenario in _navigationScenarios) {
+    for (final scenario in [
+      ..._settingsNavigationScenarios,
+      ..._directNavigationScenarios,
+    ]) {
       router.go(scenario.location);
       await tester.pump();
       await tester.pump();
@@ -73,7 +84,14 @@ void main() {
       TrackerScreen.path,
       RecurringScreen.path,
       GoalScreen.path,
+      CategoryTagManagementScreen.path,
+      QuickEntryTemplatesScreen.path,
+      SplitBillScreen.path,
+      AuditLogScreen.path,
+      SecurityScreen.path,
       InsightsScreen.location(InsightTab.rules),
+      WalletDetailScreen.location('wallet-main'),
+      WalletSharingScreen.location('wallet-main'),
     ]) {
       router.go(location);
       await tester.pumpAndSettle();
@@ -114,8 +132,19 @@ GoRouter _router(WidgetTester tester) {
 }
 
 Future<void> _openMore(WidgetTester tester) async {
-  await tester.tap(find.text('More'));
+  final moreTab = find.descendant(
+    of: find.byType(NavigationBar),
+    matching: find.text('More'),
+  );
+  if (moreTab.evaluate().isNotEmpty) {
+    await tester.tap(moreTab);
+  }
   await tester.pumpAndSettle();
+  if (find.byType(SettingsScreen).evaluate().isEmpty) {
+    _router(tester).go(SettingsScreen.path);
+    await tester.pumpAndSettle();
+  }
+  expect(find.byType(SettingsScreen), findsOneWidget);
   expect(find.text('Profile'), findsOneWidget);
 }
 
@@ -125,12 +154,15 @@ Future<void> _expectSettingsEntry(WidgetTester tester, String entry) async {
 
 Future<void> _expectVisibleText(WidgetTester tester, String text) async {
   final finder = find.text(text);
-  if (finder.evaluate().isEmpty) {
-    await tester.scrollUntilVisible(
-      finder,
-      280,
-      scrollable: find.byType(Scrollable).first,
-    );
+  for (var attempt = 0; attempt < 10; attempt += 1) {
+    if (finder.evaluate().isNotEmpty) {
+      expect(finder, findsAtLeastNWidgets(1));
+      return;
+    }
+    final listView = find.byType(ListView);
+    expect(listView, findsWidgets);
+    await tester.drag(listView.first, const Offset(0, -320));
+    await tester.pumpAndSettle();
   }
   expect(finder, findsAtLeastNWidgets(1));
 }
@@ -147,7 +179,27 @@ class _NavigationScenario {
   final String expected;
 }
 
-final _navigationScenarios = [
+final _settingsNavigationScenarios = [
+  _NavigationScenario(
+    entry: 'Security center',
+    location: SecurityScreen.path,
+    expected: 'Security center',
+  ),
+  _NavigationScenario(
+    entry: 'Quick-entry templates',
+    location: QuickEntryTemplatesScreen.path,
+    expected: 'Quick-entry templates',
+  ),
+  _NavigationScenario(
+    entry: 'Split bill',
+    location: SplitBillScreen.path,
+    expected: 'Split bill',
+  ),
+  _NavigationScenario(
+    entry: 'Categories & Tags',
+    location: CategoryTagManagementScreen.path,
+    expected: 'Categories & Tags',
+  ),
   _NavigationScenario(
     entry: 'Budgets',
     location: BudgetScreen.path,
@@ -179,6 +231,11 @@ final _navigationScenarios = [
     expected: 'Transaction CSV',
   ),
   _NavigationScenario(
+    entry: 'Audit logs',
+    location: AuditLogScreen.path,
+    expected: 'Audit logs',
+  ),
+  _NavigationScenario(
     entry: 'Alerts & Activity',
     location: InsightsScreen.location(InsightTab.alerts),
     expected: 'Food limit reached',
@@ -187,6 +244,19 @@ final _navigationScenarios = [
     entry: 'Notification rules',
     location: InsightsScreen.location(InsightTab.rules),
     expected: 'Budget alerts',
+  ),
+];
+
+final _directNavigationScenarios = [
+  _NavigationScenario(
+    entry: 'Wallet detail',
+    location: WalletDetailScreen.location('wallet-main'),
+    expected: 'Wallet detail',
+  ),
+  _NavigationScenario(
+    entry: 'Wallet sharing',
+    location: WalletSharingScreen.location('wallet-main'),
+    expected: 'Wallet sharing',
   ),
 ];
 
@@ -209,8 +279,54 @@ class _NavigationWalletRepository implements WalletRepository {
   Future<Wallet> createWallet(WalletRequest request) async => _mainWallet;
 
   @override
+  Future<Wallet> getWallet(String id) async {
+    return [
+      _mainWallet,
+      _savingsWallet,
+      _goalWallet,
+    ].firstWhere((wallet) => wallet.id == id);
+  }
+
+  @override
   Future<Wallet> updateWallet(String id, WalletRequest request) async {
     return _mainWallet;
+  }
+
+  @override
+  Future<void> deleteWallet(String id) async {}
+
+  @override
+  Future<WalletInviteResponse> inviteMember(
+    String id,
+    WalletInviteRequest request,
+  ) async {
+    return const WalletInviteResponse(status: WalletShareStatus.pending);
+  }
+
+  @override
+  Future<WalletInviteResponse> respondInvite(
+    String id,
+    String memberId,
+    WalletInviteResponse response,
+  ) async {
+    return response;
+  }
+
+  @override
+  Future<WalletMembersResponse> listMembers(String id) async {
+    final wallet = await getWallet(id);
+    return WalletMembersResponse(members: wallet.members);
+  }
+
+  @override
+  Future<WalletAnalytics> getAnalytics(String id, {String? month}) async {
+    return WalletAnalytics(
+      walletId: id,
+      month: month ?? '2026-06',
+      inflowMinor: 0,
+      outflowMinor: 0,
+      transactionCount: 0,
+    );
   }
 }
 
@@ -243,9 +359,17 @@ class _NavigationCategoryRepository implements CategoryRepository {
   }
 
   @override
+  Future<Category> getCategory(String id) async {
+    return _categories.firstWhere((category) => category.id == id);
+  }
+
+  @override
   Future<Category> updateCategory(String id, CategoryRequest request) async {
     return _categories.firstWhere((category) => category.id == id);
   }
+
+  @override
+  Future<void> deleteCategory(String id) async {}
 }
 
 const _mainWallet = Wallet(

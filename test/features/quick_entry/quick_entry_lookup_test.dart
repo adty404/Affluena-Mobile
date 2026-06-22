@@ -145,6 +145,16 @@ class LookupTransactionRepository implements TransactionRepository {
   Future<Transaction> getTransaction(String id) async => lookupTransaction;
 
   @override
+  Future<SplitTransactionResponse> splitBill(
+    SplitTransactionRequest request,
+  ) async {
+    return const SplitTransactionResponse(
+      transactionId: 'transaction-split',
+      debtIds: [],
+    );
+  }
+
+  @override
   Future<TransactionListResponse> listTransactions({
     TransactionType? type,
     String? walletId,
@@ -165,6 +175,29 @@ class LookupTransactionRepository implements TransactionRepository {
 
 class LookupQuickEntryRepository implements QuickEntryRepository {
   const LookupQuickEntryRepository();
+
+  @override
+  Future<QuickEntryTemplate> getTemplate(String id) async {
+    return lookupTemplate;
+  }
+
+  @override
+  Future<QuickEntryTemplate> createTemplate(
+    QuickEntryTemplateRequest request,
+  ) async {
+    return lookupTemplate;
+  }
+
+  @override
+  Future<QuickEntryTemplate> updateTemplate(
+    String id,
+    QuickEntryTemplateRequest request,
+  ) async {
+    return lookupTemplate;
+  }
+
+  @override
+  Future<void> deleteTemplate(String id) async {}
 
   @override
   Future<ExecuteQuickEntryResponse> executeTemplate(
@@ -212,8 +245,50 @@ class LookupWalletRepository implements WalletRepository {
   Future<Wallet> createWallet(WalletRequest request) async => wallets.first;
 
   @override
+  Future<Wallet> getWallet(String id) async {
+    return wallets.firstWhere((wallet) => wallet.id == id);
+  }
+
+  @override
   Future<Wallet> updateWallet(String id, WalletRequest request) async {
     return wallets.firstWhere((wallet) => wallet.id == id);
+  }
+
+  @override
+  Future<void> deleteWallet(String id) async {}
+
+  @override
+  Future<WalletInviteResponse> inviteMember(
+    String id,
+    WalletInviteRequest request,
+  ) async {
+    return const WalletInviteResponse(status: WalletShareStatus.pending);
+  }
+
+  @override
+  Future<WalletInviteResponse> respondInvite(
+    String id,
+    String memberId,
+    WalletInviteResponse response,
+  ) async {
+    return response;
+  }
+
+  @override
+  Future<WalletMembersResponse> listMembers(String id) async {
+    final wallet = await getWallet(id);
+    return WalletMembersResponse(members: wallet.members);
+  }
+
+  @override
+  Future<WalletAnalytics> getAnalytics(String id, {String? month}) async {
+    return WalletAnalytics(
+      walletId: id,
+      month: month ?? '2026-06',
+      inflowMinor: 0,
+      outflowMinor: 0,
+      transactionCount: 0,
+    );
   }
 }
 
@@ -250,9 +325,17 @@ class RecordingCategoryRepository implements CategoryRepository {
   }
 
   @override
+  Future<Category> getCategory(String id) async {
+    return categories.firstWhere((category) => category.id == id);
+  }
+
+  @override
   Future<Category> updateCategory(String id, CategoryRequest request) async {
     return categories.firstWhere((category) => category.id == id);
   }
+
+  @override
+  Future<void> deleteCategory(String id) async {}
 }
 
 class LookupTagRepository implements TagRepository {
@@ -280,9 +363,17 @@ class LookupTagRepository implements TagRepository {
   Future<Tag> createTag(TagRequest request) async => tags.first;
 
   @override
+  Future<Tag> getTag(String id) async {
+    return tags.firstWhere((tag) => tag.id == id);
+  }
+
+  @override
   Future<Tag> updateTag(String id, TagRequest request) async {
     return tags.firstWhere((tag) => tag.id == id);
   }
+
+  @override
+  Future<void> deleteTag(String id) async {}
 }
 
 const lookupBankWalletId = '22222222-2222-2222-2222-222222220002';
@@ -337,6 +428,19 @@ const lookupMonthlyTag = Tag(
   id: '55555555-5555-5555-5555-555555550002',
   userId: '11111111-1111-1111-1111-111111111111',
   name: '#MonthlyBill',
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+const lookupTemplate = QuickEntryTemplate(
+  id: '77777777-7777-7777-7777-777777770001',
+  userId: '11111111-1111-1111-1111-111111111111',
+  name: 'Daily Coffee',
+  type: TransactionType.expense,
+  walletId: lookupGoPayWalletId,
+  categoryId: lookupExpenseCategoryId,
+  amountMinor: 35000,
+  note: 'Lookup template',
   createdAt: '2026-06-01T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
 );

@@ -312,6 +312,65 @@ class ActivityListResponse {
   final Pagination pagination;
 }
 
+class SystemLog {
+  const SystemLog({
+    required this.id,
+    required this.method,
+    required this.path,
+    required this.statusCode,
+    required this.latencyMs,
+    required this.clientIp,
+    required this.userAgent,
+    required this.createdAt,
+    this.userId,
+    this.requestPayload,
+    this.responsePayload,
+  });
+
+  factory SystemLog.fromJson(JsonMap json) {
+    return SystemLog(
+      id: ApiJson.readString(json, 'id'),
+      method: ApiJson.readString(json, 'method'),
+      path: ApiJson.readString(json, 'path'),
+      statusCode: ApiJson.readInt(json, 'status_code'),
+      latencyMs: ApiJson.readInt(json, 'latency_ms'),
+      clientIp: ApiJson.readString(json, 'client_ip'),
+      userAgent: ApiJson.readString(json, 'user_agent'),
+      userId: ApiJson.nullableString(json, 'user_id'),
+      requestPayload: ApiJson.nullableString(json, 'request_payload'),
+      responsePayload: ApiJson.nullableString(json, 'response_payload'),
+      createdAt: ApiJson.readString(json, 'created_at'),
+    );
+  }
+
+  final String id;
+  final String method;
+  final String path;
+  final int statusCode;
+  final int latencyMs;
+  final String clientIp;
+  final String userAgent;
+  final String? userId;
+  final String? requestPayload;
+  final String? responsePayload;
+  final String createdAt;
+}
+
+class SystemLogsResponse {
+  const SystemLogsResponse({required this.logs});
+
+  factory SystemLogsResponse.fromJson(JsonMap json) {
+    return SystemLogsResponse(
+      logs: ApiJson.readObjectList(
+        json,
+        'logs',
+      ).map(SystemLog.fromJson).toList(growable: false),
+    );
+  }
+
+  final List<SystemLog> logs;
+}
+
 class InsightAlert {
   const InsightAlert({
     required this.id,

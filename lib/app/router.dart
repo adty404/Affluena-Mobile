@@ -3,18 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/budgets/presentation/budget_screen.dart';
+import '../features/categories/presentation/category_tag_management_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/auth_screens.dart';
 import '../features/debts/presentation/debt_screen.dart';
 import '../features/goals/presentation/goal_screen.dart';
+import '../features/insights/presentation/audit_log_screen.dart';
 import '../features/insights/presentation/insights_screen.dart';
+import '../features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/recurring/presentation/recurring_screen.dart';
+import '../features/settings/presentation/security_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/shared/presentation/app_shell.dart';
 import '../features/trackers/presentation/tracker_screen.dart';
+import '../features/transactions/presentation/split_bill_screen.dart';
 import '../features/transactions/presentation/transactions_screen.dart';
+import '../features/wallets/presentation/wallet_detail_screen.dart';
+import '../features/wallets/presentation/wallet_sharing_screen.dart';
 import '../features/wallets/presentation/wallets_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -83,6 +90,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: WalletsScreen.path,
                 pageBuilder: _fadePage((_) => const WalletsScreen()),
               ),
+              GoRoute(
+                path: WalletDetailScreen.path,
+                pageBuilder: _fadePage(
+                  (state) => WalletDetailScreen(
+                    walletId: state.pathParameters['walletId']!,
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: WalletSharingScreen.path,
+                pageBuilder: _fadePage(
+                  (state) => WalletSharingScreen(
+                    walletId: state.pathParameters['walletId']!,
+                  ),
+                ),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -91,6 +114,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: QuickEntryScreen.path,
                 pageBuilder: _fadePage((_) => const QuickEntryScreen()),
               ),
+              GoRoute(
+                path: QuickEntryTemplatesScreen.path,
+                pageBuilder: _fadePage(
+                  (_) => const QuickEntryTemplatesScreen(),
+                ),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -98,6 +127,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: TransactionsScreen.path,
                 pageBuilder: _fadePage((_) => const TransactionsScreen()),
+              ),
+              GoRoute(
+                path: SplitBillScreen.path,
+                pageBuilder: _fadePage((_) => const SplitBillScreen()),
               ),
             ],
           ),
@@ -110,6 +143,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: BudgetScreen.path,
                 pageBuilder: _fadePage((_) => const BudgetScreen()),
+              ),
+              GoRoute(
+                path: CategoryTagManagementScreen.path,
+                pageBuilder: _fadePage(
+                  (_) => const CategoryTagManagementScreen(),
+                ),
               ),
               GoRoute(
                 path: DebtScreen.path,
@@ -136,6 +175,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                 ),
+              ),
+              GoRoute(
+                path: AuditLogScreen.path,
+                pageBuilder: _fadePage((_) => const AuditLogScreen()),
+              ),
+              GoRoute(
+                path: SecurityScreen.path,
+                pageBuilder: _fadePage((_) => const SecurityScreen()),
               ),
             ],
           ),

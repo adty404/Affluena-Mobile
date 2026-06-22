@@ -32,6 +32,8 @@ enum WalletShareStatus {
   joined,
   rejected;
 
+  String get apiValue => name;
+
   static WalletShareStatus fromApiValue(String value) {
     return switch (value) {
       'pending' => WalletShareStatus.pending,
@@ -156,6 +158,50 @@ class WalletListResponse {
   final Pagination pagination;
 }
 
+class WalletMembersResponse {
+  const WalletMembersResponse({required this.members});
+
+  factory WalletMembersResponse.fromJson(JsonMap json) {
+    return WalletMembersResponse(
+      members: ApiJson.readObjectList(
+        json,
+        'members',
+      ).map(WalletMember.fromJson).toList(growable: false),
+    );
+  }
+
+  final List<WalletMember> members;
+}
+
+class WalletAnalytics {
+  const WalletAnalytics({
+    required this.walletId,
+    required this.month,
+    required this.inflowMinor,
+    required this.outflowMinor,
+    required this.transactionCount,
+    this.lastActivityAt,
+  });
+
+  factory WalletAnalytics.fromJson(JsonMap json) {
+    return WalletAnalytics(
+      walletId: ApiJson.readString(json, 'wallet_id'),
+      month: ApiJson.readString(json, 'month'),
+      inflowMinor: ApiJson.readInt(json, 'inflow_minor'),
+      outflowMinor: ApiJson.readInt(json, 'outflow_minor'),
+      transactionCount: ApiJson.readInt(json, 'transaction_count'),
+      lastActivityAt: ApiJson.nullableString(json, 'last_activity_at'),
+    );
+  }
+
+  final String walletId;
+  final String month;
+  final int inflowMinor;
+  final int outflowMinor;
+  final int transactionCount;
+  final String? lastActivityAt;
+}
+
 class WalletRequest {
   const WalletRequest({
     required this.name,
@@ -189,4 +235,28 @@ class WalletRequest {
     if (color != null) 'color': color,
     if (description != null) 'description': description,
   };
+}
+
+class WalletInviteRequest {
+  const WalletInviteRequest({required this.email});
+
+  final String email;
+
+  JsonMap toJson() => {'email': email};
+}
+
+class WalletInviteResponse {
+  const WalletInviteResponse({required this.status});
+
+  factory WalletInviteResponse.fromJson(JsonMap json) {
+    return WalletInviteResponse(
+      status: WalletShareStatus.fromApiValue(
+        ApiJson.readString(json, 'status'),
+      ),
+    );
+  }
+
+  final WalletShareStatus status;
+
+  JsonMap toJson() => {'status': status.apiValue};
 }

@@ -26,6 +26,10 @@ abstract interface class InsightsRepository {
 
   Future<ActivityItem> getActivity(String id);
 
+  Future<SystemLogsResponse> listSystemLogs({int? limit});
+
+  Future<SystemLog> getSystemLog(String id);
+
   Future<AlertsResponse> listAlerts({String? month});
 
   Future<InsightAlert> getAlert(String id);
@@ -102,6 +106,21 @@ class DioInsightsRepository implements InsightsRepository {
   Future<ActivityItem> getActivity(String id) async {
     final response = await _dio.get<Map<String, Object?>>('/activities/$id');
     return ActivityItem.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<SystemLogsResponse> listSystemLogs({int? limit}) async {
+    final response = await _dio.get<Map<String, Object?>>(
+      '/system-logs',
+      queryParameters: _query({'limit': limit}),
+    );
+    return SystemLogsResponse.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<SystemLog> getSystemLog(String id) async {
+    final response = await _dio.get<Map<String, Object?>>('/system-logs/$id');
+    return SystemLog.fromJson(_responseMap(response.data));
   }
 
   @override

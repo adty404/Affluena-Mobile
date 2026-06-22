@@ -65,6 +65,11 @@ class TestWalletRepository implements WalletRepository {
   }
 
   @override
+  Future<Wallet> getWallet(String id) async {
+    return wallets.firstWhere((wallet) => wallet.id == id);
+  }
+
+  @override
   Future<Wallet> updateWallet(String id, WalletRequest request) async {
     updateIds.add(id);
     updateRequests.add(request);
@@ -89,6 +94,45 @@ class TestWalletRepository implements WalletRepository {
     );
     wallets[index] = wallet;
     return wallet;
+  }
+
+  @override
+  Future<void> deleteWallet(String id) async {
+    wallets.removeWhere((wallet) => wallet.id == id);
+  }
+
+  @override
+  Future<WalletInviteResponse> inviteMember(
+    String id,
+    WalletInviteRequest request,
+  ) async {
+    return const WalletInviteResponse(status: WalletShareStatus.pending);
+  }
+
+  @override
+  Future<WalletInviteResponse> respondInvite(
+    String id,
+    String memberId,
+    WalletInviteResponse response,
+  ) async {
+    return response;
+  }
+
+  @override
+  Future<WalletMembersResponse> listMembers(String id) async {
+    final wallet = await getWallet(id);
+    return WalletMembersResponse(members: wallet.members);
+  }
+
+  @override
+  Future<WalletAnalytics> getAnalytics(String id, {String? month}) async {
+    return WalletAnalytics(
+      walletId: id,
+      month: month ?? '2026-06',
+      inflowMinor: 0,
+      outflowMinor: 0,
+      transactionCount: 0,
+    );
   }
 }
 

@@ -322,6 +322,16 @@ class FakeTransactionRepository implements TransactionRepository {
   }
 
   @override
+  Future<SplitTransactionResponse> splitBill(
+    SplitTransactionRequest request,
+  ) async {
+    return const SplitTransactionResponse(
+      transactionId: 'transaction-split',
+      debtIds: [],
+    );
+  }
+
+  @override
   Future<void> deleteTransaction(String id) async {}
 }
 
@@ -345,6 +355,29 @@ class FakeQuickEntryRepository implements QuickEntryRepository {
       ),
     );
   }
+
+  @override
+  Future<QuickEntryTemplate> getTemplate(String id) async {
+    return templates.firstWhere((template) => template.id == id);
+  }
+
+  @override
+  Future<QuickEntryTemplate> createTemplate(
+    QuickEntryTemplateRequest request,
+  ) async {
+    return templates.first;
+  }
+
+  @override
+  Future<QuickEntryTemplate> updateTemplate(
+    String id,
+    QuickEntryTemplateRequest request,
+  ) async {
+    return templates.firstWhere((template) => template.id == id);
+  }
+
+  @override
+  Future<void> deleteTemplate(String id) async {}
 
   @override
   Future<ExecuteQuickEntryResponse> executeTemplate(
@@ -382,8 +415,50 @@ class FakeWalletRepository implements WalletRepository {
   }
 
   @override
+  Future<Wallet> getWallet(String id) async {
+    return wallets.firstWhere((wallet) => wallet.id == id);
+  }
+
+  @override
   Future<Wallet> updateWallet(String id, WalletRequest request) async {
     return wallets.firstWhere((wallet) => wallet.id == id);
+  }
+
+  @override
+  Future<void> deleteWallet(String id) async {}
+
+  @override
+  Future<WalletInviteResponse> inviteMember(
+    String id,
+    WalletInviteRequest request,
+  ) async {
+    return const WalletInviteResponse(status: WalletShareStatus.pending);
+  }
+
+  @override
+  Future<WalletInviteResponse> respondInvite(
+    String id,
+    String memberId,
+    WalletInviteResponse response,
+  ) async {
+    return response;
+  }
+
+  @override
+  Future<WalletMembersResponse> listMembers(String id) async {
+    final wallet = await getWallet(id);
+    return WalletMembersResponse(members: wallet.members);
+  }
+
+  @override
+  Future<WalletAnalytics> getAnalytics(String id, {String? month}) async {
+    return WalletAnalytics(
+      walletId: id,
+      month: month ?? '2026-06',
+      inflowMinor: 0,
+      outflowMinor: 0,
+      transactionCount: 0,
+    );
   }
 }
 
@@ -415,9 +490,17 @@ class FakeCategoryRepository implements CategoryRepository {
   }
 
   @override
+  Future<Category> getCategory(String id) async {
+    return categories.firstWhere((category) => category.id == id);
+  }
+
+  @override
   Future<Category> updateCategory(String id, CategoryRequest request) async {
     return categories.firstWhere((category) => category.id == id);
   }
+
+  @override
+  Future<void> deleteCategory(String id) async {}
 }
 
 class FakeTagRepository implements TagRepository {
@@ -447,9 +530,17 @@ class FakeTagRepository implements TagRepository {
   }
 
   @override
+  Future<Tag> getTag(String id) async {
+    return tags.firstWhere((tag) => tag.id == id);
+  }
+
+  @override
   Future<Tag> updateTag(String id, TagRequest request) async {
     return tags.firstWhere((tag) => tag.id == id);
   }
+
+  @override
+  Future<void> deleteTag(String id) async {}
 }
 
 const demoUser = AuthUser(

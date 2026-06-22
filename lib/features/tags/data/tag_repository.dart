@@ -14,7 +14,11 @@ abstract interface class TagRepository {
 
   Future<Tag> createTag(TagRequest request);
 
+  Future<Tag> getTag(String id);
+
   Future<Tag> updateTag(String id, TagRequest request);
+
+  Future<void> deleteTag(String id);
 }
 
 class DioTagRepository implements TagRepository {
@@ -45,12 +49,23 @@ class DioTagRepository implements TagRepository {
   }
 
   @override
+  Future<Tag> getTag(String id) async {
+    final response = await _dio.get<Map<String, Object?>>('/tags/$id');
+    return Tag.fromJson(_responseMap(response.data));
+  }
+
+  @override
   Future<Tag> updateTag(String id, TagRequest request) async {
     final response = await _dio.put<Map<String, Object?>>(
       '/tags/$id',
       data: request.toJson(),
     );
     return Tag.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<void> deleteTag(String id) async {
+    await _dio.delete<void>('/tags/$id');
   }
 }
 

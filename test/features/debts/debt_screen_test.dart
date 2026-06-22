@@ -247,8 +247,50 @@ class TestWalletRepository implements WalletRepository {
   Future<Wallet> createWallet(WalletRequest request) async => mainWallet;
 
   @override
+  Future<Wallet> getWallet(String id) async {
+    return [mainWallet, goalWallet].firstWhere((wallet) => wallet.id == id);
+  }
+
+  @override
   Future<Wallet> updateWallet(String id, WalletRequest request) async {
     return mainWallet;
+  }
+
+  @override
+  Future<void> deleteWallet(String id) async {}
+
+  @override
+  Future<WalletInviteResponse> inviteMember(
+    String id,
+    WalletInviteRequest request,
+  ) async {
+    return const WalletInviteResponse(status: WalletShareStatus.pending);
+  }
+
+  @override
+  Future<WalletInviteResponse> respondInvite(
+    String id,
+    String memberId,
+    WalletInviteResponse response,
+  ) async {
+    return response;
+  }
+
+  @override
+  Future<WalletMembersResponse> listMembers(String id) async {
+    final wallet = await getWallet(id);
+    return WalletMembersResponse(members: wallet.members);
+  }
+
+  @override
+  Future<WalletAnalytics> getAnalytics(String id, {String? month}) async {
+    return WalletAnalytics(
+      walletId: id,
+      month: month ?? '2026-06',
+      inflowMinor: 0,
+      outflowMinor: 0,
+      transactionCount: 0,
+    );
   }
 }
 
@@ -281,9 +323,20 @@ class TestCategoryRepository implements CategoryRepository {
       salaryCategory;
 
   @override
+  Future<Category> getCategory(String id) async {
+    return [
+      salaryCategory,
+      foodCategory,
+    ].firstWhere((category) => category.id == id);
+  }
+
+  @override
   Future<Category> updateCategory(String id, CategoryRequest request) async {
     return salaryCategory;
   }
+
+  @override
+  Future<void> deleteCategory(String id) async {}
 }
 
 extension on Debt {
