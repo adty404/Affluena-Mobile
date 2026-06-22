@@ -82,6 +82,38 @@ void main() {
     expect(repository.createdRequests.single.name, 'Holiday');
     expect(repository.createdRequests.single.targetAmountMinor, 8000000);
   });
+
+  testWidgets('responds to a pending goal invite and refreshes actions', (
+    tester,
+  ) async {
+    final repository = TestGoalRepository();
+
+    await tester.pumpWidget(goalTestApp(repository));
+    await tester.pumpGoalState();
+
+    await tester.scrollUntilVisible(
+      find.text('Emergency fund'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Join goal'));
+    await tester.pumpGoalState();
+
+    expect(repository.responseRequests.single.status, GoalMemberStatus.joined);
+    expect(
+      repository.goals.single.members.single.status,
+      GoalMemberStatus.joined,
+    );
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Join goal'), findsNothing);
+    expect(find.text('Reject invite'), findsNothing);
+  });
 }
 
 extension on WidgetTester {
@@ -108,6 +140,8 @@ class TestGoalRepository implements GoalRepository {
   final createdRequests = <GoalRequest>[];
   final inviteRequests = <GoalInviteRequest>[];
   final responseRequests = <GoalInviteResponseRequest>[];
+
+  List<Goal> get goals => List<Goal>.unmodifiable(_goals);
 
   @override
   Future<GoalListResponse> listGoals() async {
@@ -149,6 +183,45 @@ class TestGoalRepository implements GoalRepository {
     GoalInviteResponseRequest request,
   ) async {
     responseRequests.add(request);
+    final index = _goals.indexWhere((goal) => goal.id == id);
+    final goal = _goals[index];
+    _goals[index] = goal.copyWithMembers(
+      goal.members
+          .map((member) {
+            if (member.userId != userId) return member;
+            return member.copyWith(status: request.status);
+          })
+          .toList(growable: false),
+    );
+  }
+}
+
+extension on Goal {
+  Goal copyWithMembers(List<GoalMember> members) {
+    return Goal(
+      id: id,
+      userId: userId,
+      name: name,
+      targetAmountMinor: targetAmountMinor,
+      collectedAmountMinor: collectedAmountMinor,
+      deadline: deadline,
+      status: status,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      members: members,
+    );
+  }
+}
+
+extension on GoalMember {
+  GoalMember copyWith({required GoalMemberStatus status}) {
+    return GoalMember(
+      goalId: goalId,
+      userId: userId,
+      status: status,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
   }
 }
 
