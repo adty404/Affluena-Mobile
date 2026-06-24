@@ -9,6 +9,7 @@ import '../../categories/presentation/category_tag_management_screen.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -27,7 +28,6 @@ class BudgetScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(budgetControllerProvider);
     final controller = ref.read(budgetControllerProvider.notifier);
-    final textTheme = Theme.of(context).textTheme;
 
     if (state.isLoading && state.budgets.isEmpty) {
       return const _BudgetLoading();
@@ -37,8 +37,23 @@ class BudgetScreen extends ConsumerWidget {
       return _BudgetError(onRetry: () => controller.load());
     }
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Budgets',
+      actions: [
+        IconButton.filledTonal(
+          key: const Key('add-budget-button'),
+          tooltip: state.hasExpenseCategories
+              ? 'Add budget'
+              : 'Add an expense category first',
+          onPressed: state.isSaving
+              ? null
+              : state.hasExpenseCategories
+              ? () => _showBudgetForm(context, ref, state: state)
+              : () => _goToCategories(context),
+          icon: const Icon(Icons.add),
+        ),
+      ],
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -46,24 +61,6 @@ class BudgetScreen extends ConsumerWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Row(
-            children: [
-              Expanded(child: Text('Budgets', style: textTheme.headlineMedium)),
-              IconButton.filledTonal(
-                key: const Key('add-budget-button'),
-                tooltip: state.hasExpenseCategories
-                    ? 'Add budget'
-                    : 'Add an expense category first',
-                onPressed: state.isSaving
-                    ? null
-                    : state.hasExpenseCategories
-                    ? () => _showBudgetForm(context, ref, state: state)
-                    : () => _goToCategories(context),
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
           _MonthControl(
             month: state.month,
             onChanged: controller.setMonth,
@@ -126,7 +123,7 @@ class BudgetScreen extends ConsumerWidget {
 }
 
 void _goToCategories(BuildContext context) {
-  context.go(CategoryTagManagementScreen.path);
+  context.push(CategoryTagManagementScreen.path);
 }
 
 class _MonthControl extends StatelessWidget {
@@ -415,9 +412,9 @@ class _BudgetLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Budgets',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -425,8 +422,6 @@ class _BudgetLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Budgets', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(
             child: SizedBox(
               height: 56,
@@ -502,9 +497,9 @@ class _BudgetError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Budgets',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -512,8 +507,6 @@ class _BudgetError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Budgets', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load your budgets.',
             onRetry: onRetry,

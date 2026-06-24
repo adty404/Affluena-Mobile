@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
@@ -34,7 +35,6 @@ class _CategoryTagManagementScreenState
     final controller = ref.read(
       categoryTagManagementControllerProvider.notifier,
     );
-    final textTheme = Theme.of(context).textTheme;
 
     if (state.isLoading && state.categories.isEmpty && state.tags.isEmpty) {
       return const _CategoryTagLoading();
@@ -66,8 +66,27 @@ class _CategoryTagManagementScreenState
         })
         .toList(growable: false);
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Categories & Tags',
+      actions: [
+        IconButton.filledTonal(
+          key: const Key('add-category-button'),
+          tooltip: 'Add category',
+          onPressed: state.isSaving
+              ? null
+              : () => _showCategoryForm(context, ref, state: state),
+          icon: const Icon(Icons.account_tree_outlined),
+        ),
+        const SizedBox(width: AffluenaSpacing.space2),
+        IconButton.filledTonal(
+          key: const Key('add-tag-button'),
+          tooltip: 'Add tag',
+          onPressed: state.isSaving ? null : () => _showTagForm(context),
+          icon: const Icon(Icons.label_outline),
+        ),
+        const SizedBox(width: AffluenaSpacing.space2),
+      ],
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -75,32 +94,6 @@ class _CategoryTagManagementScreenState
           AffluenaSpacing.space8,
         ),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Categories & Tags',
-                  style: textTheme.headlineMedium,
-                ),
-              ),
-              IconButton.filledTonal(
-                key: const Key('add-category-button'),
-                tooltip: 'Add category',
-                onPressed: state.isSaving
-                    ? null
-                    : () => _showCategoryForm(context, ref, state: state),
-                icon: const Icon(Icons.account_tree_outlined),
-              ),
-              const SizedBox(width: AffluenaSpacing.space2),
-              IconButton.filledTonal(
-                key: const Key('add-tag-button'),
-                tooltip: 'Add tag',
-                onPressed: state.isSaving ? null : () => _showTagForm(context),
-                icon: const Icon(Icons.label_outline),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space4),
           TextField(
             key: const Key('category-tag-search-field'),
             autocorrect: false,
@@ -420,9 +413,9 @@ class _CategoryTagLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Categories & Tags',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -430,8 +423,6 @@ class _CategoryTagLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Categories & Tags', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaSkeleton(height: 56, radius: AffluenaRadii.control),
           const SizedBox(height: AffluenaSpacing.space5),
           for (var i = 0; i < 4; i++) ...[
@@ -476,9 +467,9 @@ class _CategoryTagError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Categories & Tags',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -486,8 +477,6 @@ class _CategoryTagError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Categories & Tags', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load your categories and tags.',
             onRetry: onRetry,

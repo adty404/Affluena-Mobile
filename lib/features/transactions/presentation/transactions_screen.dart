@@ -89,7 +89,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               Expanded(
                 child: FilledButton.icon(
                   key: const Key('transaction-create-entry-button'),
-                  onPressed: () => context.go(TransactionCreateScreen.path),
+                  onPressed: () => context.push(TransactionCreateScreen.path),
                   icon: const Icon(Icons.add),
                   label: const Text('New transaction'),
                 ),
@@ -98,7 +98,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               Expanded(
                 child: FilledButton.tonalIcon(
                   key: const Key('split-bill-entry-button'),
-                  onPressed: () => context.go(SplitBillScreen.path),
+                  onPressed: () => context.push(SplitBillScreen.path),
                   icon: const Icon(Icons.call_split_outlined),
                   label: const Text('Split'),
                 ),
@@ -171,7 +171,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             _EmptyTransactionsState(
               hasFilters: state.filters.hasActiveFilters,
               onClearFilters: controller.clearFilters,
-              onCreate: () => context.go(TransactionCreateScreen.path),
+              onCreate: () => context.push(TransactionCreateScreen.path),
             )
           else if (visible.isEmpty)
             _NoSearchMatchesState(

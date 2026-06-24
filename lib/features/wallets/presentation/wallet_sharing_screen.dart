@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/wallet_detail_controller.dart';
-import 'wallet_detail_screen.dart';
 import 'wallet_display.dart';
 import 'wallet_invite_sheet.dart';
 import 'wallet_members_section.dart';
@@ -54,24 +53,11 @@ class _WalletSharingContent extends ConsumerWidget {
     final wallet = state.wallet;
     final textTheme = Theme.of(context).textTheme;
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Sharing',
+      body: ListView(
         padding: _screenPadding,
         children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: () =>
-                    context.go(WalletDetailScreen.location(wallet.id)),
-                icon: const Icon(Icons.arrow_back),
-              ),
-              const SizedBox(width: AffluenaSpacing.space2),
-              Expanded(
-                child: Text('Wallet sharing', style: textTheme.headlineMedium),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaCard(
             backgroundColor: context.affluenaColors.forestSoft,
             borderColor: context.affluenaColors.forestSoft,
@@ -142,13 +128,11 @@ class _WalletSharingLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Sharing',
+      body: ListView(
         padding: _screenPadding,
         children: [
-          Text('Wallet sharing', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,13 +181,11 @@ class _WalletSharingError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Sharing',
+      body: ListView(
         padding: _screenPadding,
         children: [
-          Text('Sharing unavailable', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load wallet sharing.',
             onRetry: onRetry,

@@ -8,6 +8,7 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
@@ -63,8 +64,19 @@ class _QuickEntryTemplatesScreenState
         })
         .toList(growable: false);
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Quick-entry templates',
+      actions: [
+        IconButton.filledTonal(
+          key: const Key('add-template-button'),
+          tooltip: 'Add template',
+          onPressed: state.isSaving
+              ? null
+              : () => _showTemplateForm(context, ref, state: state),
+          icon: const Icon(Icons.add),
+        ),
+      ],
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -72,25 +84,6 @@ class _QuickEntryTemplatesScreenState
           AffluenaSpacing.space8,
         ),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Quick-entry templates',
-                  style: textTheme.headlineMedium,
-                ),
-              ),
-              IconButton.filledTonal(
-                key: const Key('add-template-button'),
-                tooltip: 'Add template',
-                onPressed: state.isSaving
-                    ? null
-                    : () => _showTemplateForm(context, ref, state: state),
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space2),
           Text(
             'Manage reusable shortcuts without slowing down manual quick entry.',
             style: textTheme.bodySmall,
@@ -120,7 +113,7 @@ class _QuickEntryTemplatesScreenState
           ],
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
-            title: 'Templates',
+            title: 'Saved templates',
             actionLabel: '${visibleTemplates.length} shown',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
@@ -367,8 +360,9 @@ class _TemplatesLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Quick-entry templates',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -376,8 +370,6 @@ class _TemplatesLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Quick-entry templates', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space2),
           Text(
             'Manage reusable shortcuts without slowing down manual quick entry.',
             style: textTheme.bodySmall,
@@ -448,9 +440,9 @@ class _TemplatesError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Quick-entry templates',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -458,8 +450,6 @@ class _TemplatesError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Quick-entry templates', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load your quick-entry templates.',
             onRetry: onRetry,

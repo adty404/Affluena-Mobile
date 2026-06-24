@@ -128,7 +128,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: WalletDetailScreen.path,
-                pageBuilder: _fadePage(
+                pageBuilder: _slidePage(
                   (state) => WalletDetailScreen(
                     walletId: state.pathParameters['walletId']!,
                   ),
@@ -136,7 +136,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: WalletSharingScreen.path,
-                pageBuilder: _fadePage(
+                pageBuilder: _slidePage(
                   (state) => WalletSharingScreen(
                     walletId: state.pathParameters['walletId']!,
                   ),
@@ -152,7 +152,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: QuickEntryTemplatesScreen.path,
-                pageBuilder: _fadePage(
+                pageBuilder: _slidePage(
                   (_) => const QuickEntryTemplatesScreen(),
                 ),
               ),
@@ -166,11 +166,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: SplitBillScreen.path,
-                pageBuilder: _fadePage((_) => const SplitBillScreen()),
+                pageBuilder: _slidePage((_) => const SplitBillScreen()),
               ),
               GoRoute(
                 path: TransactionCreateScreen.path,
-                pageBuilder: _fadePage((_) => const TransactionCreateScreen()),
+                pageBuilder: _slidePage((_) => const TransactionCreateScreen()),
               ),
             ],
           ),
@@ -182,40 +182,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: BudgetScreen.path,
-                pageBuilder: _fadePage((_) => const BudgetScreen()),
+                pageBuilder: _slidePage((_) => const BudgetScreen()),
               ),
               GoRoute(
                 path: CategoryTagManagementScreen.path,
-                pageBuilder: _fadePage(
+                pageBuilder: _slidePage(
                   (_) => const CategoryTagManagementScreen(),
                 ),
               ),
               GoRoute(
                 path: DebtScreen.path,
-                pageBuilder: _fadePage((_) => const DebtScreen()),
+                pageBuilder: _slidePage((_) => const DebtScreen()),
               ),
               GoRoute(
                 path: DebtDetailScreen.path,
-                pageBuilder: _fadePage(
+                pageBuilder: _slidePage(
                   (state) =>
                       DebtDetailScreen(debtId: state.pathParameters['debtId']!),
                 ),
               ),
               GoRoute(
                 path: TrackerScreen.path,
-                pageBuilder: _fadePage((_) => const TrackerScreen()),
+                pageBuilder: _slidePage((_) => const TrackerScreen()),
               ),
               GoRoute(
                 path: RecurringScreen.path,
-                pageBuilder: _fadePage((_) => const RecurringScreen()),
+                pageBuilder: _slidePage((_) => const RecurringScreen()),
               ),
               GoRoute(
                 path: GoalScreen.path,
-                pageBuilder: _fadePage((_) => const GoalScreen()),
+                pageBuilder: _slidePage((_) => const GoalScreen()),
               ),
               GoRoute(
                 path: InsightsScreen.path,
-                pageBuilder: _fadePage(
+                pageBuilder: _slidePage(
                   (state) => InsightsScreen(
                     initialTab: InsightsScreen.tabFromQuery(
                       state.uri.queryParameters['tab'],
@@ -225,11 +225,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: AuditLogScreen.path,
-                pageBuilder: _fadePage((_) => const AuditLogScreen()),
+                pageBuilder: _slidePage((_) => const AuditLogScreen()),
               ),
               GoRoute(
                 path: SecurityScreen.path,
-                pageBuilder: _fadePage((_) => const SecurityScreen()),
+                pageBuilder: _slidePage((_) => const SecurityScreen()),
               ),
             ],
           ),
@@ -266,6 +266,40 @@ Page<dynamic> Function(BuildContext, GoRouterState) _fadePage(
       child: builder(state),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(opacity: animation, child: child);
+      },
+    );
+  };
+}
+
+/// Forward/back slide for drill-in screens, giving a clear spatial sense of
+/// moving deeper and returning. Falls back to no animation under reduce-motion.
+Page<dynamic> Function(BuildContext, GoRouterState) _slidePage(
+  Widget Function(GoRouterState state) builder,
+) {
+  return (context, state) {
+    return CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: builder(state),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+          return child;
+        }
+        final position = animation.drive(
+          Tween(
+            begin: const Offset(1, 0),
+            end: Offset.zero,
+          ).chain(CurveTween(curve: Curves.easeOutCubic)),
+        );
+        final outgoing = secondaryAnimation.drive(
+          Tween(
+            begin: Offset.zero,
+            end: const Offset(-0.2, 0),
+          ).chain(CurveTween(curve: Curves.easeOutCubic)),
+        );
+        return SlideTransition(
+          position: outgoing,
+          child: SlideTransition(position: position, child: child),
+        );
       },
     );
   };

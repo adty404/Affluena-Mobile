@@ -136,8 +136,9 @@ class _SplitBillLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Split bill',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -145,8 +146,6 @@ class _SplitBillLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Split bill', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaCard(
             backgroundColor: context.affluenaColors.forestSoft,
             borderColor: context.affluenaColors.forestSoft,
@@ -185,8 +184,9 @@ class _SplitBillLoadError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Split bill',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -194,11 +194,6 @@ class _SplitBillLoadError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text(
-            'Split bill unavailable',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load split bill data.',
             onRetry: onRetry,

@@ -47,37 +47,16 @@ class _SplitTagChips extends StatelessWidget {
   }
 }
 
-class _SplitBillHeader extends StatelessWidget {
-  const _SplitBillHeader({required this.onBack});
-
-  final VoidCallback onBack;
+class _SplitBillIntro extends StatelessWidget {
+  const _SplitBillIntro();
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Split bill', style: textTheme.headlineMedium),
-              const SizedBox(height: AffluenaSpacing.space1),
-              Text(
-                'Record one expense and create receivable debts in the same flow.',
-                style: textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-        IconButton.filledTonal(
-          tooltip: 'Back to transactions',
-          onPressed: onBack,
-          icon: const Icon(Icons.receipt_long_outlined),
-        ),
-      ],
+    return Text(
+      'Record one expense and create receivable debts in the same flow.',
+      style: textTheme.bodySmall,
     );
   }
 }

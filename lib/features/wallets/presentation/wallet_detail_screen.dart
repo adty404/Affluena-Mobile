@@ -7,6 +7,7 @@ import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/wallet_detail_controller.dart';
@@ -19,7 +20,6 @@ import 'wallet_display.dart';
 import 'wallet_invite_sheet.dart';
 import 'wallet_members_section.dart';
 import 'wallet_sharing_screen.dart';
-import 'wallets_screen.dart';
 
 const _screenPadding = EdgeInsets.fromLTRB(
   AffluenaSpacing.space5,
@@ -62,30 +62,11 @@ class _WalletDetailContent extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final canDelete = wallet.role == null || wallet.role == 'owner';
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: wallet.name.isEmpty ? 'Wallet' : wallet.name,
+      body: ListView(
         padding: _screenPadding,
         children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: () => context.go(WalletsScreen.path),
-                icon: const Icon(Icons.arrow_back),
-              ),
-              const SizedBox(width: AffluenaSpacing.space2),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Wallet detail', style: textTheme.labelMedium),
-                    const SizedBox(height: AffluenaSpacing.space1),
-                    Text(wallet.name, style: textTheme.headlineMedium),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,7 +143,7 @@ class _WalletDetailContent extends ConsumerWidget {
                   title: 'Wallet sharing',
                   value: 'Invites and member status',
                   onTap: () =>
-                      context.go(WalletSharingScreen.location(wallet.id)),
+                      context.push(WalletSharingScreen.location(wallet.id)),
                 ),
                 if (canDelete) ...[
                   const Divider(height: 1),
@@ -282,27 +263,11 @@ class _WalletDetailLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Wallet',
+      body: ListView(
         padding: _screenPadding,
         children: [
-          Row(
-            children: [
-              const AffluenaSkeleton.circle(size: 40),
-              const SizedBox(width: AffluenaSpacing.space3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    AffluenaSkeleton.line(width: 90, height: 12),
-                    SizedBox(height: AffluenaSpacing.space2),
-                    AffluenaSkeleton.line(width: 180, height: 22),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,14 +324,11 @@ class _WalletDetailError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Wallet',
+      body: ListView(
         padding: _screenPadding,
         children: [
-          Text('Wallet unavailable', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load this wallet.',
             onRetry: onRetry,
@@ -451,10 +413,15 @@ class _ActionRow extends StatelessWidget {
 }
 
 Future<void> _confirmDelete(BuildContext context, Wallet wallet) async {
-  await showDialog<void>(
+  final deleted = await showDialog<bool>(
     context: context,
     builder: (context) => _DeleteWalletDialog(wallet: wallet),
   );
+  // The wallet is gone — leave its (now stale) detail screen and return to the
+  // previous screen (the wallets list).
+  if (deleted == true && context.mounted) {
+    context.pop();
+  }
 }
 
 class _DeleteWalletDialog extends ConsumerStatefulWidget {
@@ -514,7 +481,7 @@ class _DeleteWalletDialogState extends ConsumerState<_DeleteWalletDialog> {
         ..invalidate(walletListProvider)
         ..invalidate(walletDetailProvider(widget.wallet.id));
       if (!mounted) return;
-      context.go(WalletsScreen.path);
+      Navigator.of(context).pop(true);
     } catch (_) {
       if (!mounted) return;
       setState(() {

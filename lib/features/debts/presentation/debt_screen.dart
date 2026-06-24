@@ -13,6 +13,7 @@ import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
@@ -31,20 +32,18 @@ class DebtScreen extends ConsumerWidget {
     final state = ref.watch(debtControllerProvider);
     final controller = ref.read(debtControllerProvider.notifier);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Debt & Tracker'),
-        actions: [
-          IconButton(
-            tooltip: 'Add debt',
-            onPressed: state.wallets.isEmpty || state.isSaving
-                ? null
-                : () => _showDebtForm(context, state),
-            icon: const Icon(Icons.add),
-          ),
-          const SizedBox(width: AffluenaSpacing.space2),
-        ],
-      ),
+    return DrillInScaffold(
+      title: 'Debt & Tracker',
+      actions: [
+        IconButton(
+          tooltip: 'Add debt',
+          onPressed: state.wallets.isEmpty || state.isSaving
+              ? null
+              : () => _showDebtForm(context, state),
+          icon: const Icon(Icons.add),
+        ),
+        const SizedBox(width: AffluenaSpacing.space2),
+      ],
       body: _DebtBody(state: state, controller: controller),
     );
   }
@@ -66,69 +65,61 @@ class _DebtBody extends StatelessWidget {
       return _DebtLoadError(onRetry: () => controller.load());
     }
 
-    return SafeArea(
-      top: false,
-      child: RefreshIndicator(
-        onRefresh: () => controller.load(),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AffluenaSpacing.space5,
-            AffluenaSpacing.space4,
-            AffluenaSpacing.space5,
-            AffluenaSpacing.space8,
+    return RefreshIndicator(
+      onRefresh: () => controller.load(),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          AffluenaSpacing.space5,
+          AffluenaSpacing.space4,
+          AffluenaSpacing.space5,
+          AffluenaSpacing.space8,
+        ),
+        children: [
+          _DebtSummaryCard(state: state),
+          const SizedBox(height: AffluenaSpacing.space5),
+          if (state.actionError != null) ...[
+            AffluenaBanner.error(
+              state.actionError!,
+              onRetry: () => controller.load(),
+            ),
+            const SizedBox(height: AffluenaSpacing.space4),
+          ],
+          _DebtTypeFilter(
+            selected: state.typeFilter,
+            onChanged: controller.setTypeFilter,
           ),
-          children: [
-            _DebtSummaryCard(state: state),
-            const SizedBox(height: AffluenaSpacing.space5),
-            if (state.actionError != null) ...[
-              AffluenaBanner.error(
-                state.actionError!,
-                onRetry: () => controller.load(),
+          const SizedBox(height: AffluenaSpacing.space5),
+          SectionHeader(
+            title: 'Debts',
+            actionLabel: state.total == 0 ? null : '${state.total} total',
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+          if (state.visibleDebts.isEmpty)
+            const _EmptyDebtState()
+          else ...[
+            for (final debt in state.visibleDebts) ...[
+              _DebtCard(
+                debt: debt,
+                walletName: state.walletName(debt.walletId),
+                paymentCategoryName: state.categoryName(debt.paymentCategoryId),
+                onOpen: () => context.push(DebtDetailScreen.location(debt.id)),
+                onPay: debt.canPay ? () => _showPaySheet(context, debt) : null,
+                onEdit: () => _showDebtForm(context, state, debt: debt),
+                onCancel: debt.status == DebtStatus.cancelled
+                    ? null
+                    : () => _confirmCancel(context, controller, debt),
               ),
-              const SizedBox(height: AffluenaSpacing.space4),
+              const SizedBox(height: AffluenaSpacing.space3),
             ],
-            _DebtTypeFilter(
-              selected: state.typeFilter,
-              onChanged: controller.setTypeFilter,
-            ),
-            const SizedBox(height: AffluenaSpacing.space5),
-            SectionHeader(
-              title: 'Debts',
-              actionLabel: state.total == 0 ? null : '${state.total} total',
-            ),
-            const SizedBox(height: AffluenaSpacing.space3),
-            if (state.visibleDebts.isEmpty)
-              const _EmptyDebtState()
-            else ...[
-              for (final debt in state.visibleDebts) ...[
-                _DebtCard(
-                  debt: debt,
-                  walletName: state.walletName(debt.walletId),
-                  paymentCategoryName: state.categoryName(
-                    debt.paymentCategoryId,
-                  ),
-                  onOpen: () =>
-                      context.push(DebtDetailScreen.location(debt.id)),
-                  onPay: debt.canPay
-                      ? () => _showPaySheet(context, debt)
-                      : null,
-                  onEdit: () => _showDebtForm(context, state, debt: debt),
-                  onCancel: debt.status == DebtStatus.cancelled
-                      ? null
-                      : () => _confirmCancel(context, controller, debt),
-                ),
-                const SizedBox(height: AffluenaSpacing.space3),
-              ],
-              if (state.hasMore) ...[
-                const SizedBox(height: AffluenaSpacing.space2),
-                _LoadMoreButton(
-                  isLoading: state.isLoadingMore,
-                  onPressed: controller.loadMore,
-                ),
-              ],
+            if (state.hasMore) ...[
+              const SizedBox(height: AffluenaSpacing.space2),
+              _LoadMoreButton(
+                isLoading: state.isLoadingMore,
+                onPressed: controller.loadMore,
+              ),
             ],
           ],
-        ),
+        ],
       ),
     );
   }

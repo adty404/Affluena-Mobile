@@ -8,6 +8,7 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
@@ -16,7 +17,6 @@ import '../../tags/data/tag_models.dart';
 import '../application/transaction_create_controller.dart';
 import '../data/transaction_models.dart';
 import 'adjustment_direction_control.dart';
-import 'transactions_screen.dart';
 
 class TransactionCreateScreen extends ConsumerStatefulWidget {
   const TransactionCreateScreen({super.key});
@@ -76,8 +76,9 @@ class _TransactionCreateScreenState
         ? state.categoriesOfType(_categoryType)
         : const <Category>[];
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'New transaction',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -85,7 +86,7 @@ class _TransactionCreateScreenState
           AffluenaSpacing.space8,
         ),
         children: [
-          _Header(onBack: () => context.go(TransactionsScreen.path)),
+          const _Intro(),
           const SizedBox(height: AffluenaSpacing.space5),
           SectionHeader(title: 'Type'),
           const SizedBox(height: AffluenaSpacing.space3),
@@ -340,7 +341,7 @@ class _TransactionCreateScreenState
         .read(transactionCreateControllerProvider.notifier)
         .create(request);
     if (!mounted || !created) return;
-    context.go(TransactionsScreen.path);
+    context.pop();
   }
 
   String? _validate() {
@@ -372,38 +373,16 @@ class _TransactionCreateScreenState
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
-
-  final VoidCallback onBack;
+class _Intro extends StatelessWidget {
+  const _Intro();
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('New transaction', style: textTheme.headlineMedium),
-              const SizedBox(height: AffluenaSpacing.space1),
-              Text(
-                'Record income, an expense, a transfer, or a balance adjustment.',
-                style: textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-        IconButton.filledTonal(
-          key: const Key('transaction-create-back-button'),
-          tooltip: 'Back to transactions',
-          onPressed: onBack,
-          icon: const Icon(Icons.close),
-        ),
-      ],
+    return Text(
+      'Record income, an expense, a transfer, or a balance adjustment.',
+      style: textTheme.bodySmall,
     );
   }
 }
@@ -482,8 +461,9 @@ class _TransactionCreateLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'New transaction',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -491,7 +471,6 @@ class _TransactionCreateLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          const AffluenaSkeleton.line(width: 200, height: 28),
           const SizedBox(height: AffluenaSpacing.space5),
           Wrap(
             spacing: AffluenaSpacing.space2,
@@ -537,10 +516,9 @@ class _TransactionCreateLoadError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'New transaction',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -548,8 +526,6 @@ class _TransactionCreateLoadError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('New transaction', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load wallets and categories.',
             onRetry: onRetry,

@@ -87,7 +87,7 @@ class _WalletsContent extends ConsumerWidget {
               _WalletCard(
                 wallet: wallet,
                 onOpen: () =>
-                    context.go(WalletDetailScreen.location(wallet.id)),
+                    context.push(WalletDetailScreen.location(wallet.id)),
                 onEdit: wallet.isGoal
                     ? null
                     : () => _showWalletForm(context, ref, wallet),
