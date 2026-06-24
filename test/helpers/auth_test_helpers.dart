@@ -9,6 +9,7 @@ import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_repository.dart';
+import 'package:affluena_mobile/features/onboarding/application/onboarding_controller.dart';
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_models.dart';
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository.dart';
 import 'package:affluena_mobile/features/settings/application/device_auth_service.dart';
@@ -60,10 +61,20 @@ Widget authTestApp({
       deviceAuthServiceProvider.overrideWithValue(
         deviceAuthService ?? FakeDeviceAuthService(),
       ),
+      // These suites exercise auth/nav/dashboard/settings, not the first-run
+      // onboarding gate, so boot straight past it into the normal flow.
+      onboardingControllerProvider.overrideWith(CompletedOnboardingController.new),
       ...extraOverrides,
     ],
     child: const AffluenaApp(),
   );
+}
+
+/// An [OnboardingController] override that reports onboarding as already
+/// completed so the router skips the first-run onboarding screen.
+class CompletedOnboardingController extends OnboardingController {
+  @override
+  bool? build() => true;
 }
 
 Future<void> pumpAuthTestApp(

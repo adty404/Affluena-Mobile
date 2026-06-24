@@ -10,6 +10,7 @@ import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_repository.dart';
+import 'package:affluena_mobile/features/onboarding/application/onboarding_controller.dart';
 import 'package:affluena_mobile/features/shared/presentation/widgets/affluena_skeleton.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
@@ -146,6 +147,9 @@ Widget dashboardTestApp({
       transactionRepositoryProvider.overrideWithValue(transactionRepository),
       walletRepositoryProvider.overrideWithValue(walletRepository),
       categoryRepositoryProvider.overrideWithValue(categoryRepository),
+      // This suite targets the dashboard, not the first-run onboarding gate, so
+      // boot straight past it into the authenticated flow.
+      onboardingControllerProvider.overrideWith(CompletedOnboardingController.new),
     ],
     child: const AffluenaApp(),
   );
