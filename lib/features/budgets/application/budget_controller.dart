@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../data/budget_models.dart';
 import '../data/budget_repository.dart';
 
@@ -139,6 +140,9 @@ class BudgetController extends Notifier<BudgetState> {
       }
       state = state.copyWith(isSaving: false);
       await load();
+      // Budget limits feed the dashboard and budget report, so refresh the
+      // shared financial providers (wallets/dashboard) after a successful save.
+      ref.invalidateFinancialData();
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
@@ -160,6 +164,7 @@ class BudgetController extends Notifier<BudgetState> {
         total: state.total > 0 ? state.total - 1 : 0,
       );
       await load();
+      ref.invalidateFinancialData();
     } catch (_) {
       state = state.copyWith(actionError: 'Budget could not be deleted.');
     }

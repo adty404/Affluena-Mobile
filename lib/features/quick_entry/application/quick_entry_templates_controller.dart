@@ -4,10 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
-import '../../dashboard/application/dashboard_home_controller.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../tags/data/tag_models.dart';
 import '../../tags/data/tag_repository.dart';
-import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
@@ -155,8 +154,7 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
       await ref
           .read(quickEntryRepositoryProvider)
           .executeTemplate(template.id, request);
-      ref.invalidate(dashboardHomeProvider);
-      ref.invalidate(transactionsControllerProvider);
+      ref.invalidateFinancialData();
       state = state.copyWith(
         isSaving: false,
         message: '${template.name} recorded.',

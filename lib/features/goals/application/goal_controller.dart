@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/application/financial_refresh.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
 import '../data/goal_models.dart';
@@ -94,8 +95,8 @@ class GoalController extends Notifier<GoalState> {
     required String goalWalletId,
     required int amountMinor,
     required DateTime contributedAt,
-  }) {
-    return _mutate(
+  }) async {
+    final success = await _mutate(
       () => ref
           .read(transactionRepositoryProvider)
           .createTransaction(
@@ -109,6 +110,13 @@ class GoalController extends Notifier<GoalState> {
             ),
           ),
     );
+    // A contribution moves money between wallets, so refresh the shared
+    // financial providers (wallet balances, dashboard, analytics, budgets) on
+    // success. _mutate already reloaded the goals list.
+    if (success) {
+      ref.invalidateFinancialData();
+    }
+    return success;
   }
 
   /// Runs a mutation, reloads goals on success, and reports success as a bool.
