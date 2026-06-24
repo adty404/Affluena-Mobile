@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
@@ -8,6 +7,7 @@ import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
@@ -27,11 +27,8 @@ class DebtDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detail = ref.watch(debtDetailProvider(debtId));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Debt detail'),
-        leading: BackButton(onPressed: () => _back(context)),
-      ),
+    return DrillInScaffold(
+      title: detail.value?.counterpartyName ?? 'Debt detail',
       body: detail.when(
         skipLoadingOnReload: true,
         loading: () => const _DebtDetailSkeleton(),
@@ -41,14 +38,6 @@ class DebtDetailScreen extends ConsumerWidget {
         data: (debt) => _DebtDetailContent(debt: debt),
       ),
     );
-  }
-
-  void _back(BuildContext context) {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go('/debts');
-    }
   }
 }
 
@@ -64,126 +53,123 @@ class _DebtDetailContent extends StatelessWidget {
     final isPayable = debt.type == DebtType.payable;
     final accent = isPayable ? colors.coral : colors.success;
 
-    return SafeArea(
-      top: false,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
-        children: [
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        debt.counterpartyName,
-                        style: textTheme.headlineSmall,
-                      ),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AffluenaSpacing.space5,
+        AffluenaSpacing.space4,
+        AffluenaSpacing.space5,
+        AffluenaSpacing.space8,
+      ),
+      children: [
+        AffluenaCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      debt.counterpartyName,
+                      style: textTheme.headlineSmall,
                     ),
-                    StatusBadge.forStatus(
-                      debt.status.apiValue,
-                      label: debt.status.label,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AffluenaSpacing.space2),
-                StatusBadge(
-                  label: isPayable ? 'Payable' : 'Receivable',
-                  tone: isPayable ? StatusTone.danger : StatusTone.success,
-                ),
-                const SizedBox(height: AffluenaSpacing.space4),
-                Text(
-                  MoneyFormatter.idr(debt.remainingAmountMinor),
-                  style: textTheme.displaySmall,
-                ),
-                const SizedBox(height: AffluenaSpacing.space1),
-                Text(
-                  '${debt.paidPercent.round()}% settled of '
-                  '${MoneyFormatter.idr(debt.principalAmountMinor)}',
-                  style: textTheme.bodySmall,
-                ),
-                const SizedBox(height: AffluenaSpacing.space3),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AffluenaRadii.pill),
-                  child: LinearProgressIndicator(
-                    value: debt.paidPercent / 100,
-                    minHeight: 10,
-                    color: accent,
-                    backgroundColor: colors.surfaceTintSoft,
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    MetricTile(
-                      label: 'Principal',
-                      value: MoneyFormatter.idr(debt.principalAmountMinor),
-                      helper: 'Original amount',
-                      icon: Icons.account_balance_outlined,
-                    ),
-                    const SizedBox(width: AffluenaSpacing.space3),
-                    MetricTile(
-                      label: 'Paid',
-                      value: MoneyFormatter.idr(debt.paidAmountMinor),
-                      helper: 'Settled so far',
-                      icon: Icons.done_all,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AffluenaSpacing.space3),
-                _DetailRow(
-                  icon: Icons.event_outlined,
-                  title: 'Opened',
-                  value: AffluenaDateFormatter.shortDate(debt.openedAt),
-                ),
-                const Divider(height: 1),
-                _DetailRow(
-                  icon: Icons.schedule_outlined,
-                  title: 'Due date',
-                  value: debt.dueDate == null || debt.dueDate!.isEmpty
-                      ? 'No due date'
-                      : AffluenaDateFormatter.shortDate(debt.dueDate!),
-                ),
-                if (debt.note.isNotEmpty) ...[
-                  const Divider(height: 1),
-                  _DetailRow(
-                    icon: Icons.notes_outlined,
-                    title: 'Note',
-                    value: debt.note,
+                  StatusBadge.forStatus(
+                    debt.status.apiValue,
+                    label: debt.status.label,
                   ),
                 ],
+              ),
+              const SizedBox(height: AffluenaSpacing.space2),
+              StatusBadge(
+                label: isPayable ? 'Payable' : 'Receivable',
+                tone: isPayable ? StatusTone.danger : StatusTone.success,
+              ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              Text(
+                MoneyFormatter.idr(debt.remainingAmountMinor),
+                style: textTheme.displaySmall,
+              ),
+              const SizedBox(height: AffluenaSpacing.space1),
+              Text(
+                '${debt.paidPercent.round()}% settled of '
+                '${MoneyFormatter.idr(debt.principalAmountMinor)}',
+                style: textTheme.bodySmall,
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AffluenaRadii.pill),
+                child: LinearProgressIndicator(
+                  value: debt.paidPercent / 100,
+                  minHeight: 10,
+                  color: accent,
+                  backgroundColor: colors.surfaceTintSoft,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AffluenaSpacing.space5),
+        AffluenaCard(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  MetricTile(
+                    label: 'Principal',
+                    value: MoneyFormatter.idr(debt.principalAmountMinor),
+                    helper: 'Original amount',
+                    icon: Icons.account_balance_outlined,
+                  ),
+                  const SizedBox(width: AffluenaSpacing.space3),
+                  MetricTile(
+                    label: 'Paid',
+                    value: MoneyFormatter.idr(debt.paidAmountMinor),
+                    helper: 'Settled so far',
+                    icon: Icons.done_all,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
+              _DetailRow(
+                icon: Icons.event_outlined,
+                title: 'Opened',
+                value: AffluenaDateFormatter.shortDate(debt.openedAt),
+              ),
+              const Divider(height: 1),
+              _DetailRow(
+                icon: Icons.schedule_outlined,
+                title: 'Due date',
+                value: debt.dueDate == null || debt.dueDate!.isEmpty
+                    ? 'No due date'
+                    : AffluenaDateFormatter.shortDate(debt.dueDate!),
+              ),
+              if (debt.note.isNotEmpty) ...[
+                const Divider(height: 1),
+                _DetailRow(
+                  icon: Icons.notes_outlined,
+                  title: 'Note',
+                  value: debt.note,
+                ),
               ],
-            ),
+            ],
           ),
-          const SizedBox(height: AffluenaSpacing.space6),
-          SectionHeader(
-            title: 'Payment history',
-            actionLabel: debt.payments.isEmpty
-                ? null
-                : debt.payments.length == 1
-                ? '1 payment'
-                : '${debt.payments.length} payments',
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          if (debt.payments.isEmpty)
-            const _EmptyPayments()
-          else
-            _PaymentTimeline(payments: debt.payments, accent: accent),
-        ],
-      ),
+        ),
+        const SizedBox(height: AffluenaSpacing.space6),
+        SectionHeader(
+          title: 'Payment history',
+          actionLabel: debt.payments.isEmpty
+              ? null
+              : debt.payments.length == 1
+              ? '1 payment'
+              : '${debt.payments.length} payments',
+        ),
+        const SizedBox(height: AffluenaSpacing.space3),
+        if (debt.payments.isEmpty)
+          const _EmptyPayments()
+        else
+          _PaymentTimeline(payments: debt.payments, accent: accent),
+      ],
     );
   }
 }
@@ -241,9 +227,7 @@ class _TimelineEntry extends StatelessWidget {
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: isFirst
-                        ? Colors.transparent
-                        : colors.borderSubtle,
+                    color: isFirst ? Colors.transparent : colors.borderSubtle,
                   ),
                 ),
                 Container(
@@ -449,7 +433,10 @@ class _DebtDetailError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          AffluenaBanner.error('We could not load this debt.', onRetry: onRetry),
+          AffluenaBanner.error(
+            'We could not load this debt.',
+            onRetry: onRetry,
+          ),
         ],
       ),
     );

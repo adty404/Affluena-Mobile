@@ -7,6 +7,7 @@ import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
@@ -67,7 +68,6 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(insightsControllerProvider);
     final controller = ref.read(insightsControllerProvider.notifier);
-    final textTheme = Theme.of(context).textTheme;
 
     if (state.isLoading && state.report.metrics.isEmpty) {
       return const _InsightsLoading();
@@ -80,8 +80,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
       );
     }
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Insights',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -89,8 +90,6 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Insights', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           _InsightsSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
@@ -697,8 +696,9 @@ class _InsightsLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Insights',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -706,8 +706,6 @@ class _InsightsLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Insights', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(child: _SummarySkeleton()),
           const SizedBox(height: AffluenaSpacing.space5),
           const Wrap(
@@ -799,17 +797,13 @@ class _InsightsError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
+    return DrillInScaffold(
+      title: 'Insights',
+      body: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Insights',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: AffluenaSpacing.space5),
             AffluenaBanner.error(message, onRetry: onRetry),
           ],
         ),

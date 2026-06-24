@@ -515,7 +515,7 @@ class _QuickEntryContent extends StatelessWidget {
           lookup.templates.isEmpty
               ? _SavedTemplatesEmpty(
                   onCreate: () =>
-                      context.go(QuickEntryTemplatesScreen.path),
+                      context.push(QuickEntryTemplatesScreen.path),
                 )
               : Wrap(
                   spacing: AffluenaSpacing.space3,

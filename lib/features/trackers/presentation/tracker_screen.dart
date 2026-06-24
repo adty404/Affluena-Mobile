@@ -9,6 +9,7 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -28,7 +29,6 @@ class TrackerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(trackerControllerProvider);
     final controller = ref.read(trackerControllerProvider.notifier);
-    final textTheme = Theme.of(context).textTheme;
 
     if (state.isLoading &&
         state.installments.isEmpty &&
@@ -42,8 +42,20 @@ class TrackerScreen extends ConsumerWidget {
       return _TrackerError(onRetry: controller.load);
     }
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Trackers',
+      actions: [
+        IconButton.filledTonal(
+          onPressed:
+              state.wallets.isEmpty ||
+                  state.categories.isEmpty ||
+                  state.isSaving
+              ? null
+              : () => _showTrackerForm(context, state),
+          icon: const Icon(Icons.add),
+        ),
+      ],
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -51,23 +63,6 @@ class TrackerScreen extends ConsumerWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text('Trackers', style: textTheme.headlineMedium),
-              ),
-              IconButton.filledTonal(
-                onPressed:
-                    state.wallets.isEmpty ||
-                        state.categories.isEmpty ||
-                        state.isSaving
-                    ? null
-                    : () => _showTrackerForm(context, state),
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           _TrackerSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
@@ -570,8 +565,9 @@ class _TrackerLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Trackers',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -579,8 +575,6 @@ class _TrackerLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Trackers', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(
             child: Column(
               children: [
@@ -623,8 +617,9 @@ class _TrackerError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Trackers',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -632,11 +627,6 @@ class _TrackerError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text(
-            'Trackers',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load your trackers.',
             onRetry: onRetry,

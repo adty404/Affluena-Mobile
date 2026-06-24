@@ -9,6 +9,7 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
@@ -82,8 +83,9 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
         _participants.isNotEmpty &&
         splitError == null;
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Split bill',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -91,7 +93,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
           AffluenaSpacing.space8,
         ),
         children: [
-          _SplitBillHeader(onBack: () => context.go(TransactionsScreen.path)),
+          const _SplitBillIntro(),
           const SizedBox(height: AffluenaSpacing.space5),
           _SplitSummary(
             totalAmount: totalAmount,

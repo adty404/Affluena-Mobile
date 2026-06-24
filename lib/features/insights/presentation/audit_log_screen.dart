@@ -6,6 +6,7 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
@@ -29,7 +30,6 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(auditLogControllerProvider);
     final controller = ref.read(auditLogControllerProvider.notifier);
-    final textTheme = Theme.of(context).textTheme;
 
     if (state.isLoading &&
         state.activities.isEmpty &&
@@ -43,8 +43,9 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
       return _AuditLogError(message: state.loadError!, onRetry: controller.load);
     }
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Audit logs',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -52,8 +53,6 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Audit logs', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           _AuditSummaryCard(state: state),
           if (_detailError != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
@@ -366,8 +365,9 @@ class _AuditLogLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Audit logs',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -375,11 +375,6 @@ class _AuditLogLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text(
-            'Audit logs',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(
             child: Row(
               children: [
@@ -431,17 +426,13 @@ class _AuditLogError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
+    return DrillInScaffold(
+      title: 'Audit logs',
+      body: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Audit logs',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: AffluenaSpacing.space5),
             AffluenaBanner.error(message),
             const SizedBox(height: AffluenaSpacing.space4),
             FilledButton(

@@ -9,6 +9,7 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -28,7 +29,6 @@ class RecurringScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(recurringControllerProvider);
     final controller = ref.read(recurringControllerProvider.notifier);
-    final textTheme = Theme.of(context).textTheme;
 
     if (state.isLoading && state.rules.isEmpty) {
       return const _RecurringLoading();
@@ -38,8 +38,17 @@ class RecurringScreen extends ConsumerWidget {
       return _RecurringError(onRetry: controller.load);
     }
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Recurring',
+      actions: [
+        IconButton.filledTonal(
+          onPressed: state.wallets.isEmpty || state.isSaving
+              ? null
+              : () => _showRecurringForm(context, state),
+          icon: const Icon(Icons.add),
+        ),
+      ],
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -47,20 +56,6 @@ class RecurringScreen extends ConsumerWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text('Recurring', style: textTheme.headlineMedium),
-              ),
-              IconButton.filledTonal(
-                onPressed: state.wallets.isEmpty || state.isSaving
-                    ? null
-                    : () => _showRecurringForm(context, state),
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           _RecurringSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
@@ -331,8 +326,9 @@ class _RecurringLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Recurring',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -340,8 +336,6 @@ class _RecurringLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Recurring', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(
             child: Column(
               children: [
@@ -384,8 +378,9 @@ class _RecurringError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Recurring',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -393,11 +388,6 @@ class _RecurringError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text(
-            'Recurring',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load recurring rules.',
             onRetry: onRetry,

@@ -9,6 +9,7 @@ import '../../insights/application/insights_controller.dart';
 import '../../insights/presentation/insights_screen.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../application/settings_controller.dart';
 import 'settings_screen_widgets.dart';
@@ -28,15 +29,15 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final authState = ref.watch(authControllerProvider);
     final profile = ref.watch(settingsProfileProvider);
     final securityPreferences = ref.watch(securityPreferencesProvider);
     final user = profile.asData?.value ?? authState.user;
     final securityState = securityPreferences.asData?.value;
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Security center',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -44,8 +45,6 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Security center', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           SettingsProfileCard(user: user, isLoading: profile.isLoading),
           if (_feedback != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
@@ -114,7 +113,7 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
                   title: 'Security alerts',
                   value: 'Managed in notification rules',
                   onTap: () =>
-                      context.go(InsightsScreen.location(InsightTab.rules)),
+                      context.push(InsightsScreen.location(InsightTab.rules)),
                 ),
                 const Divider(height: 1),
                 const SettingsRow(

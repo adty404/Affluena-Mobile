@@ -8,6 +8,7 @@ import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
@@ -30,7 +31,6 @@ class GoalScreen extends ConsumerWidget {
     final currentUserId = ref.watch(
       authControllerProvider.select((auth) => auth.user?.id),
     );
-    final textTheme = Theme.of(context).textTheme;
 
     if (state.isLoading && state.goals.isEmpty) {
       return const _GoalLoading();
@@ -40,8 +40,15 @@ class GoalScreen extends ConsumerWidget {
       return _GoalError(onRetry: controller.load);
     }
 
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Goals',
+      actions: [
+        IconButton(
+          onPressed: state.isSaving ? null : () => showGoalFormSheet(context),
+          icon: const Icon(Icons.add),
+        ),
+      ],
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -49,18 +56,6 @@ class GoalScreen extends ConsumerWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Row(
-            children: [
-              Expanded(child: Text('Goals', style: textTheme.headlineMedium)),
-              IconButton.filledTonal(
-                onPressed: state.isSaving
-                    ? null
-                    : () => showGoalFormSheet(context),
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           _GoalSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
@@ -405,9 +400,9 @@ class _GoalLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Goals',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -415,8 +410,6 @@ class _GoalLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Goals', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(child: _SummarySkeleton()),
           const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaSkeleton.line(width: 140, height: 16),
@@ -488,8 +481,9 @@ class _GoalError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Goals',
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
@@ -497,11 +491,6 @@ class _GoalError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text(
-            'Goals unavailable',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaBanner.error(
             'We could not load goals.',
             onRetry: onRetry,
