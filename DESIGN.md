@@ -155,6 +155,44 @@ All spacing derives from a base of 4.
 - **States**: static route shell, later replaced by module-specific loading/empty/error states.
 - **Accessibility**: rows use visible text labels and Material icons; parameter IDs are not shown as user-facing copy.
 
+### Skeleton
+
+- **Structure**: tonal shimmer block sized to the content it stands in for; compose several to mirror the loaded layout.
+- **Variants**: block (`AffluenaSkeleton`), line (`.line`), circle (`.circle`).
+- **Usage**: the standard loading state across every screen — never a centered spinner or "Loading…" text.
+- **States**: animating (shimmer) and static (when reduced-motion is on).
+- **Accessibility**: honors the platform reduce-motion setting (static tonal fill, no animation).
+- **Motion**: a single calm left-to-right shimmer sweep; opacity/gradient only.
+
+### Money Input
+
+- **Structure**: text field with an `Rp` prefix that groups thousands (`Rp 1.234.567`) as the user types.
+- **Usage**: every money amount field. Stores and reports an integer in minor units; users never read or type a bare unformatted integer. For balance adjustments an Increase/Decrease control supplies the sign.
+- **States**: default, focused, disabled, error (validator).
+- **Accessibility**: numeric keyboard; the grouped value is plain text.
+
+### Date Picker Field
+
+- **Structure**: a Selector Row-styled field (label, formatted value, chevron) that opens the native date picker on tap.
+- **Usage**: every date / datetime field. Replaces hand-typed `YYYY-MM-DD` / RFC3339 entry; machine date formats are never shown to the user.
+- **States**: empty (placeholder), selected, disabled.
+- **Accessibility**: exposes label + selected value via `Semantics`; the displayed date uses the `id_ID` locale.
+
+### Status Banner
+
+- **Structure**: rounded inline container with a leading status icon, message, and optional retry/dismiss action.
+- **Variants**: error (coral), success (success), warning (amber), info (forest).
+- **Usage**: action and load errors and confirmations. Errors read as errors — never a neutral `surfaceTintSoft` tint. Bottom sheets stay open on failure and surface the banner inline.
+- **States**: static, with-retry, with-dismiss.
+- **Accessibility**: message is body text at full ink contrast; the accent color is supportive, not the only signal.
+
+### Status Badge
+
+- **Structure**: compact pill colored by semantic meaning, not by the brand accent.
+- **Variants**: success, warning, danger, neutral (plus a `forStatus()` mapper for backend status strings).
+- **Usage**: lifecycle/status pills (active, paused, partial, paid_off, cancelled, joined, rejected, …). Active and Cancelled must look different.
+- **Accessibility**: status is carried by the label text, not color alone.
+
 ## 6. Motion & Interaction
 
 ### Timing
