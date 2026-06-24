@@ -168,6 +168,7 @@ abstract final class AffluenaRadii {
   static const double control = 18;
   static const double card = 20;
   static const double sheet = 24;
+  static const double pill = 999;
 }
 
 abstract final class AffluenaTheme {
