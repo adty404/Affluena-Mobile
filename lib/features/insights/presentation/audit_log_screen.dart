@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
+import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/audit_log_controller.dart';
 import '../data/insight_models.dart';
 import '../data/insights_repository.dart';
@@ -37,7 +40,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     if (state.loadError != null &&
         state.activities.isEmpty &&
         state.systemLogs.isEmpty) {
-      return _AuditLogError(onRetry: controller.load);
+      return _AuditLogError(message: state.loadError!, onRetry: controller.load);
     }
 
     return SafeArea(
@@ -54,7 +57,10 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           _AuditSummaryCard(state: state),
           if (_detailError != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
-            _MessageCard(message: _detailError!, isError: true),
+            AffluenaBanner(
+              message: _detailError!,
+              onDismiss: () => setState(() => _detailError = null),
+            ),
           ],
           const SizedBox(height: AffluenaSpacing.space5),
           _AuditLogTabs(
@@ -259,12 +265,15 @@ class _ActivityLogCard extends StatelessWidget {
                     style: textTheme.titleMedium,
                   ),
                 ),
-                _StatusBadge(label: activity.actionType),
+                StatusBadge.forStatus(
+                  activity.actionType,
+                  label: _humanize(activity.actionType),
+                ),
               ],
             ),
             const SizedBox(height: AffluenaSpacing.space2),
             Text(
-              '${activity.actionType} · ${activity.entityType}',
+              '${_humanize(activity.actionType)} · ${_humanize(activity.entityType)}',
               style: textTheme.bodySmall,
             ),
             const SizedBox(height: AffluenaSpacing.space1),
@@ -303,7 +312,10 @@ class _SystemLogCard extends StatelessWidget {
                     style: textTheme.titleMedium,
                   ),
                 ),
-                _StatusBadge(label: log.statusCode.toString()),
+                StatusBadge(
+                  label: log.statusCode.toString(),
+                  tone: _statusCodeTone(log.statusCode),
+                ),
               ],
             ),
             const SizedBox(height: AffluenaSpacing.space2),
@@ -316,46 +328,6 @@ class _SystemLogCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: context.affluenaColors.forestSoft,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AffluenaSpacing.space3,
-          vertical: AffluenaSpacing.space1,
-        ),
-        child: Text(label, style: Theme.of(context).textTheme.labelMedium),
-      ),
-    );
-  }
-}
-
-class _MessageCard extends StatelessWidget {
-  const _MessageCard({required this.message, required this.isError});
-
-  final String message;
-  final bool isError;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-    return AffluenaCard(
-      backgroundColor: isError ? colors.coral.withAlpha(28) : colors.forestSoft,
-      borderColor: isError ? colors.coral : colors.borderSubtle,
-      child: Text(message),
     );
   }
 }
@@ -394,29 +366,67 @@ class _AuditLogLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SafeArea(
-      child: Padding(
-        padding: EdgeInsets.all(AffluenaSpacing.space5),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            LinearProgressIndicator(minHeight: 2),
-            SizedBox(height: AffluenaSpacing.space5),
-            _EmptyState(
-              icon: Icons.manage_search_outlined,
-              title: 'Loading audit logs',
-              body: 'Fetching user activity and system request history.',
-            ),
-          ],
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          AffluenaSpacing.space5,
+          AffluenaSpacing.space4,
+          AffluenaSpacing.space5,
+          AffluenaSpacing.space8,
         ),
+        children: [
+          Text(
+            'Audit logs',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: AffluenaSpacing.space5),
+          const AffluenaCard(
+            child: Row(
+              children: [
+                Expanded(child: AffluenaSkeleton(height: 72, radius: 18)),
+                SizedBox(width: AffluenaSpacing.space3),
+                Expanded(child: AffluenaSkeleton(height: 72, radius: 18)),
+              ],
+            ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space5),
+          const Wrap(
+            spacing: AffluenaSpacing.space2,
+            children: [
+              AffluenaSkeleton(width: 84, height: 32, radius: AffluenaRadii.pill),
+              AffluenaSkeleton(
+                width: 104,
+                height: 32,
+                radius: AffluenaRadii.pill,
+              ),
+            ],
+          ),
+          const SizedBox(height: AffluenaSpacing.space5),
+          for (var i = 0; i < 4; i++) ...[
+            AffluenaCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  AffluenaSkeleton.line(width: 180, height: 16),
+                  SizedBox(height: AffluenaSpacing.space3),
+                  AffluenaSkeleton.line(width: 140),
+                  SizedBox(height: AffluenaSpacing.space2),
+                  AffluenaSkeleton.line(width: 100),
+                ],
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+          ],
+        ],
       ),
     );
   }
 }
 
 class _AuditLogError extends StatelessWidget {
-  const _AuditLogError({required this.onRetry});
+  const _AuditLogError({required this.message, required this.onRetry});
 
+  final String message;
   final VoidCallback onRetry;
 
   @override
@@ -427,11 +437,12 @@ class _AuditLogError extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _EmptyState(
-              icon: Icons.cloud_off_outlined,
-              title: 'Audit logs unavailable',
-              body: 'Check your connection and try loading audit logs again.',
+            Text(
+              'Audit logs',
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
+            const SizedBox(height: AffluenaSpacing.space5),
+            AffluenaBanner.error(message),
             const SizedBox(height: AffluenaSpacing.space4),
             FilledButton(
               key: const Key('audit-log-retry-button'),
@@ -445,6 +456,23 @@ class _AuditLogError extends StatelessWidget {
   }
 }
 
+/// Title-cases a snake_case / lowercase backend token for display.
+String _humanize(String value) {
+  if (value.isEmpty) return value;
+  return value
+      .split(RegExp(r'[_\s]+'))
+      .where((word) => word.isNotEmpty)
+      .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
+}
+
+StatusTone _statusCodeTone(int statusCode) {
+  if (statusCode >= 500) return StatusTone.danger;
+  if (statusCode >= 400) return StatusTone.warning;
+  if (statusCode >= 200 && statusCode < 300) return StatusTone.success;
+  return StatusTone.neutral;
+}
+
 Future<void> _showActivityDetailSheet(
   BuildContext context,
   ActivityItem activity,
@@ -452,17 +480,23 @@ Future<void> _showActivityDetailSheet(
   return _showAuditDetailSheet(
     context,
     title: activity.description,
-    subtitle: '${activity.actionType} · ${activity.entityType}',
+    subtitle:
+        '${_humanize(activity.actionType)} · ${_humanize(activity.entityType)}',
     rows: [
-      _DetailRowData('Entity type', activity.entityType),
+      _DetailRowData('Action', _humanize(activity.actionType)),
+      _DetailRowData('Entity', _humanize(activity.entityType)),
       _DetailRowData(
-        'Entity ID',
-        activity.entityId.isEmpty ? '-' : activity.entityId,
-      ),
-      _DetailRowData(
-        'Created',
+        'Recorded',
         AffluenaDateFormatter.shortDate(activity.createdAt),
       ),
+      // The audit API exposes only the raw entity UUID (no human-readable
+      // name), so it is surfaced as a de-emphasised technical reference.
+      if (activity.entityId.isNotEmpty)
+        _DetailRowData(
+          'Reference ID',
+          activity.entityId,
+          isTechnical: true,
+        ),
     ],
   );
 }
@@ -475,8 +509,18 @@ Future<void> _showSystemLogDetailSheet(BuildContext context, SystemLog log) {
     rows: [
       _DetailRowData('Client IP', log.clientIp),
       _DetailRowData('User agent', log.userAgent),
-      _DetailRowData('Request payload', log.requestPayload ?? '-'),
-      _DetailRowData('Response payload', log.responsePayload ?? '-'),
+      if (log.requestPayload != null && log.requestPayload!.isNotEmpty)
+        _DetailRowData(
+          'Request payload',
+          log.requestPayload!,
+          isTechnical: true,
+        ),
+      if (log.responsePayload != null && log.responsePayload!.isNotEmpty)
+        _DetailRowData(
+          'Response payload',
+          log.responsePayload!,
+          isTechnical: true,
+        ),
       _DetailRowData('Created', AffluenaDateFormatter.shortDate(log.createdAt)),
     ],
   );
@@ -531,10 +575,14 @@ Future<void> _showAuditDetailSheet(
 }
 
 class _DetailRowData {
-  const _DetailRowData(this.label, this.value);
+  const _DetailRowData(this.label, this.value, {this.isTechnical = false});
 
   final String label;
   final String value;
+
+  /// When true the row is rendered de-emphasised (muted, monospace) and the
+  /// label is suffixed with "(debug)" to signal it is a raw technical value.
+  final bool isTechnical;
 }
 
 class _DetailRow extends StatelessWidget {
@@ -545,12 +593,26 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(row.label, style: textTheme.labelMedium),
+        Text(
+          row.isTechnical ? '${row.label} (debug)' : row.label,
+          style: textTheme.labelMedium?.copyWith(
+            color: row.isTechnical ? colors.inkMuted : null,
+          ),
+        ),
         const SizedBox(height: AffluenaSpacing.space1),
-        Text(row.value, style: textTheme.bodyMedium),
+        Text(
+          row.value,
+          style: row.isTechnical
+              ? textTheme.bodySmall?.copyWith(
+                  color: colors.inkMuted,
+                  fontFamily: 'monospace',
+                )
+              : textTheme.bodyMedium,
+        ),
       ],
     );
   }

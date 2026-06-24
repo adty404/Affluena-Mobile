@@ -80,6 +80,31 @@ class BudgetController extends Notifier<BudgetState> {
     unawaited(load(month: month));
   }
 
+  Future<void> loadMore() async {
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
+
+    state = state.copyWith(isLoadingMore: true, actionError: null);
+    try {
+      final response = await ref
+          .read(budgetRepositoryProvider)
+          .listBudgets(
+            month: state.month,
+            limit: budgetPageSize,
+            offset: state.budgets.length,
+          );
+      state = state.copyWith(
+        isLoadingMore: false,
+        budgets: [...state.budgets, ...response.budgets],
+        total: response.pagination.total,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoadingMore: false,
+        actionError: 'More budgets could not be loaded.',
+      );
+    }
+  }
+
   Future<void> createBudget({
     required String categoryId,
     required int limitMinor,
@@ -152,6 +177,7 @@ class BudgetState {
     this.categoryNames = const {},
     this.reportSummary,
     this.isLoading = false,
+    this.isLoadingMore = false,
     this.isSaving = false,
     this.loadError,
     this.actionError,
@@ -166,9 +192,17 @@ class BudgetState {
   final Map<String, String> categoryNames;
   final BudgetReportSummary? reportSummary;
   final bool isLoading;
+  final bool isLoadingMore;
   final bool isSaving;
   final String? loadError;
   final String? actionError;
+
+  bool get hasMore => budgets.length < total;
+
+  /// Expense categories the user can still budget against. Used to decide
+  /// between an actionable "create budget" affordance and a CTA to first add a
+  /// category.
+  bool get hasExpenseCategories => categories.isNotEmpty;
 
   String categoryName(String id) => categoryNames[id] ?? 'Unknown category';
 
@@ -189,6 +223,7 @@ class BudgetState {
     Map<String, String>? categoryNames,
     Object? reportSummary = _unchanged,
     bool? isLoading,
+    bool? isLoadingMore,
     bool? isSaving,
     Object? loadError = _unchanged,
     Object? actionError = _unchanged,
@@ -205,6 +240,7 @@ class BudgetState {
           ? this.reportSummary
           : reportSummary as BudgetReportSummary?,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       isSaving: isSaving ?? this.isSaving,
       loadError: identical(loadError, _unchanged)
           ? this.loadError

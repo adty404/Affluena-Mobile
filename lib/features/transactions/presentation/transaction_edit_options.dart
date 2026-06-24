@@ -42,9 +42,3 @@ class _NamedOption {
   final String id;
   final String label;
 }
-
-int _parseTransactionAmount(String value) {
-  final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
-  if (digits.isEmpty) return 0;
-  return int.tryParse(digits) ?? 0;
-}

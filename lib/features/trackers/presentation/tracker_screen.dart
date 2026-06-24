@@ -5,11 +5,16 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/status_badge.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/tracker_controller.dart';
 import '../data/tracker_models.dart';
@@ -66,9 +71,9 @@ class TrackerScreen extends ConsumerWidget {
           _TrackerSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
-            AffluenaCard(
-              backgroundColor: context.affluenaColors.surfaceTintSoft,
-              child: Text(state.actionError!),
+            AffluenaBanner.error(
+              state.actionError!,
+              onRetry: controller.load,
             ),
             const SizedBox(height: AffluenaSpacing.space4),
           ],
@@ -206,10 +211,19 @@ class _InstallmentList extends StatelessWidget {
                   : () => _confirm(
                       context,
                       title: 'Cancel installment?',
-                      body: 'This marks the installment cancelled.',
+                      body:
+                          'This keeps the record and marks the installment cancelled.',
                       actionLabel: 'Cancel installment',
                       onConfirm: () => controller.cancelInstallment(item),
                     ),
+              onDelete: () => _confirm(
+                context,
+                title: 'Delete installment?',
+                body:
+                    'This permanently removes the installment and its schedule. This cannot be undone.',
+                actionLabel: 'Delete installment',
+                onConfirm: () => controller.deleteInstallment(item),
+              ),
             ),
             const SizedBox(height: AffluenaSpacing.space3),
           ],
@@ -277,13 +291,22 @@ class _SubscriptionList extends StatelessWidget {
                   : () => _confirm(
                       context,
                       title: 'Cancel subscription?',
-                      body: 'This marks the subscription cancelled.',
+                      body:
+                          'This keeps the record and marks the subscription cancelled.',
                       actionLabel: 'Cancel subscription',
                       onConfirm: () => controller.setSubscriptionStatus(
                         item,
                         SubscriptionStatus.cancelled,
                       ),
                     ),
+              onDelete: () => _confirm(
+                context,
+                title: 'Delete subscription?',
+                body:
+                    'This permanently removes the subscription. This cannot be undone.',
+                actionLabel: 'Delete subscription',
+                onConfirm: () => controller.deleteSubscription(item),
+              ),
             ),
             const SizedBox(height: AffluenaSpacing.space3),
           ],
@@ -298,6 +321,7 @@ class _InstallmentCard extends StatelessWidget {
     required this.walletName,
     required this.categoryName,
     required this.onEdit,
+    required this.onDelete,
     this.onPay,
     this.onCancel,
   });
@@ -306,6 +330,7 @@ class _InstallmentCard extends StatelessWidget {
   final String walletName;
   final String categoryName;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
   final VoidCallback? onPay;
   final VoidCallback? onCancel;
 
@@ -313,7 +338,8 @@ class _InstallmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _TrackerCard(
       title: item.name,
-      status: item.status.label,
+      statusApiValue: item.status.apiValue,
+      statusLabel: item.status.label,
       amount: MoneyFormatter.idr(item.monthlyAmountMinor),
       progress: item.paidPercent / 100,
       meta:
@@ -325,7 +351,16 @@ class _InstallmentCard extends StatelessWidget {
       menuItems: [
         _TrackerMenuItem(label: 'Edit', onTap: onEdit),
         if (onCancel != null)
-          _TrackerMenuItem(label: 'Cancel installment', onTap: onCancel!),
+          _TrackerMenuItem(
+            label: 'Cancel installment',
+            onTap: onCancel!,
+            destructive: true,
+          ),
+        _TrackerMenuItem(
+          label: 'Delete installment',
+          onTap: onDelete,
+          destructive: true,
+        ),
       ],
     );
   }
@@ -337,6 +372,7 @@ class _SubscriptionCard extends StatelessWidget {
     required this.walletName,
     required this.categoryName,
     required this.onEdit,
+    required this.onDelete,
     this.onPay,
     this.onPause,
     this.onResume,
@@ -347,6 +383,7 @@ class _SubscriptionCard extends StatelessWidget {
   final String walletName;
   final String categoryName;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
   final VoidCallback? onPay;
   final VoidCallback? onPause;
   final VoidCallback? onResume;
@@ -356,7 +393,8 @@ class _SubscriptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _TrackerCard(
       title: item.name,
-      status: item.status.label,
+      statusApiValue: item.status.apiValue,
+      statusLabel: item.status.label,
       amount: MoneyFormatter.idr(item.amountMinor),
       progress: item.status == SubscriptionStatus.active ? 1 : 0,
       meta:
@@ -371,7 +409,16 @@ class _SubscriptionCard extends StatelessWidget {
         if (onResume != null)
           _TrackerMenuItem(label: 'Resume', onTap: onResume!),
         if (onCancel != null)
-          _TrackerMenuItem(label: 'Cancel subscription', onTap: onCancel!),
+          _TrackerMenuItem(
+            label: 'Cancel subscription',
+            onTap: onCancel!,
+            destructive: true,
+          ),
+        _TrackerMenuItem(
+          label: 'Delete subscription',
+          onTap: onDelete,
+          destructive: true,
+        ),
       ],
     );
   }
@@ -380,7 +427,8 @@ class _SubscriptionCard extends StatelessWidget {
 class _TrackerCard extends StatelessWidget {
   const _TrackerCard({
     required this.title,
-    required this.status,
+    required this.statusApiValue,
+    required this.statusLabel,
     required this.amount,
     required this.progress,
     required this.meta,
@@ -392,7 +440,8 @@ class _TrackerCard extends StatelessWidget {
   });
 
   final String title;
-  final String status;
+  final String statusApiValue;
+  final String statusLabel;
   final String amount;
   final double progress;
   final String meta;
@@ -406,6 +455,12 @@ class _TrackerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
+    final normalizedStatus = statusApiValue.trim().toLowerCase();
+    final progressColor = switch (normalizedStatus) {
+      'paused' => colors.amber,
+      'cancelled' || 'canceled' => colors.inkMuted,
+      _ => colors.success,
+    };
 
     return AffluenaCard(
       child: Column(
@@ -414,23 +469,31 @@ class _TrackerCard extends StatelessWidget {
           Row(
             children: [
               Expanded(child: Text(title, style: textTheme.titleMedium)),
-              _StatusPill(label: status),
+              StatusBadge.forStatus(statusApiValue, label: statusLabel),
               PopupMenuButton<int>(
                 onSelected: (index) => menuItems[index].onTap(),
                 itemBuilder: (context) => [
                   for (var i = 0; i < menuItems.length; i++)
-                    PopupMenuItem(value: i, child: Text(menuItems[i].label)),
+                    PopupMenuItem(
+                      value: i,
+                      child: Text(
+                        menuItems[i].label,
+                        style: menuItems[i].destructive
+                            ? TextStyle(color: colors.coral)
+                            : null,
+                      ),
+                    ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AffluenaRadii.pill),
             child: LinearProgressIndicator(
               value: progress.clamp(0, 1),
               minHeight: 10,
-              color: colors.success,
+              color: progressColor,
               backgroundColor: colors.surfaceTintSoft,
             ),
           ),
@@ -459,39 +522,15 @@ class _TrackerCard extends StatelessWidget {
 }
 
 class _TrackerMenuItem {
-  const _TrackerMenuItem({required this.label, required this.onTap});
+  const _TrackerMenuItem({
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+  });
 
   final String label;
   final VoidCallback onTap;
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.forestSoft,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AffluenaSpacing.space3,
-          vertical: AffluenaSpacing.space1,
-        ),
-        child: Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: colors.forest),
-        ),
-      ),
-    );
-  }
+  final bool destructive;
 }
 
 class _TrackerEmptyState extends StatelessWidget {
@@ -543,11 +582,34 @@ class _TrackerLoading extends StatelessWidget {
           Text('Trackers', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(
-            child: SizedBox(
-              height: 144,
-              child: Center(child: Text('Loading trackers')),
+            child: Column(
+              children: [
+                AffluenaSkeleton(height: 56),
+                SizedBox(height: AffluenaSpacing.space3),
+                AffluenaSkeleton(height: 56),
+              ],
             ),
           ),
+          const SizedBox(height: AffluenaSpacing.space5),
+          const AffluenaSkeleton(height: 48, radius: AffluenaRadii.control),
+          const SizedBox(height: AffluenaSpacing.space5),
+          for (var i = 0; i < 3; i++) ...[
+            AffluenaCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  AffluenaSkeleton.line(width: 180, height: 16),
+                  SizedBox(height: AffluenaSpacing.space3),
+                  AffluenaSkeleton(height: 10, radius: AffluenaRadii.pill),
+                  SizedBox(height: AffluenaSpacing.space3),
+                  AffluenaSkeleton.line(width: 140, height: 20),
+                  SizedBox(height: AffluenaSpacing.space2),
+                  AffluenaSkeleton.line(width: 240),
+                ],
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+          ],
         ],
       ),
     );
@@ -571,23 +633,13 @@ class _TrackerError extends StatelessWidget {
         ),
         children: [
           Text(
-            'Trackers unavailable',
+            'Trackers',
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('We could not load your trackers.'),
-                const SizedBox(height: AffluenaSpacing.space4),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          AffluenaBanner.error(
+            'We could not load your trackers.',
+            onRetry: onRetry,
           ),
         ],
       ),
@@ -631,13 +683,13 @@ class _TrackerFormSheet extends ConsumerStatefulWidget {
 class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
   late TrackerTab _tab;
   late final TextEditingController _nameController;
-  late final TextEditingController _amountController;
-  late final TextEditingController _monthlyController;
   late final TextEditingController _tenorController;
-  late final TextEditingController _dateController;
   late final TextEditingController _dueDayController;
   late final TextEditingController _accountController;
   late final TextEditingController _noteController;
+  int? _amountMinor;
+  int? _monthlyMinor;
+  DateTime? _date;
   Wallet? _wallet;
   Category? _category;
   InstallmentStatus? _installmentStatus;
@@ -660,21 +712,12 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
     _nameController = TextEditingController(
       text: installment?.name ?? subscription?.name ?? '',
     );
-    _amountController = TextEditingController(
-      text:
-          (installment?.totalAmountMinor ?? subscription?.amountMinor)
-              ?.toString() ??
-          '',
-    );
-    _monthlyController = TextEditingController(
-      text: installment?.monthlyAmountMinor.toString() ?? '',
-    );
+    _amountMinor = installment?.totalAmountMinor ?? subscription?.amountMinor;
+    _monthlyMinor = installment?.monthlyAmountMinor;
     _tenorController = TextEditingController(
       text: installment?.tenorMonths.toString() ?? '',
     );
-    _dateController = TextEditingController(
-      text: installment?.startDate ?? subscription?.nextDueDate ?? '',
-    );
+    _date = _parseDate(installment?.startDate ?? subscription?.nextDueDate);
     _dueDayController = TextEditingController(
       text: installment?.dueDay.toString() ?? '',
     );
@@ -700,10 +743,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
   @override
   void dispose() {
     _nameController.dispose();
-    _amountController.dispose();
-    _monthlyController.dispose();
     _tenorController.dispose();
-    _dateController.dispose();
     _dueDayController.dispose();
     _accountController.dispose();
     _noteController.dispose();
@@ -722,10 +762,10 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
         _nameController.text.trim().isNotEmpty &&
         _wallet != null &&
         _category != null &&
-        _moneyMinor(_amountController.text) > 0 &&
-        _validDate(_dateController.text) &&
+        (_amountMinor ?? 0) > 0 &&
+        _date != null &&
         (_tab == TrackerTab.subscriptions ||
-            (_moneyMinor(_monthlyController.text) > 0 &&
+            ((_monthlyMinor ?? 0) > 0 &&
                 _intValue(_tenorController.text) > 0 &&
                 _intValue(_dueDayController.text) >= 1 &&
                 _intValue(_dueDayController.text) <= 31)) &&
@@ -746,6 +786,10 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
             children: [
               Text(title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space4),
+              if (state.actionError != null) ...[
+                AffluenaBanner.error(state.actionError!),
+                const SizedBox(height: AffluenaSpacing.space4),
+              ],
               if (!_isEditing)
                 SegmentedButton<TrackerTab>(
                   segments: const [
@@ -796,28 +840,21 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                 onTap: () => _selectCategory(widget.state.categories),
               ),
               const Divider(height: 1),
-              TextField(
+              const SizedBox(height: AffluenaSpacing.space2),
+              MoneyInput(
                 key: const Key('tracker-amount-field'),
-                controller: _amountController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.payments_outlined),
-                  labelText: _tab == TrackerTab.installments
-                      ? 'Total amount'
-                      : 'Amount',
-                ),
-                onChanged: (_) => setState(() {}),
+                label: _tab == TrackerTab.installments
+                    ? 'Total amount'
+                    : 'Amount',
+                initialValue: _amountMinor,
+                onChanged: (value) => setState(() => _amountMinor = value),
               ),
               if (_tab == TrackerTab.installments) ...[
                 const SizedBox(height: AffluenaSpacing.space2),
-                TextField(
-                  controller: _monthlyController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.calendar_month_outlined),
-                    labelText: 'Monthly amount',
-                  ),
-                  onChanged: (_) => setState(() {}),
+                MoneyInput(
+                  label: 'Monthly amount',
+                  initialValue: _monthlyMinor,
+                  onChanged: (value) => setState(() => _monthlyMinor = value),
                 ),
                 const SizedBox(height: AffluenaSpacing.space2),
                 TextField(
@@ -863,16 +900,15 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                 ),
               ],
               const SizedBox(height: AffluenaSpacing.space2),
-              TextField(
-                controller: _dateController,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.today_outlined),
-                  labelText: _tab == TrackerTab.installments
-                      ? 'Start date'
-                      : 'Next due date',
-                  hintText: 'YYYY-MM-DD',
-                ),
-                onChanged: (_) => setState(() {}),
+              DatePickerField(
+                key: const Key('tracker-date-field'),
+                label: _tab == TrackerTab.installments
+                    ? 'Start date'
+                    : 'Next due date',
+                value: _date,
+                icon: Icons.today_outlined,
+                placeholder: 'Choose date',
+                onChanged: (value) => setState(() => _date = value),
               ),
               if (_isEditing && _tab == TrackerTab.installments) ...[
                 const SizedBox(height: AffluenaSpacing.space2),
@@ -977,17 +1013,18 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
   Future<void> _save() async {
     final controller = ref.read(trackerControllerProvider.notifier);
     final note = _noteController.text.trim();
+    final dateValue = _formatDate(_date)!;
 
     if (_tab == TrackerTab.installments) {
       final request = InstallmentRequest(
         name: _nameController.text.trim(),
         walletId: _wallet!.id,
         categoryId: _category!.id,
-        totalAmountMinor: _moneyMinor(_amountController.text),
-        monthlyAmountMinor: _moneyMinor(_monthlyController.text),
+        totalAmountMinor: _amountMinor ?? 0,
+        monthlyAmountMinor: _monthlyMinor ?? 0,
         tenorMonths: _intValue(_tenorController.text),
         remainingMonths: widget.installment?.remainingMonths,
-        startDate: _dateController.text.trim(),
+        startDate: dateValue,
         dueDay: _intValue(_dueDayController.text),
         status: _installmentStatus,
         note: note,
@@ -1003,9 +1040,9 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
         accountDetail: _accountController.text.trim(),
         walletId: _wallet!.id,
         categoryId: _category!.id,
-        amountMinor: _moneyMinor(_amountController.text),
+        amountMinor: _amountMinor ?? 0,
         billingCycle: _billingCycle,
-        nextDueDate: _dateController.text.trim(),
+        nextDueDate: dateValue,
         status: _subscriptionStatus,
         note: note,
       );
@@ -1015,7 +1052,10 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
         await controller.updateSubscription(widget.subscription!, request);
       }
     }
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    if (ref.read(trackerControllerProvider).actionError == null) {
+      Navigator.of(context).pop();
+    }
   }
 }
 
@@ -1051,12 +1091,11 @@ class _TrackerPaymentSheet extends ConsumerStatefulWidget {
 }
 
 class _TrackerPaymentSheetState extends ConsumerState<_TrackerPaymentSheet> {
-  final _paidAtController = TextEditingController();
   final _noteController = TextEditingController();
+  DateTime? _paidAt;
 
   @override
   void dispose() {
-    _paidAtController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -1064,8 +1103,7 @@ class _TrackerPaymentSheetState extends ConsumerState<_TrackerPaymentSheet> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(trackerControllerProvider);
-    final canSave =
-        _validIsoDateTime(_paidAtController.text) && !state.isSaving;
+    final canSave = !state.isSaving;
 
     return SafeArea(
       child: Padding(
@@ -1084,15 +1122,17 @@ class _TrackerPaymentSheetState extends ConsumerState<_TrackerPaymentSheet> {
               const SizedBox(height: AffluenaSpacing.space2),
               Text(widget.subtitle),
               const SizedBox(height: AffluenaSpacing.space4),
-              TextField(
+              if (state.actionError != null) ...[
+                AffluenaBanner.error(state.actionError!),
+                const SizedBox(height: AffluenaSpacing.space4),
+              ],
+              DatePickerField(
                 key: const Key('tracker-payment-date-field'),
-                controller: _paidAtController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.today_outlined),
-                  labelText: 'Paid at',
-                  hintText: 'Optional RFC3339 timestamp',
-                ),
-                onChanged: (_) => setState(() {}),
+                label: 'Paid at',
+                value: _paidAt,
+                icon: Icons.today_outlined,
+                placeholder: 'Optional · defaults to today',
+                onChanged: (value) => setState(() => _paidAt = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               TextField(
@@ -1117,14 +1157,16 @@ class _TrackerPaymentSheetState extends ConsumerState<_TrackerPaymentSheet> {
   }
 
   Future<void> _save() async {
-    final paidAt = _paidAtController.text.trim();
     await widget.onSave(
       TrackerPaymentRequest(
-        paidAt: paidAt.isEmpty ? null : paidAt,
+        paidAt: _formatDateTime(_paidAt),
         note: _noteController.text.trim(),
       ),
     );
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    if (ref.read(trackerControllerProvider).actionError == null) {
+      Navigator.of(context).pop();
+    }
   }
 }
 
@@ -1135,6 +1177,7 @@ Future<void> _confirm(
   required String actionLabel,
   required Future<void> Function() onConfirm,
 }) async {
+  final colors = context.affluenaColors;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -1146,6 +1189,7 @@ Future<void> _confirm(
           child: const Text('Keep'),
         ),
         FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(actionLabel),
         ),
@@ -1170,22 +1214,25 @@ T? _findById<T>(List<T> items, String? id) {
   return null;
 }
 
-int _moneyMinor(String value) {
-  final normalized = value.replaceAll(RegExp(r'[^0-9]'), '');
-  return int.tryParse(normalized) ?? 0;
-}
-
 int _intValue(String value) {
   final normalized = value.replaceAll(RegExp(r'[^0-9]'), '');
   return int.tryParse(normalized) ?? 0;
 }
 
-bool _validDate(String value) {
-  if (value.trim().isEmpty) return false;
-  return RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value.trim());
+DateTime? _parseDate(String? value) {
+  if (value == null || value.isEmpty) return null;
+  return DateTime.tryParse(value)?.toLocal();
 }
 
-bool _validIsoDateTime(String value) {
-  if (value.trim().isEmpty) return true;
-  return DateTime.tryParse(value.trim()) != null;
+String? _formatDate(DateTime? value) {
+  if (value == null) return null;
+  final y = value.year.toString().padLeft(4, '0');
+  final m = value.month.toString().padLeft(2, '0');
+  final d = value.day.toString().padLeft(2, '0');
+  return '$y-$m-$d';
+}
+
+String? _formatDateTime(DateTime? value) {
+  if (value == null) return null;
+  return value.toUtc().toIso8601String();
 }

@@ -7,6 +7,7 @@ import '../features/categories/presentation/category_tag_management_screen.dart'
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/auth_screens.dart';
+import '../features/debts/presentation/debt_detail_screen.dart';
 import '../features/debts/presentation/debt_screen.dart';
 import '../features/goals/presentation/goal_screen.dart';
 import '../features/insights/presentation/audit_log_screen.dart';
@@ -19,6 +20,7 @@ import '../features/settings/presentation/settings_screen.dart';
 import '../features/shared/presentation/app_shell.dart';
 import '../features/trackers/presentation/tracker_screen.dart';
 import '../features/transactions/presentation/split_bill_screen.dart';
+import '../features/transactions/presentation/transaction_create_screen.dart';
 import '../features/transactions/presentation/transactions_screen.dart';
 import '../features/wallets/presentation/wallet_detail_screen.dart';
 import '../features/wallets/presentation/wallet_sharing_screen.dart';
@@ -69,7 +71,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: ResetPasswordScreen.path,
-        pageBuilder: _fadePage((_) => const ResetPasswordScreen()),
+        pageBuilder: _fadePage(
+          (state) => ResetPasswordScreen(
+            token: state.uri.queryParameters['token'],
+            email: state.extra is String ? state.extra as String : null,
+          ),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -132,6 +139,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: SplitBillScreen.path,
                 pageBuilder: _fadePage((_) => const SplitBillScreen()),
               ),
+              GoRoute(
+                path: TransactionCreateScreen.path,
+                pageBuilder: _fadePage((_) => const TransactionCreateScreen()),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -153,6 +164,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: DebtScreen.path,
                 pageBuilder: _fadePage((_) => const DebtScreen()),
+              ),
+              GoRoute(
+                path: DebtDetailScreen.path,
+                pageBuilder: _fadePage(
+                  (state) =>
+                      DebtDetailScreen(debtId: state.pathParameters['debtId']!),
+                ),
               ),
               GoRoute(
                 path: TrackerScreen.path,

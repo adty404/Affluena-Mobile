@@ -37,36 +37,3 @@ class SettingsSheetFrame extends StatelessWidget {
     );
   }
 }
-
-class SettingsInlineMessage extends StatelessWidget {
-  const SettingsInlineMessage({
-    required this.message,
-    required this.isError,
-    super.key,
-  });
-
-  final String message;
-  final bool isError;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: isError ? colors.coral.withAlpha(32) : colors.forestSoft,
-        borderRadius: BorderRadius.circular(AffluenaRadii.lg),
-        border: Border.all(color: isError ? colors.coral : colors.borderSubtle),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AffluenaSpacing.space3),
-        child: Text(
-          message,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: colors.ink),
-        ),
-      ),
-    );
-  }
-}

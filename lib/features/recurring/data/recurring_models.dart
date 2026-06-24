@@ -150,6 +150,19 @@ class RecurringRule {
 
   bool get canRun => status == RecurringStatus.active;
 
+  /// Natural-language cadence, e.g. "Monthly", "Every 2 weeks", "Every 3
+  /// months" — never the machine-ish "Monthly every 1".
+  String get frequencyLabel {
+    final unit = switch (frequency) {
+      RecurringFrequency.weekly => 'week',
+      RecurringFrequency.monthly => 'month',
+    };
+    if (intervalCount <= 1) {
+      return frequency.label; // "Weekly" / "Monthly"
+    }
+    return 'Every $intervalCount ${unit}s'; // "Every 2 weeks"
+  }
+
   RecurringRule copyForRequest({
     required String id,
     required String name,

@@ -147,10 +147,29 @@ class _SplitBillLoading extends StatelessWidget {
         children: [
           Text('Split bill', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
-          const AffluenaCard(
-            child: SizedBox(
-              height: 144,
-              child: Center(child: Text('Loading split bill data')),
+          AffluenaCard(
+            backgroundColor: context.affluenaColors.forestSoft,
+            borderColor: context.affluenaColors.forestSoft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: const [
+                AffluenaSkeleton(height: 44),
+                SizedBox(height: AffluenaSpacing.space4),
+                AffluenaSkeleton(height: 44),
+              ],
+            ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space5),
+          AffluenaCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: const [
+                AffluenaSkeleton(height: 48),
+                SizedBox(height: AffluenaSpacing.space4),
+                AffluenaSkeleton(height: 48),
+                SizedBox(height: AffluenaSpacing.space4),
+                AffluenaSkeleton(height: 48),
+              ],
             ),
           ),
         ],
@@ -180,19 +199,9 @@ class _SplitBillLoadError extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('We could not load split bill data.'),
-                const SizedBox(height: AffluenaSpacing.space4),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          AffluenaBanner.error(
+            'We could not load split bill data.',
+            onRetry: onRetry,
           ),
         ],
       ),

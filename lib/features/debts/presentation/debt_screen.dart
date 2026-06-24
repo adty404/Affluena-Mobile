@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
+import '../../shared/presentation/widgets/money_input.dart';
+import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/status_badge.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/debt_controller.dart';
 import '../data/debt_models.dart';
+import 'debt_detail_screen.dart';
 
 class DebtScreen extends ConsumerWidget {
   const DebtScreen({super.key});
@@ -23,76 +30,133 @@ class DebtScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(debtControllerProvider);
     final controller = ref.read(debtControllerProvider.notifier);
-    final textTheme = Theme.of(context).textTheme;
 
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Debt & Tracker'),
+        actions: [
+          IconButton(
+            tooltip: 'Add debt',
+            onPressed: state.wallets.isEmpty || state.isSaving
+                ? null
+                : () => _showDebtForm(context, state),
+            icon: const Icon(Icons.add),
+          ),
+          const SizedBox(width: AffluenaSpacing.space2),
+        ],
+      ),
+      body: _DebtBody(state: state, controller: controller),
+    );
+  }
+}
+
+class _DebtBody extends StatelessWidget {
+  const _DebtBody({required this.state, required this.controller});
+
+  final DebtState state;
+  final DebtController controller;
+
+  @override
+  Widget build(BuildContext context) {
     if (state.isLoading && state.debts.isEmpty) {
-      return const _DebtLoading();
+      return const _DebtSkeleton();
     }
 
     if (state.loadError != null && state.debts.isEmpty) {
-      return _DebtError(onRetry: controller.load);
+      return _DebtLoadError(onRetry: () => controller.load());
     }
 
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text('Debt & Tracker', style: textTheme.headlineMedium),
-              ),
-              IconButton.filledTonal(
-                onPressed: state.wallets.isEmpty || state.isSaving
-                    ? null
-                    : () => _showDebtForm(context, state),
-                icon: const Icon(Icons.add),
-              ),
-            ],
+      top: false,
+      child: RefreshIndicator(
+        onRefresh: () => controller.load(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AffluenaSpacing.space5,
+            AffluenaSpacing.space4,
+            AffluenaSpacing.space5,
+            AffluenaSpacing.space8,
           ),
-          const SizedBox(height: AffluenaSpacing.space5),
-          _DebtSummaryCard(state: state),
-          const SizedBox(height: AffluenaSpacing.space5),
-          if (state.actionError != null) ...[
-            AffluenaCard(
-              backgroundColor: context.affluenaColors.surfaceTintSoft,
-              child: Text(state.actionError!),
+          children: [
+            _DebtSummaryCard(state: state),
+            const SizedBox(height: AffluenaSpacing.space5),
+            if (state.actionError != null) ...[
+              AffluenaBanner.error(
+                state.actionError!,
+                onRetry: () => controller.load(),
+              ),
+              const SizedBox(height: AffluenaSpacing.space4),
+            ],
+            _DebtTypeFilter(
+              selected: state.typeFilter,
+              onChanged: controller.setTypeFilter,
             ),
-            const SizedBox(height: AffluenaSpacing.space4),
-          ],
-          _DebtTypeFilter(
-            selected: state.typeFilter,
-            onChanged: controller.setTypeFilter,
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
-          SectionHeader(
-            title: 'Debts',
-            actionLabel: state.total == 0 ? null : '${state.total} total',
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          if (state.visibleDebts.isEmpty)
-            const _EmptyDebtState()
-          else
-            for (final debt in state.visibleDebts) ...[
-              _DebtCard(
-                debt: debt,
-                walletName: state.walletName(debt.walletId),
-                paymentCategoryName: state.categoryName(debt.paymentCategoryId),
-                onPay: debt.canPay ? () => _showPaySheet(context, debt) : null,
-                onEdit: () => _showDebtForm(context, state, debt: debt),
-                onCancel: debt.status == DebtStatus.cancelled
-                    ? null
-                    : () => _confirmCancel(context, controller, debt),
-              ),
-              const SizedBox(height: AffluenaSpacing.space3),
+            const SizedBox(height: AffluenaSpacing.space5),
+            SectionHeader(
+              title: 'Debts',
+              actionLabel: state.total == 0 ? null : '${state.total} total',
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+            if (state.visibleDebts.isEmpty)
+              const _EmptyDebtState()
+            else ...[
+              for (final debt in state.visibleDebts) ...[
+                _DebtCard(
+                  debt: debt,
+                  walletName: state.walletName(debt.walletId),
+                  paymentCategoryName: state.categoryName(
+                    debt.paymentCategoryId,
+                  ),
+                  onOpen: () =>
+                      context.push(DebtDetailScreen.location(debt.id)),
+                  onPay: debt.canPay
+                      ? () => _showPaySheet(context, debt)
+                      : null,
+                  onEdit: () => _showDebtForm(context, state, debt: debt),
+                  onCancel: debt.status == DebtStatus.cancelled
+                      ? null
+                      : () => _confirmCancel(context, controller, debt),
+                ),
+                const SizedBox(height: AffluenaSpacing.space3),
+              ],
+              if (state.hasMore) ...[
+                const SizedBox(height: AffluenaSpacing.space2),
+                _LoadMoreButton(
+                  isLoading: state.isLoadingMore,
+                  onPressed: controller.loadMore,
+                ),
+              ],
             ],
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _LoadMoreButton extends StatelessWidget {
+  const _LoadMoreButton({required this.isLoading, required this.onPressed});
+
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const AffluenaCard(
+        child: Column(
+          children: [
+            AffluenaSkeleton.line(),
+            SizedBox(height: AffluenaSpacing.space3),
+            AffluenaSkeleton.line(width: 220),
+          ],
+        ),
+      );
+    }
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.expand_more),
+      label: const Text('Load more'),
     );
   }
 }
@@ -173,6 +237,7 @@ class _DebtCard extends StatelessWidget {
     required this.debt,
     required this.walletName,
     required this.paymentCategoryName,
+    required this.onOpen,
     required this.onEdit,
     this.onPay,
     this.onCancel,
@@ -181,8 +246,9 @@ class _DebtCard extends StatelessWidget {
   final Debt debt;
   final String walletName;
   final String paymentCategoryName;
-  final VoidCallback? onPay;
+  final VoidCallback onOpen;
   final VoidCallback onEdit;
+  final VoidCallback? onPay;
   final VoidCallback? onCancel;
 
   @override
@@ -192,113 +258,100 @@ class _DebtCard extends StatelessWidget {
     final isPayable = debt.type == DebtType.payable;
     final accent = isPayable ? colors.coral : colors.success;
 
-    return AffluenaCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(debt.counterpartyName, style: textTheme.titleMedium),
-                    const SizedBox(height: AffluenaSpacing.space1),
-                    Wrap(
-                      spacing: AffluenaSpacing.space2,
-                      runSpacing: AffluenaSpacing.space2,
-                      children: [
-                        _DebtBadge(
-                          label: isPayable ? 'Payable' : 'Receivable',
-                          color: accent,
+    return InkWell(
+      borderRadius: BorderRadius.circular(AffluenaRadii.card),
+      onTap: onOpen,
+      child: AffluenaCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(debt.counterpartyName, style: textTheme.titleMedium),
+                      const SizedBox(height: AffluenaSpacing.space2),
+                      Wrap(
+                        spacing: AffluenaSpacing.space2,
+                        runSpacing: AffluenaSpacing.space2,
+                        children: [
+                          StatusBadge(
+                            label: isPayable ? 'Payable' : 'Receivable',
+                            tone: isPayable
+                                ? StatusTone.danger
+                                : StatusTone.success,
+                          ),
+                          StatusBadge.forStatus(
+                            debt.status.apiValue,
+                            label: debt.status.label,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'open') onOpen();
+                    if (value == 'edit') onEdit();
+                    if (value == 'cancel' && onCancel != null) onCancel!();
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: 'open', child: Text('View')),
+                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                    if (onCancel != null)
+                      PopupMenuItem(
+                        value: 'cancel',
+                        child: Text(
+                          'Cancel debt',
+                          style: TextStyle(color: colors.coral),
                         ),
-                        _DebtBadge(label: debt.status.label, color: accent),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
+              ],
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AffluenaRadii.pill),
+              child: LinearProgressIndicator(
+                value: debt.paidPercent / 100,
+                minHeight: 10,
+                color: accent,
+                backgroundColor: colors.surfaceTintSoft,
               ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'edit') onEdit();
-                  if (value == 'cancel' && onCancel != null) onCancel!();
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  if (onCancel != null)
-                    const PopupMenuItem(
-                      value: 'cancel',
-                      child: Text('Cancel debt'),
-                    ),
-                ],
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+            Text(
+              MoneyFormatter.idr(debt.remainingAmountMinor),
+              style: textTheme.headlineSmall,
+            ),
+            const SizedBox(height: AffluenaSpacing.space1),
+            Text(
+              '${debt.paidPercent.round()}% settled from ${MoneyFormatter.idr(debt.principalAmountMinor)}',
+              style: textTheme.bodySmall,
+            ),
+            const SizedBox(height: AffluenaSpacing.space2),
+            Text(
+              '${debt.dueDate == null || debt.dueDate!.isEmpty ? 'No due date' : 'Due ${AffluenaDateFormatter.shortDate(debt.dueDate!)}'} · $walletName · $paymentCategoryName',
+              style: textTheme.bodySmall,
+            ),
+            if (debt.note.isNotEmpty) ...[
+              const SizedBox(height: AffluenaSpacing.space2),
+              Text(debt.note, style: textTheme.bodySmall),
+            ],
+            if (onPay != null) ...[
+              const SizedBox(height: AffluenaSpacing.space4),
+              FilledButton.icon(
+                onPressed: onPay,
+                icon: const Icon(Icons.payments_outlined),
+                label: const Text('Record payment'),
               ),
             ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: debt.paidPercent / 100,
-              minHeight: 10,
-              color: accent,
-              backgroundColor: colors.surfaceTintSoft,
-            ),
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          Text(
-            MoneyFormatter.idr(debt.remainingAmountMinor),
-            style: textTheme.headlineSmall,
-          ),
-          const SizedBox(height: AffluenaSpacing.space1),
-          Text(
-            '${debt.paidPercent.round()}% settled from ${MoneyFormatter.idr(debt.principalAmountMinor)}',
-            style: textTheme.bodySmall,
-          ),
-          const SizedBox(height: AffluenaSpacing.space2),
-          Text(
-            '${debt.dueDate == null ? 'No due date' : 'Due ${AffluenaDateFormatter.shortDate(debt.dueDate!)}'} · $walletName · $paymentCategoryName',
-            style: textTheme.bodySmall,
-          ),
-          if (debt.note.isNotEmpty) ...[
-            const SizedBox(height: AffluenaSpacing.space2),
-            Text(debt.note, style: textTheme.bodySmall),
           ],
-          if (onPay != null) ...[
-            const SizedBox(height: AffluenaSpacing.space4),
-            FilledButton.icon(
-              onPressed: onPay,
-              icon: const Icon(Icons.payments_outlined),
-              label: const Text('Record payment'),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _DebtBadge extends StatelessWidget {
-  const _DebtBadge({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AffluenaSpacing.space3,
-          vertical: AffluenaSpacing.space1,
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
         ),
       ),
     );
@@ -332,12 +385,13 @@ class _EmptyDebtState extends StatelessWidget {
   }
 }
 
-class _DebtLoading extends StatelessWidget {
-  const _DebtLoading();
+class _DebtSkeleton extends StatelessWidget {
+  const _DebtSkeleton();
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      top: false,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
@@ -346,31 +400,50 @@ class _DebtLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text(
-            'Debt & Tracker',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(
-            child: SizedBox(
-              height: 144,
-              child: Center(child: Text('Loading debts')),
+            child: Column(
+              children: [
+                AffluenaSkeleton(height: 56),
+                SizedBox(height: AffluenaSpacing.space3),
+                AffluenaSkeleton(height: 56),
+              ],
             ),
           ),
+          const SizedBox(height: AffluenaSpacing.space5),
+          const AffluenaSkeleton(height: 48, radius: AffluenaRadii.control),
+          const SizedBox(height: AffluenaSpacing.space5),
+          for (var i = 0; i < 3; i++) ...[
+            AffluenaCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  AffluenaSkeleton.line(width: 180, height: 16),
+                  SizedBox(height: AffluenaSpacing.space3),
+                  AffluenaSkeleton(height: 10, radius: AffluenaRadii.pill),
+                  SizedBox(height: AffluenaSpacing.space3),
+                  AffluenaSkeleton.line(width: 140, height: 20),
+                  SizedBox(height: AffluenaSpacing.space2),
+                  AffluenaSkeleton.line(width: 240),
+                ],
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+          ],
         ],
       ),
     );
   }
 }
 
-class _DebtError extends StatelessWidget {
-  const _DebtError({required this.onRetry});
+class _DebtLoadError extends StatelessWidget {
+  const _DebtLoadError({required this.onRetry});
 
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      top: false,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
@@ -379,24 +452,9 @@ class _DebtError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text(
-            'Debts unavailable',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('We could not load your debts.'),
-                const SizedBox(height: AffluenaSpacing.space4),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          AffluenaBanner.error(
+            'We could not load your debts.',
+            onRetry: onRetry,
           ),
         ],
       ),
@@ -430,9 +488,9 @@ class _DebtFormSheet extends ConsumerStatefulWidget {
 class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
   late DebtType _type;
   late final TextEditingController _counterpartyController;
-  late final TextEditingController _amountController;
-  late final TextEditingController _dueDateController;
   late final TextEditingController _noteController;
+  int? _amountMinor;
+  DateTime? _dueDate;
   DebtStatus? _status;
   Wallet? _wallet;
   Category? _disbursementCategory;
@@ -448,11 +506,9 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
     _counterpartyController = TextEditingController(
       text: debt?.counterpartyName ?? '',
     );
-    _amountController = TextEditingController(
-      text: debt?.principalAmountMinor.toString() ?? '',
-    );
-    _dueDateController = TextEditingController(text: debt?.dueDate ?? '');
     _noteController = TextEditingController(text: debt?.note ?? '');
+    _amountMinor = debt?.principalAmountMinor;
+    _dueDate = _parseDate(debt?.dueDate);
     _status = debt?.status;
     _wallet = _findById(widget.state.wallets, debt?.walletId);
     _disbursementCategory = _findById(
@@ -468,8 +524,6 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
   @override
   void dispose() {
     _counterpartyController.dispose();
-    _amountController.dispose();
-    _dueDateController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -478,15 +532,13 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final state = ref.watch(debtControllerProvider);
-    final amountMinor = _moneyMinor(_amountController.text);
     final canSave =
         _counterpartyController.text.trim().isNotEmpty &&
-        _validDate(_dueDateController.text) &&
         (_isEditing ||
             (_wallet != null &&
                 _disbursementCategory != null &&
                 _paymentCategory != null &&
-                amountMinor > 0)) &&
+                (_amountMinor ?? 0) > 0)) &&
         !state.isSaving;
 
     return SafeArea(
@@ -507,6 +559,10 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
+              if (state.actionError != null) ...[
+                AffluenaBanner.error(state.actionError!),
+                const SizedBox(height: AffluenaSpacing.space4),
+              ],
               if (!_isEditing) ...[
                 SegmentedButton<DebtType>(
                   segments: const [
@@ -574,17 +630,12 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                         setState(() => _paymentCategory = category),
                   ),
                 ),
-                const Divider(height: 1),
-                TextField(
+                const SizedBox(height: AffluenaSpacing.space2),
+                MoneyInput(
                   key: const Key('debt-amount-field'),
-                  controller: _amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.payments_outlined),
-                    labelText: 'Principal amount',
-                    hintText: '1500000',
-                  ),
-                  onChanged: (_) => setState(() {}),
+                  label: 'Principal amount',
+                  initialValue: _amountMinor,
+                  onChanged: (value) => setState(() => _amountMinor = value),
                 ),
               ] else ...[
                 DropdownButtonFormField<DebtStatus>(
@@ -605,14 +656,11 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 ),
               ],
               const SizedBox(height: AffluenaSpacing.space2),
-              TextField(
-                controller: _dueDateController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.event_outlined),
-                  labelText: 'Due date',
-                  hintText: 'YYYY-MM-DD',
-                ),
-                onChanged: (_) => setState(() {}),
+              DatePickerField(
+                label: 'Due date',
+                value: _dueDate,
+                placeholder: 'Optional',
+                onChanged: (value) => setState(() => _dueDate = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               TextField(
@@ -680,8 +728,8 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
   }
 
   Future<void> _save() async {
-    final dueDate = _dueDateController.text.trim();
     final note = _noteController.text.trim();
+    final dueDate = _formatDate(_dueDate);
     final controller = ref.read(debtControllerProvider.notifier);
 
     if (_isEditing) {
@@ -689,7 +737,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
         widget.debt!,
         DebtUpdateRequest(
           counterpartyName: _counterpartyController.text.trim(),
-          dueDate: dueDate.isEmpty ? null : dueDate,
+          dueDate: dueDate,
           status: _status,
           note: note,
         ),
@@ -702,13 +750,16 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
           walletId: _wallet!.id,
           disbursementCategoryId: _disbursementCategory!.id,
           paymentCategoryId: _paymentCategory!.id,
-          principalAmountMinor: _moneyMinor(_amountController.text),
-          dueDate: dueDate.isEmpty ? null : dueDate,
+          principalAmountMinor: _amountMinor ?? 0,
+          dueDate: dueDate,
           note: note,
         ),
       );
     }
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    if (ref.read(debtControllerProvider).actionError == null) {
+      Navigator.of(context).pop();
+    }
   }
 }
 
@@ -731,24 +782,19 @@ class _PayDebtSheet extends ConsumerStatefulWidget {
 }
 
 class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
-  late final TextEditingController _amountController;
-  late final TextEditingController _paidAtController;
   late final TextEditingController _noteController;
+  late int? _amountMinor;
+  DateTime? _paidAt;
 
   @override
   void initState() {
     super.initState();
-    _amountController = TextEditingController(
-      text: widget.debt.remainingAmountMinor.toString(),
-    );
-    _paidAtController = TextEditingController();
+    _amountMinor = widget.debt.remainingAmountMinor;
     _noteController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _amountController.dispose();
-    _paidAtController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -756,11 +802,10 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(debtControllerProvider);
-    final amount = _moneyMinor(_amountController.text);
+    final amount = _amountMinor ?? 0;
     final canSave =
         amount > 0 &&
         amount <= widget.debt.remainingAmountMinor &&
-        _validIsoDateTime(_paidAtController.text) &&
         !state.isSaving;
 
     return SafeArea(
@@ -785,25 +830,31 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
                 '${widget.debt.counterpartyName} · ${MoneyFormatter.idr(widget.debt.remainingAmountMinor)} remaining',
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              TextField(
+              if (state.actionError != null) ...[
+                AffluenaBanner.error(state.actionError!),
+                const SizedBox(height: AffluenaSpacing.space4),
+              ],
+              MoneyInput(
                 key: const Key('debt-payment-amount-field'),
-                controller: _amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.payments_outlined),
-                  labelText: 'Payment amount',
-                ),
-                onChanged: (_) => setState(() {}),
+                label: 'Payment amount',
+                initialValue: _amountMinor,
+                onChanged: (value) => setState(() => _amountMinor = value),
+                validator: (value) {
+                  final entered = value ?? 0;
+                  if (entered <= 0) return 'Enter an amount.';
+                  if (entered > widget.debt.remainingAmountMinor) {
+                    return 'Cannot exceed remaining balance.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: AffluenaSpacing.space2),
-              TextField(
-                controller: _paidAtController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.today_outlined),
-                  labelText: 'Paid at',
-                  hintText: 'Optional RFC3339 timestamp',
-                ),
-                onChanged: (_) => setState(() {}),
+              DatePickerField(
+                label: 'Paid at',
+                value: _paidAt,
+                icon: Icons.today_outlined,
+                placeholder: 'Optional',
+                onChanged: (value) => setState(() => _paidAt = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               TextField(
@@ -828,18 +879,20 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
   }
 
   Future<void> _save() async {
-    final paidAt = _paidAtController.text.trim();
     await ref
         .read(debtControllerProvider.notifier)
         .payDebt(
           widget.debt,
           DebtPaymentRequest(
-            amountMinor: _moneyMinor(_amountController.text),
-            paidAt: paidAt.isEmpty ? null : paidAt,
+            amountMinor: _amountMinor ?? 0,
+            paidAt: _formatDateTime(_paidAt),
             note: _noteController.text.trim(),
           ),
         );
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    if (ref.read(debtControllerProvider).actionError == null) {
+      Navigator.of(context).pop();
+    }
   }
 }
 
@@ -848,6 +901,7 @@ Future<void> _confirmCancel(
   DebtController controller,
   Debt debt,
 ) async {
+  final colors = context.affluenaColors;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -861,6 +915,7 @@ Future<void> _confirmCancel(
           child: const Text('Keep'),
         ),
         FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Cancel debt'),
         ),
@@ -885,17 +940,20 @@ T? _findById<T>(List<T> items, String? id) {
   return null;
 }
 
-int _moneyMinor(String value) {
-  final normalized = value.replaceAll(RegExp(r'[^0-9]'), '');
-  return int.tryParse(normalized) ?? 0;
+DateTime? _parseDate(String? value) {
+  if (value == null || value.isEmpty) return null;
+  return DateTime.tryParse(value);
 }
 
-bool _validDate(String value) {
-  if (value.trim().isEmpty) return true;
-  return RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value.trim());
+String? _formatDate(DateTime? value) {
+  if (value == null) return null;
+  final y = value.year.toString().padLeft(4, '0');
+  final m = value.month.toString().padLeft(2, '0');
+  final d = value.day.toString().padLeft(2, '0');
+  return '$y-$m-$d';
 }
 
-bool _validIsoDateTime(String value) {
-  if (value.trim().isEmpty) return true;
-  return DateTime.tryParse(value.trim()) != null;
+String? _formatDateTime(DateTime? value) {
+  if (value == null) return null;
+  return value.toUtc().toIso8601String();
 }

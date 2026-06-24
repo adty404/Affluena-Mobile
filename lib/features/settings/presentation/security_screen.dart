@@ -7,6 +7,7 @@ import '../../auth/application/auth_controller.dart';
 import '../../auth/data/auth_models.dart';
 import '../../insights/application/insights_controller.dart';
 import '../../insights/presentation/insights_screen.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../application/settings_controller.dart';
@@ -48,21 +49,18 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
           SettingsProfileCard(user: user, isLoading: profile.isLoading),
           if (_feedback != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
-            SettingsMessage(message: _feedback!, isError: false),
+            AffluenaBanner.success(
+              _feedback!,
+              onDismiss: () => setState(() => _feedback = null),
+            ),
           ],
           if (securityState?.actionError != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
-            SettingsMessage(
-              message: securityState!.actionError!,
-              isError: true,
-            ),
+            AffluenaBanner.error(securityState!.actionError!),
           ],
           if (securityState?.actionMessage != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
-            SettingsMessage(
-              message: securityState!.actionMessage!,
-              isError: false,
-            ),
+            AffluenaBanner.success(securityState!.actionMessage!),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
           const SectionHeader(title: 'Security'),

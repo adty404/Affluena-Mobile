@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../data/insight_models.dart';
 import '../data/insights_repository.dart';
+import 'csv_share_service.dart';
 
 const insightsPageSize = 20;
 
@@ -82,35 +83,101 @@ class InsightsController extends Notifier<InsightsState> {
     state = state.copyWith(selectedTab: tab, actionMessage: null);
   }
 
+  void clearActionMessage() {
+    if (state.actionMessage == null) return;
+    state = state.copyWith(actionMessage: null);
+  }
+
+  /// Generates the month CSV, hands the bytes to the platform share sheet, and
+  /// only reports success once the user has actually shared/saved the file. The
+  /// export-job history is refreshed regardless (the job is created server-side
+  /// the moment the export runs).
   Future<void> exportCsv() async {
     state = state.copyWith(
       isSaving: true,
       actionError: null,
       actionMessage: null,
     );
+
+    final repository = ref.read(insightsRepositoryProvider);
+    late final CsvExportResult result;
     try {
-      final repository = ref.read(insightsRepositoryProvider);
-      final request = _monthExportRequest(state.month);
-      final result = await repository.exportCsv(request);
-      final jobs = await repository.listExportJobs(
-        limit: insightsPageSize,
-        offset: 0,
-      );
-      state = state.copyWith(
-        isSaving: false,
-        selectedTab: InsightTab.exports,
-        exportJobs: jobs.jobs,
-        exportJobTotal: jobs.pagination.total,
-        actionMessage: result.bytes.isEmpty
-            ? 'CSV export generated'
-            : 'CSV export generated',
-      );
+      result = await repository.exportCsv(_monthExportRequest(state.month));
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
         actionError: 'CSV export could not be generated.',
       );
+      return;
     }
+
+    if (result.bytes.isEmpty) {
+      state = state.copyWith(
+        isSaving: false,
+        actionError: 'No transactions found to export for this month.',
+      );
+      return;
+    }
+
+    CsvShareOutcome outcome;
+    try {
+      outcome = await ref.read(csvShareServiceProvider).share(result);
+    } catch (_) {
+      await _refreshExportJobs(repository);
+      state = state.copyWith(
+        isSaving: false,
+        selectedTab: InsightTab.exports,
+        actionError: 'CSV export was generated but could not be shared.',
+      );
+      return;
+    }
+
+    await _refreshExportJobs(repository);
+
+    state = state.copyWith(
+      isSaving: false,
+      selectedTab: InsightTab.exports,
+      actionMessage: outcome == CsvShareOutcome.shared
+          ? 'CSV export shared.'
+          : null,
+      actionError: switch (outcome) {
+        CsvShareOutcome.unavailable =>
+          'Sharing is not available on this device.',
+        _ => null,
+      },
+    );
+  }
+
+  /// Reloads the export-job list and total after a CSV export completes.
+  Future<void> _refreshExportJobs(InsightsRepository repository) async {
+    try {
+      final jobs = await repository.listExportJobs(
+        limit: insightsPageSize,
+        offset: 0,
+      );
+      state = state.copyWith(
+        exportJobs: jobs.jobs,
+        exportJobTotal: jobs.pagination.total,
+      );
+    } catch (_) {
+      // Non-fatal: the export itself succeeded; the list refresh can be retried
+      // by reloading the screen.
+    }
+  }
+
+  /// Re-generates and shares the CSV for an already-completed export job using
+  /// its stored date range. Returns the outcome so the detail sheet can show an
+  /// inline error and stay open on failure. Does not mutate global insights
+  /// state (the sheet owns its own busy/error UI).
+  Future<CsvShareOutcome> shareExportJob(ExportJob job) async {
+    final repository = ref.read(insightsRepositoryProvider);
+    final result = await repository.exportCsv(
+      ExportCsvRequest(from: job.fromAt, to: job.toAt),
+    );
+    if (result.bytes.isEmpty) {
+      return CsvShareOutcome.empty;
+    }
+    return ref.read(csvShareServiceProvider).share(result);
   }
 
   Future<void> updateRule(

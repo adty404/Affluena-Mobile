@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
@@ -13,9 +14,13 @@ import '../../wallets/data/wallet_models.dart';
 import '../application/quick_entry_lookup_controller.dart';
 import '../data/quick_entry_models.dart';
 import '../data/quick_entry_repository.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import 'quick_entry_templates_screen.dart';
 
 class QuickEntryScreen extends ConsumerStatefulWidget {
   const QuickEntryScreen({super.key});
@@ -27,8 +32,8 @@ class QuickEntryScreen extends ConsumerStatefulWidget {
 }
 
 class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
-  late final TextEditingController _amountController;
   late final TextEditingController _noteController;
+  int _amountMinor = 0;
   TransactionType _type = TransactionType.expense;
   String? _selectedWalletId;
   String? _selectedToWalletId;
@@ -41,13 +46,11 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
   @override
   void initState() {
     super.initState();
-    _amountController = TextEditingController(text: '125000');
-    _noteController = TextEditingController(text: 'Lunch meeting');
+    _noteController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _amountController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -67,7 +70,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
         return _QuickEntryContent(
           lookup: lookup,
           type: _type,
-          amountController: _amountController,
+          amountMinor: _amountMinor,
           noteController: _noteController,
           selectedWalletId: _selectedWalletId,
           selectedToWalletId: _selectedToWalletId,
@@ -78,6 +81,11 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
           error: _error,
           canSave: _canSave(lookup),
           onTypeChanged: _setType,
+          onAmountChanged: (value) => setState(() {
+            _amountMinor = value ?? 0;
+            _message = null;
+            _error = null;
+          }),
           onSelectWallet: _selectWallet,
           onSelectToWallet: _selectToWallet,
           onSelectCategory: _selectCategory,
@@ -87,6 +95,8 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
             _error = null;
           }),
           onSave: () => _saveTransaction(lookup),
+          onDismissMessage: () => setState(() => _message = null),
+          onRetrySave: () => _saveTransaction(lookup),
           onExecuteTemplate: _executeTemplate,
         );
       },
@@ -208,12 +218,6 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
     return _selectedCategoryId != null;
   }
 
-  int get _amountMinor {
-    final digits = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.isEmpty) return 0;
-    return int.tryParse(digits) ?? 0;
-  }
-
   Future<void> _saveTransaction(QuickEntryLookup lookup) async {
     if (!_canSave(lookup)) return;
     setState(() {
@@ -298,7 +302,7 @@ class _QuickEntryContent extends StatelessWidget {
   const _QuickEntryContent({
     required this.lookup,
     required this.type,
-    required this.amountController,
+    required this.amountMinor,
     required this.noteController,
     required this.selectedWalletId,
     required this.selectedToWalletId,
@@ -309,18 +313,21 @@ class _QuickEntryContent extends StatelessWidget {
     required this.error,
     required this.canSave,
     required this.onTypeChanged,
+    required this.onAmountChanged,
     required this.onSelectWallet,
     required this.onSelectToWallet,
     required this.onSelectCategory,
     required this.onSelectTag,
     required this.onChanged,
     required this.onSave,
+    required this.onDismissMessage,
+    required this.onRetrySave,
     required this.onExecuteTemplate,
   });
 
   final QuickEntryLookup lookup;
   final TransactionType type;
-  final TextEditingController amountController;
+  final int amountMinor;
   final TextEditingController noteController;
   final String? selectedWalletId;
   final String? selectedToWalletId;
@@ -331,12 +338,15 @@ class _QuickEntryContent extends StatelessWidget {
   final String? error;
   final bool canSave;
   final ValueChanged<TransactionType> onTypeChanged;
+  final ValueChanged<int?> onAmountChanged;
   final ValueChanged<QuickEntryLookup> onSelectWallet;
   final ValueChanged<QuickEntryLookup> onSelectToWallet;
   final ValueChanged<QuickEntryLookup> onSelectCategory;
   final ValueChanged<QuickEntryLookup> onSelectTag;
   final VoidCallback onChanged;
   final VoidCallback onSave;
+  final VoidCallback onDismissMessage;
+  final VoidCallback onRetrySave;
   final ValueChanged<QuickEntryTemplate> onExecuteTemplate;
 
   @override
@@ -348,7 +358,6 @@ class _QuickEntryContent extends StatelessWidget {
     final selectedCategory = lookup.categoryById(type, selectedCategoryId);
     final selectedTag = lookup.tagById(selectedTagId);
     final categories = lookup.categoriesFor(type);
-    final amountMinor = _parseAmount(amountController.text);
     final setupGuidance = _lookupGuidanceMessage(lookup, type);
 
     return SafeArea(
@@ -413,12 +422,12 @@ class _QuickEntryContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(
+                MoneyInput(
                   key: const Key('quick-entry-amount-field'),
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Amount'),
-                  onChanged: (_) => onChanged(),
+                  label: 'Amount',
+                  initialValue: amountMinor,
+                  enabled: !isSaving,
+                  onChanged: onAmountChanged,
                 ),
                 const SizedBox(height: AffluenaSpacing.space2),
                 Text(
@@ -490,20 +499,24 @@ class _QuickEntryContent extends StatelessWidget {
               ],
             ),
           ),
-          if (message != null || error != null) ...[
+          if (error != null) ...[
             const SizedBox(height: AffluenaSpacing.space4),
-            AffluenaCard(
-              backgroundColor: message != null
-                  ? colors.forestSoft
-                  : colors.surfaceTintSoft,
-              child: Text(message ?? error!),
+            AffluenaBanner.error(
+              error!,
+              onRetry: isSaving ? null : onRetrySave,
             ),
+          ] else if (message != null) ...[
+            const SizedBox(height: AffluenaSpacing.space4),
+            AffluenaBanner.success(message!, onDismiss: onDismissMessage),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
           Text('Saved templates', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space3),
           lookup.templates.isEmpty
-              ? const AffluenaCard(child: Text('No saved templates yet.'))
+              ? _SavedTemplatesEmpty(
+                  onCreate: () =>
+                      context.go(QuickEntryTemplatesScreen.path),
+                )
               : Wrap(
                   spacing: AffluenaSpacing.space3,
                   runSpacing: AffluenaSpacing.space3,
@@ -547,12 +560,40 @@ class _QuickEntryLoading extends StatelessWidget {
         ),
         children: [
           Text('Quick entry', style: textTheme.headlineMedium),
+          const SizedBox(height: AffluenaSpacing.space2),
+          Text(
+            'Record daily money movement without turning it into paperwork.',
+            style: textTheme.bodySmall,
+          ),
           const SizedBox(height: AffluenaSpacing.space6),
-          const AffluenaCard(
-            child: SizedBox(
-              height: 168,
-              child: Center(child: Text('Loading quick entry')),
+          const AffluenaSkeleton(height: 40, radius: AffluenaRadii.pill),
+          const SizedBox(height: AffluenaSpacing.space5),
+          AffluenaCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                AffluenaSkeleton(height: 56, radius: AffluenaRadii.control),
+                SizedBox(height: AffluenaSpacing.space3),
+                AffluenaSkeleton.line(width: 160, height: 28),
+                SizedBox(height: AffluenaSpacing.space4),
+                AffluenaSkeleton(height: 52),
+                SizedBox(height: AffluenaSpacing.space3),
+                AffluenaSkeleton(height: 52),
+                SizedBox(height: AffluenaSpacing.space3),
+                AffluenaSkeleton(height: 52),
+              ],
             ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space6),
+          const AffluenaSkeleton.line(width: 140, height: 16),
+          const SizedBox(height: AffluenaSpacing.space3),
+          Wrap(
+            spacing: AffluenaSpacing.space3,
+            runSpacing: AffluenaSpacing.space3,
+            children: const [
+              AffluenaSkeleton(width: 120, height: 64, radius: AffluenaRadii.card),
+              AffluenaSkeleton(width: 120, height: 64, radius: AffluenaRadii.card),
+            ],
           ),
         ],
       ),
@@ -578,21 +619,49 @@ class _QuickEntryError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Quick entry unavailable', style: textTheme.headlineMedium),
+          Text('Quick entry', style: textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('We could not load wallets, categories, and tags.'),
-                const SizedBox(height: AffluenaSpacing.space4),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          AffluenaBanner.error(
+            'We could not load wallets, categories, and tags.',
+            onRetry: onRetry,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SavedTemplatesEmpty extends StatelessWidget {
+  const _SavedTemplatesEmpty({required this.onCreate});
+
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+
+    return AffluenaCard(
+      backgroundColor: colors.forestSoft,
+      borderColor: colors.forestSoft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.bolt_outlined, color: colors.forest),
+          const SizedBox(height: AffluenaSpacing.space3),
+          Text('No saved templates yet', style: textTheme.titleMedium),
+          const SizedBox(height: AffluenaSpacing.space1),
+          Text(
+            'Save a recurring entry once — coffee, commute, salary — then '
+            'record it here in a single tap.',
+            style: textTheme.bodySmall,
+          ),
+          const SizedBox(height: AffluenaSpacing.space4),
+          FilledButton.icon(
+            key: const Key('quick-entry-create-template-button'),
+            onPressed: onCreate,
+            icon: const Icon(Icons.add),
+            label: const Text('Create a template'),
           ),
         ],
       ),
@@ -613,7 +682,7 @@ class _TemplateChip extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(AffluenaRadii.control),
       child: AffluenaCard(
         padding: const EdgeInsets.symmetric(
           horizontal: AffluenaSpacing.space4,
@@ -631,12 +700,6 @@ class _TemplateChip extends StatelessWidget {
       ),
     );
   }
-}
-
-int _parseAmount(String value) {
-  final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
-  if (digits.isEmpty) return 0;
-  return int.tryParse(digits) ?? 0;
 }
 
 String _categoryMissingMessage(TransactionType type) {

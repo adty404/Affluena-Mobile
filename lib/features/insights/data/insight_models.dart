@@ -107,6 +107,23 @@ enum NotificationChannel {
   }
 }
 
+/// How a [ReportMetric] value should be rendered. The report API does not yet
+/// expose an explicit `unit` field, so it is derived deterministically from the
+/// stable metric `id` rather than by sniffing the display label for a '%'.
+enum MetricUnit {
+  /// Rupiah amount; format via MoneyFormatter.
+  money,
+
+  /// Whole percentage held in `valueMinor` (e.g. saving rate, progress).
+  percent,
+
+  /// Plain integer count (e.g. number of sources, open debts).
+  count,
+
+  /// No numeric value; the meaningful text lives in `helper` (e.g. top source).
+  text,
+}
+
 class ReportMetric {
   const ReportMetric({
     required this.id,
@@ -131,6 +148,21 @@ class ReportMetric {
   final int valueMinor;
   final String helper;
   final String tone;
+
+  /// Maps the stable metric `id` to an explicit render unit. Centralised here
+  /// so the UI never has to guess from the label string.
+  MetricUnit get unit {
+    return switch (id) {
+      'saving_rate' || 'overall_progress' => MetricUnit.percent,
+      'source_count' ||
+      'cat_count' ||
+      'open_count' ||
+      'overdue_count' ||
+      'active_count' => MetricUnit.count,
+      'top_source' || 'top_category' => MetricUnit.text,
+      _ => MetricUnit.money,
+    };
+  }
 }
 
 class ReportRow {

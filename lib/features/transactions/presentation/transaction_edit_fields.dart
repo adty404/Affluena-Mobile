@@ -2,7 +2,7 @@ part of 'transaction_edit_sheet.dart';
 
 class _TransactionEditFields extends StatelessWidget {
   const _TransactionEditFields({
-    required this.amountController,
+    required this.initialAmountMinor,
     required this.noteController,
     required this.walletId,
     required this.toWalletId,
@@ -13,6 +13,7 @@ class _TransactionEditFields extends StatelessWidget {
     required this.needsCategory,
     required this.isSaving,
     required this.error,
+    required this.onAmountChanged,
     required this.onTextChanged,
     required this.onWalletChanged,
     required this.onToWalletChanged,
@@ -20,7 +21,7 @@ class _TransactionEditFields extends StatelessWidget {
     required this.onSave,
   });
 
-  final TextEditingController amountController;
+  final int initialAmountMinor;
   final TextEditingController noteController;
   final String? walletId;
   final String? toWalletId;
@@ -31,6 +32,7 @@ class _TransactionEditFields extends StatelessWidget {
   final bool needsCategory;
   final bool isSaving;
   final String? error;
+  final ValueChanged<int?> onAmountChanged;
   final VoidCallback onTextChanged;
   final ValueChanged<String?> onWalletChanged;
   final ValueChanged<String?> onToWalletChanged;
@@ -43,12 +45,12 @@ class _TransactionEditFields extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
+        MoneyInput(
           key: const Key('transaction-edit-amount-field'),
-          controller: amountController,
-          decoration: const InputDecoration(labelText: 'Amount'),
-          keyboardType: TextInputType.number,
-          onChanged: (_) => onTextChanged(),
+          label: 'Amount',
+          initialValue: initialAmountMinor,
+          enabled: !isSaving,
+          onChanged: onAmountChanged,
         ),
         const SizedBox(height: AffluenaSpacing.space3),
         DropdownButtonFormField<String>(
@@ -95,10 +97,7 @@ class _TransactionEditFields extends StatelessWidget {
         ),
         if (error != null) ...[
           const SizedBox(height: AffluenaSpacing.space3),
-          Text(
-            error!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          ),
+          AffluenaBanner(message: error!, tone: AffluenaBannerTone.warning),
         ],
         const SizedBox(height: AffluenaSpacing.space5),
         SizedBox(
