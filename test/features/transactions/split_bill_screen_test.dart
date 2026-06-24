@@ -11,10 +11,18 @@ import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'transactions_test_helpers.dart';
 
 void main() {
+  setUpAll(() async {
+    // The split date is now a DatePickerField that formats the chosen date with
+    // the 'id_ID' locale (mirroring main()); without this the form throws on
+    // locale data when it builds.
+    await initializeDateFormatting('id_ID');
+  });
+
   testWidgets(
     'creates split bill with participant allocation and display-name selectors',
     (tester) async {
@@ -40,10 +48,22 @@ void main() {
         find.byKey(const Key('split-total-amount-field')),
         '300000',
       );
-      await tester.enterText(
-        find.byKey(const Key('split-date-field')),
-        '2026-06-22',
+      // The date is now a tappable DatePickerField backed by the native picker.
+      // Open it and pick the 22nd of the current month (June 2026).
+      final dateField = find.byKey(const Key('split-date-field'));
+      await tester.scrollUntilVisible(
+        dateField,
+        260,
+        scrollable: find.byType(Scrollable).first,
       );
+      await tester.ensureVisible(dateField);
+      await tester.pumpAndSettle();
+      await tester.tap(dateField);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('22'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('split-note-field')),
         'Dinner at Sate Senayan',

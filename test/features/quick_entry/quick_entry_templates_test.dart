@@ -5,6 +5,7 @@ import 'package:affluena_mobile/features/categories/data/category_repository.dar
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_models.dart';
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository.dart';
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_templates_screen.dart';
+import 'package:affluena_mobile/features/shared/presentation/widgets/date_picker_field.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
@@ -13,8 +14,14 @@ import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
+  setUpAll(() async {
+    // DatePickerField formats with the 'id_ID' locale, mirroring main().
+    await initializeDateFormatting('id_ID');
+  });
+
   testWidgets('renders template detail with wallet category and tag names', (
     tester,
   ) async {
@@ -73,6 +80,8 @@ void main() {
       await tester.pumpAndSettle();
       await _tapTemplateSelector(tester, 'template-tag-selector');
       await tester.tap(find.text('#MonthlyBill').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('tag-multi-select-apply')));
       await tester.pumpAndSettle();
       await _scrollToTemplateSave(tester);
       await tester.tap(find.byKey(const Key('template-save-button')));
@@ -151,10 +160,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Execute Daily Coffee'), findsOneWidget);
 
-      await tester.enterText(
-        find.byKey(const Key('template-execute-date-field')),
-        '2026-06-22',
-      );
+      // The execute date is now a tappable DatePickerField backed by the native
+      // date picker (no typed YYYY-MM-DD). Open it and confirm via the picker's
+      // OK action.
+      final expectedDate = await _confirmExecutionDate(tester);
       await tester.enterText(
         find.byKey(const Key('template-execute-note-field')),
         'Override note',
@@ -165,7 +174,7 @@ void main() {
       expect(repository.executedIds.single, dailyCoffeeTemplate.id);
       expect(
         repository.executeRequests.single.transactionAt,
-        contains('2026-06-22'),
+        contains(expectedDate),
       );
       expect(repository.executeRequests.single.note, 'Override note');
       expect(find.text('Template could not be executed.'), findsWidgets);
@@ -173,6 +182,27 @@ void main() {
       expect(find.text('Daily Coffee'), findsWidgets);
     },
   );
+}
+
+/// Opens the DatePickerField's native picker and confirms the default date
+/// (today). Returns the expected `YYYY-MM-DD` date the screen will send: the
+/// screen anchors the chosen day to local noon before converting to UTC, which
+/// keeps the calendar day stable across timezones.
+Future<String> _confirmExecutionDate(WidgetTester tester) async {
+  final now = DateTime.now();
+  final field = find.byKey(const Key('template-execute-date-field'));
+  await tester.ensureVisible(field);
+  await tester.pumpAndSettle();
+  await tester.tap(field);
+  await tester.pumpAndSettle();
+  expect(find.byType(DatePickerField), findsWidgets);
+  await tester.tap(find.text('OK'));
+  await tester.pumpAndSettle();
+
+  final utc = DateTime(now.year, now.month, now.day, 12).toUtc();
+  final month = utc.month.toString().padLeft(2, '0');
+  final dayStr = utc.day.toString().padLeft(2, '0');
+  return '${utc.year}-$month-$dayStr';
 }
 
 Future<void> _scrollToTemplateSave(WidgetTester tester) async {

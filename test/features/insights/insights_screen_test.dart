@@ -1,6 +1,7 @@
 import 'package:affluena_mobile/app/provider_retry.dart';
 import 'package:affluena_mobile/app/theme/affluena_theme.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
+import 'package:affluena_mobile/features/insights/application/csv_share_service.dart';
 import 'package:affluena_mobile/features/insights/application/insights_controller.dart';
 import 'package:affluena_mobile/features/insights/data/insight_models.dart';
 import 'package:affluena_mobile/features/insights/data/insights_repository.dart';
@@ -52,7 +53,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.exportRequests, hasLength(1));
-    expect(find.text('CSV export generated'), findsOneWidget);
+    expect(find.text('CSV export shared.'), findsOneWidget);
   });
 
   testWidgets('opens alert and activity detail cards', (tester) async {
@@ -63,16 +64,26 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Food limit reached'));
     await tester.pumpAndSettle();
+    // The detail sheet now surfaces humanized Type/Module/Raised metadata and
+    // the description, not the raw actionPath ("/budgets").
     expect(find.text('Food spending reached 100%.'), findsWidgets);
-    expect(find.text('/budgets'), findsOneWidget);
+    expect(find.text('Type'), findsOneWidget);
+    expect(find.text('Module'), findsOneWidget);
+    expect(find.text('Raised'), findsOneWidget);
+    expect(find.text('Budget'), findsWidgets);
+    expect(find.text('/budgets'), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.close));
+    // Dismiss the modal sheet by tapping the scrim before switching tabs.
+    await tester.tapAt(const Offset(20, 20));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('insights-tab-activity')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Created transaction Lunch'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('transaction'), findsWidgets);
+    // The activity detail sheet de-emphasizes the raw entity id as a
+    // "Reference ID (debug)" technical row.
+    expect(find.text('Reference ID (debug)'), findsOneWidget);
+    expect(find.text('transaction-1'), findsOneWidget);
   });
 
   testWidgets('updates notification rule toggle', (tester) async {
@@ -167,7 +178,16 @@ extension on WidgetTester {
 Widget insightsTestApp(TestInsightsRepository repository) {
   return ProviderScope(
     retry: noProviderRetry,
-    overrides: [insightsRepositoryProvider.overrideWithValue(repository)],
+    overrides: [
+      insightsRepositoryProvider.overrideWithValue(repository),
+      // CSV export now routes through the platform share sheet via
+      // csvShareServiceProvider. Override it so the test exercises the success
+      // path ("CSV export shared.") without touching the SharePlus platform
+      // channel.
+      csvShareServiceProvider.overrideWithValue(
+        const FakeCsvShareService(CsvShareOutcome.shared),
+      ),
+    ],
     child: MaterialApp(
       theme: AffluenaTheme.light,
       darkTheme: AffluenaTheme.dark,
@@ -175,6 +195,15 @@ Widget insightsTestApp(TestInsightsRepository repository) {
       home: const Scaffold(body: InsightsScreen()),
     ),
   );
+}
+
+class FakeCsvShareService implements CsvShareService {
+  const FakeCsvShareService(this.outcome);
+
+  final CsvShareOutcome outcome;
+
+  @override
+  Future<CsvShareOutcome> share(CsvExportResult export) async => outcome;
 }
 
 class TestInsightsRepository implements InsightsRepository {
@@ -288,7 +317,7 @@ const seededReport = ReportResponse(
       tone: 'success',
     ),
     ReportMetric(
-      id: 'metric-saving-rate',
+      id: 'saving_rate',
       label: 'Saving Rate',
       valueMinor: 79,
       helper: '% of income saved',

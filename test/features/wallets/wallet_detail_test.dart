@@ -79,6 +79,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('Invite member'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Invite member'));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -89,6 +94,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.inviteRequests.single.email, 'bad-email');
+    // The sheet stays OPEN on failure (its title is still mounted) and shows
+    // the coral error banner instead of dismissing.
     expect(find.text('Invite member'), findsWidgets);
     expect(find.text('Invite could not be sent.'), findsOneWidget);
   });
@@ -114,9 +121,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Wallet unavailable'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
+    // The error renders as a coral AffluenaBanner with a localized retry action.
+    expect(find.text('We could not load this wallet.'), findsOneWidget);
+    expect(find.text('Coba lagi'), findsOneWidget);
 
-    await tester.tap(find.text('Retry'));
+    await tester.tap(find.text('Coba lagi'));
     await tester.pumpAndSettle();
 
     expect(find.text('BCA Primary'), findsOneWidget);

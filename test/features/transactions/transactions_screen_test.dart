@@ -82,6 +82,11 @@ void main() {
     await tester.tap(find.text('Delete transaction'));
     await tester.pumpAndSettle();
 
+    // Delete now routes through a coral confirmation dialog before mutating.
+    expect(find.text('Delete this transaction?'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('transaction-delete-confirm')));
+    await tester.pumpAndSettle();
+
     expect(repository.deletedIds, [groceriesTransaction.id]);
     expect(find.text('Groceries at Indomaret'), findsNothing);
   });
@@ -111,6 +116,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete transaction'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('transaction-delete-confirm')));
+    await tester.pumpAndSettle();
 
     expect(find.text('Groceries at Indomaret'), findsNothing);
     expect(find.text('Movie Night'), findsOneWidget);
@@ -132,8 +139,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete transaction'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('transaction-delete-confirm')));
+    await tester.pumpAndSettle();
 
+    expect(repository.deletedIds, [groceriesTransaction.id]);
     expect(find.text('Groceries at Indomaret'), findsOneWidget);
-    expect(find.text('Transaction could not be deleted.'), findsOneWidget);
+    // Failure surfaces as a coral error banner on the list.
+    expect(find.text('Transaction could not be deleted.'), findsWidgets);
   });
 }

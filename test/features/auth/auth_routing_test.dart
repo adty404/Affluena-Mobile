@@ -5,6 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/auth_test_helpers.dart';
 
+// Mirrors DashboardScreen's time-of-day greeting so dashboard assertions stay
+// stable regardless of the local clock when the suite runs.
+String _expectedGreeting() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 void main() {
   testWidgets('cold start with no token routes to login', (tester) async {
     final authRepository = FakeAuthRepository();
@@ -25,7 +34,7 @@ void main() {
       authRepository: authRepository,
     );
 
-    expect(find.text('Good morning'), findsOneWidget);
+    expect(find.text(_expectedGreeting()), findsOneWidget);
     expect(find.text('Total balance'), findsOneWidget);
     expect(authRepository.meCalls, 1);
   });
@@ -45,14 +54,14 @@ void main() {
     );
 
     expect(find.text('Affluena locked'), findsOneWidget);
-    expect(find.text('Good morning'), findsNothing);
+    expect(find.text(_expectedGreeting()), findsNothing);
 
     await tester.tap(find.byKey(const Key('app-lock-unlock-button')));
     await tester.pumpAndSettle();
 
     expect(deviceAuth.authenticateCalls, 1);
     expect(find.text('Affluena locked'), findsNothing);
-    expect(find.text('Good morning'), findsOneWidget);
+    expect(find.text(_expectedGreeting()), findsOneWidget);
   });
 
   testWidgets('expired session clears token and shows login reason', (
@@ -97,7 +106,7 @@ void main() {
     await tester.tap(find.byKey(const Key('login-submit-button')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Good morning'), findsOneWidget);
+    expect(find.text(_expectedGreeting()), findsOneWidget);
     expect(authRepository.loginCalls, 1);
     expect(await tokenStore.readAccessToken(), 'fresh-access-token');
     expect(await tokenStore.readRefreshToken(), 'fresh-refresh-token');

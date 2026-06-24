@@ -1,7 +1,11 @@
 import 'package:affluena_mobile/app/provider_retry.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
+import 'package:affluena_mobile/features/auth/application/auth_controller.dart';
+import 'package:affluena_mobile/features/auth/data/auth_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
+import 'package:affluena_mobile/features/tags/data/tag_models.dart';
+import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
 import 'package:affluena_mobile/features/transactions/presentation/transactions_screen.dart';
@@ -14,12 +18,41 @@ import 'transactions_test_data.dart';
 
 export 'transactions_test_data.dart';
 
+/// The user id used by every transaction fixture. Edit/delete are gated to the
+/// transaction creator, so the signed-in test user must match this id.
+const transactionsTestUserId = '11111111-1111-1111-1111-111111111111';
+
+const _transactionsTestUser = AuthUser(
+  id: transactionsTestUserId,
+  email: 'demo@affluena.com',
+  name: 'Demo User',
+  avatarUrl: '',
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+/// A signed-in [AuthController] override so the detail sheet treats the test
+/// user as the transaction creator (and exposes edit/delete actions) without
+/// hitting the auth repository or token store.
+class _AuthenticatedAuthController extends AuthController {
+  _AuthenticatedAuthController(this.user);
+
+  final AuthUser user;
+
+  @override
+  AuthState build() => AuthState.authenticated(user);
+}
+
 Widget transactionsTestApp({
   required RecordingTransactionRepository transactionRepository,
+  AuthUser currentUser = _transactionsTestUser,
 }) {
   return ProviderScope(
     retry: noProviderRetry,
     overrides: [
+      authControllerProvider.overrideWith(
+        () => _AuthenticatedAuthController(currentUser),
+      ),
       transactionRepositoryProvider.overrideWithValue(transactionRepository),
       walletRepositoryProvider.overrideWithValue(
         const StaticWalletRepository(wallets: [gopayWallet, bcaWallet]),
@@ -29,9 +62,48 @@ Widget transactionsTestApp({
           categories: [foodCategory, salaryCategory],
         ),
       ),
+      tagRepositoryProvider.overrideWithValue(
+        const StaticTransactionsTagRepository(tags: []),
+      ),
     ],
     child: const MaterialApp(home: Scaffold(body: TransactionsScreen())),
   );
+}
+
+class StaticTransactionsTagRepository implements TagRepository {
+  const StaticTransactionsTagRepository({required this.tags});
+
+  final List<Tag> tags;
+
+  @override
+  Future<TagListResponse> listTags({
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    return TagListResponse(
+      tags: tags,
+      pagination: Pagination(
+        total: tags.length,
+        limit: limit ?? tags.length,
+        offset: offset ?? 0,
+      ),
+    );
+  }
+
+  @override
+  Future<Tag> createTag(TagRequest request) async => tags.first;
+
+  @override
+  Future<Tag> getTag(String id) async {
+    return tags.firstWhere((tag) => tag.id == id);
+  }
+
+  @override
+  Future<Tag> updateTag(String id, TagRequest request) async => getTag(id);
+
+  @override
+  Future<void> deleteTag(String id) async {}
 }
 
 class RecordingTransactionRepository implements TransactionMutationRepository {

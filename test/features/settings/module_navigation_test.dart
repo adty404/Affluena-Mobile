@@ -34,6 +34,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import '../../helpers/auth_test_helpers.dart';
 import '../budgets/budget_screen_test.dart' as budget_fakes;
@@ -44,6 +45,12 @@ import '../recurring/recurring_screen_test.dart' as recurring_fakes;
 import '../trackers/tracker_screen_test.dart' as tracker_fakes;
 
 void main() {
+  // DatePickerField (used by the split-bill surface) formats dates with the
+  // id_ID locale, which must be initialized before the widgets build.
+  setUpAll(() async {
+    await initializeDateFormatting('id_ID');
+  });
+
   testWidgets('More exposes every planning and insight module entry', (
     tester,
   ) async {

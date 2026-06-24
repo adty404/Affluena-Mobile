@@ -6,13 +6,20 @@ import 'package:affluena_mobile/features/recurring/application/recurring_control
 import 'package:affluena_mobile/features/recurring/data/recurring_models.dart';
 import 'package:affluena_mobile/features/recurring/data/recurring_repository.dart';
 import 'package:affluena_mobile/features/recurring/presentation/recurring_screen.dart';
+import 'package:affluena_mobile/features/shared/presentation/widgets/date_picker_field.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
+  setUpAll(() async {
+    // DatePickerField formats with the 'id_ID' locale, mirroring main().
+    await initializeDateFormatting('id_ID');
+  });
+
   test('loads recurring state from repositories', () async {
     final container = ProviderContainer(
       retry: noProviderRetry,
@@ -89,11 +96,15 @@ void main() {
       find.byKey(const Key('recurring-amount-field')),
       '300000',
     );
-    await tester.enterText(
-      find.byKey(const Key('recurring-next-run-field')),
-      '2026-07-01T00:00:00Z',
-    );
-    await tester.pump();
+    // The next-run input is now a tappable DatePickerField backed by the native
+    // date picker rather than a hand-typed RFC3339 TextField. Open it and
+    // confirm a date so the rule has a non-null next run.
+    await tester.ensureVisible(find.byKey(const Key('recurring-next-run-field')));
+    await tester.tap(find.byKey(const Key('recurring-next-run-field')));
+    await tester.pumpAndSettle();
+    expect(find.byType(DatePickerField), findsWidgets);
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
 
     expect(
       tester
