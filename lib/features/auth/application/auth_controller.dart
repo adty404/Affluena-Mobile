@@ -12,11 +12,16 @@ final authControllerProvider = NotifierProvider<AuthController, AuthState>(
 
 enum AuthStatus { checking, authenticated, unauthenticated }
 
+/// Tone for the inline auth message so the UI can render errors as errors
+/// (coral banner) and confirmations as success — never a neutral tint.
+enum AuthMessageTone { info, success, error }
+
 class AuthState {
   const AuthState._({
     required this.status,
     this.user,
     this.message,
+    this.messageTone = AuthMessageTone.info,
     this.isSubmitting = false,
   });
 
@@ -30,16 +35,21 @@ class AuthState {
         isSubmitting: isSubmitting,
       );
 
-  const AuthState.unauthenticated({String? message, bool isSubmitting = false})
-    : this._(
-        status: AuthStatus.unauthenticated,
-        message: message,
-        isSubmitting: isSubmitting,
-      );
+  const AuthState.unauthenticated({
+    String? message,
+    AuthMessageTone messageTone = AuthMessageTone.info,
+    bool isSubmitting = false,
+  }) : this._(
+         status: AuthStatus.unauthenticated,
+         message: message,
+         messageTone: messageTone,
+         isSubmitting: isSubmitting,
+       );
 
   final AuthStatus status;
   final AuthUser? user;
   final String? message;
+  final AuthMessageTone messageTone;
   final bool isSubmitting;
 
   bool get isAuthenticated => status == AuthStatus.authenticated;
@@ -85,11 +95,15 @@ class AuthController extends Notifier<AuthState> {
     try {
       await ref.read(authRepositoryProvider).requestPasswordReset(email.trim());
       state = const AuthState.unauthenticated(
-        message: 'Password reset instructions were sent.',
+        message: 'Check your email for a reset code.',
+        messageTone: AuthMessageTone.success,
       );
       return true;
     } catch (error) {
-      state = AuthState.unauthenticated(message: _authErrorMessage(error));
+      state = AuthState.unauthenticated(
+        message: _authErrorMessage(error),
+        messageTone: AuthMessageTone.error,
+      );
       return false;
     }
   }
@@ -107,10 +121,14 @@ class AuthController extends Notifier<AuthState> {
           .resetPassword(token: token.trim(), newPassword: newPassword);
       state = const AuthState.unauthenticated(
         message: 'Password updated. Log in with your new password.',
+        messageTone: AuthMessageTone.success,
       );
       return true;
     } catch (error) {
-      state = AuthState.unauthenticated(message: _authErrorMessage(error));
+      state = AuthState.unauthenticated(
+        message: _authErrorMessage(error),
+        messageTone: AuthMessageTone.error,
+      );
       return false;
     }
   }
@@ -142,7 +160,10 @@ class AuthController extends Notifier<AuthState> {
       state = AuthState.authenticated(user);
     } catch (error) {
       await tokenStore.clear();
-      state = AuthState.unauthenticated(message: _restoreSessionMessage(error));
+      state = AuthState.unauthenticated(
+        message: _restoreSessionMessage(error),
+        messageTone: AuthMessageTone.error,
+      );
     }
   }
 
@@ -157,7 +178,10 @@ class AuthController extends Notifier<AuthState> {
           );
       state = AuthState.authenticated(session.user);
     } catch (error) {
-      state = AuthState.unauthenticated(message: _authErrorMessage(error));
+      state = AuthState.unauthenticated(
+        message: _authErrorMessage(error),
+        messageTone: AuthMessageTone.error,
+      );
     }
   }
 

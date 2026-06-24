@@ -5,8 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../debts/presentation/debt_screen.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../../tags/data/tag_models.dart';
@@ -29,11 +33,11 @@ class SplitBillScreen extends ConsumerStatefulWidget {
 }
 
 class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
-  late final TextEditingController _totalAmountController;
-  late final TextEditingController _dateController;
   late final TextEditingController _noteController;
   final _participants = <SplitBillParticipantDraft>[];
 
+  int? _totalAmountMinor;
+  DateTime _date = DateTime.now();
   String? _walletId;
   String? _categoryId;
   String? _tagId;
@@ -42,15 +46,11 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
   @override
   void initState() {
     super.initState();
-    _totalAmountController = TextEditingController();
-    _dateController = TextEditingController(text: _todayDate());
     _noteController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _totalAmountController.dispose();
-    _dateController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -70,7 +70,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
 
     final walletId = _walletId ?? state.wallets.firstOrNull?.id;
     final categoryId = _categoryId ?? state.expenseCategories.firstOrNull?.id;
-    final totalAmount = _parseAmount(_totalAmountController.text);
+    final totalAmount = _totalAmountMinor ?? 0;
     final participantTotal = _participantTotal;
     final userShare = totalAmount - participantTotal;
     final splitError = _splitValidationError(totalAmount, participantTotal);
@@ -105,9 +105,17 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
             walletId: walletId,
             categoryId: categoryId,
             selectedTagId: _tagId,
-            totalAmountController: _totalAmountController,
-            dateController: _dateController,
+            totalAmountMinor: _totalAmountMinor,
+            date: _date,
             noteController: _noteController,
+            onAmountChanged: (value) => setState(() {
+              _totalAmountMinor = value;
+              _formError = null;
+            }),
+            onDateChanged: (value) => setState(() {
+              _date = value;
+              _formError = null;
+            }),
             onWalletChanged: (value) => setState(() {
               _walletId = value;
               _formError = null;
@@ -140,11 +148,14 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
           ),
           if (splitError != null || _formError != null) ...[
             const SizedBox(height: AffluenaSpacing.space4),
-            _FeedbackCard(message: splitError ?? _formError!, isError: true),
+            AffluenaBanner(
+              message: splitError ?? _formError!,
+              tone: AffluenaBannerTone.warning,
+            ),
           ],
           if (state.actionError != null) ...[
             const SizedBox(height: AffluenaSpacing.space4),
-            _FeedbackCard(message: state.actionError!, isError: true),
+            AffluenaBanner.error(state.actionError!),
           ],
           if (state.result != null) ...[
             const SizedBox(height: AffluenaSpacing.space4),
@@ -201,7 +212,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
       showDragHandle: true,
       useSafeArea: true,
       builder: (context) => _SplitConfirmSheet(
-        totalAmount: _parseAmount(_totalAmountController.text),
+        totalAmount: _totalAmountMinor ?? 0,
         participantTotal: _participantTotal,
         participantCount: _participants.length,
       ),
@@ -215,7 +226,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
     String walletId,
     String categoryId,
   ) async {
-    final totalAmount = _parseAmount(_totalAmountController.text);
+    final totalAmount = _totalAmountMinor ?? 0;
     final splitError = _splitValidationError(totalAmount, _participantTotal);
     if (splitError != null ||
         totalAmount <= 0 ||
@@ -233,7 +244,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
       walletId: walletId,
       categoryId: categoryId,
       totalAmountMinor: totalAmount,
-      transactionAt: _transactionAtFromDate(_dateController.text),
+      transactionAt: _transactionAtFromDate(_date),
       note: _noteController.text.trim().isEmpty
           ? null
           : _noteController.text.trim(),
@@ -250,23 +261,10 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
   }
 }
 
-int _parseAmount(String raw) {
-  return int.tryParse(raw.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-}
-
-String _transactionAtFromDate(String raw) {
-  final value = raw.trim();
-  if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) {
-    return '${value}T00:00:00Z';
-  }
-  return value.isEmpty ? '${_todayDate()}T00:00:00Z' : value;
-}
-
-String _todayDate() {
-  final now = DateTime.now();
-  final month = now.month.toString().padLeft(2, '0');
-  final day = now.day.toString().padLeft(2, '0');
-  return '${now.year}-$month-$day';
+String _transactionAtFromDate(DateTime date) {
+  final month = date.month.toString().padLeft(2, '0');
+  final day = date.day.toString().padLeft(2, '0');
+  return '${date.year}-$month-${day}T00:00:00Z';
 }
 
 String _tagLabel(String name) {

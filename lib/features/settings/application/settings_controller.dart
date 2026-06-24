@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_error.dart';
+import '../../../core/storage/secure_token_store.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/data/auth_repository.dart';
@@ -23,6 +24,23 @@ final securityPreferencesProvider =
       SecurityPreferencesController,
       SecurityPreferencesState
     >(SecurityPreferencesController.new);
+
+/// The token suffix of the access token stored on *this* device, used to flag
+/// the active session in the sessions list. Null when no token is stored.
+final currentSessionTokenSuffixProvider = FutureProvider<String?>((ref) async {
+  final token = await ref.watch(secureTokenStoreProvider).readAccessToken();
+  if (token == null || token.isEmpty) return null;
+  return token;
+});
+
+/// Returns true when [record] is the session backing this device, by matching
+/// the stored access token against the record's token suffix.
+bool isCurrentSession(AuthSessionRecord record, String? currentAccessToken) {
+  final token = currentAccessToken?.trim();
+  final suffix = record.tokenSuffix.trim();
+  if (token == null || token.isEmpty || suffix.isEmpty) return false;
+  return token.endsWith(suffix);
+}
 
 class SettingsActionResult {
   const SettingsActionResult._({required this.message, required this.success});

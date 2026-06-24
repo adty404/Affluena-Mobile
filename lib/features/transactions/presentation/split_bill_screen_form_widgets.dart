@@ -258,19 +258,3 @@ class _ParticipantRow extends StatelessWidget {
   }
 }
 
-class _FeedbackCard extends StatelessWidget {
-  const _FeedbackCard({required this.message, required this.isError});
-
-  final String message;
-  final bool isError;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-
-    return AffluenaCard(
-      backgroundColor: isError ? colors.surfaceTintSoft : colors.forestSoft,
-      child: Text(message),
-    );
-  }
-}

@@ -2,17 +2,79 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/formatters/date_formatter.dart';
+import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
+import '../../tags/data/tag_models.dart';
+import '../../tags/data/tag_repository.dart';
+import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
 import '../data/transaction_models.dart';
 import '../data/transaction_repository.dart';
 
 const transactionsPageSize = 5;
+const _transactionsLookupPageSize = 100;
 
 final transactionsControllerProvider =
     NotifierProvider<TransactionsController, TransactionsState>(
       TransactionsController.new,
     );
+
+class TransactionFilters {
+  const TransactionFilters({
+    this.type,
+    this.walletId,
+    this.categoryId,
+    this.tagId,
+    this.from,
+    this.to,
+  });
+
+  final TransactionType? type;
+  final String? walletId;
+  final String? categoryId;
+  final String? tagId;
+  final DateTime? from;
+  final DateTime? to;
+
+  bool get hasActiveFilters =>
+      walletId != null ||
+      categoryId != null ||
+      tagId != null ||
+      from != null ||
+      to != null;
+
+  int get activeCount =>
+      (walletId != null ? 1 : 0) +
+      (categoryId != null ? 1 : 0) +
+      (tagId != null ? 1 : 0) +
+      (from != null ? 1 : 0) +
+      (to != null ? 1 : 0);
+
+  TransactionFilters copyWith({
+    Object? type = _unchanged,
+    Object? walletId = _unchanged,
+    Object? categoryId = _unchanged,
+    Object? tagId = _unchanged,
+    Object? from = _unchanged,
+    Object? to = _unchanged,
+  }) {
+    return TransactionFilters(
+      type: identical(type, _unchanged) ? this.type : type as TransactionType?,
+      walletId: identical(walletId, _unchanged)
+          ? this.walletId
+          : walletId as String?,
+      categoryId: identical(categoryId, _unchanged)
+          ? this.categoryId
+          : categoryId as String?,
+      tagId: identical(tagId, _unchanged) ? this.tagId : tagId as String?,
+      from: identical(from, _unchanged) ? this.from : from as DateTime?,
+      to: identical(to, _unchanged) ? this.to : to as DateTime?,
+    );
+  }
+
+  TransactionFilters cleared() => const TransactionFilters();
+}
 
 class TransactionsController extends Notifier<TransactionsState> {
   @override
@@ -35,24 +97,46 @@ class TransactionsController extends Notifier<TransactionsState> {
     );
 
     try {
+      final filters = state.filters;
       final transactionFuture = ref
           .read(transactionRepositoryProvider)
           .listTransactions(
-            type: state.typeFilter,
+            type: filters.type,
+            walletId: filters.walletId,
+            categoryId: filters.categoryId,
+            tagId: filters.tagId,
+            from: _isoDate(filters.from),
+            to: _isoDate(filters.to),
             limit: transactionsPageSize,
             offset: offset,
             sort: 'transaction_at_desc',
           );
       final walletsFuture = ref
           .read(walletRepositoryProvider)
-          .listWallets(limit: 100, offset: 0, sort: 'name_asc');
+          .listWallets(
+            limit: _transactionsLookupPageSize,
+            offset: 0,
+            sort: 'name_asc',
+          );
       final categoriesFuture = ref
           .read(categoryRepositoryProvider)
-          .listCategories(limit: 100, offset: 0, sort: 'name_asc');
+          .listCategories(
+            limit: _transactionsLookupPageSize,
+            offset: 0,
+            sort: 'name_asc',
+          );
+      final tagsFuture = ref
+          .read(tagRepositoryProvider)
+          .listTags(
+            limit: _transactionsLookupPageSize,
+            offset: 0,
+            sort: 'name_asc',
+          );
 
       final transactionResponse = await transactionFuture;
       final walletResponse = await walletsFuture;
       final categoryResponse = await categoriesFuture;
+      final tagResponse = await tagsFuture;
 
       state = state.copyWith(
         isLoading: false,
@@ -63,6 +147,9 @@ class TransactionsController extends Notifier<TransactionsState> {
           ...transactionResponse.transactions,
         ],
         total: transactionResponse.pagination.total,
+        wallets: walletResponse.wallets,
+        categories: categoryResponse.categories,
+        tags: tagResponse.tags,
         walletNames: {
           for (final wallet in walletResponse.wallets) wallet.id: wallet.name,
         },
@@ -70,6 +157,7 @@ class TransactionsController extends Notifier<TransactionsState> {
           for (final category in categoryResponse.categories)
             category.id: category.name,
         },
+        tagNames: {for (final tag in tagResponse.tags) tag.id: tag.name},
       );
     } catch (_) {
       state = state.copyWith(
@@ -83,10 +171,45 @@ class TransactionsController extends Notifier<TransactionsState> {
     }
   }
 
+  void setSearchQuery(String query) {
+    if (state.searchQuery == query) return;
+    state = state.copyWith(searchQuery: query);
+  }
+
   void setTypeFilter(TransactionType? type) {
-    if (state.typeFilter == type) return;
-    state = state.copyWith(typeFilter: type, transactions: const [], total: 0);
+    if (state.filters.type == type) return;
+    state = state.copyWith(
+      filters: state.filters.copyWith(type: type),
+      transactions: const [],
+      total: 0,
+    );
     unawaited(load(reset: true));
+  }
+
+  void applyFilters(TransactionFilters filters) {
+    state = state.copyWith(
+      filters: filters,
+      transactions: const [],
+      total: 0,
+    );
+    unawaited(load(reset: true));
+  }
+
+  void clearFilters() {
+    if (!state.filters.hasActiveFilters) return;
+    applyFilters(state.filters.cleared());
+  }
+
+  Future<bool> createTransaction(TransactionRequest request) async {
+    state = state.copyWith(actionError: null);
+    try {
+      await ref.read(transactionRepositoryProvider).createTransaction(request);
+      await load(reset: true);
+      return true;
+    } catch (_) {
+      state = state.copyWith(actionError: 'Transaction could not be created.');
+      return false;
+    }
   }
 
   Future<bool> updateTransaction(
@@ -110,16 +233,30 @@ class TransactionsController extends Notifier<TransactionsState> {
     }
   }
 
-  Future<void> deleteTransaction(Transaction transaction) async {
+  Future<bool> deleteTransaction(Transaction transaction) async {
     state = state.copyWith(actionError: null);
     try {
       await ref
           .read(transactionRepositoryProvider)
           .deleteTransaction(transaction.id);
       await load(reset: true);
+      return true;
     } catch (_) {
       state = state.copyWith(actionError: 'Transaction could not be deleted.');
+      return false;
     }
+  }
+
+  void clearActionFeedback() {
+    if (state.actionError == null) return;
+    state = state.copyWith(actionError: null);
+  }
+
+  static String? _isoDate(DateTime? date) {
+    if (date == null) return null;
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-${day}T00:00:00Z';
   }
 }
 
@@ -127,9 +264,14 @@ class TransactionsState {
   const TransactionsState({
     this.transactions = const [],
     this.total = 0,
+    this.wallets = const [],
+    this.categories = const [],
+    this.tags = const [],
     this.walletNames = const {},
     this.categoryNames = const {},
-    this.typeFilter,
+    this.tagNames = const {},
+    this.filters = const TransactionFilters(),
+    this.searchQuery = '',
     this.isLoading = false,
     this.isLoadingMore = false,
     this.loadError,
@@ -138,17 +280,42 @@ class TransactionsState {
 
   final List<Transaction> transactions;
   final int total;
+  final List<Wallet> wallets;
+  final List<Category> categories;
+  final List<Tag> tags;
   final Map<String, String> walletNames;
   final Map<String, String> categoryNames;
-  final TransactionType? typeFilter;
+  final Map<String, String> tagNames;
+  final TransactionFilters filters;
+  final String searchQuery;
   final bool isLoading;
   final bool isLoadingMore;
   final String? loadError;
   final String? actionError;
 
+  TransactionType? get typeFilter => filters.type;
+
   bool get hasMore => transactions.length < total;
 
+  /// Transactions narrowed by the in-memory search query. Server-side filters
+  /// are applied during [TransactionsController.load]; the query refines the
+  /// already-loaded page by note, wallet, or category name.
+  List<Transaction> get visibleTransactions {
+    final query = searchQuery.trim().toLowerCase();
+    if (query.isEmpty) return transactions;
+    return transactions.where((transaction) {
+      final note = transaction.note.toLowerCase();
+      final wallet = walletName(transaction.walletId).toLowerCase();
+      final category = categoryName(transaction).toLowerCase();
+      return note.contains(query) ||
+          wallet.contains(query) ||
+          category.contains(query);
+    }).toList(growable: false);
+  }
+
   String walletName(String id) => walletNames[id] ?? 'Unknown wallet';
+
+  String tagName(String id) => tagNames[id] ?? 'Tag';
 
   String categoryName(Transaction transaction) {
     if (transaction.categoryId == null) {
@@ -162,12 +329,23 @@ class TransactionsState {
     return categoryNames[transaction.categoryId] ?? 'Uncategorized';
   }
 
+  String filterDateLabel(DateTime date) => AffluenaDateFormatter.shortDate(
+    '${date.year.toString().padLeft(4, '0')}-'
+    '${date.month.toString().padLeft(2, '0')}-'
+    '${date.day.toString().padLeft(2, '0')}T00:00:00Z',
+  );
+
   TransactionsState copyWith({
     List<Transaction>? transactions,
     int? total,
+    List<Wallet>? wallets,
+    List<Category>? categories,
+    List<Tag>? tags,
     Map<String, String>? walletNames,
     Map<String, String>? categoryNames,
-    Object? typeFilter = _unchanged,
+    Map<String, String>? tagNames,
+    TransactionFilters? filters,
+    String? searchQuery,
     bool? isLoading,
     bool? isLoadingMore,
     Object? loadError = _unchanged,
@@ -176,11 +354,14 @@ class TransactionsState {
     return TransactionsState(
       transactions: transactions ?? this.transactions,
       total: total ?? this.total,
+      wallets: wallets ?? this.wallets,
+      categories: categories ?? this.categories,
+      tags: tags ?? this.tags,
       walletNames: walletNames ?? this.walletNames,
       categoryNames: categoryNames ?? this.categoryNames,
-      typeFilter: identical(typeFilter, _unchanged)
-          ? this.typeFilter
-          : typeFilter as TransactionType?,
+      tagNames: tagNames ?? this.tagNames,
+      filters: filters ?? this.filters,
+      searchQuery: searchQuery ?? this.searchQuery,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       loadError: identical(loadError, _unchanged)

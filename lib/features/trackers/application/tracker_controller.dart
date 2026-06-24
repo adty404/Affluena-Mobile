@@ -136,6 +136,15 @@ class TrackerController extends Notifier<TrackerState> {
     );
   }
 
+  Future<void> deleteInstallment(Installment installment) async {
+    await _save(
+      () => ref.read(trackerRepositoryProvider).deleteInstallment(
+        installment.id,
+      ),
+      errorMessage: 'Installment could not be deleted.',
+    );
+  }
+
   Future<void> createSubscription(SubscriptionRequest request) async {
     await _save(
       () => ref.read(trackerRepositoryProvider).createSubscription(request),
@@ -162,6 +171,15 @@ class TrackerController extends Notifier<TrackerState> {
           .read(trackerRepositoryProvider)
           .paySubscription(subscription.id, request),
       errorMessage: 'Subscription payment could not be recorded.',
+    );
+  }
+
+  Future<void> deleteSubscription(Subscription subscription) async {
+    await _save(
+      () => ref.read(trackerRepositoryProvider).deleteSubscription(
+        subscription.id,
+      ),
+      errorMessage: 'Subscription could not be deleted.',
     );
   }
 

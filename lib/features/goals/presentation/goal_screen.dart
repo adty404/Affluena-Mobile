@@ -4,11 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../auth/application/auth_controller.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
+import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/goal_controller.dart';
 import '../data/goal_models.dart';
+import 'goal_contribute_sheet.dart';
+import 'goal_form_sheet.dart';
+import 'goal_invite_sheet.dart';
+import 'goal_members_section.dart';
 
 class GoalScreen extends ConsumerWidget {
   const GoalScreen({super.key});
@@ -19,6 +27,9 @@ class GoalScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(goalControllerProvider);
     final controller = ref.read(goalControllerProvider.notifier);
+    final currentUserId = ref.watch(
+      authControllerProvider.select((auth) => auth.user?.id),
+    );
     final textTheme = Theme.of(context).textTheme;
 
     if (state.isLoading && state.goals.isEmpty) {
@@ -42,7 +53,9 @@ class GoalScreen extends ConsumerWidget {
             children: [
               Expanded(child: Text('Goals', style: textTheme.headlineMedium)),
               IconButton.filledTonal(
-                onPressed: state.isSaving ? null : () => _showGoalForm(context),
+                onPressed: state.isSaving
+                    ? null
+                    : () => showGoalFormSheet(context),
                 icon: const Icon(Icons.add),
               ),
             ],
@@ -51,9 +64,9 @@ class GoalScreen extends ConsumerWidget {
           _GoalSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
-            AffluenaCard(
-              backgroundColor: context.affluenaColors.surfaceTintSoft,
-              child: Text(state.actionError!),
+            AffluenaBanner.error(
+              state.actionError!,
+              onRetry: controller.clearActionError,
             ),
             const SizedBox(height: AffluenaSpacing.space4),
           ],
@@ -65,13 +78,18 @@ class GoalScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           if (state.goals.isEmpty)
-            const _GoalEmptyState()
+            _GoalEmptyState(onCreate: () => showGoalFormSheet(context))
           else
             for (final goal in state.goals) ...[
               _GoalCard(
                 goal: goal,
-                onInvite: () => _showInviteSheet(context, goal),
-                onEdit: () => _showGoalForm(context, goal: goal),
+                currentUserId: currentUserId,
+                busy: state.isSaving,
+                onContribute: () => showGoalContributeSheet(context, goal),
+                onInvite: () => showGoalInviteSheet(context, goal),
+                onEdit: () => showGoalFormSheet(context, goal: goal),
+                onTransition: (status) =>
+                    _confirmTransition(context, ref, goal, status),
                 onRespond: (member, status) =>
                     controller.respondInvite(goal, member, status),
               ),
@@ -79,6 +97,49 @@ class GoalScreen extends ConsumerWidget {
             ],
         ],
       ),
+    );
+  }
+
+  Future<void> _confirmTransition(
+    BuildContext context,
+    WidgetRef ref,
+    Goal goal,
+    GoalStatus status,
+  ) async {
+    final colors = context.affluenaColors;
+    final isCancel = status == GoalStatus.cancelled;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          isCancel ? 'Cancel this goal?' : 'Mark goal achieved?',
+        ),
+        content: Text(
+          isCancel
+              ? 'Cancelling stops tracking progress for "${goal.name}". '
+                    'Collected funds stay in the goal wallet.'
+              : 'This marks "${goal.name}" as achieved. You can still view it '
+                    'in your list.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Keep active'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: isCancel
+                ? FilledButton.styleFrom(backgroundColor: colors.coral)
+                : null,
+            child: Text(isCancel ? 'Cancel goal' : 'Mark achieved'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(goalControllerProvider.notifier).transitionStatus(
+      goal,
+      status,
     );
   }
 }
@@ -137,24 +198,28 @@ class _GoalSummaryCard extends StatelessWidget {
 class _GoalCard extends StatelessWidget {
   const _GoalCard({
     required this.goal,
+    required this.currentUserId,
+    required this.busy,
+    required this.onContribute,
     required this.onInvite,
     required this.onEdit,
+    required this.onTransition,
     required this.onRespond,
   });
 
   final Goal goal;
+  final String? currentUserId;
+  final bool busy;
+  final VoidCallback onContribute;
   final VoidCallback onInvite;
   final VoidCallback onEdit;
-  final Future<void> Function(GoalMember member, GoalMemberStatus status)
-  onRespond;
+  final void Function(GoalStatus status) onTransition;
+  final void Function(GoalMember member, GoalMemberStatus status) onRespond;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
-    final pendingMember = goal.members.where((member) {
-      return member.status == GoalMemberStatus.pending;
-    }).firstOrNull;
 
     return AffluenaCard(
       child: Column(
@@ -168,47 +233,35 @@ class _GoalCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(goal.name, style: textTheme.titleMedium),
-                    const SizedBox(height: AffluenaSpacing.space1),
+                    const SizedBox(height: AffluenaSpacing.space2),
                     Wrap(
                       spacing: AffluenaSpacing.space2,
                       runSpacing: AffluenaSpacing.space2,
                       children: [
-                        _GoalBadge(label: goal.status.label),
-                        _GoalBadge(label: '${goal.members.length} members'),
+                        StatusBadge.forStatus(
+                          goal.status.apiValue,
+                          label: goal.status.label,
+                        ),
+                        StatusBadge(
+                          label: '${goal.members.length} '
+                              '${goal.members.length == 1 ? 'member' : 'members'}',
+                          tone: StatusTone.neutral,
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'edit') onEdit();
-                  if (pendingMember != null && value == 'join') {
-                    onRespond(pendingMember, GoalMemberStatus.joined);
-                  }
-                  if (pendingMember != null && value == 'reject') {
-                    onRespond(pendingMember, GoalMemberStatus.rejected);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  if (pendingMember != null)
-                    const PopupMenuItem(
-                      value: 'join',
-                      child: Text('Join goal'),
-                    ),
-                  if (pendingMember != null)
-                    const PopupMenuItem(
-                      value: 'reject',
-                      child: Text('Reject invite'),
-                    ),
-                ],
+              _GoalOverflowMenu(
+                goal: goal,
+                onEdit: onEdit,
+                onTransition: onTransition,
               ),
             ],
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AffluenaRadii.pill),
             child: LinearProgressIndicator(
               value: goal.progressPercent / 100,
               minHeight: 10,
@@ -236,10 +289,29 @@ class _GoalCard extends StatelessWidget {
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
-          FilledButton.icon(
-            onPressed: onInvite,
-            icon: const Icon(Icons.person_add_alt_1_outlined),
-            label: const Text('Invite'),
+          GoalMembersSection(
+            members: goal.members,
+            currentUserId: currentUserId,
+            busy: busy,
+            onRespond: onRespond,
+          ),
+          const SizedBox(height: AffluenaSpacing.space4),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: goal.isActive ? onContribute : null,
+                  icon: const Icon(Icons.add_card_outlined),
+                  label: const Text('Contribute'),
+                ),
+              ),
+              const SizedBox(width: AffluenaSpacing.space2),
+              OutlinedButton.icon(
+                onPressed: onInvite,
+                icon: const Icon(Icons.person_add_alt_1_outlined),
+                label: const Text('Invite'),
+              ),
+            ],
           ),
         ],
       ),
@@ -247,37 +319,55 @@ class _GoalCard extends StatelessWidget {
   }
 }
 
-class _GoalBadge extends StatelessWidget {
-  const _GoalBadge({required this.label});
+class _GoalOverflowMenu extends StatelessWidget {
+  const _GoalOverflowMenu({
+    required this.goal,
+    required this.onEdit,
+    required this.onTransition,
+  });
 
-  final String label;
+  final Goal goal;
+  final VoidCallback onEdit;
+  final void Function(GoalStatus status) onTransition;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.affluenaColors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.forestSoft,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AffluenaSpacing.space3,
-          vertical: AffluenaSpacing.space1,
-        ),
-        child: Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: colors.forest),
-        ),
-      ),
+    return PopupMenuButton<String>(
+      onSelected: (value) {
+        switch (value) {
+          case 'edit':
+            onEdit();
+          case 'achieved':
+            onTransition(GoalStatus.achieved);
+          case 'cancelled':
+            onTransition(GoalStatus.cancelled);
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(value: 'edit', child: Text('Edit goal')),
+        if (goal.isActive) ...[
+          const PopupMenuItem(
+            value: 'achieved',
+            child: Text('Mark achieved'),
+          ),
+          PopupMenuItem(
+            value: 'cancelled',
+            child: Text(
+              'Cancel goal',
+              style: TextStyle(color: colors.coral),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
 
 class _GoalEmptyState extends StatelessWidget {
-  const _GoalEmptyState();
+  const _GoalEmptyState({required this.onCreate});
+
+  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
@@ -294,8 +384,15 @@ class _GoalEmptyState extends StatelessWidget {
           Text('No goals yet', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Create saving targets and let goal wallets track collected balance.',
+            'Create a saving target and a goal wallet tracks the balance you '
+            'collect toward it.',
             style: textTheme.bodySmall,
+          ),
+          const SizedBox(height: AffluenaSpacing.space4),
+          FilledButton.icon(
+            onPressed: onCreate,
+            icon: const Icon(Icons.add),
+            label: const Text('Create goal'),
           ),
         ],
       ),
@@ -308,6 +405,7 @@ class _GoalLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -317,14 +415,66 @@ class _GoalLoading extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Goals', style: Theme.of(context).textTheme.headlineMedium),
+          Text('Goals', style: textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
-          const AffluenaCard(
-            child: SizedBox(
-              height: 144,
-              child: Center(child: Text('Loading goals')),
-            ),
-          ),
+          const AffluenaCard(child: _SummarySkeleton()),
+          const SizedBox(height: AffluenaSpacing.space5),
+          const AffluenaSkeleton.line(width: 140, height: 16),
+          const SizedBox(height: AffluenaSpacing.space3),
+          const _GoalCardSkeleton(),
+          const SizedBox(height: AffluenaSpacing.space3),
+          const _GoalCardSkeleton(),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummarySkeleton extends StatelessWidget {
+  const _SummarySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: const [
+        Row(
+          children: [
+            Expanded(child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md)),
+            SizedBox(width: AffluenaSpacing.space3),
+            Expanded(child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md)),
+          ],
+        ),
+        SizedBox(height: AffluenaSpacing.space3),
+        Row(
+          children: [
+            Expanded(child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md)),
+            SizedBox(width: AffluenaSpacing.space3),
+            Expanded(child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _GoalCardSkeleton extends StatelessWidget {
+  const _GoalCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const AffluenaCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AffluenaSkeleton.line(width: 160, height: 16),
+          SizedBox(height: AffluenaSpacing.space3),
+          AffluenaSkeleton(height: 10, radius: AffluenaRadii.pill),
+          SizedBox(height: AffluenaSpacing.space3),
+          AffluenaSkeleton.line(width: 120, height: 20),
+          SizedBox(height: AffluenaSpacing.space2),
+          AffluenaSkeleton.line(width: 90, height: 12),
+          SizedBox(height: AffluenaSpacing.space4),
+          AffluenaSkeleton(height: 44, radius: AffluenaRadii.control),
         ],
       ),
     );
@@ -352,250 +502,12 @@ class _GoalError extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('We could not load goals.'),
-                const SizedBox(height: AffluenaSpacing.space4),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          AffluenaBanner.error(
+            'We could not load goals.',
+            onRetry: onRetry,
           ),
         ],
       ),
     );
   }
-}
-
-Future<void> _showGoalForm(BuildContext context, {Goal? goal}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (_) => _GoalFormSheet(goal: goal),
-  );
-}
-
-class _GoalFormSheet extends ConsumerStatefulWidget {
-  const _GoalFormSheet({this.goal});
-
-  final Goal? goal;
-
-  @override
-  ConsumerState<_GoalFormSheet> createState() => _GoalFormSheetState();
-}
-
-class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _targetController;
-  late final TextEditingController _deadlineController;
-
-  bool get _isEditing => widget.goal != null;
-
-  @override
-  void initState() {
-    super.initState();
-    final goal = widget.goal;
-    _nameController = TextEditingController(text: goal?.name ?? '');
-    _targetController = TextEditingController(
-      text: goal?.targetAmountMinor.toString() ?? '',
-    );
-    _deadlineController = TextEditingController(text: goal?.deadline ?? '');
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _targetController.dispose();
-    _deadlineController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(goalControllerProvider);
-    final canSave =
-        _nameController.text.trim().isNotEmpty &&
-        _moneyMinor(_targetController.text) > 0 &&
-        _validDateTime(_deadlineController.text) &&
-        !state.isSaving;
-
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space2,
-          AffluenaSpacing.space5,
-          MediaQuery.viewInsetsOf(context).bottom + AffluenaSpacing.space5,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                _isEditing ? 'Edit goal' : 'Create goal',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AffluenaSpacing.space4),
-              TextField(
-                key: const Key('goal-name-field'),
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.label_outline),
-                  labelText: 'Name',
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: AffluenaSpacing.space2),
-              TextField(
-                key: const Key('goal-target-field'),
-                controller: _targetController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.flag_outlined),
-                  labelText: 'Target amount',
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: AffluenaSpacing.space2),
-              TextField(
-                key: const Key('goal-deadline-field'),
-                controller: _deadlineController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.event_outlined),
-                  labelText: 'Deadline',
-                  hintText: '2026-12-31T00:00:00Z',
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: AffluenaSpacing.space5),
-              FilledButton(
-                key: const Key('goal-save-button'),
-                onPressed: canSave ? _save : null,
-                child: Text(state.isSaving ? 'Saving...' : 'Save goal'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _save() async {
-    final controller = ref.read(goalControllerProvider.notifier);
-    final request = GoalRequest(
-      name: _nameController.text.trim(),
-      targetAmountMinor: _moneyMinor(_targetController.text),
-      deadline: _deadlineController.text.trim(),
-    );
-    if (widget.goal == null) {
-      await controller.createGoal(request);
-    } else {
-      await controller.updateGoal(widget.goal!, request);
-    }
-    if (mounted) Navigator.of(context).pop();
-  }
-}
-
-Future<void> _showInviteSheet(BuildContext context, Goal goal) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (_) => _GoalInviteSheet(goal: goal),
-  );
-}
-
-class _GoalInviteSheet extends ConsumerStatefulWidget {
-  const _GoalInviteSheet({required this.goal});
-
-  final Goal goal;
-
-  @override
-  ConsumerState<_GoalInviteSheet> createState() => _GoalInviteSheetState();
-}
-
-class _GoalInviteSheetState extends ConsumerState<_GoalInviteSheet> {
-  final _emailController = TextEditingController();
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(goalControllerProvider);
-    final canSave = _validEmail(_emailController.text) && !state.isSaving;
-
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space2,
-          AffluenaSpacing.space5,
-          MediaQuery.viewInsetsOf(context).bottom + AffluenaSpacing.space5,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Invite member',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AffluenaSpacing.space2),
-            Text(widget.goal.name),
-            const SizedBox(height: AffluenaSpacing.space4),
-            TextField(
-              key: const Key('goal-invite-email-field'),
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.mail_outline),
-                labelText: 'Email',
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: AffluenaSpacing.space5),
-            FilledButton(
-              key: const Key('goal-invite-save-button'),
-              onPressed: canSave ? _save : null,
-              child: Text(state.isSaving ? 'Sending...' : 'Send invite'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _save() async {
-    await ref
-        .read(goalControllerProvider.notifier)
-        .inviteMember(
-          widget.goal,
-          GoalInviteRequest(email: _emailController.text.trim()),
-        );
-    if (mounted) Navigator.of(context).pop();
-  }
-}
-
-int _moneyMinor(String value) {
-  final normalized = value.replaceAll(RegExp(r'[^0-9]'), '');
-  return int.tryParse(normalized) ?? 0;
-}
-
-bool _validDateTime(String value) {
-  return DateTime.tryParse(value.trim()) != null;
-}
-
-bool _validEmail(String value) {
-  return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim());
 }

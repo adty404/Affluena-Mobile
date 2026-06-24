@@ -45,6 +45,11 @@ class DashboardSummary {
   final List<UpcomingSubscription> upcomingSubscriptions;
   final List<UpcomingInstallment> upcomingInstallments;
   final List<UpcomingDebt> upcomingDebts;
+
+  bool get hasUpcoming =>
+      upcomingSubscriptions.isNotEmpty ||
+      upcomingInstallments.isNotEmpty ||
+      upcomingDebts.isNotEmpty;
 }
 
 class BudgetSummary {

@@ -5,11 +5,16 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/status_badge.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/recurring_controller.dart';
 import '../data/recurring_models.dart';
@@ -59,9 +64,9 @@ class RecurringScreen extends ConsumerWidget {
           _RecurringSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
-            AffluenaCard(
-              backgroundColor: context.affluenaColors.surfaceTintSoft,
-              child: Text(state.actionError!),
+            AffluenaBanner.error(
+              state.actionError!,
+              onRetry: controller.load,
             ),
             const SizedBox(height: AffluenaSpacing.space4),
           ],
@@ -189,6 +194,7 @@ class _RecurringCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
     final detail = rule.type == RecurringType.transfer
         ? '$walletName to ${destinationName ?? 'Unknown wallet'}'
         : '$walletName · $categoryName';
@@ -210,8 +216,14 @@ class _RecurringCard extends StatelessWidget {
                       spacing: AffluenaSpacing.space2,
                       runSpacing: AffluenaSpacing.space2,
                       children: [
-                        _RecurringBadge(label: rule.type.label),
-                        _RecurringBadge(label: rule.status.label),
+                        StatusBadge(
+                          label: rule.type.label,
+                          tone: StatusTone.neutral,
+                        ),
+                        StatusBadge.forStatus(
+                          rule.status.apiValue,
+                          label: rule.status.label,
+                        ),
                       ],
                     ),
                   ],
@@ -232,11 +244,20 @@ class _RecurringCard extends StatelessWidget {
                   if (onResume != null)
                     const PopupMenuItem(value: 'resume', child: Text('Resume')),
                   if (onCancel != null)
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'cancel',
-                      child: Text('Cancel rule'),
+                      child: Text(
+                        'Cancel rule',
+                        style: TextStyle(color: colors.coral),
+                      ),
                     ),
-                  const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(
+                      'Delete',
+                      style: TextStyle(color: colors.coral),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -248,7 +269,7 @@ class _RecurringCard extends StatelessWidget {
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            '${rule.frequency.label} every ${rule.intervalCount} · next ${AffluenaDateFormatter.shortDate(rule.nextRunAt)}',
+            '${rule.frequencyLabel} · next ${AffluenaDateFormatter.shortDate(rule.nextRunAt)}',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
@@ -273,35 +294,6 @@ class _RecurringCard extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _RecurringBadge extends StatelessWidget {
-  const _RecurringBadge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.forestSoft,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AffluenaSpacing.space3,
-          vertical: AffluenaSpacing.space1,
-        ),
-        child: Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: colors.forest),
-        ),
       ),
     );
   }
@@ -351,11 +343,34 @@ class _RecurringLoading extends StatelessWidget {
           Text('Recurring', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(
-            child: SizedBox(
-              height: 144,
-              child: Center(child: Text('Loading recurring rules')),
+            child: Column(
+              children: [
+                AffluenaSkeleton(height: 56),
+                SizedBox(height: AffluenaSpacing.space3),
+                AffluenaSkeleton(height: 56),
+              ],
             ),
           ),
+          const SizedBox(height: AffluenaSpacing.space5),
+          const AffluenaSkeleton.line(width: 120, height: 16),
+          const SizedBox(height: AffluenaSpacing.space4),
+          for (var i = 0; i < 3; i++) ...[
+            AffluenaCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  AffluenaSkeleton.line(width: 160, height: 16),
+                  SizedBox(height: AffluenaSpacing.space2),
+                  AffluenaSkeleton.line(width: 100, height: 20),
+                  SizedBox(height: AffluenaSpacing.space3),
+                  AffluenaSkeleton.line(width: 140, height: 22),
+                  SizedBox(height: AffluenaSpacing.space2),
+                  AffluenaSkeleton.line(width: 240),
+                ],
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+          ],
         ],
       ),
     );
@@ -379,23 +394,13 @@ class _RecurringError extends StatelessWidget {
         ),
         children: [
           Text(
-            'Recurring unavailable',
+            'Recurring',
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('We could not load recurring rules.'),
-                const SizedBox(height: AffluenaSpacing.space4),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          AffluenaBanner.error(
+            'We could not load recurring rules.',
+            onRetry: onRetry,
           ),
         ],
       ),
@@ -432,11 +437,11 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
   late RecurringFrequency _frequency;
   late RecurringStatus _status;
   late final TextEditingController _nameController;
-  late final TextEditingController _amountController;
   late final TextEditingController _intervalController;
-  late final TextEditingController _nextRunController;
-  late final TextEditingController _endAtController;
   late final TextEditingController _noteController;
+  int? _amountMinor;
+  DateTime? _nextRunAt;
+  DateTime? _endAt;
   Wallet? _wallet;
   Wallet? _toWallet;
   Category? _category;
@@ -451,14 +456,12 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
     _frequency = rule?.frequency ?? RecurringFrequency.monthly;
     _status = rule?.status ?? RecurringStatus.active;
     _nameController = TextEditingController(text: rule?.name ?? '');
-    _amountController = TextEditingController(
-      text: rule?.amountMinor.toString() ?? '',
-    );
+    _amountMinor = rule?.amountMinor;
     _intervalController = TextEditingController(
       text: rule?.intervalCount.toString() ?? '1',
     );
-    _nextRunController = TextEditingController(text: rule?.nextRunAt ?? '');
-    _endAtController = TextEditingController(text: rule?.endAt ?? '');
+    _nextRunAt = _parseDateTime(rule?.nextRunAt);
+    _endAt = _parseDateTime(rule?.endAt);
     _noteController = TextEditingController(text: rule?.note ?? '');
     _wallet = _findById(widget.state.wallets, rule?.walletId);
     _toWallet = _findById(widget.state.wallets, rule?.toWalletId);
@@ -468,10 +471,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
   @override
   void dispose() {
     _nameController.dispose();
-    _amountController.dispose();
     _intervalController.dispose();
-    _nextRunController.dispose();
-    _endAtController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -483,10 +483,9 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
         _nameController.text.trim().isNotEmpty &&
         _wallet != null &&
         (_type != RecurringType.transfer || _toWallet != null) &&
-        _moneyMinor(_amountController.text) > 0 &&
+        (_amountMinor ?? 0) > 0 &&
         _intValue(_intervalController.text) > 0 &&
-        _validDateTime(_nextRunController.text) &&
-        _validOptionalDateTime(_endAtController.text) &&
+        _nextRunAt != null &&
         !state.isSaving;
 
     return SafeArea(
@@ -507,6 +506,10 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
+              if (state.actionError != null) ...[
+                AffluenaBanner.error(state.actionError!),
+                const SizedBox(height: AffluenaSpacing.space4),
+              ],
               SegmentedButton<RecurringType>(
                 showSelectedIcon: false,
                 segments: const [
@@ -591,15 +594,12 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 ),
               ],
               const Divider(height: 1),
-              TextField(
+              const SizedBox(height: AffluenaSpacing.space2),
+              MoneyInput(
                 key: const Key('recurring-amount-field'),
-                controller: _amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.payments_outlined),
-                  labelText: 'Amount',
-                ),
-                onChanged: (_) => setState(() {}),
+                label: 'Amount',
+                initialValue: _amountMinor,
+                onChanged: (value) => setState(() => _amountMinor = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               DropdownButtonFormField<RecurringFrequency>(
@@ -632,25 +632,21 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
-              TextField(
+              DatePickerField(
                 key: const Key('recurring-next-run-field'),
-                controller: _nextRunController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.event_outlined),
-                  labelText: 'Next run at',
-                  hintText: '2026-07-01T00:00:00Z',
-                ),
-                onChanged: (_) => setState(() {}),
+                label: 'Next run date',
+                value: _nextRunAt,
+                icon: Icons.event_outlined,
+                placeholder: 'Choose date',
+                onChanged: (value) => setState(() => _nextRunAt = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
-              TextField(
-                controller: _endAtController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.event_busy_outlined),
-                  labelText: 'End at',
-                  hintText: 'Optional RFC3339 timestamp',
-                ),
-                onChanged: (_) => setState(() {}),
+              DatePickerField(
+                label: 'End date',
+                value: _endAt,
+                icon: Icons.event_busy_outlined,
+                placeholder: 'Optional',
+                onChanged: (value) => setState(() => _endAt = value),
               ),
               if (_isEditing) ...[
                 const SizedBox(height: AffluenaSpacing.space2),
@@ -742,18 +738,17 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
 
   Future<void> _save() async {
     final controller = ref.read(recurringControllerProvider.notifier);
-    final endAt = _endAtController.text.trim();
     final request = RecurringRuleRequest(
       name: _nameController.text.trim(),
       type: _type,
       walletId: _wallet!.id,
       toWalletId: _type == RecurringType.transfer ? _toWallet?.id : null,
       categoryId: _type == RecurringType.transfer ? null : _category?.id,
-      amountMinor: _moneyMinor(_amountController.text),
+      amountMinor: _amountMinor ?? 0,
       frequency: _frequency,
       intervalCount: _intValue(_intervalController.text),
-      nextRunAt: _nextRunController.text.trim(),
-      endAt: endAt.isEmpty ? null : endAt,
+      nextRunAt: _formatDateTime(_nextRunAt)!,
+      endAt: _formatDateTime(_endAt),
       status: _status,
       note: _noteController.text.trim(),
     );
@@ -763,7 +758,10 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
     } else {
       await controller.updateRule(widget.rule!, request);
     }
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    if (ref.read(recurringControllerProvider).actionError == null) {
+      Navigator.of(context).pop();
+    }
   }
 }
 
@@ -774,6 +772,7 @@ Future<void> _confirm(
   required String actionLabel,
   required Future<void> Function() onConfirm,
 }) async {
+  final colors = context.affluenaColors;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -785,6 +784,7 @@ Future<void> _confirm(
           child: const Text('Keep'),
         ),
         FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(actionLabel),
         ),
@@ -807,21 +807,17 @@ T? _findById<T>(List<T> items, String? id) {
   return null;
 }
 
-int _moneyMinor(String value) {
-  final normalized = value.replaceAll(RegExp(r'[^0-9]'), '');
-  return int.tryParse(normalized) ?? 0;
-}
-
 int _intValue(String value) {
   final normalized = value.replaceAll(RegExp(r'[^0-9]'), '');
   return int.tryParse(normalized) ?? 0;
 }
 
-bool _validDateTime(String value) {
-  return DateTime.tryParse(value.trim()) != null;
+DateTime? _parseDateTime(String? value) {
+  if (value == null || value.isEmpty) return null;
+  return DateTime.tryParse(value)?.toLocal();
 }
 
-bool _validOptionalDateTime(String value) {
-  if (value.trim().isEmpty) return true;
-  return DateTime.tryParse(value.trim()) != null;
+String? _formatDateTime(DateTime? value) {
+  if (value == null) return null;
+  return value.toUtc().toIso8601String();
 }

@@ -6,9 +6,11 @@ class _SplitBillInfoSection extends StatelessWidget {
     required this.walletId,
     required this.categoryId,
     required this.selectedTagId,
-    required this.totalAmountController,
-    required this.dateController,
+    required this.totalAmountMinor,
+    required this.date,
     required this.noteController,
+    required this.onAmountChanged,
+    required this.onDateChanged,
     required this.onWalletChanged,
     required this.onCategoryChanged,
     required this.onTagChanged,
@@ -19,9 +21,11 @@ class _SplitBillInfoSection extends StatelessWidget {
   final String? walletId;
   final String? categoryId;
   final String? selectedTagId;
-  final TextEditingController totalAmountController;
-  final TextEditingController dateController;
+  final int? totalAmountMinor;
+  final DateTime date;
   final TextEditingController noteController;
+  final ValueChanged<int?> onAmountChanged;
+  final ValueChanged<DateTime> onDateChanged;
   final ValueChanged<String> onWalletChanged;
   final ValueChanged<String> onCategoryChanged;
   final ValueChanged<String?> onTagChanged;
@@ -66,27 +70,21 @@ class _SplitBillInfoSection extends StatelessWidget {
               ),
               const Divider(height: 1),
               const SizedBox(height: AffluenaSpacing.space3),
-              TextField(
+              MoneyInput(
                 key: const Key('split-total-amount-field'),
-                controller: totalAmountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.payments_outlined),
-                  labelText: 'Total bill',
-                ),
-                onChanged: (_) => onTextChanged(),
+                label: 'Total bill',
+                initialValue: totalAmountMinor,
+                enabled: !state.isSaving,
+                onChanged: onAmountChanged,
               ),
               const SizedBox(height: AffluenaSpacing.space3),
-              TextField(
+              DatePickerField(
                 key: const Key('split-date-field'),
-                controller: dateController,
-                keyboardType: TextInputType.datetime,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.event_outlined),
-                  labelText: 'Date',
-                  hintText: 'YYYY-MM-DD',
-                ),
-                onChanged: (_) => onTextChanged(),
+                label: 'Date',
+                value: date,
+                enabled: !state.isSaving,
+                lastDate: DateTime.now(),
+                onChanged: onDateChanged,
               ),
               const SizedBox(height: AffluenaSpacing.space3),
               TextField(

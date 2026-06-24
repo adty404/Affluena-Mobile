@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
 
@@ -34,8 +36,8 @@ class _TransactionEditSheet extends ConsumerStatefulWidget {
 }
 
 class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
-  late final TextEditingController _amountController;
   late final TextEditingController _noteController;
+  late int? _amountMinor;
   late String? _walletId;
   late String? _toWalletId;
   late String? _categoryId;
@@ -46,9 +48,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
   void initState() {
     super.initState();
     final transaction = widget.transaction;
-    _amountController = TextEditingController(
-      text: transaction.amountMinor.toString(),
-    );
+    _amountMinor = transaction.amountMinor;
     _noteController = TextEditingController(text: transaction.note);
     _walletId = transaction.walletId;
     _toWalletId = transaction.toWalletId;
@@ -57,7 +57,6 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
 
   @override
   void dispose() {
-    _amountController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -93,7 +92,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
               Text('Edit transaction', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space4),
               _TransactionEditFields(
-                amountController: _amountController,
+                initialAmountMinor: widget.transaction.amountMinor,
                 noteController: _noteController,
                 walletId: _walletId,
                 toWalletId: _toWalletId,
@@ -104,6 +103,10 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
                 needsCategory: needsCategory,
                 isSaving: _isSaving,
                 error: _error,
+                onAmountChanged: (value) {
+                  _amountMinor = value;
+                  _clearError();
+                },
                 onTextChanged: _clearError,
                 onWalletChanged: (value) => setState(() {
                   _walletId = value;
@@ -134,7 +137,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
 
   Future<void> _save() async {
     final transaction = widget.transaction;
-    final amountMinor = _parseTransactionAmount(_amountController.text);
+    final amountMinor = _amountMinor ?? 0;
     final error = _validationError(transaction, amountMinor);
     if (error != null) {
       setState(() => _error = error);

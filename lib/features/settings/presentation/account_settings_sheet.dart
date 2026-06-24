@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../auth/data/auth_models.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../application/settings_controller.dart';
 import 'settings_sheet_widgets.dart';
 
@@ -74,7 +75,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
           ),
           if (_error != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
-            SettingsInlineMessage(message: _error!, isError: true),
+            AffluenaBanner.error(_error!),
           ],
           const SizedBox(height: AffluenaSpacing.space4),
           FilledButton.icon(

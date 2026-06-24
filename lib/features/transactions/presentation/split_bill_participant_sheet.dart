@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../application/split_bill_controller.dart';
 import '../data/transaction_models.dart';
@@ -55,7 +56,7 @@ class _SplitBillParticipantSheet extends StatefulWidget {
 class _SplitBillParticipantSheetState
     extends State<_SplitBillParticipantSheet> {
   late final TextEditingController _nameController;
-  late final TextEditingController _amountController;
+  int? _amountMinor;
   String? _disbursementCategoryId;
   String? _paymentCategoryId;
   String? _error;
@@ -64,7 +65,6 @@ class _SplitBillParticipantSheetState
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _amountController = TextEditingController();
     _disbursementCategoryId = widget.state.expenseCategories.firstOrNull?.id;
     _paymentCategoryId = widget.state.incomeCategories.firstOrNull?.id;
   }
@@ -72,14 +72,13 @@ class _SplitBillParticipantSheetState
   @override
   void dispose() {
     _nameController.dispose();
-    _amountController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final amount = _parseAmount(_amountController.text);
+    final amount = _amountMinor ?? 0;
     final canSave =
         _nameController.text.trim().isNotEmpty &&
         amount > 0 &&
@@ -117,15 +116,14 @@ class _SplitBillParticipantSheetState
                         onChanged: (_) => setState(() => _error = null),
                       ),
                       const SizedBox(height: AffluenaSpacing.space3),
-                      TextField(
+                      MoneyInput(
                         key: const Key('participant-amount-field'),
-                        controller: _amountController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.payments_outlined),
-                          labelText: 'Share amount',
-                        ),
-                        onChanged: (_) => setState(() => _error = null),
+                        label: 'Share amount',
+                        initialValue: _amountMinor,
+                        onChanged: (value) => setState(() {
+                          _amountMinor = value;
+                          _error = null;
+                        }),
                       ),
                       const SizedBox(height: AffluenaSpacing.space3),
                       SelectorRow(
@@ -225,14 +223,10 @@ class _SplitBillParticipantSheetState
     Navigator.of(context).pop(
       SplitBillParticipantDraft(
         counterpartyName: _nameController.text.trim(),
-        amountMinor: _parseAmount(_amountController.text),
+        amountMinor: _amountMinor ?? 0,
         disbursementCategoryId: _disbursementCategoryId!,
         paymentCategoryId: _paymentCategoryId!,
       ),
     );
   }
-}
-
-int _parseAmount(String raw) {
-  return int.tryParse(raw.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
 }

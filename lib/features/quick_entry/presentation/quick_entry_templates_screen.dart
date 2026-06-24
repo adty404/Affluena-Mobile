@@ -4,14 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/status_badge.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/quick_entry_templates_controller.dart';
 import '../data/quick_entry_models.dart';
+import 'tag_multi_select_sheet.dart';
 
 class QuickEntryTemplatesScreen extends ConsumerStatefulWidget {
   const QuickEntryTemplatesScreen({super.key});
@@ -99,13 +105,17 @@ class _QuickEntryTemplatesScreenState
             ),
             onChanged: (value) => setState(() => _query = value),
           ),
-          if (state.message != null || state.actionError != null) ...[
+          if (state.actionError != null) ...[
             const SizedBox(height: AffluenaSpacing.space4),
-            AffluenaCard(
-              backgroundColor: state.message != null
-                  ? context.affluenaColors.forestSoft
-                  : context.affluenaColors.surfaceTintSoft,
-              child: Text(state.message ?? state.actionError!),
+            AffluenaBanner.error(
+              state.actionError!,
+              onRetry: state.isSaving ? null : controller.load,
+            ),
+          ] else if (state.message != null) ...[
+            const SizedBox(height: AffluenaSpacing.space4),
+            AffluenaBanner.success(
+              state.message!,
+              onDismiss: controller.clearMessage,
             ),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
@@ -115,7 +125,13 @@ class _QuickEntryTemplatesScreenState
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           if (visibleTemplates.isEmpty)
-            const _EmptyTemplateState()
+            state.templates.isEmpty
+                ? _EmptyTemplateState(
+                    onCreate: state.isSaving
+                        ? null
+                        : () => _showTemplateForm(context, ref, state: state),
+                  )
+                : const _NoSearchResults()
           else
             for (final template in visibleTemplates) ...[
               _TemplateCard(
@@ -282,7 +298,9 @@ class _TemplateMetaRow extends StatelessWidget {
 }
 
 class _EmptyTemplateState extends StatelessWidget {
-  const _EmptyTemplateState();
+  const _EmptyTemplateState({this.onCreate});
+
+  final VoidCallback? onCreate;
 
   @override
   Widget build(BuildContext context) {
@@ -300,7 +318,41 @@ class _EmptyTemplateState extends StatelessWidget {
           Text('No templates yet', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Create shortcuts for daily coffee, commute, salary, or transfers.',
+            'Templates turn a repeat transaction — daily coffee, commute, '
+            'salary, a standing transfer — into a one-tap entry.',
+            style: textTheme.bodySmall,
+          ),
+          const SizedBox(height: AffluenaSpacing.space4),
+          FilledButton.icon(
+            key: const Key('empty-create-template-button'),
+            onPressed: onCreate,
+            icon: const Icon(Icons.add),
+            label: const Text('Create your first template'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NoSearchResults extends StatelessWidget {
+  const _NoSearchResults();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+
+    return AffluenaCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.search_off_outlined, color: colors.inkMuted),
+          const SizedBox(height: AffluenaSpacing.space3),
+          Text('No matching templates', style: textTheme.titleMedium),
+          const SizedBox(height: AffluenaSpacing.space1),
+          Text(
+            'Try a different name, wallet, category, or tag.',
             style: textTheme.bodySmall,
           ),
         ],
@@ -325,12 +377,63 @@ class _TemplatesLoading extends StatelessWidget {
         ),
         children: [
           Text('Quick-entry templates', style: textTheme.headlineMedium),
+          const SizedBox(height: AffluenaSpacing.space2),
+          Text(
+            'Manage reusable shortcuts without slowing down manual quick entry.',
+            style: textTheme.bodySmall,
+          ),
           const SizedBox(height: AffluenaSpacing.space5),
-          const AffluenaCard(
-            child: SizedBox(
-              height: 144,
-              child: Center(child: Text('Loading templates')),
-            ),
+          const AffluenaSkeleton(height: 56, radius: AffluenaRadii.control),
+          const SizedBox(height: AffluenaSpacing.space6),
+          const AffluenaSkeleton.line(width: 120, height: 16),
+          const SizedBox(height: AffluenaSpacing.space3),
+          for (var i = 0; i < 3; i++) ...[
+            const _TemplateCardSkeleton(),
+            const SizedBox(height: AffluenaSpacing.space3),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TemplateCardSkeleton extends StatelessWidget {
+  const _TemplateCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return AffluenaCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const AffluenaSkeleton(width: 34, height: 34),
+              const SizedBox(width: AffluenaSpacing.space3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    AffluenaSkeleton.line(width: 140, height: 14),
+                    SizedBox(height: AffluenaSpacing.space2),
+                    AffluenaSkeleton.line(width: 100, height: 20),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AffluenaSpacing.space4),
+          const AffluenaSkeleton.line(width: 180, height: 12),
+          const SizedBox(height: AffluenaSpacing.space2),
+          const AffluenaSkeleton.line(width: 140, height: 12),
+          const SizedBox(height: AffluenaSpacing.space4),
+          Row(
+            children: const [
+              Expanded(child: AffluenaSkeleton(height: 40, radius: 18)),
+              SizedBox(width: AffluenaSpacing.space3),
+              Expanded(child: AffluenaSkeleton(height: 40, radius: 18)),
+            ],
           ),
         ],
       ),
@@ -355,21 +458,11 @@ class _TemplatesError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Templates unavailable', style: textTheme.headlineMedium),
+          Text('Quick-entry templates', style: textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('We could not load your quick-entry templates.'),
-                const SizedBox(height: AffluenaSpacing.space4),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          AffluenaBanner.error(
+            'We could not load your quick-entry templates.',
+            onRetry: onRetry,
           ),
         ],
       ),
@@ -469,13 +562,13 @@ class _TemplateFormSheet extends ConsumerStatefulWidget {
 
 class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
   late final TextEditingController _nameController;
-  late final TextEditingController _amountController;
   late final TextEditingController _noteController;
   late TransactionType _type;
+  late int _amountMinor;
   String? _walletId;
   String? _toWalletId;
   String? _categoryId;
-  String? _tagId;
+  late List<String> _tagIds;
 
   bool get _isEditing => widget.template != null;
 
@@ -490,18 +583,15 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
     _categoryId =
         template?.categoryId ??
         widget.initialState.categoriesFor(_type).firstOrNull?.id;
-    _tagId = template?.tagIds.firstOrNull;
+    _tagIds = List<String>.from(template?.tagIds ?? const []);
+    _amountMinor = template?.amountMinor ?? 0;
     _nameController = TextEditingController(text: template?.name ?? '');
-    _amountController = TextEditingController(
-      text: template?.amountMinor.toString() ?? '',
-    );
     _noteController = TextEditingController(text: template?.note ?? '');
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _amountController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -513,7 +603,9 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
     final selectedWallet = state.walletById(_walletId);
     final selectedToWallet = state.walletById(_toWalletId);
     final selectedCategory = state.categoryById(_categoryId);
-    final selectedTag = state.tagById(_tagId);
+    final selectedTags = [
+      for (final id in _tagIds) ?state.tagById(id),
+    ];
     final categories = state.categoriesFor(_type);
     final canSave = _canSave(state);
 
@@ -551,15 +643,13 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: AffluenaSpacing.space3),
-                      TextField(
+                      MoneyInput(
                         key: const Key('template-amount-field'),
-                        controller: _amountController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.payments_outlined),
-                          labelText: 'Amount',
-                        ),
-                        onChanged: (_) => setState(() {}),
+                        label: 'Amount',
+                        initialValue: _amountMinor,
+                        enabled: !state.isSaving,
+                        onChanged: (value) =>
+                            setState(() => _amountMinor = value ?? 0),
                       ),
                       const SizedBox(height: AffluenaSpacing.space4),
                       Wrap(
@@ -640,15 +730,31 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                       SelectorRow(
                         key: const Key('template-tag-selector'),
                         label: 'Tags',
-                        value: selectedTag == null
+                        value: selectedTags.isEmpty
                             ? 'Optional'
-                            : _tagLabel(selectedTag.name),
+                            : selectedTags
+                                  .map((tag) => _tagLabel(tag.name))
+                                  .join(', '),
                         icon: Icons.sell_outlined,
                         enabled: state.tags.isNotEmpty && !state.isSaving,
                         onTap: state.tags.isEmpty
                             ? null
-                            : () => _selectTag(state),
+                            : () => _selectTags(state),
                       ),
+                      if (selectedTags.isNotEmpty) ...[
+                        const SizedBox(height: AffluenaSpacing.space2),
+                        Wrap(
+                          spacing: AffluenaSpacing.space2,
+                          runSpacing: AffluenaSpacing.space2,
+                          children: [
+                            for (final tag in selectedTags)
+                              StatusBadge(
+                                label: _tagLabel(tag.name),
+                                tone: StatusTone.neutral,
+                              ),
+                          ],
+                        ),
+                      ],
                       const Divider(height: 1),
                       TextField(
                         key: const Key('template-note-field'),
@@ -665,10 +771,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
               ),
               if (state.actionError != null) ...[
                 const SizedBox(height: AffluenaSpacing.space3),
-                Text(
-                  state.actionError!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                AffluenaBanner.error(state.actionError!),
               ],
               const SizedBox(height: AffluenaSpacing.space4),
               FilledButton(
@@ -696,8 +799,6 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
     }
     return true;
   }
-
-  int get _amountMinor => _parseAmount(_amountController.text);
 
   Future<void> _selectWallet(QuickEntryTemplatesState state) async {
     final selected = await showLookupSelectorSheet<String>(
@@ -760,27 +861,14 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
     setState(() => _categoryId = selected);
   }
 
-  Future<void> _selectTag(QuickEntryTemplatesState state) async {
-    final selected = await showLookupSelectorSheet<String>(
+  Future<void> _selectTags(QuickEntryTemplatesState state) async {
+    final selected = await showTagMultiSelectSheet(
       context: context,
-      title: 'Template tag',
-      selectedValue: _tagId ?? '',
-      options: [
-        const LookupSelectorOption<String>(
-          value: '',
-          label: 'No tag',
-          icon: Icons.block,
-        ),
-        for (final tag in state.tags)
-          LookupSelectorOption<String>(
-            value: tag.id,
-            label: _tagLabel(tag.name),
-            icon: Icons.sell_outlined,
-          ),
-      ],
+      tags: state.tags,
+      selectedIds: _tagIds,
     );
     if (!mounted || selected == null) return;
-    setState(() => _tagId = selected.isEmpty ? null : selected);
+    setState(() => _tagIds = selected);
   }
 
   Future<void> _save() async {
@@ -802,7 +890,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
             note: _noteController.text.trim().isEmpty
                 ? null
                 : _noteController.text.trim(),
-            tagIds: _tagId == null ? const [] : [_tagId!],
+            tagIds: _tagIds,
           ),
         );
     if (!mounted) return;
@@ -835,24 +923,19 @@ class _ExecuteTemplateSheet extends ConsumerStatefulWidget {
 }
 
 class _ExecuteTemplateSheetState extends ConsumerState<_ExecuteTemplateSheet> {
-  late final TextEditingController _dateController;
   late final TextEditingController _noteController;
-  String? _localError;
+  late DateTime _executionDate;
 
   @override
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _dateController = TextEditingController(
-      text:
-          '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
-    );
+    _executionDate = DateTime(now.year, now.month, now.day);
     _noteController = TextEditingController(text: widget.template.note);
   }
 
   @override
   void dispose() {
-    _dateController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -880,30 +963,28 @@ class _ExecuteTemplateSheetState extends ConsumerState<_ExecuteTemplateSheet> {
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              TextField(
+              DatePickerField(
                 key: const Key('template-execute-date-field'),
-                controller: _dateController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.today_outlined),
-                  labelText: 'Execution date',
-                  hintText: 'YYYY-MM-DD',
-                ),
+                label: 'Execution date',
+                value: _executionDate,
+                icon: Icons.today_outlined,
+                lastDate: DateTime.now(),
+                enabled: !state.isSaving,
+                onChanged: (picked) => setState(() => _executionDate = picked),
               ),
               const SizedBox(height: AffluenaSpacing.space3),
               TextField(
                 key: const Key('template-execute-note-field'),
                 controller: _noteController,
+                enabled: !state.isSaving,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Override note',
                 ),
               ),
-              if (_localError != null || state.actionError != null) ...[
+              if (state.actionError != null) ...[
                 const SizedBox(height: AffluenaSpacing.space3),
-                Text(
-                  _localError ?? state.actionError!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                AffluenaBanner.error(state.actionError!),
               ],
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton(
@@ -921,12 +1002,7 @@ class _ExecuteTemplateSheetState extends ConsumerState<_ExecuteTemplateSheet> {
   }
 
   Future<void> _execute() async {
-    final transactionAt = _transactionAtFromDate(_dateController.text);
-    if (transactionAt == null) {
-      setState(() => _localError = 'Use YYYY-MM-DD for the execution date.');
-      return;
-    }
-    setState(() => _localError = null);
+    final transactionAt = _transactionAtFromDate(_executionDate);
 
     final executed = await ref
         .read(quickEntryTemplatesControllerProvider.notifier)
@@ -971,17 +1047,10 @@ Future<void> _confirmDeleteTemplate(
   }
 }
 
-int _parseAmount(String value) {
-  final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
-  if (digits.isEmpty) return 0;
-  return int.tryParse(digits) ?? 0;
-}
-
-String? _transactionAtFromDate(String value) {
-  final trimmed = value.trim();
-  if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(trimmed)) return null;
-  final parsed = DateTime.tryParse('${trimmed}T12:00:00');
-  return parsed?.toUtc().toIso8601String();
+String _transactionAtFromDate(DateTime date) {
+  // Anchor to local noon so the date stays stable across the UTC conversion.
+  final anchored = DateTime(date.year, date.month, date.day, 12);
+  return anchored.toUtc().toIso8601String();
 }
 
 String _typeLabel(TransactionType type) {

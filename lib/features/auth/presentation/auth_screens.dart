@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../application/auth_controller.dart';
+import 'auth_validators.dart';
 
 class AuthBootstrapScreen extends StatelessWidget {
   const AuthBootstrapScreen({super.key});
@@ -45,6 +48,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  AutovalidateMode _autovalidate = AutovalidateMode.disabled;
 
   @override
   void dispose() {
@@ -61,29 +66,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       title: 'Welcome back',
       subtitle: 'Log in to keep your balances, wallets, and entries in sync.',
       message: authState.message,
+      messageTone: authState.messageTone,
       children: [
-        TextField(
-          key: const Key('login-email-field'),
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          autofillHints: const [AutofillHints.email],
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            prefixIcon: Icon(Icons.mail_outline),
-          ),
-        ),
-        const SizedBox(height: AffluenaSpacing.space3),
-        TextField(
-          key: const Key('login-password-field'),
-          controller: _passwordController,
-          obscureText: true,
-          textInputAction: TextInputAction.done,
-          autofillHints: const [AutofillHints.password],
-          onSubmitted: (_) => _submit(authState),
-          decoration: const InputDecoration(
-            labelText: 'Password',
-            prefixIcon: Icon(Icons.lock_outline),
+        Form(
+          key: _formKey,
+          autovalidateMode: _autovalidate,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                key: const Key('login-email-field'),
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                validator: AuthValidators.email,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.mail_outline),
+                ),
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
+              TextFormField(
+                key: const Key('login-password-field'),
+                controller: _passwordController,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                validator: (value) => AuthValidators.required(
+                  value,
+                  message: 'Enter your password.',
+                ),
+                onFieldSubmitted: (_) => _submit(authState),
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space4),
@@ -121,6 +141,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _submit(AuthState authState) {
     if (authState.isSubmitting) return;
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
+      return;
+    }
     ref
         .read(authControllerProvider.notifier)
         .login(
@@ -142,11 +166,15 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  AutovalidateMode _autovalidate = AutovalidateMode.disabled;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
@@ -158,31 +186,63 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       title: 'Create account',
       subtitle: 'Start with a secure account, then connect your Affluena data.',
       message: authState.message,
+      messageTone: authState.messageTone,
       children: [
-        TextField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          autofillHints: const [AutofillHints.email],
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            prefixIcon: Icon(Icons.mail_outline),
-          ),
-        ),
-        const SizedBox(height: AffluenaSpacing.space3),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          textInputAction: TextInputAction.done,
-          autofillHints: const [AutofillHints.newPassword],
-          onSubmitted: (_) => _submit(authState),
-          decoration: const InputDecoration(
-            labelText: 'Password',
-            prefixIcon: Icon(Icons.lock_outline),
+        Form(
+          key: _formKey,
+          autovalidateMode: _autovalidate,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                key: const Key('register-email-field'),
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                validator: AuthValidators.email,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.mail_outline),
+                ),
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
+              TextFormField(
+                key: const Key('register-password-field'),
+                controller: _passwordController,
+                obscureText: true,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.newPassword],
+                validator: AuthValidators.password,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  helperText: 'At least 8 characters.',
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
+              TextFormField(
+                key: const Key('register-confirm-password-field'),
+                controller: _confirmController,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                validator: (value) => AuthValidators.confirmPassword(
+                  _passwordController.text,
+                  value,
+                ),
+                onFieldSubmitted: (_) => _submit(authState),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm password',
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space4),
         _SubmitButton(
+          key: const Key('register-submit-button'),
           isSubmitting: authState.isSubmitting,
           icon: Icons.person_add_alt_1_outlined,
           label: 'Register',
@@ -201,6 +261,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _submit(AuthState authState) {
     if (authState.isSubmitting) return;
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
+      return;
+    }
     ref
         .read(authControllerProvider.notifier)
         .register(
@@ -222,6 +286,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  AutovalidateMode _autovalidate = AutovalidateMode.disabled;
 
   @override
   void dispose() {
@@ -235,25 +301,35 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     return _AuthShell(
       title: 'Reset access',
-      subtitle: 'Send a reset link to your Affluena account email.',
+      subtitle:
+          'We will email a reset code to your Affluena account. Enter it on the '
+          'next screen to choose a new password.',
       message: authState.message,
+      messageTone: authState.messageTone,
       children: [
-        TextField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.done,
-          autofillHints: const [AutofillHints.email],
-          onSubmitted: (_) => _submit(authState),
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            prefixIcon: Icon(Icons.mail_outline),
+        Form(
+          key: _formKey,
+          autovalidateMode: _autovalidate,
+          child: TextFormField(
+            key: const Key('forgot-email-field'),
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.email],
+            validator: AuthValidators.email,
+            onFieldSubmitted: (_) => _submit(authState),
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              prefixIcon: Icon(Icons.mail_outline),
+            ),
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space4),
         _SubmitButton(
+          key: const Key('forgot-submit-button'),
           isSubmitting: authState.isSubmitting,
           icon: Icons.mark_email_read_outlined,
-          label: 'Send reset link',
+          label: 'Email me a code',
           onPressed: () => _submit(authState),
         ),
         const SizedBox(height: AffluenaSpacing.space3),
@@ -267,18 +343,33 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     );
   }
 
-  void _submit(AuthState authState) {
+  Future<void> _submit(AuthState authState) async {
     if (authState.isSubmitting) return;
-    ref
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
+      return;
+    }
+    final email = _emailController.text.trim();
+    final sent = await ref
         .read(authControllerProvider.notifier)
-        .requestPasswordReset(_emailController.text);
+        .requestPasswordReset(email);
+    if (!mounted || !sent) return;
+    // Carry the email forward so the reset screen can keep context. Push keeps
+    // forgot-password underneath so the user can step back to re-send a code.
+    context.push(ResetPasswordScreen.path, extra: email);
   }
 }
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
-  const ResetPasswordScreen({super.key});
+  const ResetPasswordScreen({this.email, this.token, super.key});
 
   static const path = '/auth/reset-password';
+
+  /// Email carried over from the forgot-password step (shown for context).
+  final String? email;
+
+  /// Reset code prefilled from a deep link (e.g. /auth/reset-password?token=…).
+  final String? token;
 
   @override
   ConsumerState<ResetPasswordScreen> createState() =>
@@ -286,47 +377,102 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
-  final _tokenController = TextEditingController();
+  late final TextEditingController _codeController;
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  AutovalidateMode _autovalidate = AutovalidateMode.disabled;
+  bool _completed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _codeController = TextEditingController(text: widget.token?.trim() ?? '');
+  }
 
   @override
   void dispose() {
-    _tokenController.dispose();
+    _codeController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final email = widget.email?.trim();
 
     return _AuthShell(
       title: 'New password',
-      subtitle: 'Paste the reset token and choose a fresh password.',
+      subtitle: email != null && email.isNotEmpty
+          ? 'Enter the code we emailed to $email, then choose a new password.'
+          : 'Enter the code from your email, then choose a new password.',
       message: authState.message,
+      messageTone: authState.messageTone,
       children: [
-        TextField(
-          controller: _tokenController,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Reset token',
-            prefixIcon: Icon(Icons.key_outlined),
-          ),
-        ),
-        const SizedBox(height: AffluenaSpacing.space3),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          textInputAction: TextInputAction.done,
-          autofillHints: const [AutofillHints.newPassword],
-          onSubmitted: (_) => _submit(authState),
-          decoration: const InputDecoration(
-            labelText: 'New password',
-            prefixIcon: Icon(Icons.lock_reset_outlined),
+        Form(
+          key: _formKey,
+          autovalidateMode: _autovalidate,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                key: const Key('reset-code-field'),
+                controller: _codeController,
+                textInputAction: TextInputAction.next,
+                autocorrect: false,
+                enableSuggestions: false,
+                validator: AuthValidators.resetCode,
+                decoration: InputDecoration(
+                  labelText: 'Reset code',
+                  helperText: 'The code from your email.',
+                  prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                  suffixIcon: IconButton(
+                    key: const Key('reset-code-paste-button'),
+                    tooltip: 'Paste code',
+                    icon: const Icon(Icons.content_paste_outlined),
+                    onPressed: _pasteCode,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
+              TextFormField(
+                key: const Key('reset-password-field'),
+                controller: _passwordController,
+                obscureText: true,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.newPassword],
+                validator: AuthValidators.password,
+                decoration: const InputDecoration(
+                  labelText: 'New password',
+                  helperText: 'At least 8 characters.',
+                  prefixIcon: Icon(Icons.lock_reset_outlined),
+                ),
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
+              TextFormField(
+                key: const Key('reset-confirm-password-field'),
+                controller: _confirmController,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                validator: (value) => AuthValidators.confirmPassword(
+                  _passwordController.text,
+                  value,
+                ),
+                onFieldSubmitted: (_) => _submit(authState),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm password',
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space4),
         _SubmitButton(
+          key: const Key('reset-submit-button'),
           isSubmitting: authState.isSubmitting,
           icon: Icons.done_outline,
           label: 'Update password',
@@ -334,6 +480,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         ),
         const SizedBox(height: AffluenaSpacing.space3),
         TextButton(
+          key: const Key('reset-back-to-login-button'),
           onPressed: authState.isSubmitting
               ? null
               : () => context.go(LoginScreen.path),
@@ -343,14 +490,30 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     );
   }
 
-  void _submit(AuthState authState) {
+  Future<void> _pasteCode() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text?.trim();
+    if (text == null || text.isEmpty || !mounted) return;
+    _codeController.text = text;
+  }
+
+  Future<void> _submit(AuthState authState) async {
     if (authState.isSubmitting) return;
-    ref
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
+      return;
+    }
+    final success = await ref
         .read(authControllerProvider.notifier)
         .resetPassword(
-          token: _tokenController.text,
+          token: _codeController.text.trim(),
           newPassword: _passwordController.text,
         );
+    if (!mounted || !success || _completed) return;
+    // Land back on login so the user signs in with the new password. The
+    // success banner persists in auth state and reads on the login screen.
+    _completed = true;
+    context.go(LoginScreen.path);
   }
 }
 
@@ -360,11 +523,13 @@ class _AuthShell extends StatelessWidget {
     required this.subtitle,
     required this.children,
     this.message,
+    this.messageTone = AuthMessageTone.info,
   });
 
   final String title;
   final String subtitle;
   final String? message;
+  final AuthMessageTone messageTone;
   final List<Widget> children;
 
   @override
@@ -394,7 +559,7 @@ class _AuthShell extends StatelessWidget {
                     Text(subtitle, style: textTheme.bodyMedium),
                     if (message != null && message!.isNotEmpty) ...[
                       const SizedBox(height: AffluenaSpacing.space4),
-                      _AuthMessage(message: message!),
+                      _AuthMessage(message: message!, tone: messageTone),
                     ],
                     const SizedBox(height: AffluenaSpacing.space5),
                     ...children,
@@ -458,25 +623,24 @@ class _BrandMark extends StatelessWidget {
 }
 
 class _AuthMessage extends StatelessWidget {
-  const _AuthMessage({required this.message});
+  const _AuthMessage({required this.message, required this.tone});
 
   final String message;
+  final AuthMessageTone tone;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = context.affluenaColors;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AffluenaSpacing.space3),
-      decoration: BoxDecoration(
-        color: colors.forestSoft,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.borderSubtle),
-      ),
-      child: Text(message, style: textTheme.bodySmall),
-    );
+    switch (tone) {
+      case AuthMessageTone.error:
+        return AffluenaBanner.error(message);
+      case AuthMessageTone.success:
+        return AffluenaBanner.success(message);
+      case AuthMessageTone.info:
+        return AffluenaBanner(
+          message: message,
+          tone: AffluenaBannerTone.info,
+        );
+    }
   }
 }
 

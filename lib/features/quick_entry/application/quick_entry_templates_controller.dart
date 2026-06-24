@@ -130,6 +130,11 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
     }
   }
 
+  void clearMessage() {
+    if (state.message == null) return;
+    state = state.copyWith(message: null);
+  }
+
   Future<void> deleteTemplate(QuickEntryTemplate template) async {
     state = state.copyWith(actionError: null, message: null);
     try {

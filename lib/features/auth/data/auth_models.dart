@@ -1,4 +1,5 @@
 import '../../../core/api/api_json.dart';
+import '../../../core/formatters/date_formatter.dart';
 
 class AuthUser {
   const AuthUser({
@@ -108,6 +109,60 @@ class AuthSessionRecord {
   final String createdAt;
   final String? revokedAt;
   final String? lastUsedAt;
+
+  /// A human-readable device/browser name parsed from the raw user agent.
+  ///
+  /// Falls back to "Unknown device" when the user agent is missing. We surface
+  /// this instead of the raw UA string so a session reads as "iPhone · Safari",
+  /// not a wall of version tokens.
+  String get deviceLabel {
+    final agent = userAgent?.trim();
+    if (agent == null || agent.isEmpty) return 'Unknown device';
+
+    final platform = _platformLabel(agent);
+    final browser = _browserLabel(agent);
+    if (platform != null && browser != null) return '$platform · $browser';
+    return platform ?? browser ?? agent;
+  }
+
+  /// A human-readable location line: IP address when present, else null.
+  String? get locationLabel {
+    final ip = ipAddress?.trim();
+    if (ip == null || ip.isEmpty) return null;
+    return ip;
+  }
+
+  /// "Last used" line, formatted as a short date, or null when never recorded.
+  String? get lastUsedLabel {
+    final value = lastUsedAt?.trim();
+    if (value == null || value.isEmpty) return null;
+    return AffluenaDateFormatter.shortDate(value);
+  }
+
+  /// "Signed in" date, formatted as a short date.
+  String get createdLabel => AffluenaDateFormatter.shortDate(createdAt);
+
+  static String? _platformLabel(String agent) {
+    final ua = agent.toLowerCase();
+    if (ua.contains('iphone')) return 'iPhone';
+    if (ua.contains('ipad')) return 'iPad';
+    if (ua.contains('android')) return 'Android';
+    if (ua.contains('mac os') || ua.contains('macintosh')) return 'macOS';
+    if (ua.contains('windows')) return 'Windows';
+    if (ua.contains('linux')) return 'Linux';
+    return null;
+  }
+
+  static String? _browserLabel(String agent) {
+    final ua = agent.toLowerCase();
+    if (ua.contains('affluena')) return 'Affluena app';
+    if (ua.contains('edg/') || ua.contains('edge')) return 'Edge';
+    if (ua.contains('chrome') && !ua.contains('chromium')) return 'Chrome';
+    if (ua.contains('firefox')) return 'Firefox';
+    if (ua.contains('safari') && !ua.contains('chrome')) return 'Safari';
+    if (ua.contains('dart') || ua.contains('dio')) return 'Affluena app';
+    return null;
+  }
 }
 
 class LoginRequest {

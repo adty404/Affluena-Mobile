@@ -7,9 +7,12 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/api/api_error.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../auth/application/auth_controller.dart';
 import '../../budgets/presentation/budget_screen.dart';
 import '../../quick_entry/presentation/quick_entry_screen.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
@@ -18,6 +21,7 @@ import '../../transactions/presentation/transactions_screen.dart';
 import '../../wallets/presentation/wallets_screen.dart';
 import '../application/dashboard_home_controller.dart';
 import '../data/dashboard_models.dart';
+import 'cashflow_trend_chart.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -40,16 +44,15 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-class _DashboardContent extends StatelessWidget {
+class _DashboardContent extends ConsumerWidget {
   const _DashboardContent({required this.home});
 
   final DashboardHome home;
 
   @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = context.affluenaColors;
+  Widget build(BuildContext context, WidgetRef ref) {
     final summary = home.summary;
+    final user = ref.watch(authControllerProvider).user;
 
     return SafeArea(
       child: ListView(
@@ -60,73 +63,31 @@ class _DashboardContent extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Affluena', style: textTheme.labelMedium),
-                    const SizedBox(height: AffluenaSpacing.space1),
-                    Text('Good morning', style: textTheme.headlineMedium),
-                  ],
-                ),
-              ),
-              IconButton.filledTonal(
-                onPressed: () {},
-                icon: const Icon(Icons.notifications_none),
-              ),
-              const SizedBox(width: AffluenaSpacing.space2),
-              CircleAvatar(
-                backgroundColor: colors.forest,
-                child: Text(
-                  'A',
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: colors.surfaceCanvas,
-                  ),
-                ),
-              ),
-            ],
+          _DashboardHeader(
+            greeting: _greetingForNow(DateTime.now()),
+            initial: _avatarInitial(user?.name, user?.email),
           ),
           const SizedBox(height: AffluenaSpacing.space6),
-          AffluenaCard(
-            backgroundColor: colors.surfaceSoft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Total balance', style: textTheme.bodySmall),
-                const SizedBox(height: AffluenaSpacing.space2),
-                Text(
-                  MoneyFormatter.idr(summary.netWorthMinor),
-                  style: textTheme.displaySmall,
-                ),
-                const SizedBox(height: AffluenaSpacing.space4),
-                Row(
-                  children: [
-                    MetricTile(
-                      label: 'Income',
-                      value: MoneyFormatter.idr(summary.monthlyIncomeMinor),
-                      helper: 'This month',
-                      icon: Icons.arrow_downward_rounded,
-                    ),
-                    const SizedBox(width: AffluenaSpacing.space3),
-                    MetricTile(
-                      label: 'Expense',
-                      value: MoneyFormatter.idr(summary.monthlyExpenseMinor),
-                      helper: _budgetUsageLabel(summary.budget.usagePercent),
-                      icon: Icons.arrow_upward_rounded,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          _BalanceCard(summary: summary),
           const SizedBox(height: AffluenaSpacing.space5),
           const _QuickActions(),
           const SizedBox(height: AffluenaSpacing.space6),
+          const _ForecastSection(),
           home.isEmpty
               ? const _EmptyDashboardState()
               : _BudgetCard(summary: summary),
+          if (summary.hasUpcoming) ...[
+            const SizedBox(height: AffluenaSpacing.space6),
+            _UpcomingSection(summary: summary),
+          ],
+          const SizedBox(height: AffluenaSpacing.space6),
+          const SectionHeader(title: 'Cashflow trend'),
+          const SizedBox(height: AffluenaSpacing.space2),
+          const _CashflowTrendSection(),
+          const SizedBox(height: AffluenaSpacing.space6),
+          const SectionHeader(title: 'Where money went'),
+          const SizedBox(height: AffluenaSpacing.space2),
+          const _ExpenseDistributionSection(),
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
             title: 'Recent transactions',
@@ -135,6 +96,109 @@ class _DashboardContent extends StatelessWidget {
           ),
           const SizedBox(height: AffluenaSpacing.space2),
           _RecentTransactions(home: home),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardHeader extends StatelessWidget {
+  const _DashboardHeader({required this.greeting, required this.initial});
+
+  final String greeting;
+  final String initial;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Affluena', style: textTheme.labelMedium),
+              const SizedBox(height: AffluenaSpacing.space1),
+              Text(greeting, style: textTheme.headlineMedium),
+            ],
+          ),
+        ),
+        CircleAvatar(
+          backgroundColor: colors.forest,
+          child: Text(
+            initial,
+            style: textTheme.bodyLarge?.copyWith(color: colors.surfaceCanvas),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BalanceCard extends StatelessWidget {
+  const _BalanceCard({required this.summary});
+
+  final DashboardSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+    final cashflow = summary.monthlyCashflowMinor;
+    final isPositive = cashflow >= 0;
+    final cashflowColor = isPositive ? colors.success : colors.coral;
+
+    return AffluenaCard(
+      backgroundColor: colors.surfaceSoft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Total balance', style: textTheme.bodySmall),
+          const SizedBox(height: AffluenaSpacing.space2),
+          Text(
+            MoneyFormatter.idr(summary.netWorthMinor),
+            style: textTheme.displaySmall,
+          ),
+          const SizedBox(height: AffluenaSpacing.space2),
+          Row(
+            children: [
+              Icon(
+                isPositive
+                    ? Icons.trending_up_rounded
+                    : Icons.trending_down_rounded,
+                size: 16,
+                color: cashflowColor,
+              ),
+              const SizedBox(width: AffluenaSpacing.space1),
+              Text(
+                '${MoneyFormatter.signedIdr(cashflow)} this month',
+                style: textTheme.bodySmall?.copyWith(
+                  color: cashflowColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AffluenaSpacing.space4),
+          Row(
+            children: [
+              MetricTile(
+                label: 'Income',
+                value: MoneyFormatter.idr(summary.monthlyIncomeMinor),
+                helper: 'This month',
+                icon: Icons.arrow_downward_rounded,
+              ),
+              const SizedBox(width: AffluenaSpacing.space3),
+              MetricTile(
+                label: 'Expense',
+                value: MoneyFormatter.idr(summary.monthlyExpenseMinor),
+                helper: _budgetUsageLabel(summary.budget.usagePercent),
+                icon: Icons.arrow_upward_rounded,
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -157,7 +221,7 @@ class _QuickActions extends StatelessWidget {
         _QuickAction(
           icon: Icons.swap_horiz_rounded,
           label: 'Transfer',
-          onTap: () => context.go(QuickEntryScreen.path),
+          onTap: () => context.go('${QuickEntryScreen.path}?type=transfer'),
         ),
         const SizedBox(width: AffluenaSpacing.space3),
         _QuickAction(
@@ -233,7 +297,7 @@ class _BudgetCard extends StatelessWidget {
       borderColor: colors.forestSoft,
       child: Row(
         children: [
-          Icon(Icons.pie_chart_outline, color: colors.amber),
+          Icon(Icons.pie_chart_outline, color: colors.forest),
           const SizedBox(width: AffluenaSpacing.space3),
           Expanded(
             child: Column(
@@ -254,6 +318,415 @@ class _BudgetCard extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ForecastSection extends ConsumerWidget {
+  const _ForecastSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final forecast = ref.watch(dashboardForecastProvider);
+
+    return forecast.when(
+      skipLoadingOnReload: true,
+      loading: () => const Padding(
+        padding: EdgeInsets.only(bottom: AffluenaSpacing.space6),
+        child: AffluenaSkeleton(height: 64, radius: AffluenaRadii.lg),
+      ),
+      // Forecast is a supplementary nudge — if it fails, stay silent rather
+      // than pushing an error banner above the budget card.
+      error: (error, stackTrace) => const SizedBox.shrink(),
+      data: (forecast) {
+        if (forecast.status != ForecastStatus.overbudget) {
+          return const SizedBox.shrink();
+        }
+        final projected = MoneyFormatter.idr(forecast.forecastedExpenseMinor);
+        final limit = MoneyFormatter.idr(forecast.budgetLimitMinor);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AffluenaSpacing.space6),
+          child: AffluenaBanner(
+            tone: AffluenaBannerTone.warning,
+            message:
+                'At this pace you are on track to spend $projected this month, '
+                'over your $limit budget.',
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _UpcomingSection extends StatelessWidget {
+  const _UpcomingSection({required this.summary});
+
+  final DashboardSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <_UpcomingItem>[
+      for (final sub in summary.upcomingSubscriptions)
+        _UpcomingItem(
+          icon: Icons.autorenew_rounded,
+          title: sub.name,
+          subtitle: 'Due ${AffluenaDateFormatter.shortDate(sub.nextDueDate)}',
+          amountMinor: sub.amountMinor,
+        ),
+      for (final inst in summary.upcomingInstallments)
+        _UpcomingItem(
+          icon: Icons.calendar_month_rounded,
+          title: inst.name,
+          subtitle:
+              '${inst.remainingMonths} payments left · '
+              'Due ${AffluenaDateFormatter.shortDate(inst.dueDate)}',
+          amountMinor: inst.monthlyAmountMinor,
+        ),
+      for (final debt in summary.upcomingDebts)
+        _UpcomingItem(
+          icon: Icons.handshake_outlined,
+          title: debt.counterpartyName,
+          subtitle:
+              '${_debtTypeLabel(debt.type)} · '
+              'Due ${AffluenaDateFormatter.shortDate(debt.dueDate)}',
+          amountMinor: debt.remainingAmountMinor,
+        ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'Upcoming'),
+        const SizedBox(height: AffluenaSpacing.space2),
+        AffluenaCard(
+          child: Column(
+            children: [
+              for (final entry in items.indexed) ...[
+                _UpcomingRow(item: entry.$2),
+                if (entry.$1 < items.length - 1) const Divider(height: 1),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UpcomingItem {
+  const _UpcomingItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.amountMinor,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final int amountMinor;
+}
+
+class _UpcomingRow extends StatelessWidget {
+  const _UpcomingRow({required this.item});
+
+  final _UpcomingItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space2),
+      child: Row(
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.surfaceTintSoft,
+              borderRadius: BorderRadius.circular(AffluenaRadii.md),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AffluenaSpacing.space2),
+              child: Icon(item.icon, color: colors.forest, size: 20),
+            ),
+          ),
+          const SizedBox(width: AffluenaSpacing.space3),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: textTheme.bodyLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AffluenaSpacing.space1),
+                Text(
+                  item.subtitle,
+                  style: textTheme.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AffluenaSpacing.space3),
+          Text(
+            MoneyFormatter.idr(item.amountMinor),
+            style: textTheme.titleMedium,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CashflowTrendSection extends ConsumerWidget {
+  const _CashflowTrendSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trend = ref.watch(dashboardCashflowTrendProvider);
+
+    return trend.when(
+      skipLoadingOnReload: true,
+      loading: () => const AffluenaCard(
+        child: AffluenaSkeleton(height: 132, radius: AffluenaRadii.lg),
+      ),
+      error: (error, stackTrace) => AffluenaCard(
+        child: AffluenaBanner.error(
+          _dashboardErrorMessage(error),
+          onRetry: () => ref.invalidate(dashboardCashflowTrendProvider),
+        ),
+      ),
+      data: (response) {
+        final points = response.trend;
+        final hasData = points.any(
+          (p) => p.incomeMinor > 0 || p.expenseMinor > 0,
+        );
+        if (!hasData) {
+          return const _DashboardEmptyCard(
+            icon: Icons.show_chart_rounded,
+            title: 'No trend yet',
+            message:
+                'Record income and expenses across a few months to see how '
+                'your cashflow moves.',
+          );
+        }
+        return AffluenaCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _TrendLegend(),
+              const SizedBox(height: AffluenaSpacing.space4),
+              CashflowTrendChart(points: points),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TrendLegend extends StatelessWidget {
+  const _TrendLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+
+    return Row(
+      children: [
+        _LegendDot(color: colors.forest, label: 'Income'),
+        const SizedBox(width: AffluenaSpacing.space4),
+        _LegendDot(color: colors.coral, label: 'Expense'),
+      ],
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: AffluenaSpacing.space2),
+        Text(label, style: textTheme.labelMedium),
+      ],
+    );
+  }
+}
+
+class _ExpenseDistributionSection extends ConsumerWidget {
+  const _ExpenseDistributionSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final distribution = ref.watch(dashboardExpenseDistributionProvider);
+
+    return distribution.when(
+      skipLoadingOnReload: true,
+      loading: () => const AffluenaCard(child: _DistributionSkeleton()),
+      error: (error, stackTrace) => AffluenaCard(
+        child: AffluenaBanner.error(
+          _dashboardErrorMessage(error),
+          onRetry: () => ref.invalidate(dashboardExpenseDistributionProvider),
+        ),
+      ),
+      data: (response) {
+        final rows = response.distribution
+            .where((d) => d.amountMinor > 0)
+            .toList(growable: false);
+        if (rows.isEmpty) {
+          return const _DashboardEmptyCard(
+            icon: Icons.donut_large_rounded,
+            title: 'No spending yet',
+            message:
+                'Once you log expenses this month, your top categories show '
+                'up here.',
+          );
+        }
+        final maxPercentage = rows
+            .map((d) => d.percentage)
+            .fold<double>(0, (a, b) => a > b ? a : b);
+        return AffluenaCard(
+          child: Column(
+            children: [
+              for (final entry in rows.indexed) ...[
+                _DistributionRow(
+                  item: entry.$2,
+                  maxPercentage: maxPercentage,
+                ),
+                if (entry.$1 < rows.length - 1)
+                  const SizedBox(height: AffluenaSpacing.space4),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DistributionRow extends StatelessWidget {
+  const _DistributionRow({required this.item, required this.maxPercentage});
+
+  final ExpenseDistribution item;
+  final double maxPercentage;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+    final fraction = maxPercentage <= 0
+        ? 0.0
+        : (item.percentage / maxPercentage).clamp(0.0, 1.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                item.categoryName,
+                style: textTheme.bodyLarge,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: AffluenaSpacing.space3),
+            Text(
+              '${item.percentage.round()}%',
+              style: textTheme.labelMedium,
+            ),
+            const SizedBox(width: AffluenaSpacing.space2),
+            Text(
+              MoneyFormatter.idr(item.amountMinor),
+              style: textTheme.titleMedium,
+            ),
+          ],
+        ),
+        const SizedBox(height: AffluenaSpacing.space2),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AffluenaRadii.pill),
+          child: LinearProgressIndicator(
+            value: fraction,
+            minHeight: 6,
+            backgroundColor: colors.surfaceTintSoft,
+            valueColor: AlwaysStoppedAnimation<Color>(colors.forest),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DistributionSkeleton extends StatelessWidget {
+  const _DistributionSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < 3; i++) ...[
+          Row(
+            children: const [
+              Expanded(child: AffluenaSkeleton.line(width: 120)),
+              SizedBox(width: AffluenaSpacing.space3),
+              AffluenaSkeleton.line(width: 64),
+            ],
+          ),
+          const SizedBox(height: AffluenaSpacing.space2),
+          const AffluenaSkeleton(height: 6, radius: AffluenaRadii.pill),
+          if (i < 2) const SizedBox(height: AffluenaSpacing.space4),
+        ],
+      ],
+    );
+  }
+}
+
+class _DashboardEmptyCard extends StatelessWidget {
+  const _DashboardEmptyCard({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+
+    return AffluenaCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: colors.forest),
+          const SizedBox(height: AffluenaSpacing.space3),
+          Text(title, style: textTheme.titleMedium),
+          const SizedBox(height: AffluenaSpacing.space1),
+          Text(message, style: textTheme.bodySmall),
         ],
       ),
     );
@@ -349,8 +822,6 @@ class _DashboardLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -359,19 +830,73 @@ class _DashboardLoading extends StatelessWidget {
           AffluenaSpacing.space5,
           AffluenaSpacing.space8,
         ),
-        children: [
-          Text('Affluena', style: textTheme.labelMedium),
-          const SizedBox(height: AffluenaSpacing.space1),
-          Text('Good morning', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space6),
-          const AffluenaCard(
-            child: SizedBox(
-              height: 144,
-              child: Center(child: Text('Loading dashboard')),
+        children: const [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AffluenaSkeleton.line(width: 64),
+                    SizedBox(height: AffluenaSpacing.space2),
+                    AffluenaSkeleton.line(width: 180, height: 22),
+                  ],
+                ),
+              ),
+              AffluenaSkeleton.circle(size: 40),
+            ],
+          ),
+          SizedBox(height: AffluenaSpacing.space6),
+          AffluenaCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AffluenaSkeleton.line(width: 96),
+                SizedBox(height: AffluenaSpacing.space3),
+                AffluenaSkeleton(width: 200, height: 34, radius: AffluenaRadii.md),
+                SizedBox(height: AffluenaSpacing.space4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AffluenaSkeleton(
+                        height: 84,
+                        radius: AffluenaRadii.lg,
+                      ),
+                    ),
+                    SizedBox(width: AffluenaSpacing.space3),
+                    Expanded(
+                      child: AffluenaSkeleton(
+                        height: 84,
+                        radius: AffluenaRadii.lg,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AffluenaSpacing.space5),
-          const AffluenaCard(child: SizedBox(height: 72)),
+          SizedBox(height: AffluenaSpacing.space5),
+          Row(
+            children: [
+              Expanded(
+                child: AffluenaSkeleton(height: 72, radius: AffluenaRadii.card),
+              ),
+              SizedBox(width: AffluenaSpacing.space3),
+              Expanded(
+                child: AffluenaSkeleton(height: 72, radius: AffluenaRadii.card),
+              ),
+              SizedBox(width: AffluenaSpacing.space3),
+              Expanded(
+                child: AffluenaSkeleton(height: 72, radius: AffluenaRadii.card),
+              ),
+              SizedBox(width: AffluenaSpacing.space3),
+              Expanded(
+                child: AffluenaSkeleton(height: 72, radius: AffluenaRadii.card),
+              ),
+            ],
+          ),
+          SizedBox(height: AffluenaSpacing.space6),
+          AffluenaSkeleton(height: 72, radius: AffluenaRadii.card),
         ],
       ),
     );
@@ -425,6 +950,29 @@ class _DashboardError extends StatelessWidget {
 String _budgetUsageLabel(double usagePercent) {
   if (usagePercent <= 0) return 'No budget yet';
   return '${usagePercent.round()}% planned';
+}
+
+String _greetingForNow(DateTime now) {
+  final hour = now.hour;
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+String _avatarInitial(String? name, String? email) {
+  final source = (name != null && name.trim().isNotEmpty)
+      ? name.trim()
+      : (email ?? '').trim();
+  if (source.isEmpty) return 'A';
+  return source.characters.first.toUpperCase();
+}
+
+String _debtTypeLabel(String type) {
+  return switch (type.trim().toLowerCase()) {
+    'payable' => 'You owe',
+    'receivable' => 'Owed to you',
+    _ => 'Debt',
+  };
 }
 
 String _transactionMetadata(

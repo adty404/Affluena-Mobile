@@ -70,6 +70,16 @@ class GoalMember {
   final GoalMemberStatus status;
   final String createdAt;
   final String updatedAt;
+
+  /// The best identity we can show for this member. The goal-member API only
+  /// returns the raw user id (no name/email), so we surface a short, stable
+  /// reference derived from that id rather than inventing a display name.
+  String get identityLabel {
+    final trimmed = userId.trim();
+    if (trimmed.isEmpty) return 'Member';
+    final head = trimmed.length <= 8 ? trimmed : trimmed.substring(0, 8);
+    return 'Member $head';
+  }
 }
 
 class Goal {
@@ -183,6 +193,31 @@ class GoalRequest {
     'name': name,
     'target_amount_minor': targetAmountMinor,
     'deadline': deadline,
+  };
+}
+
+/// Payload for an active -> achieved/cancelled transition. Re-sends the goal's
+/// existing editable fields (the only update endpoint the API exposes) plus the
+/// target status so the request is forward-compatible the moment the backend
+/// honors a status field on update.
+class GoalStatusRequest {
+  const GoalStatusRequest({
+    required this.name,
+    required this.targetAmountMinor,
+    required this.deadline,
+    required this.status,
+  });
+
+  final String name;
+  final int targetAmountMinor;
+  final String deadline;
+  final GoalStatus status;
+
+  JsonMap toJson() => {
+    'name': name,
+    'target_amount_minor': targetAmountMinor,
+    'deadline': deadline,
+    'status': status.apiValue,
   };
 }
 

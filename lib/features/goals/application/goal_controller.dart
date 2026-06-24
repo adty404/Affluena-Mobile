@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../transactions/data/transaction_models.dart';
+import '../../transactions/data/transaction_repository.dart';
 import '../data/goal_models.dart';
 import '../data/goal_repository.dart';
 
@@ -30,29 +32,49 @@ class GoalController extends Notifier<GoalState> {
     }
   }
 
-  Future<void> createGoal(GoalRequest request) async {
-    await _save(() => ref.read(goalRepositoryProvider).createGoal(request));
+  /// Creates a goal. Returns `true` on success so the sheet can stay OPEN and
+  /// surface an inline error when it fails.
+  Future<bool> createGoal(GoalRequest request) {
+    return _mutate(() => ref.read(goalRepositoryProvider).createGoal(request));
   }
 
-  Future<void> updateGoal(Goal goal, GoalRequest request) async {
-    await _save(
+  Future<bool> updateGoal(Goal goal, GoalRequest request) {
+    return _mutate(
       () => ref.read(goalRepositoryProvider).updateGoal(goal.id, request),
     );
   }
 
-  Future<void> inviteMember(Goal goal, GoalInviteRequest request) async {
-    await _save(
-      () => ref.read(goalRepositoryProvider).inviteMember(goal.id, request),
-      errorMessage: 'Goal invite could not be sent.',
+  /// Transitions a goal from active to achieved or cancelled.
+  Future<bool> transitionStatus(Goal goal, GoalStatus status) {
+    return _mutate(
+      () => ref
+          .read(goalRepositoryProvider)
+          .updateGoalStatus(
+            goal.id,
+            GoalStatusRequest(
+              name: goal.name,
+              targetAmountMinor: goal.targetAmountMinor,
+              deadline: goal.deadline ?? goal.createdAt,
+              status: status,
+            ),
+          ),
     );
   }
 
-  Future<void> respondInvite(
+  Future<bool> inviteMember(Goal goal, GoalInviteRequest request) {
+    return _mutate(
+      () => ref.read(goalRepositoryProvider).inviteMember(goal.id, request),
+    );
+  }
+
+  /// Responds to a single pending invite. Each member is responded to
+  /// independently, so callers can handle every pending invite, not just one.
+  Future<bool> respondInvite(
     Goal goal,
     GoalMember member,
     GoalMemberStatus status,
-  ) async {
-    await _save(
+  ) {
+    return _mutate(
       () => ref
           .read(goalRepositoryProvider)
           .respondInvite(
@@ -60,22 +82,57 @@ class GoalController extends Notifier<GoalState> {
             member.userId,
             GoalInviteResponseRequest(status: status),
           ),
-      errorMessage: 'Goal invitation could not be updated.',
     );
   }
 
-  Future<void> _save(
-    Future<Object?> Function() action, {
-    String errorMessage = 'Goal could not be saved.',
-  }) async {
+  /// Funds a goal by recording a `transfer` transaction from [sourceWalletId]
+  /// into the goal's own goal-type wallet. The collected amount is computed
+  /// server-side from wallet balances, so we simply reload after the transfer.
+  Future<bool> contribute({
+    required Goal goal,
+    required String sourceWalletId,
+    required String goalWalletId,
+    required int amountMinor,
+    required DateTime contributedAt,
+  }) {
+    return _mutate(
+      () => ref
+          .read(transactionRepositoryProvider)
+          .createTransaction(
+            TransactionRequest(
+              type: TransactionType.transfer,
+              walletId: sourceWalletId,
+              toWalletId: goalWalletId,
+              amountMinor: amountMinor,
+              transactionAt: contributedAt.toUtc().toIso8601String(),
+              note: 'Contribution to ${goal.name}',
+            ),
+          ),
+    );
+  }
+
+  /// Runs a mutation, reloads goals on success, and reports success as a bool.
+  /// On failure the surface that triggered the action stays open and renders an
+  /// inline error; we also expose a list-level [actionError] for the screen.
+  Future<bool> _mutate(Future<Object?> Function() action) async {
     state = state.copyWith(isSaving: true, actionError: null);
     try {
       await action();
       state = state.copyWith(isSaving: false);
       await load();
+      return true;
     } catch (_) {
-      state = state.copyWith(isSaving: false, actionError: errorMessage);
+      state = state.copyWith(
+        isSaving: false,
+        actionError: 'That action could not be completed.',
+      );
+      return false;
     }
+  }
+
+  void clearActionError() {
+    if (state.actionError == null) return;
+    state = state.copyWith(actionError: null);
   }
 }
 

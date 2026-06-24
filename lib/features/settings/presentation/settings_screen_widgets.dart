@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../auth/data/auth_models.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../application/settings_controller.dart';
 
 class SettingsProfileCard extends StatelessWidget {
@@ -18,6 +19,12 @@ class SettingsProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // First load with no cached user yet: show a skeleton mirroring the card
+    // layout instead of placeholder text + a progress bar.
+    if (user == null && isLoading) {
+      return const _SettingsProfileCardSkeleton();
+    }
+
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
     final displayName = user?.name.isNotEmpty == true ? user!.name : 'Affluena';
@@ -68,16 +75,34 @@ class SettingsProfileCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (isLoading) ...[
-              const SizedBox(height: AffluenaSpacing.space4),
-              LinearProgressIndicator(
-                minHeight: 2,
-                color: colors.forest,
-                backgroundColor: colors.surfaceTintSoft,
-              ),
-            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SettingsProfileCardSkeleton extends StatelessWidget {
+  const _SettingsProfileCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return AffluenaCard(
+      child: Row(
+        children: const [
+          AffluenaSkeleton.circle(size: 56),
+          SizedBox(width: AffluenaSpacing.space4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AffluenaSkeleton.line(width: 140, height: 16),
+                SizedBox(height: AffluenaSpacing.space2),
+                AffluenaSkeleton.line(width: 200),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -311,38 +336,5 @@ class SettingsDeviceLockRow extends StatelessWidget {
         onChanged: null,
       ),
     };
-  }
-}
-
-class SettingsMessage extends StatelessWidget {
-  const SettingsMessage({
-    required this.message,
-    required this.isError,
-    super.key,
-  });
-
-  final String message;
-  final bool isError;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: isError ? colors.coral.withAlpha(32) : colors.forestSoft,
-        borderRadius: BorderRadius.circular(AffluenaRadii.lg),
-        border: Border.all(color: isError ? colors.coral : colors.borderSubtle),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AffluenaSpacing.space3),
-        child: Text(
-          message,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: colors.ink),
-        ),
-      ),
-    );
   }
 }

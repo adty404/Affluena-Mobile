@@ -78,3 +78,27 @@ class DashboardHome {
     return categoryNames[categoryId] ?? 'Uncategorized';
   }
 }
+
+/// Compact income/expense history for the trend chart. Kept independent of the
+/// summary so it can show its own skeleton without blocking the balance card.
+final dashboardCashflowTrendProvider =
+    FutureProvider.autoDispose<CashflowTrendResponse>((ref) async {
+      return ref.read(dashboardRepositoryProvider).cashflowTrend(months: 6);
+    });
+
+/// This month's spending broken down by category, with category names already
+/// resolved by the API.
+final dashboardExpenseDistributionProvider =
+    FutureProvider.autoDispose<ExpenseDistributionResponse>((ref) async {
+      final month = AffluenaDateFormatter.monthKey(DateTime.now());
+      return ref
+          .read(dashboardRepositoryProvider)
+          .expenseDistribution(month: month);
+    });
+
+/// End-of-month spending projection used to surface an over-budget warning.
+final dashboardForecastProvider =
+    FutureProvider.autoDispose<DashboardForecast>((ref) async {
+      final month = AffluenaDateFormatter.monthKey(DateTime.now());
+      return ref.read(dashboardRepositoryProvider).forecast(month: month);
+    });

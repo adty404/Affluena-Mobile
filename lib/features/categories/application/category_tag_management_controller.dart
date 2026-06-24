@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/api/api_error.dart';
 import '../../tags/data/tag_models.dart';
 import '../../tags/data/tag_repository.dart';
 import '../data/category_models.dart';
@@ -56,6 +58,60 @@ class CategoryTagManagementController
     }
   }
 
+  Future<void> loadMoreCategories() async {
+    if (state.isLoading ||
+        state.isLoadingMoreCategories ||
+        !state.hasMoreCategories) {
+      return;
+    }
+    state = state.copyWith(isLoadingMoreCategories: true, actionError: null);
+    try {
+      final response = await ref
+          .read(categoryRepositoryProvider)
+          .listCategories(
+            limit: categoryTagPageSize,
+            offset: state.categories.length,
+            sort: 'name_asc',
+          );
+      state = state.copyWith(
+        isLoadingMoreCategories: false,
+        categories: [...state.categories, ...response.categories],
+        categoryTotal: response.pagination.total,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoadingMoreCategories: false,
+        actionError: 'More categories could not be loaded.',
+      );
+    }
+  }
+
+  Future<void> loadMoreTags() async {
+    if (state.isLoading || state.isLoadingMoreTags || !state.hasMoreTags) {
+      return;
+    }
+    state = state.copyWith(isLoadingMoreTags: true, actionError: null);
+    try {
+      final response = await ref
+          .read(tagRepositoryProvider)
+          .listTags(
+            limit: categoryTagPageSize,
+            offset: state.tags.length,
+            sort: 'name_asc',
+          );
+      state = state.copyWith(
+        isLoadingMoreTags: false,
+        tags: [...state.tags, ...response.tags],
+        tagTotal: response.pagination.total,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoadingMoreTags: false,
+        actionError: 'More tags could not be loaded.',
+      );
+    }
+  }
+
   Future<bool> saveCategory({
     Category? category,
     required String name,
@@ -86,15 +142,28 @@ class CategoryTagManagementController
       state = state.copyWith(isSaving: false);
       await load();
       return true;
-    } catch (_) {
+    } catch (error) {
       state = state.copyWith(
         isSaving: false,
-        actionError: category == null
-            ? 'Category could not be created.'
-            : 'Category could not be updated.',
+        actionError: _categorySaveError(error, isCreate: category == null),
       );
       return false;
     }
+  }
+
+  /// Maps a failed category save to user-facing copy, surfacing the server's
+  /// 3-level hierarchy limit inline rather than a generic failure.
+  String _categorySaveError(Object error, {required bool isCreate}) {
+    final apiError = error is DioException ? error.error : error;
+    final message = apiError is ApiException
+        ? apiError.message.toLowerCase()
+        : '';
+    if (message.contains('depth') || message.contains('3 level')) {
+      return 'Categories can only nest 3 levels deep. Pick a higher-level parent.';
+    }
+    return isCreate
+        ? 'Category could not be created.'
+        : 'Category could not be updated.';
   }
 
   Future<void> deleteCategory(Category category) async {
@@ -155,19 +224,30 @@ class CategoryTagManagementState {
     this.categoryTotal = 0,
     this.tagTotal = 0,
     this.isLoading = false,
+    this.isLoadingMoreCategories = false,
+    this.isLoadingMoreTags = false,
     this.isSaving = false,
     this.loadError,
     this.actionError,
   });
+
+  /// Maximum nesting depth the backend allows (root + 2 descendants).
+  static const maxCategoryDepth = 3;
 
   final List<Category> categories;
   final List<Tag> tags;
   final int categoryTotal;
   final int tagTotal;
   final bool isLoading;
+  final bool isLoadingMoreCategories;
+  final bool isLoadingMoreTags;
   final bool isSaving;
   final String? loadError;
   final String? actionError;
+
+  bool get hasMoreCategories => categories.length < categoryTotal;
+
+  bool get hasMoreTags => tags.length < tagTotal;
 
   String categoryName(String? id) {
     if (id == null) return 'No parent';
@@ -184,12 +264,34 @@ class CategoryTagManagementState {
     return null;
   }
 
+  /// Depth of [category] within the loaded hierarchy (a root category is 1).
+  /// Guards against cycles in case of partial/inconsistent data.
+  int depthOf(Category category) {
+    var depth = 1;
+    var current = category;
+    final seen = <String>{current.id};
+    while (current.parentId != null) {
+      final parent = categoryById(current.parentId!);
+      if (parent == null || !seen.add(parent.id)) break;
+      depth += 1;
+      current = parent;
+    }
+    return depth;
+  }
+
+  /// Whether a new child can be nested under [parent] without exceeding the
+  /// backend's [maxCategoryDepth] limit. A parent already at the deepest
+  /// allowed level cannot take children.
+  bool canParent(Category parent) => depthOf(parent) < maxCategoryDepth;
+
   CategoryTagManagementState copyWith({
     List<Category>? categories,
     List<Tag>? tags,
     int? categoryTotal,
     int? tagTotal,
     bool? isLoading,
+    bool? isLoadingMoreCategories,
+    bool? isLoadingMoreTags,
     bool? isSaving,
     Object? loadError = _unchanged,
     Object? actionError = _unchanged,
@@ -200,6 +302,9 @@ class CategoryTagManagementState {
       categoryTotal: categoryTotal ?? this.categoryTotal,
       tagTotal: tagTotal ?? this.tagTotal,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingMoreCategories:
+          isLoadingMoreCategories ?? this.isLoadingMoreCategories,
+      isLoadingMoreTags: isLoadingMoreTags ?? this.isLoadingMoreTags,
       isSaving: isSaving ?? this.isSaving,
       loadError: identical(loadError, _unchanged)
           ? this.loadError

@@ -18,6 +18,10 @@ abstract interface class GoalRepository {
 
   Future<Goal> updateGoal(String id, GoalRequest request);
 
+  /// Transitions a goal to a new lifecycle status (active -> achieved/cancelled)
+  /// via the goal update endpoint, re-sending the existing editable fields.
+  Future<Goal> updateGoalStatus(String id, GoalStatusRequest request);
+
   Future<void> inviteMember(String id, GoalInviteRequest request);
 
   Future<void> respondInvite(
@@ -55,6 +59,15 @@ class DioGoalRepository implements GoalRepository {
 
   @override
   Future<Goal> updateGoal(String id, GoalRequest request) async {
+    final response = await _dio.put<Map<String, Object?>>(
+      '/goals/$id',
+      data: request.toJson(),
+    );
+    return Goal.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<Goal> updateGoalStatus(String id, GoalStatusRequest request) async {
     final response = await _dio.put<Map<String, Object?>>(
       '/goals/$id',
       data: request.toJson(),

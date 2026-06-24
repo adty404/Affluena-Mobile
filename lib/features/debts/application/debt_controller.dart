@@ -22,13 +22,25 @@ class DebtController extends Notifier<DebtState> {
     return const DebtState();
   }
 
-  Future<void> load() async {
-    state = state.copyWith(isLoading: true, loadError: null, actionError: null);
+  Future<void> load({bool reset = true}) async {
+    if (state.isLoading || state.isLoadingMore) return;
+
+    final offset = reset ? 0 : state.debts.length;
+    state = state.copyWith(
+      isLoading: reset,
+      isLoadingMore: !reset,
+      loadError: reset ? null : state.loadError,
+      actionError: null,
+    );
 
     try {
       final debtsFuture = ref
           .read(debtRepositoryProvider)
-          .listDebts(limit: debtPageSize, offset: 0, sort: 'opened_at_desc');
+          .listDebts(
+            limit: debtPageSize,
+            offset: offset,
+            sort: 'opened_at_desc',
+          );
       final walletsFuture = ref
           .read(walletRepositoryProvider)
           .listWallets(limit: 100, offset: 0, sort: 'name_asc');
@@ -45,7 +57,12 @@ class DebtController extends Notifier<DebtState> {
 
       state = state.copyWith(
         isLoading: false,
-        debts: debtResponse.debts,
+        isLoadingMore: false,
+        loadError: null,
+        debts: [
+          if (!reset) ...state.debts,
+          ...debtResponse.debts,
+        ],
         total: debtResponse.pagination.total,
         wallets: selectableWallets,
         incomeCategories: categoryResponse.categories
@@ -65,9 +82,18 @@ class DebtController extends Notifier<DebtState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Debts could not be loaded.',
+        isLoadingMore: false,
+        loadError: reset ? 'Debts could not be loaded.' : state.loadError,
+        actionError: reset ? null : 'Could not load more debts.',
       );
     }
+  }
+
+  Future<void> loadMore() => load(reset: false);
+
+  void dismissActionError() {
+    if (state.actionError == null) return;
+    state = state.copyWith(actionError: null);
   }
 
   void setTypeFilter(DebtType? type) {
@@ -141,6 +167,7 @@ class DebtState {
     this.categoryNames = const {},
     this.typeFilter,
     this.isLoading = false,
+    this.isLoadingMore = false,
     this.isSaving = false,
     this.loadError,
     this.actionError,
@@ -155,9 +182,12 @@ class DebtState {
   final Map<String, String> categoryNames;
   final DebtType? typeFilter;
   final bool isLoading;
+  final bool isLoadingMore;
   final bool isSaving;
   final String? loadError;
   final String? actionError;
+
+  bool get hasMore => debts.length < total;
 
   List<Debt> get visibleDebts {
     if (typeFilter == null) return debts;
@@ -202,6 +232,7 @@ class DebtState {
     Map<String, String>? categoryNames,
     Object? typeFilter = _unchanged,
     bool? isLoading,
+    bool? isLoadingMore,
     bool? isSaving,
     Object? loadError = _unchanged,
     Object? actionError = _unchanged,
@@ -218,6 +249,7 @@ class DebtState {
           ? this.typeFilter
           : typeFilter as DebtType?,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       isSaving: isSaving ?? this.isSaving,
       loadError: identical(loadError, _unchanged)
           ? this.loadError

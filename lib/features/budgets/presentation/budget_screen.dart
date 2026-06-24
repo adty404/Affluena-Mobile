@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
+import '../../categories/presentation/category_tag_management_screen.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/budget_controller.dart';
 import '../data/budget_models.dart';
 
@@ -44,9 +50,15 @@ class BudgetScreen extends ConsumerWidget {
             children: [
               Expanded(child: Text('Budgets', style: textTheme.headlineMedium)),
               IconButton.filledTonal(
-                onPressed: state.categories.isEmpty || state.isSaving
+                key: const Key('add-budget-button'),
+                tooltip: state.hasExpenseCategories
+                    ? 'Add budget'
+                    : 'Add an expense category first',
+                onPressed: state.isSaving
                     ? null
-                    : () => _showBudgetForm(context, ref, state: state),
+                    : state.hasExpenseCategories
+                    ? () => _showBudgetForm(context, ref, state: state)
+                    : () => _goToCategories(context),
                 icon: const Icon(Icons.add),
               ),
             ],
@@ -63,9 +75,9 @@ class BudgetScreen extends ConsumerWidget {
             const SizedBox(height: AffluenaSpacing.space5),
           ],
           if (state.actionError != null) ...[
-            AffluenaCard(
-              backgroundColor: context.affluenaColors.surfaceTintSoft,
-              child: Text(state.actionError!),
+            AffluenaBanner.error(
+              state.actionError!,
+              onRetry: () => controller.load(),
             ),
             const SizedBox(height: AffluenaSpacing.space4),
           ],
@@ -77,8 +89,12 @@ class BudgetScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           if (state.budgets.isEmpty)
-            const _EmptyBudgetState()
-          else
+            _EmptyBudgetState(
+              hasExpenseCategories: state.hasExpenseCategories,
+              onCreate: () => _showBudgetForm(context, ref, state: state),
+              onAddCategory: () => _goToCategories(context),
+            )
+          else ...[
             for (final budget in state.budgets) ...[
               _BudgetCard(
                 budget: budget,
@@ -90,10 +106,27 @@ class BudgetScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AffluenaSpacing.space3),
             ],
+            if (state.hasMore) ...[
+              const SizedBox(height: AffluenaSpacing.space2),
+              OutlinedButton(
+                key: const Key('budget-load-more-button'),
+                onPressed: state.isLoadingMore ? null : controller.loadMore,
+                child: Text(
+                  state.isLoadingMore
+                      ? 'Loading...'
+                      : 'Load more (${state.budgets.length} of ${state.total})',
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );
   }
+}
+
+void _goToCategories(BuildContext context) {
+  context.go(CategoryTagManagementScreen.path);
 }
 
 class _MonthControl extends StatelessWidget {
@@ -230,31 +263,11 @@ class _BudgetAlerts extends StatelessWidget {
         const SectionHeader(title: 'Alerts'),
         const SizedBox(height: AffluenaSpacing.space3),
         for (final alert in alerts.take(2)) ...[
-          AffluenaCard(
-            backgroundColor: colors.surfaceTintSoft,
-            child: Row(
-              children: [
-                Icon(
-                  alert.severity == BudgetSeverity.danger
-                      ? Icons.warning_amber_rounded
-                      : Icons.error_outline,
-                  color: alert.severity == BudgetSeverity.danger
-                      ? colors.coral
-                      : colors.amber,
-                ),
-                const SizedBox(width: AffluenaSpacing.space3),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(alert.title, style: textTheme.bodyLarge),
-                      const SizedBox(height: AffluenaSpacing.space1),
-                      Text(alert.message, style: textTheme.bodySmall),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          AffluenaBanner(
+            message: '${alert.title}\n${alert.message}',
+            tone: alert.severity == BudgetSeverity.danger
+                ? AffluenaBannerTone.error
+                : AffluenaBannerTone.warning,
           ),
           const SizedBox(height: AffluenaSpacing.space2),
         ],
@@ -283,11 +296,11 @@ class _BudgetCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
     final percent = (budget.usagePercent / 100).clamp(0.0, 1.0);
-    final statusColor = budget.usagePercent >= 100
-        ? colors.coral
+    final (statusColor, statusTone, statusLabel) = budget.usagePercent >= 100
+        ? (colors.coral, StatusTone.danger, 'Over budget')
         : budget.usagePercent >= 80
-        ? colors.amber
-        : colors.success;
+        ? (colors.amber, StatusTone.warning, 'Near limit')
+        : (colors.success, StatusTone.success, 'On track');
 
     return AffluenaCard(
       child: Column(
@@ -296,6 +309,7 @@ class _BudgetCard extends StatelessWidget {
           Row(
             children: [
               Expanded(child: Text(categoryName, style: textTheme.titleMedium)),
+              StatusBadge(label: statusLabel, tone: statusTone),
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'edit') onEdit();
@@ -344,7 +358,15 @@ class _BudgetCard extends StatelessWidget {
 }
 
 class _EmptyBudgetState extends StatelessWidget {
-  const _EmptyBudgetState();
+  const _EmptyBudgetState({
+    required this.hasExpenseCategories,
+    required this.onCreate,
+    required this.onAddCategory,
+  });
+
+  final bool hasExpenseCategories;
+  final VoidCallback onCreate;
+  final VoidCallback onAddCategory;
 
   @override
   Widget build(BuildContext context) {
@@ -362,9 +384,26 @@ class _EmptyBudgetState extends StatelessWidget {
           Text('No budgets yet', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Create category budgets to monitor monthly spending.',
+            hasExpenseCategories
+                ? 'Set a monthly limit on an expense category to watch your spending.'
+                : 'Budgets cap an expense category each month. Add an expense category first, then set its limit here.',
             style: textTheme.bodySmall,
           ),
+          const SizedBox(height: AffluenaSpacing.space4),
+          if (hasExpenseCategories)
+            FilledButton.icon(
+              key: const Key('budget-empty-create-button'),
+              onPressed: onCreate,
+              icon: const Icon(Icons.add),
+              label: const Text('Create budget'),
+            )
+          else
+            FilledButton.icon(
+              key: const Key('budget-empty-add-category-button'),
+              onPressed: onAddCategory,
+              icon: const Icon(Icons.account_tree_outlined),
+              label: const Text('Add expense category'),
+            ),
         ],
       ),
     );
@@ -390,12 +429,68 @@ class _BudgetLoading extends StatelessWidget {
           const SizedBox(height: AffluenaSpacing.space5),
           const AffluenaCard(
             child: SizedBox(
-              height: 144,
-              child: Center(child: Text('Loading budgets')),
+              height: 56,
+              child: Center(
+                child: AffluenaSkeleton.line(width: 160, height: 18),
+              ),
             ),
           ),
+          const SizedBox(height: AffluenaSpacing.space5),
+          const AffluenaCard(child: _BudgetSummarySkeleton()),
+          const SizedBox(height: AffluenaSpacing.space5),
+          for (var i = 0; i < 3; i++) ...[
+            const AffluenaCard(child: _BudgetCardSkeleton()),
+            const SizedBox(height: AffluenaSpacing.space3),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _BudgetSummarySkeleton extends StatelessWidget {
+  const _BudgetSummarySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: AffluenaSkeleton(height: 48)),
+            SizedBox(width: AffluenaSpacing.space3),
+            Expanded(child: AffluenaSkeleton(height: 48)),
+          ],
+        ),
+        SizedBox(height: AffluenaSpacing.space3),
+        Row(
+          children: [
+            Expanded(child: AffluenaSkeleton(height: 48)),
+            SizedBox(width: AffluenaSpacing.space3),
+            Expanded(child: AffluenaSkeleton(height: 48)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _BudgetCardSkeleton extends StatelessWidget {
+  const _BudgetCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AffluenaSkeleton.line(width: 140, height: 16),
+        SizedBox(height: AffluenaSpacing.space3),
+        AffluenaSkeleton(height: 10, radius: AffluenaRadii.pill),
+        SizedBox(height: AffluenaSpacing.space3),
+        AffluenaSkeleton.line(width: 100),
+        SizedBox(height: AffluenaSpacing.space2),
+        AffluenaSkeleton.line(width: 200),
+      ],
     );
   }
 }
@@ -417,21 +512,11 @@ class _BudgetError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Budgets unavailable', style: textTheme.headlineMedium),
+          Text('Budgets', style: textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('We could not load your budgets.'),
-                const SizedBox(height: AffluenaSpacing.space4),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          AffluenaBanner.error(
+            'We could not load your budgets.',
+            onRetry: onRetry,
           ),
         ],
       ),
@@ -464,7 +549,7 @@ class _BudgetFormSheet extends ConsumerStatefulWidget {
 }
 
 class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
-  late final TextEditingController _limitController;
+  int? _limitMinorValue;
   Category? _category;
 
   bool get _isEditing => widget.budget != null;
@@ -472,9 +557,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   @override
   void initState() {
     super.initState();
-    _limitController = TextEditingController(
-      text: widget.budget?.limitMinor.toString() ?? '',
-    );
+    _limitMinorValue = widget.budget?.limitMinor;
     if (widget.budget != null) {
       for (final category in widget.state.categories) {
         if (category.id == widget.budget!.categoryId) {
@@ -486,19 +569,13 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   }
 
   @override
-  void dispose() {
-    _limitController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final state = ref.watch(budgetControllerProvider);
     final selectedLabel = _category?.name ?? 'Choose expense category';
     final canSave =
         (_isEditing || _category != null) &&
-        _limitMinor(_limitController.text) > 0 &&
+        (_limitMinorValue ?? 0) > 0 &&
         !state.isSaving;
 
     return SafeArea(
@@ -529,17 +606,19 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                     : _selectCategory,
               ),
               const Divider(height: 1),
-              TextField(
+              const SizedBox(height: AffluenaSpacing.space3),
+              MoneyInput(
                 key: const Key('budget-limit-field'),
-                controller: _limitController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.payments_outlined),
-                  labelText: 'Monthly limit',
-                  hintText: '1500000',
-                ),
-                onChanged: (_) => setState(() {}),
+                label: 'Monthly limit',
+                hint: 'Spending cap for this category',
+                initialValue: _limitMinorValue,
+                enabled: !state.isSaving,
+                onChanged: (value) => setState(() => _limitMinorValue = value),
               ),
+              if (state.actionError != null) ...[
+                const SizedBox(height: AffluenaSpacing.space4),
+                AffluenaBanner.error(state.actionError!),
+              ],
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton(
                 key: const Key('budget-save-button'),
@@ -563,7 +642,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
           LookupSelectorOption<Category>(
             value: category,
             label: category.name,
-            subtitle: category.type.apiValue,
+            subtitle: category.type.label,
             icon: Icons.category_outlined,
           ),
       ],
@@ -573,17 +652,22 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   }
 
   Future<void> _save() async {
-    final limitMinor = _limitMinor(_limitController.text);
+    final limitMinor = _limitMinorValue ?? 0;
+    if (limitMinor <= 0) return;
+    final controller = ref.read(budgetControllerProvider.notifier);
     if (_isEditing) {
-      await ref
-          .read(budgetControllerProvider.notifier)
-          .updateBudget(widget.budget!, limitMinor: limitMinor);
+      await controller.updateBudget(widget.budget!, limitMinor: limitMinor);
     } else {
-      await ref
-          .read(budgetControllerProvider.notifier)
-          .createBudget(categoryId: _category!.id, limitMinor: limitMinor);
+      await controller.createBudget(
+        categoryId: _category!.id,
+        limitMinor: limitMinor,
+      );
     }
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    // Keep the sheet open on failure so the inline error stays visible.
+    if (ref.read(budgetControllerProvider).actionError == null) {
+      Navigator.of(context).pop();
+    }
   }
 }
 
@@ -592,6 +676,7 @@ Future<void> _confirmDelete(
   BudgetController controller,
   BudgetSummary budget,
 ) async {
+  final colors = context.affluenaColors;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -603,6 +688,7 @@ Future<void> _confirmDelete(
           child: const Text('Cancel'),
         ),
         FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Delete'),
         ),
@@ -612,9 +698,4 @@ Future<void> _confirmDelete(
   if (confirmed == true) {
     await controller.deleteBudget(budget);
   }
-}
-
-int _limitMinor(String value) {
-  final normalized = value.replaceAll(RegExp(r'[^0-9]'), '');
-  return int.tryParse(normalized) ?? 0;
 }

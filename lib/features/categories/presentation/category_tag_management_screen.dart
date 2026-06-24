@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/status_badge.dart';
 import '../../tags/data/tag_models.dart';
 import '../application/category_tag_management_controller.dart';
 import '../data/category_models.dart';
@@ -133,9 +136,9 @@ class _CategoryTagManagementScreenState
           ),
           if (state.actionError != null) ...[
             const SizedBox(height: AffluenaSpacing.space4),
-            AffluenaCard(
-              backgroundColor: context.affluenaColors.surfaceTintSoft,
-              child: Text(state.actionError!),
+            AffluenaBanner.error(
+              state.actionError!,
+              onRetry: controller.load,
             ),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
@@ -145,12 +148,22 @@ class _CategoryTagManagementScreenState
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           if (visibleCategories.isEmpty)
-            const _EmptyManagementState(
+            _EmptyManagementState(
               icon: Icons.account_tree_outlined,
-              title: 'No categories found',
-              message: 'Create income or expense categories for transactions.',
+              title: normalizedQuery.isEmpty && _typeFilter == null
+                  ? 'No categories yet'
+                  : 'No categories match',
+              message: normalizedQuery.isEmpty && _typeFilter == null
+                  ? 'Group your spending and income. Create your first category to start.'
+                  : 'Try a different search or filter to find a category.',
+              actionLabel: normalizedQuery.isEmpty && _typeFilter == null
+                  ? 'Add category'
+                  : null,
+              onAction: normalizedQuery.isEmpty && _typeFilter == null
+                  ? () => _showCategoryForm(context, ref, state: state)
+                  : null,
             )
-          else
+          else ...[
             for (final category in visibleCategories) ...[
               _CategoryCard(
                 category: category,
@@ -166,6 +179,23 @@ class _CategoryTagManagementScreenState
               ),
               const SizedBox(height: AffluenaSpacing.space3),
             ],
+            if (state.hasMoreCategories &&
+                normalizedQuery.isEmpty &&
+                _typeFilter == null) ...[
+              const SizedBox(height: AffluenaSpacing.space2),
+              OutlinedButton(
+                key: const Key('category-load-more-button'),
+                onPressed: state.isLoadingMoreCategories
+                    ? null
+                    : controller.loadMoreCategories,
+                child: Text(
+                  state.isLoadingMoreCategories
+                      ? 'Loading...'
+                      : 'Load more (${state.categories.length} of ${state.categoryTotal})',
+                ),
+              ),
+            ],
+          ],
           const SizedBox(height: AffluenaSpacing.space5),
           SectionHeader(
             title: 'Tags',
@@ -173,12 +203,18 @@ class _CategoryTagManagementScreenState
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           if (visibleTags.isEmpty)
-            const _EmptyManagementState(
+            _EmptyManagementState(
               icon: Icons.label_outline,
-              title: 'No tags found',
-              message: 'Create labels to group transactions across categories.',
+              title: normalizedQuery.isEmpty ? 'No tags yet' : 'No tags match',
+              message: normalizedQuery.isEmpty
+                  ? 'Tags label transactions across categories. Create your first tag.'
+                  : 'Try a different search to find a tag.',
+              actionLabel: normalizedQuery.isEmpty ? 'Add tag' : null,
+              onAction: normalizedQuery.isEmpty
+                  ? () => _showTagForm(context)
+                  : null,
             )
-          else
+          else ...[
             for (final tag in visibleTags) ...[
               _TagCard(
                 tag: tag,
@@ -187,6 +223,21 @@ class _CategoryTagManagementScreenState
               ),
               const SizedBox(height: AffluenaSpacing.space3),
             ],
+            if (state.hasMoreTags && normalizedQuery.isEmpty) ...[
+              const SizedBox(height: AffluenaSpacing.space2),
+              OutlinedButton(
+                key: const Key('tag-load-more-button'),
+                onPressed: state.isLoadingMoreTags
+                    ? null
+                    : controller.loadMoreTags,
+                child: Text(
+                  state.isLoadingMoreTags
+                      ? 'Loading...'
+                      : 'Load more (${state.tags.length} of ${state.tagTotal})',
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );
@@ -210,9 +261,6 @@ class _CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
-    final typeLabel = category.type == CategoryType.expense
-        ? 'Expense'
-        : 'Income';
     final parentLabel = category.parentId == null
         ? 'Root category'
         : 'Parent: $parentName';
@@ -246,7 +294,12 @@ class _CategoryCard extends StatelessWidget {
                 const SizedBox(height: AffluenaSpacing.space1),
                 Text(parentLabel, style: textTheme.bodySmall),
                 const SizedBox(height: AffluenaSpacing.space2),
-                _StatusChip(label: typeLabel),
+                StatusBadge(
+                  label: category.type.label,
+                  tone: category.type == CategoryType.income
+                      ? StatusTone.success
+                      : StatusTone.neutral,
+                ),
               ],
             ),
           ),
@@ -317,46 +370,20 @@ class _TagCard extends StatelessWidget {
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.forestSoft,
-        borderRadius: BorderRadius.circular(AffluenaRadii.md),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AffluenaSpacing.space2,
-          vertical: AffluenaSpacing.space1,
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: colors.forest,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _EmptyManagementState extends StatelessWidget {
   const _EmptyManagementState({
     required this.icon,
     required this.title,
     required this.message,
+    this.actionLabel,
+    this.onAction,
   });
 
   final IconData icon;
   final String title;
   final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -374,6 +401,14 @@ class _EmptyManagementState extends StatelessWidget {
           Text(title, style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(message, style: textTheme.bodySmall),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: AffluenaSpacing.space4),
+            FilledButton.icon(
+              onPressed: onAction,
+              icon: const Icon(Icons.add),
+              label: Text(actionLabel!),
+            ),
+          ],
         ],
       ),
     );
@@ -397,14 +432,39 @@ class _CategoryTagLoading extends StatelessWidget {
         children: [
           Text('Categories & Tags', style: textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
-          const AffluenaCard(
-            child: SizedBox(
-              height: 144,
-              child: Center(child: Text('Loading categories and tags')),
-            ),
-          ),
+          const AffluenaSkeleton(height: 56, radius: AffluenaRadii.control),
+          const SizedBox(height: AffluenaSpacing.space5),
+          for (var i = 0; i < 4; i++) ...[
+            const AffluenaCard(child: _ManagementRowSkeleton()),
+            const SizedBox(height: AffluenaSpacing.space3),
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _ManagementRowSkeleton extends StatelessWidget {
+  const _ManagementRowSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AffluenaSkeleton(width: 34, height: 34),
+        SizedBox(width: AffluenaSpacing.space3),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AffluenaSkeleton.line(width: 140, height: 14),
+              SizedBox(height: AffluenaSpacing.space2),
+              AffluenaSkeleton.line(width: 90),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -426,24 +486,11 @@ class _CategoryTagError extends StatelessWidget {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text(
-            'Categories & tags unavailable',
-            style: textTheme.headlineMedium,
-          ),
+          Text('Categories & Tags', style: textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('We could not load your categories and tags.'),
-                const SizedBox(height: AffluenaSpacing.space4),
-                FilledButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          AffluenaBanner.error(
+            'We could not load your categories and tags.',
+            onRetry: onRetry,
           ),
         ],
       ),
@@ -504,7 +551,7 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
   Widget build(BuildContext context) {
     final state = ref.watch(categoryTagManagementControllerProvider);
     final textTheme = Theme.of(context).textTheme;
-    final parentOptions = _parentOptions(state.categories);
+    final parentOptions = _parentOptions(state);
     final selectedParent = _selectedParent(parentOptions);
     final canSave = _nameController.text.trim().isNotEmpty && !state.isSaving;
 
@@ -568,12 +615,16 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
                 enabled: !state.isSaving,
                 onTap: () => _selectParent(parentOptions, selectedParent),
               ),
-              if (state.actionError != null) ...[
-                const SizedBox(height: AffluenaSpacing.space3),
-                Text(
-                  state.actionError!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: AffluenaSpacing.space1),
+              Text(
+                'Categories nest up to 3 levels. Only categories with room for a child are shown.',
+                style: textTheme.bodySmall?.copyWith(
+                  color: context.affluenaColors.inkMuted,
                 ),
+              ),
+              if (state.actionError != null) ...[
+                const SizedBox(height: AffluenaSpacing.space4),
+                AffluenaBanner.error(state.actionError!),
               ],
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton(
@@ -588,11 +639,15 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
     );
   }
 
-  List<Category> _parentOptions(List<Category> categories) {
-    return categories
+  List<Category> _parentOptions(CategoryTagManagementState state) {
+    return state.categories
         .where(
           (category) =>
-              category.type == _type && category.id != widget.category?.id,
+              category.type == _type &&
+              category.id != widget.category?.id &&
+              // Enforce the 3-level hierarchy client-side: a category already at
+              // the deepest allowed level cannot accept new children.
+              state.canParent(category),
         )
         .toList(growable: false);
   }
@@ -624,7 +679,7 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
           LookupSelectorOption<String>(
             value: category.id,
             label: category.name,
-            subtitle: category.type.apiValue,
+            subtitle: category.type.label,
             icon: Icons.category_outlined,
           ),
       ],
@@ -732,11 +787,8 @@ class _TagFormSheetState extends ConsumerState<_TagFormSheet> {
                 onChanged: (_) => setState(() {}),
               ),
               if (state.actionError != null) ...[
-                const SizedBox(height: AffluenaSpacing.space3),
-                Text(
-                  state.actionError!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                const SizedBox(height: AffluenaSpacing.space4),
+                AffluenaBanner.error(state.actionError!),
               ],
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton(
@@ -768,6 +820,7 @@ Future<void> _confirmDeleteCategory(
   CategoryTagManagementController controller,
   Category category,
 ) async {
+  final colors = context.affluenaColors;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -779,6 +832,7 @@ Future<void> _confirmDeleteCategory(
           child: const Text('Cancel'),
         ),
         FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Delete category'),
         ),
@@ -795,6 +849,7 @@ Future<void> _confirmDeleteTag(
   CategoryTagManagementController controller,
   Tag tag,
 ) async {
+  final colors = context.affluenaColors;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -808,6 +863,7 @@ Future<void> _confirmDeleteTag(
           child: const Text('Cancel'),
         ),
         FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Delete tag'),
         ),
