@@ -288,12 +288,12 @@ final _directNavigationScenarios = [
   _NavigationScenario(
     entry: 'Wallet detail',
     location: WalletDetailScreen.location('wallet-main'),
-    expected: 'Wallet detail',
+    expected: 'Main Wallet',
   ),
   _NavigationScenario(
     entry: 'Wallet sharing',
     location: WalletSharingScreen.location('wallet-main'),
-    expected: 'Wallet sharing',
+    expected: 'Sharing',
   ),
 ];
 
