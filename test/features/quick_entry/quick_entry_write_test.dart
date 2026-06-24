@@ -65,6 +65,15 @@ void main() {
     await tester.pumpWidget(quickEntryWriteApp());
     await tester.pumpAndSettle();
 
+    // The demo seed amount was removed, so the screen now starts empty. Enter a
+    // valid amount via MoneyInput so the only remaining gate is the destination
+    // wallet.
+    await tester.enterText(
+      find.byKey(const Key('quick-entry-amount-field')),
+      '50000',
+    );
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Transfer'));
     await tester.pumpAndSettle();
 

@@ -5,12 +5,21 @@ import 'package:affluena_mobile/app/theme/affluena_theme.dart';
 
 import 'helpers/auth_test_helpers.dart';
 
+// Mirrors DashboardScreen's time-of-day greeting so the assertion stays stable
+// no matter what local time the suite runs at.
+String _expectedGreeting() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 void main() {
   testWidgets('renders Affluena dashboard shell', (tester) async {
     await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
 
     expect(find.text('Affluena'), findsOneWidget);
-    expect(find.text('Good morning'), findsOneWidget);
+    expect(find.text(_expectedGreeting()), findsOneWidget);
     expect(find.text('Total balance'), findsOneWidget);
   });
 
@@ -21,6 +30,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Quick entry'), findsOneWidget);
+    // The amount is now a MoneyInput that starts empty and formats digits as
+    // grouped IDR. Typing 125000 echoes back as "Rp 125.000".
+    await tester.enterText(
+      find.byKey(const Key('quick-entry-amount-field')),
+      '125000',
+    );
+    await tester.pumpAndSettle();
     expect(find.text('Rp 125.000'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Save transaction'),
@@ -36,7 +52,7 @@ void main() {
 
     await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
 
-    final dashboardContext = tester.element(find.text('Good morning'));
+    final dashboardContext = tester.element(find.text(_expectedGreeting()));
     expect(Theme.of(dashboardContext).brightness, Brightness.dark);
     expect(
       dashboardContext.affluenaColors.surfaceCanvas,

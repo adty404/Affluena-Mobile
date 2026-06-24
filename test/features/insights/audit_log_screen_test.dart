@@ -19,7 +19,8 @@ void main() {
     expect(find.text('1 activity'), findsOneWidget);
     expect(find.text('1 system request'), findsOneWidget);
     expect(find.text('Created transaction Lunch'), findsOneWidget);
-    expect(find.text('create · transaction'), findsOneWidget);
+    // Audit copy is now humanized ("Create · Transaction" not the raw tokens).
+    expect(find.text('Create · Transaction'), findsOneWidget);
     expect(find.text('Activity'), findsWidgets);
 
     await tester.tap(find.byKey(const Key('audit-log-tab-system')));
@@ -43,7 +44,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repository.activityDetailRequests, ['activity-1']);
-      expect(find.text('Entity ID'), findsOneWidget);
+      // The raw entity id is now a de-emphasized "Reference ID (debug)" row.
+      expect(find.text('Reference ID (debug)'), findsOneWidget);
+      expect(find.text('Entity ID'), findsNothing);
       expect(find.text('transaction-1'), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.close));
@@ -54,8 +57,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repository.systemLogDetailRequests, ['log-1']);
-      expect(find.text('Request payload'), findsOneWidget);
-      expect(find.text('Response payload'), findsOneWidget);
+      // Payloads are surfaced as de-emphasized "(debug)" technical rows.
+      expect(find.text('Request payload (debug)'), findsOneWidget);
+      expect(find.text('Response payload (debug)'), findsOneWidget);
       expect(find.text('{"ok":true}'), findsOneWidget);
     },
   );
@@ -68,7 +72,11 @@ void main() {
     await tester.pumpWidget(auditLogTestApp(repository));
     await tester.pumpAuditState();
 
-    expect(find.text('Audit logs unavailable'), findsOneWidget);
+    // The error state is now an AffluenaBanner.error showing the load error
+    // message (not a "Audit logs unavailable" title) with a keyed Retry button.
+    expect(find.text('Audit logs could not be loaded.'), findsOneWidget);
+    expect(find.text('Audit logs unavailable'), findsNothing);
+    expect(find.byKey(const Key('audit-log-retry-button')), findsOneWidget);
 
     repository.failInitialLoad = false;
     await tester.tap(find.byKey(const Key('audit-log-retry-button')));

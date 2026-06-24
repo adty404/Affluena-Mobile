@@ -22,8 +22,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Signed-in sessions'), findsOneWidget);
-    expect(find.text('Chrome on macOS'), findsOneWidget);
-    expect(find.textContaining('ab12'), findsOneWidget);
+    // The session row now shows the parsed device label (deviceLabel) instead
+    // of the raw user-agent string. The seeded UA "Chrome on macOS" resolves to
+    // the browser-only label "Chrome".
+    expect(find.text('Chrome'), findsOneWidget);
+    expect(find.text('Chrome on macOS'), findsNothing);
+    // Raw token-suffix copy ("Token ending ab12") was dropped from the UI.
+    expect(find.textContaining('ab12'), findsNothing);
     expect(authRepository.meCalls, 2);
     expect(authRepository.listSessionsCalls, 1);
   });
@@ -79,17 +84,25 @@ void main() {
       find.byKey(const Key('settings-new-password-field')),
       'short',
     );
+    await tester.enterText(
+      find.byKey(const Key('settings-confirm-password-field')),
+      'short',
+    );
     await tester.tap(find.byKey(const Key('settings-password-save-button')));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Password must be at least 8 characters.'),
-      findsOneWidget,
-    );
+    // The shared AuthValidators.password copy changed to this shorter phrasing.
+    expect(find.text('Use at least 8 characters.'), findsOneWidget);
     expect(authRepository.changePasswordRequests, isEmpty);
 
     await tester.enterText(
       find.byKey(const Key('settings-new-password-field')),
+      'newpassword123',
+    );
+    // The sheet now requires a matching confirm-password field before it will
+    // submit; fill it so validation passes.
+    await tester.enterText(
+      find.byKey(const Key('settings-confirm-password-field')),
       'newpassword123',
     );
     await tester.tap(find.byKey(const Key('settings-password-save-button')));
@@ -116,8 +129,10 @@ void main() {
 
     expect(authRepository.revokedSessionIds, isEmpty);
     expect(find.text('Revoke this session?'), findsOneWidget);
+    // The seeded session is not the current device, so the confirm dialog warns
+    // that the other device will be signed out.
     expect(
-      find.textContaining('If this is your current session'),
+      find.textContaining('That device will be signed out'),
       findsOneWidget,
     );
 
@@ -126,8 +141,9 @@ void main() {
 
     expect(authRepository.revokedSessionIds, [seededAuthSession.id]);
     expect(find.text('Session revoked.'), findsOneWidget);
-    expect(find.text('Chrome on macOS'), findsNothing);
-    expect(find.text('No active sessions found.'), findsOneWidget);
+    // The parsed device label is gone once the only session is revoked.
+    expect(find.text('Chrome'), findsNothing);
+    expect(find.text('No other sessions'), findsOneWidget);
   });
 
   testWidgets('session list error can retry', (tester) async {
@@ -148,6 +164,8 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-sessions-row')));
     await tester.pumpAndSettle();
 
+    // Errors now render through AffluenaBanner.error, which keeps the message
+    // and exposes a retry affordance ("Coba lagi") instead of a keyed button.
     expect(
       find.text(
         'Unable to reach Affluena. Check your connection and try again.',
@@ -155,14 +173,19 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.byKey(const Key('settings-sessions-retry-button')),
+      find.byKey(const Key('settings-sessions-error-banner')),
       findsOneWidget,
     );
+    final retryAction = find.descendant(
+      of: find.byKey(const Key('settings-sessions-error-banner')),
+      matching: find.text('Coba lagi'),
+    );
+    expect(retryAction, findsOneWidget);
     authRepository.listSessionsError = null;
-    await tester.tap(find.byKey(const Key('settings-sessions-retry-button')));
+    await tester.tap(retryAction);
     await tester.pumpAndSettle();
 
-    expect(find.text('Chrome on macOS'), findsOneWidget);
+    expect(find.text('Chrome'), findsOneWidget);
     expect(authRepository.listSessionsCalls, 2);
   });
 

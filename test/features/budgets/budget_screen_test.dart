@@ -5,6 +5,8 @@ import 'package:affluena_mobile/features/budgets/data/budget_models.dart';
 import 'package:affluena_mobile/features/budgets/data/budget_repository.dart';
 import 'package:affluena_mobile/features/budgets/presentation/budget_screen.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
+import 'package:affluena_mobile/features/shared/presentation/widgets/affluena_banner.dart';
+import 'package:affluena_mobile/features/shared/presentation/widgets/status_badge.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,13 +42,18 @@ void main() {
     await tester.pumpBudgetState();
 
     expect(find.text('Budgets'), findsOneWidget);
-    expect(find.text('Food near limit'), findsOneWidget);
+    // The alert is now rendered inside an AffluenaBanner whose Text combines the
+    // title and message, so match on substring.
+    expect(find.textContaining('Food near limit'), findsOneWidget);
+    expect(find.byType(AffluenaBanner), findsWidgets);
     await tester.scrollUntilVisible(
       find.text('Food & Dining'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Food & Dining'), findsOneWidget);
+    // The budget card now carries a StatusBadge label reflecting usage.
+    expect(find.widgetWithText(StatusBadge, 'Near limit'), findsOneWidget);
     expect(find.text('85% used'), findsOneWidget);
     expect(find.textContaining('category-food'), findsNothing);
   });

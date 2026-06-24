@@ -1,4 +1,6 @@
 import 'package:affluena_mobile/app/provider_retry.dart';
+import 'package:affluena_mobile/features/auth/application/auth_controller.dart';
+import 'package:affluena_mobile/features/auth/data/auth_models.dart';
 import 'package:affluena_mobile/features/goals/application/goal_controller.dart';
 import 'package:affluena_mobile/features/goals/data/goal_models.dart';
 import 'package:affluena_mobile/features/goals/data/goal_repository.dart';
@@ -6,8 +8,15 @@ import 'package:affluena_mobile/features/goals/presentation/goal_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
+  setUpAll(() async {
+    // DatePickerField formats the chosen date with the 'id_ID' locale, mirroring
+    // main(); without this the create flow throws on locale data.
+    await initializeDateFormatting('id_ID');
+  });
+
   test('loads goal state from repository', () async {
     final container = ProviderContainer(
       retry: noProviderRetry,
@@ -62,20 +71,29 @@ void main() {
     await tester.pumpWidget(goalTestApp(repository));
     await tester.pumpGoalState();
 
-    await tester.tap(find.byIcon(Icons.add));
+    // Two add affordances exist on the empty list (header button + empty-state
+    // CTA); open the create sheet from the header IconButton.
+    await tester.tap(find.widgetWithIcon(IconButton, Icons.add));
     await tester.pumpAndSettle();
-    expect(find.text('Create goal'), findsOneWidget);
+    expect(find.text('Create goal'), findsWidgets);
 
     await tester.enterText(find.byKey(const Key('goal-name-field')), 'Holiday');
+    // The amount is now a MoneyInput: typed digits become minor units and are
+    // shown grouped as "Rp 8.000.000".
     await tester.enterText(
       find.byKey(const Key('goal-target-field')),
       '8000000',
     );
-    await tester.enterText(
-      find.byKey(const Key('goal-deadline-field')),
-      '2026-11-01T00:00:00Z',
-    );
     await tester.pump();
+    expect(find.text('8.000.000'), findsOneWidget);
+
+    // The deadline is now a tappable DatePickerField backed by the native date
+    // picker instead of a hand-typed RFC3339 field.
+    await tester.tap(find.text('Deadline'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.byKey(const Key('goal-save-button')));
     await tester.pumpAndSettle();
 
@@ -88,17 +106,22 @@ void main() {
   ) async {
     final repository = TestGoalRepository();
 
-    await tester.pumpWidget(goalTestApp(repository));
+    // The accept/reject controls only render for the signed-in member, so seed
+    // the auth user id to match the pending member on the seed goal.
+    await tester.pumpWidget(goalTestApp(repository, currentUserId: 'member-1'));
     await tester.pumpGoalState();
 
     await tester.scrollUntilVisible(
-      find.text('Emergency fund'),
+      find.text('Accept'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.byType(PopupMenuButton<String>));
+    // The pending invite is actionable from the member row, not an overflow
+    // menu: tapping Accept joins the goal.
+    expect(find.text('Reject'), findsOneWidget);
+    await tester.ensureVisible(find.text('Accept'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Join goal'));
+    await tester.tap(find.text('Accept'));
     await tester.pumpGoalState();
 
     expect(repository.responseRequests.single.status, GoalMemberStatus.joined);
@@ -107,12 +130,19 @@ void main() {
       GoalMemberStatus.joined,
     );
 
+    // Once joined the row drops its accept/reject controls and shows the
+    // "Joined" status badge instead.
+    expect(find.text('Accept'), findsNothing);
+    expect(find.text('Reject'), findsNothing);
+    expect(find.text('Joined'), findsOneWidget);
+
+    // The overflow menu still exposes the goal-management actions.
+    await tester.ensureVisible(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
-
-    expect(find.text('Edit'), findsOneWidget);
-    expect(find.text('Join goal'), findsNothing);
-    expect(find.text('Reject invite'), findsNothing);
+    expect(find.text('Edit goal'), findsOneWidget);
+    expect(find.text('Mark achieved'), findsOneWidget);
   });
 }
 
@@ -124,12 +154,42 @@ extension on WidgetTester {
   }
 }
 
-Widget goalTestApp(TestGoalRepository repository) {
+Widget goalTestApp(TestGoalRepository repository, {String? currentUserId}) {
   return ProviderScope(
     retry: noProviderRetry,
-    overrides: [goalRepositoryProvider.overrideWithValue(repository)],
+    overrides: [
+      goalRepositoryProvider.overrideWithValue(repository),
+      authControllerProvider.overrideWith(
+        () => _SignedInAuthController(currentUserId),
+      ),
+    ],
     child: const MaterialApp(home: Scaffold(body: GoalScreen())),
   );
+}
+
+/// A signed-in [AuthController] that skips the token store / network so the
+/// goal screen can resolve `auth.user?.id`. The member-row accept/reject
+/// controls only render for the current user, so tests that exercise the invite
+/// response must seed the matching id here.
+class _SignedInAuthController extends AuthController {
+  _SignedInAuthController(this.userId);
+
+  final String? userId;
+
+  @override
+  AuthState build() {
+    if (userId == null) return const AuthState.unauthenticated();
+    return AuthState.authenticated(
+      AuthUser(
+        id: userId!,
+        email: 'me@example.com',
+        name: 'Me',
+        avatarUrl: '',
+        createdAt: '2026-06-01T00:00:00Z',
+        updatedAt: '2026-06-01T00:00:00Z',
+      ),
+    );
+  }
 }
 
 class TestGoalRepository implements GoalRepository {
@@ -140,6 +200,7 @@ class TestGoalRepository implements GoalRepository {
   final createdRequests = <GoalRequest>[];
   final inviteRequests = <GoalInviteRequest>[];
   final responseRequests = <GoalInviteResponseRequest>[];
+  final statusRequests = <GoalStatusRequest>[];
 
   List<Goal> get goals => List<Goal>.unmodifiable(_goals);
 
@@ -168,6 +229,12 @@ class TestGoalRepository implements GoalRepository {
 
   @override
   Future<Goal> updateGoal(String id, GoalRequest request) async {
+    return _goals.firstWhere((goal) => goal.id == id);
+  }
+
+  @override
+  Future<Goal> updateGoalStatus(String id, GoalStatusRequest request) async {
+    statusRequests.add(request);
     return _goals.firstWhere((goal) => goal.id == id);
   }
 

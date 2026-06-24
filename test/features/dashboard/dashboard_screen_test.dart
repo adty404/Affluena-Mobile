@@ -10,6 +10,7 @@ import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_repository.dart';
+import 'package:affluena_mobile/features/shared/presentation/widgets/affluena_skeleton.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
@@ -33,9 +34,12 @@ void main() {
         ),
       ),
     );
-    await _pumpUntilFound(tester, find.text('Loading dashboard'));
+    await _pumpUntilFound(tester, find.byType(AffluenaSkeleton));
 
-    expect(find.text('Loading dashboard'), findsOneWidget);
+    // The loading state now renders a skeleton scaffold instead of a
+    // "Loading dashboard" text/spinner.
+    expect(find.byType(AffluenaSkeleton), findsWidgets);
+    expect(find.text('Loading dashboard'), findsNothing);
 
     pendingSummary.complete(seededSummary);
     await tester.pumpAndSettle();
