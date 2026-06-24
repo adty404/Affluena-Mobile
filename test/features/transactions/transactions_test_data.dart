@@ -102,6 +102,15 @@ final transferTransaction = transactionFixture(
   transactionAt: '2026-06-19T09:00:00Z',
 );
 
+final balanceDecreaseAdjustment = transactionFixture(
+  id: '66666666-6666-6666-6666-666666660099',
+  type: TransactionType.adjustment,
+  walletId: gopayWallet.id,
+  amountMinor: -50000,
+  note: 'Correct overstated balance',
+  transactionAt: '2026-06-22T09:00:00Z',
+);
+
 final fuelTransaction = transactionFixture(
   id: 'fuel',
   type: TransactionType.expense,

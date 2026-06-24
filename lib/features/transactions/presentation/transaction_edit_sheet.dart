@@ -6,6 +6,7 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
+import 'adjustment_direction_control.dart';
 
 part 'transaction_edit_fields.dart';
 part 'transaction_edit_options.dart';
@@ -38,6 +39,7 @@ class _TransactionEditSheet extends ConsumerStatefulWidget {
 class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
   late final TextEditingController _noteController;
   late int? _amountMinor;
+  late bool _decrease;
   late String? _walletId;
   late String? _toWalletId;
   late String? _categoryId;
@@ -48,7 +50,13 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
   void initState() {
     super.initState();
     final transaction = widget.transaction;
-    _amountMinor = transaction.amountMinor;
+    // Adjustments may carry a negative amount_minor to decrease a balance. The
+    // MoneyInput is positive-only, so we store the magnitude here and recover
+    // the sign from the direction control on save.
+    _amountMinor = transaction.amountMinor.abs();
+    _decrease =
+        transaction.type == TransactionType.adjustment &&
+        transaction.amountMinor < 0;
     _noteController = TextEditingController(text: transaction.note);
     _walletId = transaction.walletId;
     _toWalletId = transaction.toWalletId;
@@ -66,6 +74,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
     final textTheme = Theme.of(context).textTheme;
     final transaction = widget.transaction;
     final isTransfer = transaction.type == TransactionType.transfer;
+    final isAdjustment = transaction.type == TransactionType.adjustment;
     final needsCategory =
         transaction.type == TransactionType.income ||
         transaction.type == TransactionType.expense;
@@ -92,7 +101,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
               Text('Edit transaction', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space4),
               _TransactionEditFields(
-                initialAmountMinor: widget.transaction.amountMinor,
+                initialAmountMinor: widget.transaction.amountMinor.abs(),
                 noteController: _noteController,
                 walletId: _walletId,
                 toWalletId: _toWalletId,
@@ -100,6 +109,8 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
                 walletOptions: walletOptions,
                 categoryOptions: categoryOptions,
                 isTransfer: isTransfer,
+                isAdjustment: isAdjustment,
+                decrease: _decrease,
                 needsCategory: needsCategory,
                 isSaving: _isSaving,
                 error: _error,
@@ -107,6 +118,10 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
                   _amountMinor = value;
                   _clearError();
                 },
+                onDirectionChanged: (decrease) => setState(() {
+                  _decrease = decrease;
+                  _error = null;
+                }),
                 onTextChanged: _clearError,
                 onWalletChanged: (value) => setState(() {
                   _walletId = value;
@@ -144,6 +159,10 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
       return;
     }
 
+    final signed = transaction.type == TransactionType.adjustment && _decrease
+        ? -amountMinor
+        : amountMinor;
+
     setState(() {
       _isSaving = true;
       _error = null;
@@ -159,7 +178,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
       categoryId: transaction.type == TransactionType.transfer
           ? null
           : _categoryId,
-      amountMinor: amountMinor,
+      amountMinor: signed,
       transactionAt: transaction.transactionAt,
       note: note.isEmpty ? null : note,
       tagIds: transaction.tagIds,
@@ -181,7 +200,11 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
 
   String? _validationError(Transaction transaction, int amountMinor) {
     if (_walletId == null) return 'Wallet is required.';
-    if (transaction.type != TransactionType.adjustment && amountMinor <= 0) {
+    if (transaction.type == TransactionType.adjustment) {
+      // amountMinor is the magnitude (always non-negative from MoneyInput); a
+      // zero adjustment would be a no-op in either direction.
+      if (amountMinor == 0) return 'Amount must be greater than 0.';
+    } else if (amountMinor <= 0) {
       return 'Amount must be greater than 0.';
     }
     if (transaction.type == TransactionType.transfer) {

@@ -111,6 +111,68 @@ void main() {
     ]);
   });
 
+  testWidgets(
+    'negative adjustment preselects Decrease and shows the absolute amount',
+    (tester) async {
+      final repository = RecordingTransactionRepository(
+        transactions: [balanceDecreaseAdjustment],
+      );
+
+      await tester.pumpWidget(
+        transactionsTestApp(transactionRepository: repository),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Correct overstated balance'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit transaction'));
+      await tester.pumpAndSettle();
+
+      // The positive-only MoneyInput shows the magnitude, not the signed value.
+      expect(find.text('50.000'), findsOneWidget);
+
+      // Decrease is preselected for a negative adjustment.
+      final decreaseChip = tester.widget<ChoiceChip>(
+        find.ancestor(
+          of: find.text('Decrease (−)'),
+          matching: find.byType(ChoiceChip),
+        ),
+      );
+      expect(decreaseChip.selected, isTrue);
+
+      // Saving without changes preserves the negative sign.
+      await tester.tap(find.byKey(const Key('transaction-edit-save-button')));
+      await tester.pumpAndSettle();
+
+      expect(repository.updatedRequests.single.amountMinor, -50000);
+    },
+  );
+
+  testWidgets('toggling an adjustment to Increase sends a positive amount', (
+    tester,
+  ) async {
+    final repository = RecordingTransactionRepository(
+      transactions: [balanceDecreaseAdjustment],
+    );
+
+    await tester.pumpWidget(
+      transactionsTestApp(transactionRepository: repository),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Correct overstated balance'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit transaction'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Increase (+)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('transaction-edit-save-button')));
+    await tester.pumpAndSettle();
+
+    expect(repository.updatedRequests.single.amountMinor, 50000);
+  });
+
   testWidgets('transfer edit clears destination when source changes to it', (
     tester,
   ) async {
