@@ -12,6 +12,8 @@ import '../features/debts/presentation/debt_screen.dart';
 import '../features/goals/presentation/goal_screen.dart';
 import '../features/insights/presentation/audit_log_screen.dart';
 import '../features/insights/presentation/insights_screen.dart';
+import '../features/onboarding/application/onboarding_controller.dart';
+import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/recurring/presentation/recurring_screen.dart';
@@ -35,9 +37,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authState = ref.read(authControllerProvider);
+      final onboardingDone = ref.read(onboardingControllerProvider);
       final location = state.matchedLocation;
       final isBootstrap = location == AuthBootstrapScreen.path;
       final isAuthRoute = _publicAuthRoutes.contains(location);
+      final atOnboarding = location == OnboardingScreen.path;
+
+      // First-run onboarding gate (evaluated before auth).
+      if (onboardingDone == null) {
+        return isBootstrap ? null : AuthBootstrapScreen.path;
+      }
+      if (!onboardingDone) {
+        return atOnboarding ? null : OnboardingScreen.path;
+      }
+      if (atOnboarding) {
+        // Onboarding is complete here. Allow it to stay open only when it is
+        // being reviewed from settings (?replay=true); otherwise the first-run
+        // flow just finished, so move on to the normal auth destination.
+        if (state.uri.queryParameters['replay'] == 'true') return null;
+        return authState.isAuthenticated
+            ? DashboardScreen.path
+            : LoginScreen.path;
+      }
 
       if (authState.isChecking) {
         return isBootstrap ? null : AuthBootstrapScreen.path;
@@ -68,6 +89,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: ForgotPasswordScreen.path,
         pageBuilder: _fadePage((_) => const ForgotPasswordScreen()),
+      ),
+      GoRoute(
+        path: OnboardingScreen.path,
+        pageBuilder: _fadePage(
+          (state) => OnboardingScreen(
+            replay: state.uri.queryParameters['replay'] == 'true',
+          ),
+        ),
       ),
       GoRoute(
         path: ResetPasswordScreen.path,
@@ -220,6 +249,9 @@ const _publicAuthRoutes = {
 class _RouterRefreshNotifier extends ChangeNotifier {
   _RouterRefreshNotifier(Ref ref) {
     ref.listen<AuthState>(authControllerProvider, (_, next) {
+      notifyListeners();
+    });
+    ref.listen(onboardingControllerProvider, (_, _) {
       notifyListeners();
     });
   }
