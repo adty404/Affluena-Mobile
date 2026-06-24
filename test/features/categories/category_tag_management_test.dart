@@ -20,9 +20,12 @@ void main() {
     );
     await tester.pumpManagementState();
 
+    // Tree renders the parent, its child indented beneath it, and a child-count
+    // hint on the parent — instead of a flat "Parent: X" subtitle.
     expect(find.text('Food & Dining'), findsOneWidget);
     expect(find.text('Coffee'), findsOneWidget);
-    expect(find.text('Parent: Food & Dining'), findsOneWidget);
+    expect(find.text('1 sub'), findsOneWidget);
+    expect(find.text('Parent: Food & Dining'), findsNothing);
     expect(find.text(foodCategory.id), findsNothing);
 
     await tester.tap(find.byKey(const Key('add-category-button')));
@@ -48,7 +51,8 @@ void main() {
     expect(categoryRepository.createdRequests.single.parentId, foodCategory.id);
     await tester.scrollUntilTextVisible('Restaurants');
     expect(find.text('Restaurants'), findsOneWidget);
-    expect(find.text('Parent: Food & Dining'), findsWidgets);
+    // Food now has two children rendered beneath it in the tree.
+    expect(find.text('2 sub'), findsOneWidget);
 
     await tester.tap(
       find.byKey(const Key('category-menu-category-restaurants')),
@@ -149,6 +153,7 @@ void main() {
     await tester.pumpManagementState();
 
     expect(find.text('Category could not be deleted.'), findsOneWidget);
+    await tester.scrollUntilTextVisible('Coffee');
     expect(find.text('Coffee'), findsOneWidget);
     expect(categoryRepository.deletedIds, isEmpty);
 

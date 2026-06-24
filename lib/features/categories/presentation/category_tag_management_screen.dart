@@ -29,6 +29,16 @@ class _CategoryTagManagementScreenState
   String _query = '';
   CategoryType? _typeFilter;
 
+  /// Ids of parent categories whose subtree is collapsed. Defaults to expanded,
+  /// so only explicitly-collapsed nodes live here.
+  final Set<String> _collapsed = <String>{};
+
+  void _toggleCollapsed(String id) {
+    setState(() {
+      if (!_collapsed.remove(id)) _collapsed.add(id);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(categoryTagManagementControllerProvider);
@@ -140,54 +150,28 @@ class _CategoryTagManagementScreenState
             actionLabel: '${visibleCategories.length} shown',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
-          if (visibleCategories.isEmpty)
-            _EmptyManagementState(
-              icon: Icons.account_tree_outlined,
-              title: normalizedQuery.isEmpty && _typeFilter == null
-                  ? 'No categories yet'
-                  : 'No categories match',
-              message: normalizedQuery.isEmpty && _typeFilter == null
-                  ? 'Group your spending and income. Create your first category to start.'
-                  : 'Try a different search or filter to find a category.',
-              actionLabel: normalizedQuery.isEmpty && _typeFilter == null
-                  ? 'Add category'
-                  : null,
-              onAction: normalizedQuery.isEmpty && _typeFilter == null
-                  ? () => _showCategoryForm(context, ref, state: state)
-                  : null,
-            )
-          else ...[
-            for (final category in visibleCategories) ...[
-              _CategoryCard(
-                category: category,
-                parentName: state.categoryName(category.parentId),
-                onEdit: () => _showCategoryForm(
-                  context,
-                  ref,
-                  state: state,
-                  category: category,
-                ),
-                onDelete: () =>
-                    _confirmDeleteCategory(context, controller, category),
+          ..._buildCategoriesSection(
+            context: context,
+            state: state,
+            controller: controller,
+            visibleCategories: visibleCategories,
+            normalizedQuery: normalizedQuery,
+          ),
+          if (state.hasMoreCategories &&
+              normalizedQuery.isEmpty &&
+              _typeFilter == null) ...[
+            const SizedBox(height: AffluenaSpacing.space3),
+            OutlinedButton(
+              key: const Key('category-load-more-button'),
+              onPressed: state.isLoadingMoreCategories
+                  ? null
+                  : controller.loadMoreCategories,
+              child: Text(
+                state.isLoadingMoreCategories
+                    ? 'Loading...'
+                    : 'Load more (${state.categories.length} of ${state.categoryTotal})',
               ),
-              const SizedBox(height: AffluenaSpacing.space3),
-            ],
-            if (state.hasMoreCategories &&
-                normalizedQuery.isEmpty &&
-                _typeFilter == null) ...[
-              const SizedBox(height: AffluenaSpacing.space2),
-              OutlinedButton(
-                key: const Key('category-load-more-button'),
-                onPressed: state.isLoadingMoreCategories
-                    ? null
-                    : controller.loadMoreCategories,
-                child: Text(
-                  state.isLoadingMoreCategories
-                      ? 'Loading...'
-                      : 'Load more (${state.categories.length} of ${state.categoryTotal})',
-                ),
-              ),
-            ],
+            ),
           ],
           const SizedBox(height: AffluenaSpacing.space5),
           SectionHeader(
@@ -235,45 +219,367 @@ class _CategoryTagManagementScreenState
       ),
     );
   }
+
+  /// Renders the categories block. When the user is searching or filtering by a
+  /// single type, the hierarchy is hard to scan, so we fall back to a flat,
+  /// pruned list. Otherwise we draw the full Income/Expense hierarchy trees.
+  List<Widget> _buildCategoriesSection({
+    required BuildContext context,
+    required CategoryTagManagementState state,
+    required CategoryTagManagementController controller,
+    required List<Category> visibleCategories,
+    required String normalizedQuery,
+  }) {
+    final isFiltering = normalizedQuery.isNotEmpty || _typeFilter != null;
+
+    if (visibleCategories.isEmpty) {
+      return [
+        _EmptyManagementState(
+          icon: Icons.account_tree_outlined,
+          title: isFiltering ? 'No categories match' : 'No categories yet',
+          message: isFiltering
+              ? 'Try a different search or filter to find a category.'
+              : 'Group your spending and income into a hierarchy. Categories '
+                    'nest up to 3 levels — a parent, its subcategories, and '
+                    'their subcategories. Create your first one to start.',
+          actionLabel: isFiltering ? null : 'Add category',
+          onAction: isFiltering
+              ? null
+              : () => _showCategoryForm(context, ref, state: state),
+        ),
+      ];
+    }
+
+    // Filtering/searching: a flat, depth-aware list is more useful than a
+    // partial tree (matches may be scattered across branches).
+    if (isFiltering) {
+      final widgets = <Widget>[];
+      for (final category in visibleCategories) {
+        widgets.add(
+          _CategoryTreeNode(
+            category: category,
+            depth: 0,
+            isLast: true,
+            hasChildren: false,
+            childCount: 0,
+            collapsed: false,
+            showConnectors: false,
+            parentName: state.categoryName(category.parentId),
+            canAddChild: state.canParent(category),
+            onToggle: null,
+            onAddChild: state.canParent(category)
+                ? () => _showCategoryForm(
+                    context,
+                    ref,
+                    state: state,
+                    presetParent: category,
+                  )
+                : null,
+            onEdit: () => _showCategoryForm(
+              context,
+              ref,
+              state: state,
+              category: category,
+            ),
+            onDelete: () =>
+                _confirmDeleteCategory(context, controller, category),
+          ),
+        );
+        widgets.add(const SizedBox(height: AffluenaSpacing.space3));
+      }
+      return widgets;
+    }
+
+    // Full hierarchy: group by type, then render each section as a tree.
+    final byType = <CategoryType, List<Category>>{
+      CategoryType.income: const [],
+      CategoryType.expense: const [],
+    };
+    for (final type in CategoryType.values) {
+      byType[type] = visibleCategories
+          .where((c) => c.type == type)
+          .toList(growable: false);
+    }
+
+    final widgets = <Widget>[];
+    for (final type in const [CategoryType.income, CategoryType.expense]) {
+      final categories = byType[type]!;
+      if (categories.isEmpty) continue;
+      if (widgets.isNotEmpty) {
+        widgets.add(const SizedBox(height: AffluenaSpacing.space5));
+      }
+      widgets.addAll(
+        _buildTypeTree(
+          context: context,
+          state: state,
+          controller: controller,
+          type: type,
+          categories: categories,
+        ),
+      );
+    }
+    return widgets;
+  }
+
+  List<Widget> _buildTypeTree({
+    required BuildContext context,
+    required CategoryTagManagementState state,
+    required CategoryTagManagementController controller,
+    required CategoryType type,
+    required List<Category> categories,
+  }) {
+    // Index this type's categories by parent so we can walk the tree. Only
+    // parents that are themselves part of [categories] anchor a subtree; any
+    // node whose parent is missing is treated as a root so it stays visible.
+    final ids = {for (final c in categories) c.id};
+    final childrenOf = <String?, List<Category>>{};
+    for (final category in categories) {
+      final key =
+          (category.parentId != null && ids.contains(category.parentId))
+          ? category.parentId
+          : null;
+      childrenOf.putIfAbsent(key, () => <Category>[]).add(category);
+    }
+
+    final roots = childrenOf[null] ?? const <Category>[];
+    final total = categories.length;
+
+    final rows = <Widget>[];
+
+    void addNode(Category category, int depth, bool isLast) {
+      final children = childrenOf[category.id] ?? const <Category>[];
+      final hasChildren = children.isNotEmpty;
+      final collapsed = _collapsed.contains(category.id);
+      // Cap "Add subcategory" at the 3-level limit using the controller guard.
+      final canAddChild = state.canParent(category);
+
+      rows.add(
+        _CategoryTreeNode(
+          category: category,
+          depth: depth,
+          isLast: isLast,
+          hasChildren: hasChildren,
+          childCount: children.length,
+          collapsed: collapsed,
+          showConnectors: depth > 0,
+          parentName: state.categoryName(category.parentId),
+          canAddChild: canAddChild,
+          onToggle: hasChildren ? () => _toggleCollapsed(category.id) : null,
+          onAddChild: canAddChild
+              ? () => _showCategoryForm(
+                  context,
+                  ref,
+                  state: state,
+                  presetParent: category,
+                )
+              : null,
+          onEdit: () => _showCategoryForm(
+            context,
+            ref,
+            state: state,
+            category: category,
+          ),
+          onDelete: () => _confirmDeleteCategory(context, controller, category),
+        ),
+      );
+      rows.add(const SizedBox(height: AffluenaSpacing.space2));
+
+      if (hasChildren && !collapsed) {
+        for (var i = 0; i < children.length; i++) {
+          addNode(children[i], depth + 1, i == children.length - 1);
+        }
+      }
+    }
+
+    for (var i = 0; i < roots.length; i++) {
+      addNode(roots[i], 0, i == roots.length - 1);
+    }
+
+    return [
+      _TreeSectionHeader(
+        type: type,
+        parentCount: roots.length,
+        total: total,
+      ),
+      const SizedBox(height: AffluenaSpacing.space3),
+      ...rows,
+    ];
+  }
 }
 
-class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({
+class _TreeSectionHeader extends StatelessWidget {
+  const _TreeSectionHeader({
+    required this.type,
+    required this.parentCount,
+    required this.total,
+  });
+
+  final CategoryType type;
+  final int parentCount;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+    final textTheme = Theme.of(context).textTheme;
+    final isIncome = type == CategoryType.income;
+    final accent = isIncome ? colors.success : colors.inkMuted;
+    final parentLabel = parentCount == 1 ? '1 parent' : '$parentCount parents';
+    final totalLabel = total == 1 ? '1 total' : '$total total';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AffluenaSpacing.space1),
+      child: Row(
+        children: [
+          Icon(
+            isIncome ? Icons.trending_up : Icons.trending_down,
+            size: 18,
+            color: accent,
+          ),
+          const SizedBox(width: AffluenaSpacing.space2),
+          Text(type.label, style: textTheme.titleSmall),
+          const SizedBox(width: AffluenaSpacing.space2),
+          Expanded(
+            child: Text(
+              '$parentLabel · $totalLabel',
+              style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single row in the category hierarchy tree. Draws connector guides to the
+/// left (a vertical trunk + an elbow into the row) so parent -> child ->
+/// grandchild reads as a branching tree, with a leading icon, the name, a
+/// child-count hint, a type badge, a collapse chevron, and inline actions.
+class _CategoryTreeNode extends StatelessWidget {
+  const _CategoryTreeNode({
     required this.category,
+    required this.depth,
+    required this.isLast,
+    required this.hasChildren,
+    required this.childCount,
+    required this.collapsed,
+    required this.showConnectors,
     required this.parentName,
+    required this.canAddChild,
+    required this.onToggle,
+    required this.onAddChild,
     required this.onEdit,
     required this.onDelete,
   });
 
   final Category category;
+  final int depth;
+  final bool isLast;
+  final bool hasChildren;
+  final int childCount;
+  final bool collapsed;
+  final bool showConnectors;
   final String parentName;
+  final bool canAddChild;
+  final VoidCallback? onToggle;
+  final VoidCallback? onAddChild;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
+  static const double _indentWidth = 24;
+
   @override
   Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+
+    // IntrinsicHeight bounds the Row's height to the card so the stretched
+    // connector slots can paint full-height guides without unbounded
+    // constraints inside the scrolling list.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showConnectors)
+            ..._buildConnectors(colors)
+          else if (depth > 0)
+            SizedBox(width: _indentWidth * depth),
+          Expanded(child: _buildCard(context)),
+        ],
+      ),
+    );
+  }
+
+  /// Builds one indent slot per ancestor level. Levels above this node show a
+  /// continuing vertical trunk; the node's own level shows an elbow branch.
+  List<Widget> _buildConnectors(AffluenaSemanticColors colors) {
+    final line = colors.borderSubtle;
+    final slots = <Widget>[];
+    // Ancestor trunks (every level except the node's own).
+    for (var i = 0; i < depth - 1; i++) {
+      slots.add(
+        SizedBox(
+          width: _indentWidth,
+          child: Center(
+            child: Container(width: 1.5, color: line),
+          ),
+        ),
+      );
+    }
+    // The node's own elbow: a half-height trunk (full when not last) plus the
+    // horizontal branch into the row.
+    slots.add(
+      SizedBox(
+        width: _indentWidth,
+        child: CustomPaint(
+          painter: _ElbowPainter(color: line, isLast: isLast),
+        ),
+      ),
+    );
+    return slots;
+  }
+
+  Widget _buildCard(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
-    final parentLabel = category.parentId == null
-        ? 'Root category'
-        : 'Parent: $parentName';
+    final isRoot = depth == 0;
+    final isIncome = category.type == CategoryType.income;
+
+    final chevron = hasChildren
+        ? IconButton(
+            key: Key('category-toggle-${category.id}'),
+            tooltip: collapsed ? 'Expand' : 'Collapse',
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            iconSize: 20,
+            onPressed: onToggle,
+            icon: Icon(
+              collapsed ? Icons.chevron_right : Icons.expand_more,
+              color: colors.inkMuted,
+            ),
+          )
+        : const SizedBox(width: 32);
 
     return AffluenaCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AffluenaSpacing.space3,
+        vertical: AffluenaSpacing.space3,
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          chevron,
           DecoratedBox(
             decoration: BoxDecoration(
-              color: colors.forestSoft,
+              color: isRoot ? colors.forestSoft : colors.surfaceTintSoft,
               borderRadius: BorderRadius.circular(AffluenaRadii.md),
             ),
             child: Padding(
               padding: const EdgeInsets.all(AffluenaSpacing.space2),
               child: Icon(
-                category.parentId == null
-                    ? Icons.category_outlined
+                isRoot
+                    ? Icons.folder_outlined
                     : Icons.subdirectory_arrow_right,
-                color: colors.forest,
+                color: isRoot ? colors.forest : colors.inkMuted,
                 size: 18,
               ),
             ),
@@ -283,34 +589,119 @@ class _CategoryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(category.name, style: textTheme.titleMedium),
-                const SizedBox(height: AffluenaSpacing.space1),
-                Text(parentLabel, style: textTheme.bodySmall),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        category.name,
+                        style: textTheme.titleMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (hasChildren) ...[
+                      const SizedBox(width: AffluenaSpacing.space2),
+                      Text(
+                        '$childCount sub',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colors.inkMuted,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 const SizedBox(height: AffluenaSpacing.space2),
                 StatusBadge(
                   label: category.type.label,
-                  tone: category.type == CategoryType.income
-                      ? StatusTone.success
-                      : StatusTone.neutral,
+                  tone: isIncome ? StatusTone.success : StatusTone.neutral,
                 ),
               ],
             ),
           ),
           PopupMenuButton<String>(
             key: Key('category-menu-${category.id}'),
+            tooltip: 'Category actions',
             onSelected: (value) {
-              if (value == 'edit') onEdit();
-              if (value == 'delete') onDelete();
+              switch (value) {
+                case 'add':
+                  onAddChild?.call();
+                case 'edit':
+                  onEdit();
+                case 'delete':
+                  onDelete();
+              }
             },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'edit', child: Text('Edit')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            itemBuilder: (context) => [
+              if (canAddChild && onAddChild != null)
+                const PopupMenuItem(
+                  value: 'add',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.add),
+                    title: Text('Add subcategory'),
+                  ),
+                ),
+              const PopupMenuItem(
+                value: 'edit',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.edit_outlined),
+                  title: Text('Edit'),
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.delete_outline),
+                  title: Text('Delete'),
+                ),
+              ),
             ],
           ),
         ],
       ),
     );
   }
+}
+
+/// Paints the elbow connector for a child row: a vertical trunk segment that
+/// stops at the row's vertical center (full-height when the node has following
+/// siblings) and a horizontal branch reaching toward the card.
+class _ElbowPainter extends CustomPainter {
+  const _ElbowPainter({required this.color, required this.isLast});
+
+  final Color color;
+  final bool isLast;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    // Vertical trunk from the top; stops at center for the last child so the
+    // line doesn't dangle past the final branch.
+    canvas.drawLine(
+      Offset(centerX, 0),
+      Offset(centerX, isLast ? centerY : size.height),
+      paint,
+    );
+    // Horizontal branch into the row.
+    canvas.drawLine(
+      Offset(centerX, centerY),
+      Offset(size.width, centerY),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ElbowPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.isLast != isLast;
 }
 
 class _TagCard extends StatelessWidget {
@@ -492,22 +883,34 @@ Future<void> _showCategoryForm(
   WidgetRef ref, {
   required CategoryTagManagementState state,
   Category? category,
+  Category? presetParent,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     useSafeArea: true,
-    builder: (context) =>
-        _CategoryFormSheet(initialState: state, category: category),
+    builder: (context) => _CategoryFormSheet(
+      initialState: state,
+      category: category,
+      presetParent: presetParent,
+    ),
   );
 }
 
 class _CategoryFormSheet extends ConsumerStatefulWidget {
-  const _CategoryFormSheet({required this.initialState, this.category});
+  const _CategoryFormSheet({
+    required this.initialState,
+    this.category,
+    this.presetParent,
+  });
 
   final CategoryTagManagementState initialState;
   final Category? category;
+
+  /// When opening "Add subcategory" from a node, the form pre-selects this
+  /// parent and adopts its type so the new child lands in the right branch.
+  final Category? presetParent;
 
   @override
   ConsumerState<_CategoryFormSheet> createState() => _CategoryFormSheetState();
@@ -524,9 +927,14 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
-    _type = widget.category?.type ?? CategoryType.expense;
+    _type =
+        widget.category?.type ??
+        widget.presetParent?.type ??
+        CategoryType.expense;
     if (widget.category?.parentId != null) {
       _parent = widget.initialState.categoryById(widget.category!.parentId!);
+    } else if (widget.category == null && widget.presetParent != null) {
+      _parent = widget.presetParent;
     }
   }
 
