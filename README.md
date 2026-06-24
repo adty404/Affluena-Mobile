@@ -54,14 +54,15 @@ rtk fvm flutter build ios --simulator --debug --dart-define=AFFLUENA_API_BASE_UR
 
 ## Current Scope
 
-This scaffold includes:
+This app includes:
 
 - Android and iOS Flutter project wrappers
-- App shell with bottom navigation
+- App shell with bottom navigation (Home, Wallets, Add, Activity, More)
+- Auth flows: login, register, forgot password, reset password
 - Home dashboard screen
-- Quick Entry screen
-- Transactions screen
-- Wallets screen
-- Profile/settings screen
+- Quick Entry screen and quick-entry templates
+- Transactions screen and split bill
+- Wallets screen with wallet detail and sharing
+- Settings screen with security/device-lock and parity modules (budgets, categories/tags, debts, trackers, recurring, goals, insights, audit log)
 - Shared UI primitives and theme tokens
 - API client and secure token storage providers
