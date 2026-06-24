@@ -15,6 +15,7 @@ import '../../shared/presentation/widgets/selector_row.dart';
 import '../../tags/data/tag_models.dart';
 import '../application/transaction_create_controller.dart';
 import '../data/transaction_models.dart';
+import 'adjustment_direction_control.dart';
 import 'transactions_screen.dart';
 
 class TransactionCreateScreen extends ConsumerStatefulWidget {
@@ -31,6 +32,7 @@ class _TransactionCreateScreenState
     extends ConsumerState<TransactionCreateScreen> {
   TransactionType _type = TransactionType.expense;
   int? _amountMinor;
+  bool _decrease = false;
   String? _walletId;
   String? _toWalletId;
   String? _categoryId;
@@ -46,6 +48,8 @@ class _TransactionCreateScreenState
   }
 
   bool get _isTransfer => _type == TransactionType.transfer;
+
+  bool get _isAdjustment => _type == TransactionType.adjustment;
 
   bool get _needsCategory =>
       _type == TransactionType.income || _type == TransactionType.expense;
@@ -95,6 +99,17 @@ class _TransactionCreateScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (_isAdjustment) ...[
+                  AdjustmentDirectionControl(
+                    decrease: _decrease,
+                    enabled: !state.isSaving,
+                    onChanged: (decrease) => setState(() {
+                      _decrease = decrease;
+                      _clearErrors();
+                    }),
+                  ),
+                  const SizedBox(height: AffluenaSpacing.space3),
+                ],
                 MoneyInput(
                   key: const Key('transaction-create-amount-field'),
                   label: 'Amount',
@@ -218,6 +233,7 @@ class _TransactionCreateScreenState
       _type = type;
       _categoryId = null;
       if (!_isTransfer) _toWalletId = null;
+      if (!_isAdjustment) _decrease = false;
       _clearErrors();
     });
   }
@@ -307,12 +323,14 @@ class _TransactionCreateScreenState
     }
 
     final note = _noteController.text.trim();
+    final amount = _amountMinor!;
+    final signed = _isAdjustment && _decrease ? -amount : amount;
     final request = TransactionRequest(
       type: _type,
       walletId: _walletId!,
       toWalletId: _isTransfer ? _toWalletId : null,
       categoryId: _needsCategory ? _categoryId : null,
-      amountMinor: _amountMinor!,
+      amountMinor: signed,
       transactionAt: _transactionAt(_date),
       note: note.isEmpty ? null : note,
       tagIds: _tagId == null ? const [] : [_tagId!],
@@ -329,12 +347,11 @@ class _TransactionCreateScreenState
     if (_walletId == null) {
       return _isTransfer ? 'Source wallet is required.' : 'Wallet is required.';
     }
-    if (_type != TransactionType.adjustment &&
-        (_amountMinor == null || _amountMinor! <= 0)) {
+    if (!_isAdjustment && (_amountMinor == null || _amountMinor! <= 0)) {
       return 'Enter an amount greater than zero.';
     }
-    if (_type == TransactionType.adjustment && _amountMinor == null) {
-      return 'Enter an amount.';
+    if (_isAdjustment && (_amountMinor == null || _amountMinor! == 0)) {
+      return 'Enter an amount greater than zero.';
     }
     if (_isTransfer) {
       if (_toWalletId == null) return 'Destination wallet is required.';

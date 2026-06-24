@@ -10,10 +10,13 @@ class _TransactionEditFields extends StatelessWidget {
     required this.walletOptions,
     required this.categoryOptions,
     required this.isTransfer,
+    required this.isAdjustment,
+    required this.decrease,
     required this.needsCategory,
     required this.isSaving,
     required this.error,
     required this.onAmountChanged,
+    required this.onDirectionChanged,
     required this.onTextChanged,
     required this.onWalletChanged,
     required this.onToWalletChanged,
@@ -29,10 +32,13 @@ class _TransactionEditFields extends StatelessWidget {
   final List<_NamedOption> walletOptions;
   final List<_NamedOption> categoryOptions;
   final bool isTransfer;
+  final bool isAdjustment;
+  final bool decrease;
   final bool needsCategory;
   final bool isSaving;
   final String? error;
   final ValueChanged<int?> onAmountChanged;
+  final ValueChanged<bool> onDirectionChanged;
   final VoidCallback onTextChanged;
   final ValueChanged<String?> onWalletChanged;
   final ValueChanged<String?> onToWalletChanged;
@@ -45,6 +51,14 @@ class _TransactionEditFields extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (isAdjustment) ...[
+          AdjustmentDirectionControl(
+            decrease: decrease,
+            enabled: !isSaving,
+            onChanged: onDirectionChanged,
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+        ],
         MoneyInput(
           key: const Key('transaction-edit-amount-field'),
           label: 'Amount',
