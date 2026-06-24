@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../app/theme/theme_mode_controller.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/data/auth_models.dart';
 import '../../budgets/presentation/budget_screen.dart';
@@ -12,6 +13,7 @@ import '../../goals/presentation/goal_screen.dart';
 import '../../insights/presentation/audit_log_screen.dart';
 import '../../insights/application/insights_controller.dart';
 import '../../insights/presentation/insights_screen.dart';
+import '../../onboarding/presentation/onboarding_screen.dart';
 import '../../quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../../recurring/presentation/recurring_screen.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
@@ -23,6 +25,7 @@ import '../application/settings_controller.dart';
 import 'security_screen.dart';
 import 'settings_screen_widgets.dart';
 import 'settings_sheets.dart';
+import 'theme_settings_sheet.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -42,6 +45,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final authState = ref.watch(authControllerProvider);
     final profile = ref.watch(settingsProfileProvider);
     final securityPreferences = ref.watch(securityPreferencesProvider);
+    final themeMode = ref.watch(appThemeModeProvider);
     final user = profile.asData?.value ?? authState.user;
     final securityState = securityPreferences.asData?.value;
 
@@ -122,6 +126,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onChanged: (enabled) => ref
                       .read(securityPreferencesProvider.notifier)
                       .setDeviceLockEnabled(enabled),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space6),
+          const SectionHeader(title: 'Appearance'),
+          const SizedBox(height: AffluenaSpacing.space3),
+          AffluenaCard(
+            child: Column(
+              children: [
+                SettingsRow(
+                  key: const Key('settings-theme-row'),
+                  icon: themeMode.icon,
+                  title: 'Theme',
+                  value: themeMode.label,
+                  onTap: () => showThemeSettingsSheet(context),
+                ),
+                const Divider(height: 1),
+                SettingsRow(
+                  icon: Icons.slideshow_outlined,
+                  title: 'App tour',
+                  value: 'Replay the welcome guide',
+                  onTap: () => context.push(OnboardingScreen.replayLocation()),
                 ),
               ],
             ),
