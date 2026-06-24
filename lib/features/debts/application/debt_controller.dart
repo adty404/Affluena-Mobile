@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
 import '../data/debt_models.dart';
@@ -105,6 +106,7 @@ class DebtController extends Notifier<DebtState> {
     state = state.copyWith(isSaving: true, actionError: null);
     try {
       await ref.read(debtRepositoryProvider).createDebt(request);
+      ref.invalidateFinancialData();
       state = state.copyWith(isSaving: false);
       await load();
     } catch (_) {
@@ -119,6 +121,7 @@ class DebtController extends Notifier<DebtState> {
     state = state.copyWith(isSaving: true, actionError: null);
     try {
       await ref.read(debtRepositoryProvider).updateDebt(debt.id, request);
+      ref.invalidateFinancialData();
       state = state.copyWith(isSaving: false);
       await load();
     } catch (_) {
@@ -133,6 +136,7 @@ class DebtController extends Notifier<DebtState> {
     state = state.copyWith(isSaving: true, actionError: null);
     try {
       await ref.read(debtRepositoryProvider).payDebt(debt.id, request);
+      ref.invalidateFinancialData();
       state = state.copyWith(isSaving: false);
       await load();
     } catch (_) {

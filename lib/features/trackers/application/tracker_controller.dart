@@ -6,6 +6,7 @@ import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../data/tracker_models.dart';
 import '../data/tracker_repository.dart';
 
@@ -210,6 +211,7 @@ class TrackerController extends Notifier<TrackerState> {
     state = state.copyWith(isSaving: true, actionError: null);
     try {
       await action();
+      ref.invalidateFinancialData();
       state = state.copyWith(isSaving: false);
       await load();
     } catch (_) {

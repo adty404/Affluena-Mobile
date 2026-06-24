@@ -7,6 +7,7 @@ import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
 import '../../tags/data/tag_models.dart';
 import '../../tags/data/tag_repository.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
 import '../data/transaction_models.dart';
@@ -204,6 +205,7 @@ class TransactionsController extends Notifier<TransactionsState> {
     state = state.copyWith(actionError: null);
     try {
       await ref.read(transactionRepositoryProvider).createTransaction(request);
+      ref.invalidateBalances();
       await load(reset: true);
       return true;
     } catch (_) {
@@ -225,6 +227,7 @@ class TransactionsController extends Notifier<TransactionsState> {
 
     try {
       await repository.updateTransaction(transaction.id, request);
+      ref.invalidateBalances();
       await load(reset: true);
       return true;
     } catch (_) {
@@ -239,6 +242,7 @@ class TransactionsController extends Notifier<TransactionsState> {
       await ref
           .read(transactionRepositoryProvider)
           .deleteTransaction(transaction.id);
+      ref.invalidateBalances();
       await load(reset: true);
       return true;
     } catch (_) {

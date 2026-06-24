@@ -4,15 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
-import '../../dashboard/application/dashboard_home_controller.dart';
 import '../../debts/application/debt_controller.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../tags/data/tag_models.dart';
 import '../../tags/data/tag_repository.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
 import '../data/transaction_models.dart';
 import '../data/transaction_repository.dart';
-import 'transactions_controller.dart';
 
 const splitBillLookupPageSize = 100;
 
@@ -90,8 +89,7 @@ class SplitBillController extends Notifier<SplitBillState> {
       final result = await ref
           .read(transactionRepositoryProvider)
           .splitBill(request);
-      ref.invalidate(dashboardHomeProvider);
-      ref.invalidate(transactionsControllerProvider);
+      ref.invalidateFinancialData();
       ref.invalidate(debtControllerProvider);
       state = state.copyWith(isSaving: false, result: result);
       return true;
