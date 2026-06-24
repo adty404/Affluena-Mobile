@@ -80,7 +80,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('Invite member'),
+      find.text('partner@affluena.test'),
       240,
       scrollable: find.byType(Scrollable).first,
     );
@@ -120,8 +120,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Wallet unavailable'), findsOneWidget);
-    // The error renders as a coral AffluenaBanner with a localized retry action.
+    // The drill-in AppBar shows the title; the error renders as a coral
+    // AffluenaBanner with a localized retry action.
+    expect(find.text('Wallet'), findsOneWidget);
     expect(find.text('We could not load this wallet.'), findsOneWidget);
     expect(find.text('Coba lagi'), findsOneWidget);
 
@@ -175,12 +176,17 @@ Widget walletRouteTestApp(TestWalletRepository repository, String location) {
       GoRoute(
         path: WalletsScreen.path,
         builder: (context, state) => const Scaffold(body: WalletsScreen()),
-      ),
-      GoRoute(
-        path: WalletDetailScreen.path,
-        builder: (context, state) => Scaffold(
-          body: WalletDetailScreen(walletId: state.pathParameters['walletId']!),
-        ),
+        routes: [
+          // Nested so navigating to the detail builds a [list, detail] stack —
+          // matching the real push flow, so the detail's AppBar back / delete
+          // pop returns to the wallets list.
+          GoRoute(
+            path: ':walletId',
+            builder: (context, state) => WalletDetailScreen(
+              walletId: state.pathParameters['walletId']!,
+            ),
+          ),
+        ],
       ),
     ],
   );
