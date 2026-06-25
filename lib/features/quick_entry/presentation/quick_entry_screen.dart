@@ -1,3 +1,5 @@
+import '../../wallets/presentation/wallet_format.dart';
+import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +11,6 @@ import '../../tags/data/tag_models.dart';
 import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
-import '../../wallets/data/wallet_models.dart';
 import '../application/quick_entry_lookup_controller.dart';
 import '../data/quick_entry_models.dart';
 import '../data/quick_entry_repository.dart';
@@ -150,8 +151,8 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
           LookupSelectorOption(
             value: wallet.id,
             label: wallet.name,
-            subtitle: _walletTypeLabel(wallet.type),
-            icon: _walletIcon(wallet.type),
+            subtitle: walletTypeLabel(wallet.type),
+            icon: walletIcon(wallet.type),
           ),
       ],
     );
@@ -169,8 +170,8 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
             LookupSelectorOption(
               value: wallet.id,
               label: wallet.name,
-              subtitle: _walletTypeLabel(wallet.type),
-              icon: _walletIcon(wallet.type),
+              subtitle: walletTypeLabel(wallet.type),
+              icon: walletIcon(wallet.type),
             ),
       ],
     );
@@ -362,7 +363,7 @@ class _QuickEntryContent extends StatelessWidget {
     ].whereType<Tag>().toList(growable: false);
     final tagSummary = selectedTags.isEmpty
         ? 'Optional — tap to add'
-        : selectedTags.map(_tagLabel).join('  ');
+        : selectedTags.map((t) => tagLabel(t.name)).join('  ');
     final categories = lookup.categoriesFor(type);
     // Templates are scoped to the active tab so an expense template never shows
     // (or fires) while the Income/Transfer tab is selected.
@@ -493,7 +494,9 @@ class _QuickEntryContent extends StatelessWidget {
                   value: tagSummary,
                   icon: Icons.sell_outlined,
                   enabled: lookup.tags.isNotEmpty,
-                  onTap: lookup.tags.isEmpty ? null : () => onSelectTags(lookup),
+                  onTap: lookup.tags.isEmpty
+                      ? null
+                      : () => onSelectTags(lookup),
                 ),
                 const SizedBox(height: AffluenaSpacing.space4),
                 TextField(
@@ -538,8 +541,7 @@ class _QuickEntryContent extends StatelessWidget {
           typeTemplates.isEmpty
               ? _SavedTemplatesEmpty(
                   type: type,
-                  onCreate: () =>
-                      context.push(QuickEntryTemplatesScreen.path),
+                  onCreate: () => context.push(QuickEntryTemplatesScreen.path),
                 )
               : Wrap(
                   spacing: AffluenaSpacing.space3,
@@ -615,8 +617,16 @@ class _QuickEntryLoading extends StatelessWidget {
             spacing: AffluenaSpacing.space3,
             runSpacing: AffluenaSpacing.space3,
             children: const [
-              AffluenaSkeleton(width: 120, height: 64, radius: AffluenaRadii.card),
-              AffluenaSkeleton(width: 120, height: 64, radius: AffluenaRadii.card),
+              AffluenaSkeleton(
+                width: 120,
+                height: 64,
+                radius: AffluenaRadii.card,
+              ),
+              AffluenaSkeleton(
+                width: 120,
+                height: 64,
+                radius: AffluenaRadii.card,
+              ),
             ],
           ),
         ],
@@ -674,7 +684,10 @@ class _SavedTemplatesEmpty extends StatelessWidget {
         children: [
           Icon(Icons.bolt_outlined, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No ${_typeLabel(type)} templates yet', style: textTheme.titleMedium),
+          Text(
+            'No ${_typeLabel(type)} templates yet',
+            style: textTheme.titleMedium,
+          ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             'Save a recurring ${_typeLabel(type)} entry once — then record it '
@@ -765,29 +778,5 @@ String _typeLabel(TransactionType type) {
     TransactionType.expense => 'expense',
     TransactionType.transfer => 'transfer',
     TransactionType.adjustment => 'adjustment',
-  };
-}
-
-String _tagLabel(Tag tag) {
-  return tag.name.startsWith('#') ? tag.name : '#${tag.name}';
-}
-
-String _walletTypeLabel(WalletType type) {
-  return switch (type) {
-    WalletType.cash => 'Cash',
-    WalletType.bank => 'Bank',
-    WalletType.eWallet => 'E-wallet',
-    WalletType.investment => 'Investment',
-    WalletType.goal => 'Goal',
-  };
-}
-
-IconData _walletIcon(WalletType type) {
-  return switch (type) {
-    WalletType.cash => Icons.payments_outlined,
-    WalletType.bank => Icons.account_balance_outlined,
-    WalletType.eWallet => Icons.phone_iphone_outlined,
-    WalletType.investment => Icons.trending_up,
-    WalletType.goal => Icons.flag_outlined,
   };
 }

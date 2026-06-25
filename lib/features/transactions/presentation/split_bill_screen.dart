@@ -1,3 +1,4 @@
+import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -278,9 +279,4 @@ String _transactionAtFromDate(DateTime date) {
   final month = date.month.toString().padLeft(2, '0');
   final day = date.day.toString().padLeft(2, '0');
   return '${date.year}-$month-${day}T00:00:00Z';
-}
-
-String _tagLabel(String name) {
-  final normalized = name.trim().replaceFirst(RegExp(r'^#+'), '');
-  return normalized.isEmpty ? '#' : '#$normalized';
 }

@@ -1,3 +1,4 @@
+import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/affluena_theme.dart';
@@ -99,7 +100,7 @@ class _TransactionFilterSheetState extends State<_TransactionFilterSheet> {
                 label: 'Tag',
                 value: _tagId == null
                     ? 'Any tag'
-                    : _tagLabel(state.tagName(_tagId!)),
+                    : tagLabel(state.tagName(_tagId!)),
                 icon: Icons.sell_outlined,
                 enabled: state.tags.isNotEmpty,
                 onTap: state.tags.isEmpty ? null : _selectTag,
@@ -223,7 +224,7 @@ class _TransactionFilterSheetState extends State<_TransactionFilterSheet> {
         for (final tag in widget.state.tags)
           LookupSelectorOption<String>(
             value: tag.id,
-            label: _tagLabel(tag.name),
+            label: tagLabel(tag.name),
             icon: Icons.sell_outlined,
           ),
       ],
@@ -262,9 +263,4 @@ class _TransactionFilterSheetState extends State<_TransactionFilterSheet> {
       ),
     );
   }
-}
-
-String _tagLabel(String name) {
-  final normalized = name.trim().replaceFirst(RegExp(r'^#+'), '');
-  return normalized.isEmpty ? '#' : '#$normalized';
 }

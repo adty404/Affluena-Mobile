@@ -1,3 +1,4 @@
+import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/affluena_theme.dart';
@@ -125,7 +126,7 @@ class _TagMultiSelectSheetState extends State<_TagMultiSelectSheet> {
                         final tag = filtered[index];
                         final selected = _selected.contains(tag.id);
                         return _TagOptionTile(
-                          label: _tagLabel(tag.name),
+                          label: tagLabel(tag.name),
                           selected: selected,
                           onTap: () => setState(() {
                             if (selected) {
@@ -236,9 +237,4 @@ class _TagOptionTile extends StatelessWidget {
       ),
     );
   }
-}
-
-String _tagLabel(String name) {
-  final normalized = name.trim().replaceFirst(RegExp(r'^#+'), '');
-  return normalized.isEmpty ? '#' : '#$normalized';
 }

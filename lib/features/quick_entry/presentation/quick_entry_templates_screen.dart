@@ -1,3 +1,5 @@
+import '../../wallets/presentation/wallet_format.dart';
+import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,7 +17,6 @@ import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../../transactions/data/transaction_models.dart';
-import '../../wallets/data/wallet_models.dart';
 import '../application/quick_entry_templates_controller.dart';
 import '../data/quick_entry_models.dart';
 import 'tag_multi_select_sheet.dart';
@@ -593,9 +594,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
     final selectedWallet = state.walletById(_walletId);
     final selectedToWallet = state.walletById(_toWalletId);
     final selectedCategory = state.categoryById(_categoryId);
-    final selectedTags = [
-      for (final id in _tagIds) ?state.tagById(id),
-    ];
+    final selectedTags = [for (final id in _tagIds) ?state.tagById(id)];
     final categories = state.categoriesFor(_type);
     final canSave = _canSave(state);
 
@@ -723,7 +722,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         value: selectedTags.isEmpty
                             ? 'Optional'
                             : selectedTags
-                                  .map((tag) => _tagLabel(tag.name))
+                                  .map((tag) => tagLabel(tag.name))
                                   .join(', '),
                         icon: Icons.sell_outlined,
                         enabled: state.tags.isNotEmpty && !state.isSaving,
@@ -739,7 +738,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                           children: [
                             for (final tag in selectedTags)
                               StatusBadge(
-                                label: _tagLabel(tag.name),
+                                label: tagLabel(tag.name),
                                 tone: StatusTone.neutral,
                               ),
                           ],
@@ -800,8 +799,8 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
           LookupSelectorOption<String>(
             value: wallet.id,
             label: wallet.name,
-            subtitle: _walletTypeLabel(wallet.type),
-            icon: _walletIcon(wallet.type),
+            subtitle: walletTypeLabel(wallet.type),
+            icon: walletIcon(wallet.type),
           ),
       ],
     );
@@ -823,8 +822,8 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
             LookupSelectorOption<String>(
               value: wallet.id,
               label: wallet.name,
-              subtitle: _walletTypeLabel(wallet.type),
-              icon: _walletIcon(wallet.type),
+              subtitle: walletTypeLabel(wallet.type),
+              icon: walletIcon(wallet.type),
             ),
       ],
     );
@@ -1057,32 +1056,6 @@ IconData _typeIcon(TransactionType type) {
     TransactionType.income => Icons.trending_up,
     TransactionType.transfer => Icons.swap_horiz,
     TransactionType.adjustment => Icons.tune,
-  };
-}
-
-
-String _tagLabel(String name) {
-  final normalized = name.trim().replaceFirst(RegExp(r'^#+'), '');
-  return normalized.isEmpty ? '#' : '#$normalized';
-}
-
-String _walletTypeLabel(WalletType type) {
-  return switch (type) {
-    WalletType.cash => 'Cash',
-    WalletType.bank => 'Bank',
-    WalletType.eWallet => 'E-wallet',
-    WalletType.investment => 'Investment',
-    WalletType.goal => 'Goal',
-  };
-}
-
-IconData _walletIcon(WalletType type) {
-  return switch (type) {
-    WalletType.cash => Icons.payments_outlined,
-    WalletType.bank => Icons.account_balance_outlined,
-    WalletType.eWallet => Icons.phone_iphone_outlined,
-    WalletType.investment => Icons.trending_up,
-    WalletType.goal => Icons.flag_outlined,
   };
 }
 

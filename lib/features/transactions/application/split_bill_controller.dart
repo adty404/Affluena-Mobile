@@ -1,3 +1,4 @@
+import '../../../core/formatters/tag_formatter.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -152,7 +153,7 @@ class SplitBillState {
 
   String tagName(String? id) {
     final tag = tagById(id);
-    return tag == null ? 'Optional' : _tagLabel(tag.name);
+    return tag == null ? 'Optional' : tagLabel(tag.name);
   }
 
   SplitBillState copyWith({
@@ -198,11 +199,6 @@ T? _findById<T>(Iterable<T> items, String? id) {
     if (itemId == id) return item;
   }
   return null;
-}
-
-String _tagLabel(String name) {
-  final normalized = name.trim().replaceFirst(RegExp(r'^#+'), '');
-  return normalized.isEmpty ? '#' : '#$normalized';
 }
 
 const _unchanged = Object();
