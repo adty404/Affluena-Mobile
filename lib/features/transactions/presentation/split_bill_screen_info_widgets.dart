@@ -78,12 +78,11 @@ class _SplitBillInfoSection extends StatelessWidget {
                 onChanged: onAmountChanged,
               ),
               const SizedBox(height: AffluenaSpacing.space3),
-              DatePickerField(
+              DateTimePickerField(
                 key: const Key('split-date-field'),
-                label: 'Date',
+                label: 'Date & time',
                 value: date,
                 enabled: !state.isSaving,
-                lastDate: DateTime.now(),
                 onChanged: onDateChanged,
               ),
               const SizedBox(height: AffluenaSpacing.space3),

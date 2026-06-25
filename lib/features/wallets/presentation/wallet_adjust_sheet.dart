@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../shared/application/financial_refresh.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
+import '../../shared/presentation/widgets/date_time_picker_field.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
@@ -35,6 +36,7 @@ class _WalletAdjustSheet extends ConsumerStatefulWidget {
 class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
   late int _targetMinor = widget.wallet.balanceMinor;
   final _noteController = TextEditingController();
+  DateTime _dateTime = DateTime.now();
   bool _isSaving = false;
   String? _error;
 
@@ -92,6 +94,17 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
                 ),
               ),
             const SizedBox(height: AffluenaSpacing.space3),
+            DateTimePickerField(
+              key: const Key('wallet-adjust-datetime-field'),
+              label: 'Date & time',
+              value: _dateTime,
+              enabled: !_isSaving,
+              onChanged: (value) => setState(() {
+                _dateTime = value;
+                _error = null;
+              }),
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
             TextField(
               controller: _noteController,
               enabled: !_isSaving,
@@ -131,7 +144,7 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
       walletId: widget.wallet.id,
       // Adjustment uses a signed amount: positive raises, negative lowers.
       amountMinor: delta,
-      transactionAt: DateTime.now().toUtc().toIso8601String(),
+      transactionAt: _dateTime.toUtc().toIso8601String(),
       note: note.isEmpty ? 'Balance adjustment' : note,
     );
 

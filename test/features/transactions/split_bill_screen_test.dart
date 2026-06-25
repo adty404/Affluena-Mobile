@@ -49,8 +49,10 @@ void main() {
         find.byKey(const Key('split-total-amount-field')),
         '300000',
       );
-      // The date is now a tappable DatePickerField backed by the native picker.
-      // Open it and pick the 22nd of the current month (June 2026).
+      // The date is now a tappable DateTimePickerField: it opens the native date
+      // picker, then a time picker (so split bills can be backdated AND carry a
+      // time). Pick the 22nd of the current month (June 2026), then confirm the
+      // default time.
       final dateField = find.byKey(const Key('split-date-field'));
       await tester.scrollUntilVisible(
         dateField,
@@ -63,7 +65,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('22'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('OK')); // confirm the date picker
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK')); // confirm the time picker
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('split-note-field')),
@@ -131,7 +135,12 @@ void main() {
       expect(request.totalAmountMinor, 300000);
       expect(request.tagIds, [monthlyTag.id]);
       expect(request.note, 'Dinner at Sate Senayan');
-      expect(request.transactionAt, contains('2026-06-22'));
+      // transactionAt is the picked local date+time normalized to UTC; parse it
+      // back to local so the date assertion is timezone-stable.
+      final localPicked = DateTime.parse(request.transactionAt!).toLocal();
+      expect(localPicked.year, 2026);
+      expect(localPicked.month, 6);
+      expect(localPicked.day, 22);
       expect(request.splits, hasLength(2));
       expect(request.splits.first.counterpartyName, 'Rani');
       expect(request.splits.first.amountMinor, 120000);
