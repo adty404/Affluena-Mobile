@@ -83,12 +83,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     return DrillInScaffold(
       title: 'Insights',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           _InsightsSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -699,12 +694,7 @@ class _InsightsLoading extends StatelessWidget {
     return DrillInScaffold(
       title: 'Insights',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const AffluenaCard(child: _SummarySkeleton()),
           const SizedBox(height: AffluenaSpacing.space5),

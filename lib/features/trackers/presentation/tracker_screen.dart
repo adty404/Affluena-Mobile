@@ -56,12 +56,7 @@ class TrackerScreen extends ConsumerWidget {
         ),
       ],
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           _TrackerSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -568,12 +563,7 @@ class _TrackerLoading extends StatelessWidget {
     return DrillInScaffold(
       title: 'Trackers',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const AffluenaCard(
             child: Column(
@@ -620,12 +610,7 @@ class _TrackerError extends StatelessWidget {
     return DrillInScaffold(
       title: 'Trackers',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
             'We could not load your trackers.',

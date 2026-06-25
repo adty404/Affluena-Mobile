@@ -78,12 +78,7 @@ class _QuickEntryTemplatesScreenState
         ),
       ],
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           Text(
             'Manage reusable shortcuts without slowing down manual quick entry.',
@@ -364,12 +359,7 @@ class _TemplatesLoading extends StatelessWidget {
     return DrillInScaffold(
       title: 'Quick-entry templates',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           Text(
             'Manage reusable shortcuts without slowing down manual quick entry.',
@@ -444,12 +434,7 @@ class _TemplatesError extends StatelessWidget {
     return DrillInScaffold(
       title: 'Quick-entry templates',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
             'We could not load your quick-entry templates.',

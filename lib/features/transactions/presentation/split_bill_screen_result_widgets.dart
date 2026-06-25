@@ -139,12 +139,7 @@ class _SplitBillLoading extends StatelessWidget {
     return DrillInScaffold(
       title: 'Split bill',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaCard(
             backgroundColor: context.affluenaColors.forestSoft,
@@ -187,12 +182,7 @@ class _SplitBillLoadError extends StatelessWidget {
     return DrillInScaffold(
       title: 'Split bill',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
             'We could not load split bill data.',

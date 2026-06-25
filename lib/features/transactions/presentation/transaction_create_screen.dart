@@ -81,12 +81,7 @@ class _TransactionCreateScreenState
     return DrillInScaffold(
       title: 'New transaction',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const _Intro(),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -465,12 +460,7 @@ class _TransactionCreateLoading extends StatelessWidget {
     return DrillInScaffold(
       title: 'New transaction',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const SizedBox(height: AffluenaSpacing.space5),
           Wrap(
@@ -532,12 +522,7 @@ class _TransactionCreateLoadError extends StatelessWidget {
     return DrillInScaffold(
       title: 'New transaction',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
             'We could not load wallets and categories.',

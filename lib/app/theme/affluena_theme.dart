@@ -162,6 +162,16 @@ abstract final class AffluenaSpacing {
   static const double space8 = 32;
 }
 
+abstract final class AffluenaInsets {
+  /// Standard scroll-body padding used by full-screen ListViews.
+  static const EdgeInsets screen = EdgeInsets.fromLTRB(
+    AffluenaSpacing.space5,
+    AffluenaSpacing.space4,
+    AffluenaSpacing.space5,
+    AffluenaSpacing.space8,
+  );
+}
+
 abstract final class AffluenaRadii {
   static const double md = 14;
   static const double lg = 16;

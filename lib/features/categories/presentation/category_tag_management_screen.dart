@@ -97,12 +97,7 @@ class _CategoryTagManagementScreenState
         const SizedBox(width: AffluenaSpacing.space2),
       ],
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           TextField(
             key: const Key('category-tag-search-field'),
@@ -807,12 +802,7 @@ class _CategoryTagLoading extends StatelessWidget {
     return DrillInScaffold(
       title: 'Categories & Tags',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const AffluenaSkeleton(height: 56, radius: AffluenaRadii.control),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -861,12 +851,7 @@ class _CategoryTagError extends StatelessWidget {
     return DrillInScaffold(
       title: 'Categories & Tags',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
             'We could not load your categories and tags.',

@@ -32,12 +32,7 @@ class ParitySurfaceScreen extends StatelessWidget {
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           Text(title, style: textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space5),

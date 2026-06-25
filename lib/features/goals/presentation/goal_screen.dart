@@ -49,12 +49,7 @@ class GoalScreen extends ConsumerWidget {
         ),
       ],
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           _GoalSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -403,12 +398,7 @@ class _GoalLoading extends StatelessWidget {
     return DrillInScaffold(
       title: 'Goals',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const AffluenaCard(child: _SummarySkeleton()),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -484,12 +474,7 @@ class _GoalError extends StatelessWidget {
     return DrillInScaffold(
       title: 'Goals',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
             'We could not load goals.',
