@@ -51,12 +51,14 @@ class WalletAnalyticsMonth extends Notifier<DateTime> {
 
 /// Analytics for the wallet at the selected month. Isolated from the detail
 /// provider so it can load, fail, and retry independently.
-final walletAnalyticsProvider =
-    FutureProvider.family<WalletAnalytics, String>((ref, walletId) async {
-      final month = ref.watch(walletAnalyticsMonthProvider(walletId));
-      final repository = ref.watch(walletRepositoryProvider);
-      return repository.getAnalytics(
-        walletId,
-        month: AffluenaDateFormatter.monthKey(month),
-      );
-    });
+final walletAnalyticsProvider = FutureProvider.family<WalletAnalytics, String>((
+  ref,
+  walletId,
+) async {
+  final month = ref.watch(walletAnalyticsMonthProvider(walletId));
+  final repository = ref.watch(walletRepositoryProvider);
+  return repository.getAnalytics(
+    walletId,
+    month: AffluenaDateFormatter.monthKey(month),
+  );
+});

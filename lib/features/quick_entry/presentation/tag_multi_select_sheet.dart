@@ -1,7 +1,7 @@
-import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../core/formatters/tag_formatter.dart';
 import '../../tags/data/tag_models.dart';
 
 /// Opens a multi-select sheet for choosing zero or more tags. Returns the new

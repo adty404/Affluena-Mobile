@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
-import '../../shared/application/financial_refresh.dart';
 import '../data/recurring_models.dart';
 import '../data/recurring_repository.dart';
 

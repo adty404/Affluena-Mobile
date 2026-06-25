@@ -54,10 +54,7 @@ class RecurringScreen extends ConsumerWidget {
           _RecurringSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
-            AffluenaBanner.error(
-              state.actionError!,
-              onRetry: controller.load,
-            ),
+            AffluenaBanner.error(state.actionError!, onRetry: controller.load),
             const SizedBox(height: AffluenaSpacing.space4),
           ],
           SectionHeader(

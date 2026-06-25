@@ -232,8 +232,10 @@ class _PendingInviteCard extends ConsumerWidget {
                   child: FilledButton(
                     onPressed: isBusy
                         ? null
-                        : () =>
-                              controller.respond(self, WalletShareStatus.joined),
+                        : () => controller.respond(
+                            self,
+                            WalletShareStatus.joined,
+                          ),
                     child: Text(isBusy ? 'Working…' : 'Accept'),
                   ),
                 ),

@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
-import '../../shared/application/financial_refresh.dart';
 import '../data/tracker_models.dart';
 import '../data/tracker_repository.dart';
 
@@ -139,9 +139,8 @@ class TrackerController extends Notifier<TrackerState> {
 
   Future<void> deleteInstallment(Installment installment) async {
     await _save(
-      () => ref.read(trackerRepositoryProvider).deleteInstallment(
-        installment.id,
-      ),
+      () =>
+          ref.read(trackerRepositoryProvider).deleteInstallment(installment.id),
       errorMessage: 'Installment could not be deleted.',
     );
   }
@@ -177,9 +176,9 @@ class TrackerController extends Notifier<TrackerState> {
 
   Future<void> deleteSubscription(Subscription subscription) async {
     await _save(
-      () => ref.read(trackerRepositoryProvider).deleteSubscription(
-        subscription.id,
-      ),
+      () => ref
+          .read(trackerRepositoryProvider)
+          .deleteSubscription(subscription.id),
       errorMessage: 'Subscription could not be deleted.',
     );
   }

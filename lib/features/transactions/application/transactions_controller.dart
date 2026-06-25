@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../tags/data/tag_models.dart';
 import '../../tags/data/tag_repository.dart';
-import '../../shared/application/financial_refresh.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
 import '../data/transaction_models.dart';
@@ -188,11 +188,7 @@ class TransactionsController extends Notifier<TransactionsState> {
   }
 
   void applyFilters(TransactionFilters filters) {
-    state = state.copyWith(
-      filters: filters,
-      transactions: const [],
-      total: 0,
-    );
+    state = state.copyWith(filters: filters, transactions: const [], total: 0);
     unawaited(load(reset: true));
   }
 
@@ -307,14 +303,16 @@ class TransactionsState {
   List<Transaction> get visibleTransactions {
     final query = searchQuery.trim().toLowerCase();
     if (query.isEmpty) return transactions;
-    return transactions.where((transaction) {
-      final note = transaction.note.toLowerCase();
-      final wallet = walletName(transaction.walletId).toLowerCase();
-      final category = categoryName(transaction).toLowerCase();
-      return note.contains(query) ||
-          wallet.contains(query) ||
-          category.contains(query);
-    }).toList(growable: false);
+    return transactions
+        .where((transaction) {
+          final note = transaction.note.toLowerCase();
+          final wallet = walletName(transaction.walletId).toLowerCase();
+          final category = categoryName(transaction).toLowerCase();
+          return note.contains(query) ||
+              wallet.contains(query) ||
+              category.contains(query);
+        })
+        .toList(growable: false);
   }
 
   String walletName(String id) => walletNames[id] ?? 'Unknown wallet';

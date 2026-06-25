@@ -61,10 +61,7 @@ class TrackerScreen extends ConsumerWidget {
           _TrackerSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
           if (state.actionError != null) ...[
-            AffluenaBanner.error(
-              state.actionError!,
-              onRetry: controller.load,
-            ),
+            AffluenaBanner.error(state.actionError!, onRetry: controller.load),
             const SizedBox(height: AffluenaSpacing.space4),
           ],
           _TrackerTabs(selected: state.tab, onChanged: controller.setTab),

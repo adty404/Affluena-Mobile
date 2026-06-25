@@ -17,10 +17,23 @@ class AffluenaBanner extends StatelessWidget {
   });
 
   const AffluenaBanner.error(String message, {VoidCallback? onRetry, Key? key})
-    : this(message: message, tone: AffluenaBannerTone.error, onRetry: onRetry, key: key);
+    : this(
+        message: message,
+        tone: AffluenaBannerTone.error,
+        onRetry: onRetry,
+        key: key,
+      );
 
-  const AffluenaBanner.success(String message, {VoidCallback? onDismiss, Key? key})
-    : this(message: message, tone: AffluenaBannerTone.success, onDismiss: onDismiss, key: key);
+  const AffluenaBanner.success(
+    String message, {
+    VoidCallback? onDismiss,
+    Key? key,
+  }) : this(
+         message: message,
+         tone: AffluenaBannerTone.success,
+         onDismiss: onDismiss,
+         key: key,
+       );
 
   final String message;
   final AffluenaBannerTone tone;

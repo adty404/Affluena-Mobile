@@ -18,7 +18,9 @@ class OnboardingController extends Notifier<bool?> {
   }
 
   Future<void> _restore() async {
-    state = await ref.read(onboardingPreferencesRepositoryProvider).isCompleted();
+    state = await ref
+        .read(onboardingPreferencesRepositoryProvider)
+        .isCompleted();
   }
 
   /// Marks onboarding complete and persists it.

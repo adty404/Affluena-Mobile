@@ -150,7 +150,9 @@ Widget dashboardTestApp({
       categoryRepositoryProvider.overrideWithValue(categoryRepository),
       // This suite targets the dashboard, not the first-run onboarding gate, so
       // boot straight past it into the authenticated flow.
-      onboardingControllerProvider.overrideWith(CompletedOnboardingController.new),
+      onboardingControllerProvider.overrideWith(
+        CompletedOnboardingController.new,
+      ),
     ],
     child: const AffluenaApp(),
   );

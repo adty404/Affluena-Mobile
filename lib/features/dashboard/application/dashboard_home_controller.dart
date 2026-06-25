@@ -133,8 +133,9 @@ final dashboardExpenseDistributionProvider =
     });
 
 /// End-of-month spending projection used to surface an over-budget warning.
-final dashboardForecastProvider =
-    FutureProvider.autoDispose<DashboardForecast>((ref) async {
-      final month = AffluenaDateFormatter.monthKey(DateTime.now());
-      return ref.read(dashboardRepositoryProvider).forecast(month: month);
-    });
+final dashboardForecastProvider = FutureProvider.autoDispose<DashboardForecast>(
+  (ref) async {
+    final month = AffluenaDateFormatter.monthKey(DateTime.now());
+    return ref.read(dashboardRepositoryProvider).forecast(month: month);
+  },
+);

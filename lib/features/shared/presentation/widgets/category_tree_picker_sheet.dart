@@ -162,8 +162,7 @@ class _CategoryTreePickerSheetState extends State<_CategoryTreePickerSheet> {
                         return _CategoryTreeTile(
                           node: node,
                           selected: node.entry.id == widget.selectedId,
-                          onTap: () =>
-                              Navigator.of(context).pop(node.entry.id),
+                          onTap: () => Navigator.of(context).pop(node.entry.id),
                           onToggle: node.hasChildren
                               ? () => setState(() {
                                   if (_collapsed.contains(node.entry.id)) {

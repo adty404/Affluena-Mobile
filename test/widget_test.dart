@@ -1,7 +1,6 @@
+import 'package:affluena_mobile/app/theme/affluena_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:affluena_mobile/app/theme/affluena_theme.dart';
 
 import 'helpers/auth_test_helpers.dart';
 

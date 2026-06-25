@@ -17,6 +17,7 @@ import 'package:shared_preferences_platform_interface/shared_preferences_async_p
 /// providers resolve to their defaults instead of erroring.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
-  SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty();
+  SharedPreferencesAsyncPlatform.instance =
+      InMemorySharedPreferencesAsync.empty();
   await testMain();
 }

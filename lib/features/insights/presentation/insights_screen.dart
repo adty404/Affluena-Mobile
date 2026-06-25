@@ -492,7 +492,8 @@ class _ExportJobCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return InkWell(
       borderRadius: BorderRadius.circular(AffluenaRadii.card),
-      onTap: () => _openExportJobDetail(context, job: job, controller: controller),
+      onTap: () =>
+          _openExportJobDetail(context, job: job, controller: controller),
       child: AffluenaCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -702,10 +703,26 @@ class _InsightsLoading extends StatelessWidget {
             spacing: AffluenaSpacing.space2,
             runSpacing: AffluenaSpacing.space2,
             children: [
-              AffluenaSkeleton(width: 80, height: 32, radius: AffluenaRadii.pill),
-              AffluenaSkeleton(width: 80, height: 32, radius: AffluenaRadii.pill),
-              AffluenaSkeleton(width: 72, height: 32, radius: AffluenaRadii.pill),
-              AffluenaSkeleton(width: 72, height: 32, radius: AffluenaRadii.pill),
+              AffluenaSkeleton(
+                width: 80,
+                height: 32,
+                radius: AffluenaRadii.pill,
+              ),
+              AffluenaSkeleton(
+                width: 80,
+                height: 32,
+                radius: AffluenaRadii.pill,
+              ),
+              AffluenaSkeleton(
+                width: 72,
+                height: 32,
+                radius: AffluenaRadii.pill,
+              ),
+              AffluenaSkeleton(
+                width: 72,
+                height: 32,
+                radius: AffluenaRadii.pill,
+              ),
             ],
           ),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -793,9 +810,7 @@ class _InsightsError extends StatelessWidget {
         padding: const EdgeInsets.all(AffluenaSpacing.space5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AffluenaBanner.error(message, onRetry: onRetry),
-          ],
+          children: [AffluenaBanner.error(message, onRetry: onRetry)],
         ),
       ),
     );
@@ -837,8 +852,7 @@ String _formatMetricValue(ReportMetric metric) {
   return switch (metric.unit) {
     MetricUnit.percent => '${metric.valueMinor}%',
     MetricUnit.count => metric.valueMinor.toString(),
-    MetricUnit.text =>
-      metric.helper.isEmpty ? '—' : metric.helper,
+    MetricUnit.text => metric.helper.isEmpty ? '—' : metric.helper,
     MetricUnit.money => MoneyFormatter.idr(metric.valueMinor),
   };
 }
@@ -876,10 +890,7 @@ String _humanize(String value) {
       .join(' ');
 }
 
-Future<void> _openActivityDetail(
-  BuildContext context,
-  ActivityItem activity,
-) {
+Future<void> _openActivityDetail(BuildContext context, ActivityItem activity) {
   return _showDetailSheet(
     context,
     title: activity.description,
@@ -922,10 +933,7 @@ Future<void> _openAlertDetail(
     rows: [
       _DetailRow('Type', _humanize(detail.type)),
       _DetailRow('Module', _humanize(detail.module)),
-      _DetailRow(
-        'Raised',
-        AffluenaDateFormatter.shortDate(detail.createdAt),
-      ),
+      _DetailRow('Raised', AffluenaDateFormatter.shortDate(detail.createdAt)),
     ],
   );
 }
@@ -1019,13 +1027,14 @@ class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
                       style: textTheme.titleLarge,
                     ),
                   ),
-                  StatusBadge.forStatus(job.status.name, label: job.status.label),
+                  StatusBadge.forStatus(
+                    job.status.name,
+                    label: job.status.label,
+                  ),
                 ],
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              _SheetDetailRow(
-                row: _DetailRow('Rows', '${job.rowCount}'),
-              ),
+              _SheetDetailRow(row: _DetailRow('Rows', '${job.rowCount}')),
               const SizedBox(height: AffluenaSpacing.space3),
               _SheetDetailRow(
                 row: _DetailRow(

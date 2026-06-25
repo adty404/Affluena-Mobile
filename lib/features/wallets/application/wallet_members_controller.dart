@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_error.dart';
 import '../data/wallet_models.dart';
 import '../data/wallet_repository.dart';
-import 'wallets_controller.dart';
 import 'wallet_detail_controller.dart';
+import 'wallets_controller.dart';
 
 /// Drives accept/reject responses to a wallet invitation. Tracks which member
 /// row is in-flight so each row can show its own loading state, and surfaces a
@@ -33,7 +33,9 @@ class WalletMembersActionState {
     bool clearError = false,
   }) {
     return WalletMembersActionState(
-      pendingUserId: clearPending ? null : (pendingUserId ?? this.pendingUserId),
+      pendingUserId: clearPending
+          ? null
+          : (pendingUserId ?? this.pendingUserId),
       error: clearError ? null : (error ?? this.error),
     );
   }
@@ -56,10 +58,7 @@ class WalletMembersController extends Notifier<WalletMembersActionState> {
 
   /// Responds to an invitation with [status] (joined or rejected). Returns true
   /// on success. Errors are stored on state rather than thrown.
-  Future<bool> respond(
-    WalletMember member,
-    WalletShareStatus status,
-  ) async {
+  Future<bool> respond(WalletMember member, WalletShareStatus status) async {
     if (state.pendingUserId != null) return false;
 
     state = WalletMembersActionState(pendingUserId: member.userId);

@@ -169,10 +169,8 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
       isScrollControlled: true,
       showDragHandle: true,
       useSafeArea: true,
-      builder: (sheetContext) => _SourceWalletPicker(
-        wallets: sources,
-        selectedId: _sourceWalletId,
-      ),
+      builder: (sheetContext) =>
+          _SourceWalletPicker(wallets: sources, selectedId: _sourceWalletId),
     );
     if (picked != null) {
       setState(() {

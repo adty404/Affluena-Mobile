@@ -40,10 +40,7 @@ class WalletMembersSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (action.error != null) ...[
-            AffluenaBanner.error(
-              action.error!,
-              onRetry: controller.clearError,
-            ),
+            AffluenaBanner.error(action.error!, onRetry: controller.clearError),
             const SizedBox(height: AffluenaSpacing.space3),
           ],
           for (final (index, member) in members.indexed) ...[

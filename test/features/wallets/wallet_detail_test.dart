@@ -182,9 +182,8 @@ Widget walletRouteTestApp(TestWalletRepository repository, String location) {
           // pop returns to the wallets list.
           GoRoute(
             path: ':walletId',
-            builder: (context, state) => WalletDetailScreen(
-              walletId: state.pathParameters['walletId']!,
-            ),
+            builder: (context, state) =>
+                WalletDetailScreen(walletId: state.pathParameters['walletId']!),
           ),
         ],
       ),

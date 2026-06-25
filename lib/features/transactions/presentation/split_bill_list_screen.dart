@@ -17,9 +17,9 @@ import 'split_bill_screen.dart';
 /// Lists the user's split bills (status: null = all, 'ongoing', 'settled').
 final splitBillListProvider = FutureProvider.autoDispose
     .family<SplitBillListResponse, String?>((ref, status) {
-      return ref.read(transactionRepositoryProvider).listSplitBills(
-        status: status,
-      );
+      return ref
+          .read(transactionRepositoryProvider)
+          .listSplitBills(status: status);
     });
 
 class SplitBillListScreen extends ConsumerStatefulWidget {
@@ -90,10 +90,7 @@ class _SplitBillListScreenState extends ConsumerState<SplitBillListScreen> {
             data: (response) {
               final bills = response.splitBills;
               if (bills.isEmpty) {
-                return _SplitListEmpty(
-                  status: _status,
-                  onCreate: _openCreate,
-                );
+                return _SplitListEmpty(status: _status, onCreate: _openCreate);
               }
               return Column(
                 children: [
@@ -260,7 +257,9 @@ class _SplitBillDetailSheet extends ConsumerWidget {
 
 final _splitBillDetailProvider = FutureProvider.autoDispose
     .family<SplitBillDetail, String>((ref, transactionId) {
-      return ref.read(transactionRepositoryProvider).getSplitBill(transactionId);
+      return ref
+          .read(transactionRepositoryProvider)
+          .getSplitBill(transactionId);
     });
 
 class _ParticipantTile extends StatelessWidget {

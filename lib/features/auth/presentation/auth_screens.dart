@@ -636,10 +636,7 @@ class _AuthMessage extends StatelessWidget {
       case AuthMessageTone.success:
         return AffluenaBanner.success(message);
       case AuthMessageTone.info:
-        return AffluenaBanner(
-          message: message,
-          tone: AffluenaBannerTone.info,
-        );
+        return AffluenaBanner(message: message, tone: AffluenaBannerTone.info);
     }
   }
 }
