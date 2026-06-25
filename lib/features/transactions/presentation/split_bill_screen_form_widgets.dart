@@ -35,7 +35,7 @@ class _SplitTagChips extends StatelessWidget {
               for (final tag in tags)
                 ChoiceChip(
                   key: Key('split-tag-chip-${tag.id}'),
-                  label: Text(_tagLabel(tag.name)),
+                  label: Text(tagLabel(tag.name)),
                   selected: selectedTagId == tag.id,
                   onSelected: enabled ? (_) => onChanged(tag.id) : null,
                 ),

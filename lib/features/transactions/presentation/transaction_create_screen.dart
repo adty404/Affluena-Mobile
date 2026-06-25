@@ -1,3 +1,4 @@
+import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -241,7 +242,8 @@ class _TransactionCreateScreenState
   }
 
   void _clearErrors() {
-    if (_validationError == null && ref.read(transactionCreateControllerProvider).actionError == null) {
+    if (_validationError == null &&
+        ref.read(transactionCreateControllerProvider).actionError == null) {
       return;
     }
     setState(() => _validationError = null);
@@ -410,9 +412,7 @@ class _TypeChips extends StatelessWidget {
             key: Key('transaction-create-type-${type.apiValue}'),
             label: Text(_typeLabel(type)),
             selected: selected == type,
-            avatar: selected == type
-                ? const Icon(Icons.check, size: 16)
-                : null,
+            avatar: selected == type ? const Icon(Icons.check, size: 16) : null,
             onSelected: enabled ? (_) => onChanged(type) : null,
           ),
       ],
@@ -448,7 +448,7 @@ class _TagChips extends StatelessWidget {
         for (final tag in tags)
           ChoiceChip(
             key: Key('transaction-create-tag-${tag.id}'),
-            label: Text(_tagLabel(tag.name)),
+            label: Text(tagLabel(tag.name)),
             selected: selectedTagId == tag.id,
             onSelected: enabled ? (_) => onChanged(tag.id) : null,
           ),
@@ -477,9 +477,21 @@ class _TransactionCreateLoading extends StatelessWidget {
             spacing: AffluenaSpacing.space2,
             runSpacing: AffluenaSpacing.space2,
             children: const [
-              AffluenaSkeleton(width: 84, height: 32, radius: AffluenaRadii.pill),
-              AffluenaSkeleton(width: 92, height: 32, radius: AffluenaRadii.pill),
-              AffluenaSkeleton(width: 96, height: 32, radius: AffluenaRadii.pill),
+              AffluenaSkeleton(
+                width: 84,
+                height: 32,
+                radius: AffluenaRadii.pill,
+              ),
+              AffluenaSkeleton(
+                width: 92,
+                height: 32,
+                radius: AffluenaRadii.pill,
+              ),
+              AffluenaSkeleton(
+                width: 96,
+                height: 32,
+                radius: AffluenaRadii.pill,
+              ),
               AffluenaSkeleton(
                 width: 110,
                 height: 32,
@@ -544,9 +556,4 @@ String _typeLabel(TransactionType type) {
     TransactionType.transfer => 'Transfer',
     TransactionType.adjustment => 'Adjustment',
   };
-}
-
-String _tagLabel(String name) {
-  final normalized = name.trim().replaceFirst(RegExp(r'^#+'), '');
-  return normalized.isEmpty ? '#' : '#$normalized';
 }

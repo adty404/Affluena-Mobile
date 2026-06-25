@@ -1,3 +1,4 @@
+import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -104,158 +105,154 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final isSearching = state.searchQuery.trim().isNotEmpty;
 
     return [
-          TextField(
-            key: const Key('transactions-search-field'),
-            controller: _searchController,
-            autocorrect: false,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              hintText: 'Search note, wallet, or category',
-              suffixIcon: isSearching
-                  ? IconButton(
-                      key: const Key('transactions-search-clear'),
-                      tooltip: 'Clear search',
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        _searchController.clear();
-                        controller.setSearchQuery('');
-                      },
-                    )
-                  : null,
+      TextField(
+        key: const Key('transactions-search-field'),
+        controller: _searchController,
+        autocorrect: false,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          prefixIcon: const Icon(Icons.search),
+          hintText: 'Search note, wallet, or category',
+          suffixIcon: isSearching
+              ? IconButton(
+                  key: const Key('transactions-search-clear'),
+                  tooltip: 'Clear search',
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    _searchController.clear();
+                    controller.setSearchQuery('');
+                  },
+                )
+              : null,
+        ),
+        onChanged: controller.setSearchQuery,
+      ),
+      const SizedBox(height: AffluenaSpacing.space3),
+      Row(
+        children: [
+          Expanded(
+            child: FilledButton.icon(
+              key: const Key('transaction-create-entry-button'),
+              onPressed: () => context.push(TransactionCreateScreen.path),
+              icon: const Icon(Icons.add),
+              label: const Text('New transaction'),
             ),
-            onChanged: controller.setSearchQuery,
           ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          Row(
+          const SizedBox(width: AffluenaSpacing.space3),
+          Expanded(
+            child: FilledButton.tonalIcon(
+              key: const Key('split-bill-entry-button'),
+              onPressed: () => context.push(SplitBillListScreen.path),
+              icon: const Icon(Icons.call_split_outlined),
+              label: const Text('Split'),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: AffluenaSpacing.space3),
+      Row(
+        children: [
+          Expanded(
+            child: Wrap(
+              spacing: AffluenaSpacing.space2,
+              runSpacing: AffluenaSpacing.space2,
+              children: [
+                _TypeFilterChip(
+                  label: 'All',
+                  selected: state.typeFilter == null,
+                  onSelected: () => controller.setTypeFilter(null),
+                ),
+                _TypeFilterChip(
+                  label: 'Income',
+                  selected: state.typeFilter == TransactionType.income,
+                  onSelected: () =>
+                      controller.setTypeFilter(TransactionType.income),
+                ),
+                _TypeFilterChip(
+                  label: 'Expense',
+                  selected: state.typeFilter == TransactionType.expense,
+                  onSelected: () =>
+                      controller.setTypeFilter(TransactionType.expense),
+                ),
+                _TypeFilterChip(
+                  label: 'Transfer',
+                  selected: state.typeFilter == TransactionType.transfer,
+                  onSelected: () =>
+                      controller.setTypeFilter(TransactionType.transfer),
+                ),
+                _TypeFilterChip(
+                  label: 'Adjustment',
+                  selected: state.typeFilter == TransactionType.adjustment,
+                  onSelected: () =>
+                      controller.setTypeFilter(TransactionType.adjustment),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AffluenaSpacing.space2),
+          _FilterButton(
+            activeCount: state.filters.activeCount,
+            onTap: () => _openFilters(context, state, controller),
+          ),
+        ],
+      ),
+      if (state.filters.hasActiveFilters) ...[
+        const SizedBox(height: AffluenaSpacing.space3),
+        _ActiveFilterSummary(state: state, onClear: controller.clearFilters),
+      ],
+      const SizedBox(height: AffluenaSpacing.space5),
+      if (state.actionError != null) ...[
+        AffluenaBanner.error(
+          state.actionError!,
+          onRetry: () => controller.load(reset: true),
+        ),
+        const SizedBox(height: AffluenaSpacing.space3),
+      ],
+      if (state.transactions.isEmpty)
+        _EmptyTransactionsState(
+          hasFilters: state.filters.hasActiveFilters,
+          onClearFilters: controller.clearFilters,
+          onCreate: () => context.push(TransactionCreateScreen.path),
+        )
+      else if (visible.isEmpty)
+        _NoSearchMatchesState(
+          query: state.searchQuery.trim(),
+          onClear: () {
+            _searchController.clear();
+            controller.setSearchQuery('');
+          },
+        )
+      else
+        AffluenaCard(
+          child: Column(
             children: [
-              Expanded(
-                child: FilledButton.icon(
-                  key: const Key('transaction-create-entry-button'),
-                  onPressed: () => context.push(TransactionCreateScreen.path),
-                  icon: const Icon(Icons.add),
-                  label: const Text('New transaction'),
+              for (final entry in visible.indexed) ...[
+                InkWell(
+                  onTap: () =>
+                      showTransactionDetail(context, ref, state, entry.$2),
+                  child: TransactionTile(
+                    title: transactionTitle(state, entry.$2),
+                    metadata: transactionMetadata(state, entry.$2),
+                    amount: transactionAmount(entry.$2),
+                    icon: transactionIcon(state, entry.$2),
+                    isIncome: entry.$2.type == TransactionType.income,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AffluenaSpacing.space3),
-              Expanded(
-                child: FilledButton.tonalIcon(
-                  key: const Key('split-bill-entry-button'),
-                  onPressed: () => context.push(SplitBillListScreen.path),
-                  icon: const Icon(Icons.call_split_outlined),
-                  label: const Text('Split'),
-                ),
-              ),
+                if (entry.$1 < visible.length - 1) const Divider(height: 1),
+              ],
             ],
           ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          Row(
-            children: [
-              Expanded(
-                child: Wrap(
-                  spacing: AffluenaSpacing.space2,
-                  runSpacing: AffluenaSpacing.space2,
-                  children: [
-                    _TypeFilterChip(
-                      label: 'All',
-                      selected: state.typeFilter == null,
-                      onSelected: () => controller.setTypeFilter(null),
-                    ),
-                    _TypeFilterChip(
-                      label: 'Income',
-                      selected: state.typeFilter == TransactionType.income,
-                      onSelected: () =>
-                          controller.setTypeFilter(TransactionType.income),
-                    ),
-                    _TypeFilterChip(
-                      label: 'Expense',
-                      selected: state.typeFilter == TransactionType.expense,
-                      onSelected: () =>
-                          controller.setTypeFilter(TransactionType.expense),
-                    ),
-                    _TypeFilterChip(
-                      label: 'Transfer',
-                      selected: state.typeFilter == TransactionType.transfer,
-                      onSelected: () =>
-                          controller.setTypeFilter(TransactionType.transfer),
-                    ),
-                    _TypeFilterChip(
-                      label: 'Adjustment',
-                      selected: state.typeFilter == TransactionType.adjustment,
-                      onSelected: () =>
-                          controller.setTypeFilter(TransactionType.adjustment),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AffluenaSpacing.space2),
-              _FilterButton(
-                activeCount: state.filters.activeCount,
-                onTap: () => _openFilters(context, state, controller),
-              ),
-            ],
-          ),
-          if (state.filters.hasActiveFilters) ...[
-            const SizedBox(height: AffluenaSpacing.space3),
-            _ActiveFilterSummary(
-              state: state,
-              onClear: controller.clearFilters,
-            ),
-          ],
-          const SizedBox(height: AffluenaSpacing.space5),
-          if (state.actionError != null) ...[
-            AffluenaBanner.error(
-              state.actionError!,
-              onRetry: () => controller.load(reset: true),
-            ),
-            const SizedBox(height: AffluenaSpacing.space3),
-          ],
-          if (state.transactions.isEmpty)
-            _EmptyTransactionsState(
-              hasFilters: state.filters.hasActiveFilters,
-              onClearFilters: controller.clearFilters,
-              onCreate: () => context.push(TransactionCreateScreen.path),
-            )
-          else if (visible.isEmpty)
-            _NoSearchMatchesState(
-              query: state.searchQuery.trim(),
-              onClear: () {
-                _searchController.clear();
-                controller.setSearchQuery('');
-              },
-            )
-          else
-            AffluenaCard(
-              child: Column(
-                children: [
-                  for (final entry in visible.indexed) ...[
-                    InkWell(
-                      onTap: () =>
-                          showTransactionDetail(context, ref, state, entry.$2),
-                      child: TransactionTile(
-                        title: transactionTitle(state, entry.$2),
-                        metadata: transactionMetadata(state, entry.$2),
-                        amount: transactionAmount(entry.$2),
-                        icon: transactionIcon(state, entry.$2),
-                        isIncome: entry.$2.type == TransactionType.income,
-                      ),
-                    ),
-                    if (entry.$1 < visible.length - 1)
-                      const Divider(height: 1),
-                  ],
-                ],
-              ),
-            ),
-          if (state.hasMore && !isSearching) ...[
-            const SizedBox(height: AffluenaSpacing.space4),
-            OutlinedButton(
-              onPressed: state.isLoadingMore
-                  ? null
-                  : () => controller.load(reset: false),
-              child: Text(state.isLoadingMore ? 'Loading...' : 'Load more'),
-            ),
-          ],
-          const SizedBox(height: AffluenaSpacing.space6),
+        ),
+      if (state.hasMore && !isSearching) ...[
+        const SizedBox(height: AffluenaSpacing.space4),
+        OutlinedButton(
+          onPressed: state.isLoadingMore
+              ? null
+              : () => controller.load(reset: false),
+          child: Text(state.isLoadingMore ? 'Loading...' : 'Load more'),
+        ),
+      ],
+      const SizedBox(height: AffluenaSpacing.space6),
     ];
   }
 
@@ -267,9 +264,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       return const [_TransactionsLoadingBody()];
     }
     if (state.loadError != null && state.activities.isEmpty) {
-      return [
-        AffluenaBanner.error(state.loadError!, onRetry: controller.load),
-      ];
+      return [AffluenaBanner.error(state.loadError!, onRetry: controller.load)];
     }
     if (state.activities.isEmpty) {
       return const [
@@ -285,9 +280,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     return [
       Text(
         '${state.activityTotal} recorded ${state.activityTotal == 1 ? 'action' : 'actions'}',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: context.affluenaColors.inkMuted,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: context.affluenaColors.inkMuted),
       ),
       const SizedBox(height: AffluenaSpacing.space3),
       AffluenaCard(
@@ -504,7 +499,7 @@ class _ActiveFilterSummary extends StatelessWidget {
       if (filters.walletId != null) state.walletName(filters.walletId!),
       if (filters.categoryId != null)
         (state.categoryNames[filters.categoryId] ?? 'Category'),
-      if (filters.tagId != null) _tagLabel(state.tagName(filters.tagId!)),
+      if (filters.tagId != null) tagLabel(state.tagName(filters.tagId!)),
       if (filters.from != null) 'From ${state.filterDateLabel(filters.from!)}',
       if (filters.to != null) 'To ${state.filterDateLabel(filters.to!)}',
     ];
@@ -547,7 +542,6 @@ class _ActiveFilterSummary extends StatelessWidget {
     );
   }
 }
-
 
 class _EmptyTransactionsState extends StatelessWidget {
   const _EmptyTransactionsState({
@@ -640,9 +634,4 @@ class _NoSearchMatchesState extends StatelessWidget {
       ),
     );
   }
-}
-
-String _tagLabel(String name) {
-  final normalized = name.trim().replaceFirst(RegExp(r'^#+'), '');
-  return normalized.isEmpty ? '#' : '#$normalized';
 }

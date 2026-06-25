@@ -1,3 +1,4 @@
+import '../../../core/formatters/tag_formatter.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -227,7 +228,7 @@ class QuickEntryTemplatesState {
     if (ids.isEmpty) return 'No tags';
     final names = [
       for (final id in ids)
-        if (tagById(id) case final tag?) _tagLabel(tag.name),
+        if (tagById(id) case final tag?) tagLabel(tag.name),
     ];
     return names.isEmpty ? 'Unknown tags' : names.join(', ');
   }
@@ -295,11 +296,6 @@ T? _findById<T>(Iterable<T> items, String? id) {
     if (itemId == id) return item;
   }
   return null;
-}
-
-String _tagLabel(String name) {
-  final normalized = name.trim().replaceFirst(RegExp(r'^#+'), '');
-  return normalized.isEmpty ? '#' : '#$normalized';
 }
 
 const _unchanged = Object();

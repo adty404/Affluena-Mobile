@@ -1,3 +1,4 @@
+import 'wallet_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -88,13 +89,12 @@ class _WalletsContent extends ConsumerWidget {
               physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               itemCount: wallets.length,
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: AffluenaSpacing.space3,
-                    crossAxisSpacing: AffluenaSpacing.space3,
-                    mainAxisExtent: 188,
-                  ),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: AffluenaSpacing.space3,
+                crossAxisSpacing: AffluenaSpacing.space3,
+                mainAxisExtent: 188,
+              ),
               itemBuilder: (context, index) {
                 final wallet = wallets[index];
                 return _WalletCard(
@@ -143,7 +143,7 @@ class _WalletCard extends StatelessWidget {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(AffluenaSpacing.space3),
-                    child: Icon(_walletIcon(wallet.type), color: colors.forest),
+                    child: Icon(walletIcon(wallet.type), color: colors.forest),
                   ),
                 ),
                 const Spacer(),
@@ -172,7 +172,7 @@ class _WalletCard extends StatelessWidget {
             ),
             const SizedBox(height: AffluenaSpacing.space1),
             Text(
-              '${_walletTypeLabel(wallet.type)} · ${_walletDescription(wallet)}',
+              '${walletTypeLabel(wallet.type)} · ${_walletDescription(wallet)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: textTheme.bodySmall,
@@ -363,7 +363,7 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
                 for (final type in _editableWalletTypes)
                   DropdownMenuItem(
                     value: type,
-                    child: Text(_walletTypeLabel(type)),
+                    child: Text(walletTypeLabel(type)),
                   ),
               ],
               onChanged: _isSaving
@@ -486,26 +486,6 @@ String _walletDescription(Wallet wallet) {
   if (wallet.description.isNotEmpty) return wallet.description;
   if (_isShared(wallet)) return 'Shared wallet';
   return 'Private wallet';
-}
-
-String _walletTypeLabel(WalletType type) {
-  return switch (type) {
-    WalletType.cash => 'Cash',
-    WalletType.bank => 'Bank',
-    WalletType.eWallet => 'E-wallet',
-    WalletType.investment => 'Investment',
-    WalletType.goal => 'Goal',
-  };
-}
-
-IconData _walletIcon(WalletType type) {
-  return switch (type) {
-    WalletType.cash => Icons.payments_outlined,
-    WalletType.bank => Icons.account_balance_outlined,
-    WalletType.eWallet => Icons.phone_iphone_outlined,
-    WalletType.investment => Icons.trending_up,
-    WalletType.goal => Icons.flag_outlined,
-  };
 }
 
 String _walletKey(Wallet wallet) {
