@@ -20,7 +20,7 @@ abstract interface class AuthRepository {
 
   Future<AuthUser> updateAccount(UpdateAccountRequest request);
 
-  Future<void> changePassword(ChangePasswordRequest request);
+  Future<AuthSession> changePassword(ChangePasswordRequest request);
 
   Future<List<AuthSessionRecord>> listSessions();
 
@@ -89,8 +89,14 @@ class DioAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> changePassword(ChangePasswordRequest request) async {
-    await _dio.put<void>('/auth/password', data: request.toJson());
+  Future<AuthSession> changePassword(ChangePasswordRequest request) async {
+    // Returns a fresh {user, tokens} pair: the server revokes all other
+    // sessions on a password change, so the caller must persist the new tokens.
+    final response = await _dio.put<Map<String, Object?>>(
+      '/auth/password',
+      data: request.toJson(),
+    );
+    return AuthSession.fromJson(_responseMap(response.data));
   }
 
   @override

@@ -112,6 +112,43 @@ void main() {
     expect(find.text('current password is incorrect'), findsOneWidget);
   });
 
+  testWidgets('password change persists the refreshed token pair', (
+    tester,
+  ) async {
+    final authRepository = FakeAuthRepository();
+    final tokenStore = authenticatedTokenStore();
+
+    await pumpAuthTestApp(
+      tester,
+      tokenStore: tokenStore,
+      authRepository: authRepository,
+    );
+    await _openSettings(tester);
+
+    await tester.tap(find.byKey(const Key('settings-password-row')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('settings-current-password-field')),
+      'password123',
+    );
+    await tester.enterText(
+      find.byKey(const Key('settings-new-password-field')),
+      'newpassword123',
+    );
+    await tester.enterText(
+      find.byKey(const Key('settings-confirm-password-field')),
+      'newpassword123',
+    );
+    await tester.tap(find.byKey(const Key('settings-password-save-button')));
+    await tester.pumpAndSettle();
+
+    expect(authRepository.changePasswordRequests, hasLength(1));
+    // The server revokes all other sessions on a password change and returns a
+    // fresh pair; the device must persist it to stay signed in.
+    expect(await tokenStore.readAccessToken(), 'fresh-access-token');
+    expect(await tokenStore.readRefreshToken(), 'fresh-refresh-token');
+  });
+
   testWidgets('revokes a session only after confirmation', (tester) async {
     final authRepository = FakeAuthRepository();
 

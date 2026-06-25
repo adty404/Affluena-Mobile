@@ -226,6 +226,7 @@ class FakeAuthRepository implements AuthRepository {
     List<AuthSessionRecord> sessions = const [seededAuthSession],
     this.updateAccountError,
     this.changePasswordError,
+    this.changePasswordSession = demoSession,
     this.listSessionsError,
     this.revokeSessionError,
   }) {
@@ -238,6 +239,7 @@ class FakeAuthRepository implements AuthRepository {
   Object? loginError;
   Object? updateAccountError;
   Object? changePasswordError;
+  AuthSession changePasswordSession;
   Object? listSessionsError;
   Object? revokeSessionError;
   final List<AuthSessionRecord> sessions = [];
@@ -296,9 +298,10 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> changePassword(ChangePasswordRequest request) async {
+  Future<AuthSession> changePassword(ChangePasswordRequest request) async {
     changePasswordRequests.add(request);
     if (changePasswordError != null) throw changePasswordError!;
+    return changePasswordSession;
   }
 
   @override
