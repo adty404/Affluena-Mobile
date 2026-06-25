@@ -218,26 +218,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           },
         )
       else
-        AffluenaCard(
-          child: Column(
-            children: [
-              for (final entry in visible.indexed) ...[
-                InkWell(
-                  onTap: () =>
-                      showTransactionDetail(context, ref, state, entry.$2),
-                  child: TransactionTile(
-                    title: transactionTitle(state, entry.$2),
-                    metadata: transactionMetadata(state, entry.$2),
-                    amount: transactionAmount(entry.$2),
-                    icon: transactionIcon(state, entry.$2),
-                    isIncome: entry.$2.type == TransactionType.income,
-                  ),
-                ),
-                if (entry.$1 < visible.length - 1) const Divider(height: 1),
-              ],
-            ],
-          ),
-        ),
+        ..._dayGroupedSections(context, state, visible),
       if (state.hasMore && !isSearching) ...[
         const SizedBox(height: AffluenaSpacing.space4),
         OutlinedButton(
@@ -292,6 +273,72 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ),
       ),
     ];
+  }
+
+  /// Renders the (date-desc) transactions as day groups: a "Today / Yesterday /
+  /// date" header followed by a card of that day's rows. Scrolling down walks
+  /// back through the days.
+  List<Widget> _dayGroupedSections(
+    BuildContext context,
+    TransactionsState state,
+    List<Transaction> visible,
+  ) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+    final sections = <Widget>[];
+    DateTime? currentDay;
+    var dayTxns = <Transaction>[];
+
+    void flush() {
+      if (dayTxns.isEmpty || currentDay == null) return;
+      final group = List<Transaction>.from(dayTxns);
+      sections.add(
+        Padding(
+          padding: const EdgeInsets.only(
+            top: AffluenaSpacing.space4,
+            bottom: AffluenaSpacing.space2,
+          ),
+          child: Text(
+            AffluenaDateFormatter.dayHeader(currentDay),
+            style: textTheme.labelLarge?.copyWith(color: colors.inkMuted),
+          ),
+        ),
+      );
+      sections.add(
+        AffluenaCard(
+          child: Column(
+            children: [
+              for (final entry in group.indexed) ...[
+                InkWell(
+                  onTap: () =>
+                      showTransactionDetail(context, ref, state, entry.$2),
+                  child: TransactionTile(
+                    title: transactionTitle(state, entry.$2),
+                    metadata: transactionGroupedMetadata(state, entry.$2),
+                    amount: transactionAmount(entry.$2),
+                    icon: transactionIcon(state, entry.$2),
+                    isIncome: entry.$2.type == TransactionType.income,
+                  ),
+                ),
+                if (entry.$1 < group.length - 1) const Divider(height: 1),
+              ],
+            ],
+          ),
+        ),
+      );
+      dayTxns = [];
+    }
+
+    for (final transaction in visible) {
+      final day = AffluenaDateFormatter.localDay(transaction.transactionAt);
+      if (currentDay == null || day != currentDay) {
+        flush();
+        currentDay = day;
+      }
+      dayTxns.add(transaction);
+    }
+    flush();
+    return sections;
   }
 
   Future<void> _openFilters(

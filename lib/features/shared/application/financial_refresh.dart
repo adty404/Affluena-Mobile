@@ -40,3 +40,23 @@ extension FinancialRefresh on Ref {
     invalidate(transactionsControllerProvider);
   }
 }
+
+/// WidgetRef variant for widgets/sheets that mutate money directly (e.g. the
+/// wallet balance-adjust sheet) rather than going through a controller.
+extension FinancialRefreshWidget on WidgetRef {
+  void invalidateBalances() {
+    invalidate(walletListProvider);
+    invalidate(walletDetailProvider);
+    invalidate(walletAnalyticsProvider);
+    invalidate(dashboardHomeProvider);
+    invalidate(dashboardCashflowTrendProvider);
+    invalidate(dashboardExpenseDistributionProvider);
+    invalidate(dashboardForecastProvider);
+    invalidate(budgetControllerProvider);
+  }
+
+  void invalidateFinancialData() {
+    invalidateBalances();
+    invalidate(transactionsControllerProvider);
+  }
+}

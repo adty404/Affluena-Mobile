@@ -15,6 +15,7 @@ import '../application/wallet_members_controller.dart';
 import '../application/wallets_controller.dart';
 import '../data/wallet_models.dart';
 import '../data/wallet_repository.dart';
+import 'wallet_adjust_sheet.dart';
 import 'wallet_analytics_section.dart';
 import 'wallet_display.dart';
 import 'wallet_invite_sheet.dart';
@@ -138,6 +139,15 @@ class _WalletDetailContent extends ConsumerWidget {
           AffluenaCard(
             child: Column(
               children: [
+                if (!wallet.isGoal) ...[
+                  _ActionRow(
+                    icon: Icons.tune_rounded,
+                    title: 'Adjust balance',
+                    value: 'Set a new balance (penyesuaian)',
+                    onTap: () => showWalletAdjustSheet(context, wallet),
+                  ),
+                  const Divider(height: 1),
+                ],
                 _ActionRow(
                   icon: Icons.group_add_outlined,
                   title: 'Wallet sharing',
