@@ -127,7 +127,8 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
       if (!mounted) return;
       setState(() {
         _isAuthenticating = false;
-        _error = 'Device authentication is unavailable. Set up a fingerprint, '
+        _error =
+            'Device authentication is unavailable. Set up a fingerprint, '
             'face, or screen lock in your device settings, or log out.';
       });
     }

@@ -60,10 +60,7 @@ class DebtController extends Notifier<DebtState> {
         isLoading: false,
         isLoadingMore: false,
         loadError: null,
-        debts: [
-          if (!reset) ...state.debts,
-          ...debtResponse.debts,
-        ],
+        debts: [if (!reset) ...state.debts, ...debtResponse.debts],
         total: debtResponse.pagination.total,
         wallets: selectableWallets,
         incomeCategories: categoryResponse.categories

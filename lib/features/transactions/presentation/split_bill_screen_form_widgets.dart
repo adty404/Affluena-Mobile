@@ -176,7 +176,9 @@ class _ParticipantList extends StatelessWidget {
                   const SizedBox(height: AffluenaSpacing.space2),
                   Text(
                     'Add the people splitting this bill with you.',
-                    style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colors.inkMuted,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -268,4 +270,3 @@ class _ParticipantRow extends StatelessWidget {
     );
   }
 }
-

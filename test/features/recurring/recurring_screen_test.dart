@@ -99,7 +99,9 @@ void main() {
     // The next-run input is now a tappable DatePickerField backed by the native
     // date picker rather than a hand-typed RFC3339 TextField. Open it and
     // confirm a date so the rule has a non-null next run.
-    await tester.ensureVisible(find.byKey(const Key('recurring-next-run-field')));
+    await tester.ensureVisible(
+      find.byKey(const Key('recurring-next-run-field')),
+    );
     await tester.tap(find.byKey(const Key('recurring-next-run-field')));
     await tester.pumpAndSettle();
     expect(find.byType(DatePickerField), findsWidgets);

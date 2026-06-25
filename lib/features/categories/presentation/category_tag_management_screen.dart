@@ -1,13 +1,13 @@
-import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../core/formatters/tag_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
-import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
@@ -15,8 +15,8 @@ import '../../tags/data/tag_models.dart';
 import '../application/category_tag_management_controller.dart';
 import '../data/category_models.dart';
 
-part 'category_tag_widgets.dart';
 part 'category_tag_forms.dart';
+part 'category_tag_widgets.dart';
 
 class CategoryTagManagementScreen extends ConsumerStatefulWidget {
   const CategoryTagManagementScreen({super.key});

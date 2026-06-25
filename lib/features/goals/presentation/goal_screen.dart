@@ -101,9 +101,7 @@ class GoalScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(
-          isCancel ? 'Cancel this goal?' : 'Mark goal achieved?',
-        ),
+        title: Text(isCancel ? 'Cancel this goal?' : 'Mark goal achieved?'),
         content: Text(
           isCancel
               ? 'Cancelling stops tracking progress for "${goal.name}". '
@@ -127,10 +125,9 @@ class GoalScreen extends ConsumerWidget {
       ),
     );
     if (confirmed != true) return;
-    await ref.read(goalControllerProvider.notifier).transitionStatus(
-      goal,
-      status,
-    );
+    await ref
+        .read(goalControllerProvider.notifier)
+        .transitionStatus(goal, status);
   }
 }
 
@@ -233,7 +230,8 @@ class _GoalCard extends StatelessWidget {
                           label: goal.status.label,
                         ),
                         StatusBadge(
-                          label: '${goal.members.length} '
+                          label:
+                              '${goal.members.length} '
                               '${goal.members.length == 1 ? 'member' : 'members'}',
                           tone: StatusTone.neutral,
                         ),
@@ -337,16 +335,10 @@ class _GoalOverflowMenu extends StatelessWidget {
       itemBuilder: (context) => [
         const PopupMenuItem(value: 'edit', child: Text('Edit goal')),
         if (goal.isActive) ...[
-          const PopupMenuItem(
-            value: 'achieved',
-            child: Text('Mark achieved'),
-          ),
+          const PopupMenuItem(value: 'achieved', child: Text('Mark achieved')),
           PopupMenuItem(
             value: 'cancelled',
-            child: Text(
-              'Cancel goal',
-              style: TextStyle(color: colors.coral),
-            ),
+            child: Text('Cancel goal', style: TextStyle(color: colors.coral)),
           ),
         ],
       ],
@@ -422,17 +414,25 @@ class _SummarySkeleton extends StatelessWidget {
       children: const [
         Row(
           children: [
-            Expanded(child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md)),
+            Expanded(
+              child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md),
+            ),
             SizedBox(width: AffluenaSpacing.space3),
-            Expanded(child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md)),
+            Expanded(
+              child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md),
+            ),
           ],
         ),
         SizedBox(height: AffluenaSpacing.space3),
         Row(
           children: [
-            Expanded(child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md)),
+            Expanded(
+              child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md),
+            ),
             SizedBox(width: AffluenaSpacing.space3),
-            Expanded(child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md)),
+            Expanded(
+              child: AffluenaSkeleton(height: 56, radius: AffluenaRadii.md),
+            ),
           ],
         ),
       ],
@@ -476,10 +476,7 @@ class _GoalError extends StatelessWidget {
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
-          AffluenaBanner.error(
-            'We could not load goals.',
-            onRetry: onRetry,
-          ),
+          AffluenaBanner.error('We could not load goals.', onRetry: onRetry),
         ],
       ),
     );

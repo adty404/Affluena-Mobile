@@ -1,10 +1,10 @@
-import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
+import '../../../core/formatters/tag_formatter.dart';
 import '../../insights/application/audit_log_controller.dart';
 import '../../insights/data/insight_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';

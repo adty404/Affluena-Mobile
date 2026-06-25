@@ -2,9 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../tags/data/tag_models.dart';
 import '../../tags/data/tag_repository.dart';
-import '../../shared/application/financial_refresh.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
 import '../data/transaction_models.dart';
@@ -30,7 +30,11 @@ class TransactionCreateController extends Notifier<TransactionCreateState> {
     try {
       final walletFuture = ref
           .read(walletRepositoryProvider)
-          .listWallets(limit: _createLookupPageSize, offset: 0, sort: 'name_asc');
+          .listWallets(
+            limit: _createLookupPageSize,
+            offset: 0,
+            sort: 'name_asc',
+          );
       final categoryFuture = ref
           .read(categoryRepositoryProvider)
           .listCategories(
@@ -133,7 +137,8 @@ class TransactionCreateState {
 
   String walletName(String? id) => walletById(id)?.name ?? 'Choose wallet';
 
-  String categoryName(String? id) => categoryById(id)?.name ?? 'Choose category';
+  String categoryName(String? id) =>
+      categoryById(id)?.name ?? 'Choose category';
 
   TransactionCreateState copyWith({
     List<Wallet>? wallets,

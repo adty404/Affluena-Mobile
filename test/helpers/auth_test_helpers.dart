@@ -64,7 +64,9 @@ Widget authTestApp({
       ),
       // These suites exercise auth/nav/dashboard/settings, not the first-run
       // onboarding gate, so boot straight past it into the normal flow.
-      onboardingControllerProvider.overrideWith(CompletedOnboardingController.new),
+      onboardingControllerProvider.overrideWith(
+        CompletedOnboardingController.new,
+      ),
       ...extraOverrides,
     ],
     child: const AffluenaApp(),

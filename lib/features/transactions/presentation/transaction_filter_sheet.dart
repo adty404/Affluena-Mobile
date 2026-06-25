@@ -1,7 +1,7 @@
-import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../core/formatters/tag_formatter.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/selector_row.dart';

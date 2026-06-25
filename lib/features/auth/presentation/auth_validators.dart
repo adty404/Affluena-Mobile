@@ -3,9 +3,7 @@
 /// Keep messages user-facing and free of jargon. These mirror the API rules
 /// (email shape, 8-char minimum) so users get instant feedback before submit.
 abstract final class AuthValidators {
-  static final RegExp _emailPattern = RegExp(
-    r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-  );
+  static final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   /// Returns an error message for an invalid email, or null when valid.
   static String? email(String? value) {

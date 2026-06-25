@@ -40,7 +40,10 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     if (state.loadError != null &&
         state.activities.isEmpty &&
         state.systemLogs.isEmpty) {
-      return _AuditLogError(message: state.loadError!, onRetry: controller.load);
+      return _AuditLogError(
+        message: state.loadError!,
+        onRetry: controller.load,
+      );
     }
 
     return DrillInScaffold(
@@ -378,7 +381,11 @@ class _AuditLogLoading extends StatelessWidget {
           const Wrap(
             spacing: AffluenaSpacing.space2,
             children: [
-              AffluenaSkeleton(width: 84, height: 32, radius: AffluenaRadii.pill),
+              AffluenaSkeleton(
+                width: 84,
+                height: 32,
+                radius: AffluenaRadii.pill,
+              ),
               AffluenaSkeleton(
                 width: 104,
                 height: 32,
@@ -473,11 +480,7 @@ Future<void> _showActivityDetailSheet(
       // The audit API exposes only the raw entity UUID (no human-readable
       // name), so it is surfaced as a de-emphasised technical reference.
       if (activity.entityId.isNotEmpty)
-        _DetailRowData(
-          'Reference ID',
-          activity.entityId,
-          isTechnical: true,
-        ),
+        _DetailRowData('Reference ID', activity.entityId, isTechnical: true),
     ],
   );
 }

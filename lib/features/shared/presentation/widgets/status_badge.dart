@@ -8,7 +8,11 @@ enum StatusTone { success, warning, danger, neutral }
 /// accent. Active/Paused/Cancelled must look different — status carries its own
 /// visual weight.
 class StatusBadge extends StatelessWidget {
-  const StatusBadge({required this.label, this.tone = StatusTone.neutral, super.key});
+  const StatusBadge({
+    required this.label,
+    this.tone = StatusTone.neutral,
+    super.key,
+  });
 
   final String label;
   final StatusTone tone;
@@ -17,11 +21,18 @@ class StatusBadge extends StatelessWidget {
   factory StatusBadge.forStatus(String status, {String? label}) {
     final normalized = status.trim().toLowerCase();
     final tone = switch (normalized) {
-      'active' || 'joined' || 'paid_off' || 'achieved' || 'completed' || 'success' =>
-        StatusTone.success,
+      'active' ||
+      'joined' ||
+      'paid_off' ||
+      'achieved' ||
+      'completed' ||
+      'success' => StatusTone.success,
       'partial' || 'paused' || 'pending' || 'processing' => StatusTone.warning,
-      'cancelled' || 'canceled' || 'rejected' || 'failed' || 'overdue' =>
-        StatusTone.danger,
+      'cancelled' ||
+      'canceled' ||
+      'rejected' ||
+      'failed' ||
+      'overdue' => StatusTone.danger,
       _ => StatusTone.neutral,
     };
     return StatusBadge(label: label ?? _humanize(normalized), tone: tone);
@@ -40,9 +51,15 @@ class StatusBadge extends StatelessWidget {
       case StatusTone.success:
         return (fg: c.success, bg: c.forestSoft);
       case StatusTone.warning:
-        return (fg: c.amber, bg: Color.alphaBlend(c.amber.withAlpha(28), c.surfaceSoft));
+        return (
+          fg: c.amber,
+          bg: Color.alphaBlend(c.amber.withAlpha(28), c.surfaceSoft),
+        );
       case StatusTone.danger:
-        return (fg: c.coral, bg: Color.alphaBlend(c.coral.withAlpha(28), c.surfaceSoft));
+        return (
+          fg: c.coral,
+          bg: Color.alphaBlend(c.coral.withAlpha(28), c.surfaceSoft),
+        );
       case StatusTone.neutral:
         return (fg: c.inkMuted, bg: c.surfaceTintSoft);
     }

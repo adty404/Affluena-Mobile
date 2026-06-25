@@ -1,8 +1,8 @@
-import '../../../core/formatters/tag_formatter.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/formatters/tag_formatter.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
 import '../../shared/application/financial_refresh.dart';

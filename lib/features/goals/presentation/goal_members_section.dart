@@ -85,11 +85,7 @@ class _MemberRow extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.person_outline,
-                  size: 18,
-                  color: colors.inkMuted,
-                ),
+                Icon(Icons.person_outline, size: 18, color: colors.inkMuted),
                 const SizedBox(width: AffluenaSpacing.space2),
                 Expanded(
                   child: Text(

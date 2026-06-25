@@ -101,7 +101,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   opacity: _isLast ? 0 : 1,
                   duration: const Duration(milliseconds: 200),
                   child: Padding(
-                    padding: const EdgeInsets.only(right: AffluenaSpacing.space3),
+                    padding: const EdgeInsets.only(
+                      right: AffluenaSpacing.space3,
+                    ),
                     child: TextButton(
                       onPressed: _isLast ? null : _finish,
                       child: const Text('Skip'),
@@ -196,7 +198,9 @@ class _Dots extends StatelessWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOut,
-            margin: const EdgeInsets.symmetric(horizontal: AffluenaSpacing.space1),
+            margin: const EdgeInsets.symmetric(
+              horizontal: AffluenaSpacing.space1,
+            ),
             height: 8,
             width: i == index ? 22 : 8,
             decoration: BoxDecoration(

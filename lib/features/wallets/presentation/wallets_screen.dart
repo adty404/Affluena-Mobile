@@ -1,4 +1,3 @@
-import 'wallet_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +11,7 @@ import '../application/wallets_controller.dart';
 import '../data/wallet_models.dart';
 import '../data/wallet_repository.dart';
 import 'wallet_detail_screen.dart';
+import 'wallet_format.dart';
 
 class WalletsScreen extends ConsumerWidget {
   const WalletsScreen({super.key});

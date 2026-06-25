@@ -77,14 +77,18 @@ class _DirectionChip extends StatelessWidget {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
-      avatar: selected ? Icon(Icons.check, size: 16, color: selectedForeground) : null,
+      avatar: selected
+          ? Icon(Icons.check, size: 16, color: selectedForeground)
+          : null,
       selectedColor: selectedColor,
       labelStyle: TextStyle(
         color: selected ? selectedForeground : colors.ink,
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
-      side: BorderSide(color: selected ? selectedForeground : colors.borderSubtle),
+      side: BorderSide(
+        color: selected ? selectedForeground : colors.borderSubtle,
+      ),
       onSelected: enabled ? (_) => onSelected() : null,
     );
   }

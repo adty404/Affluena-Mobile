@@ -39,8 +39,7 @@ class WalletAnalyticsSection extends ConsumerWidget {
           error: (error, stackTrace) => AffluenaCard(
             child: AffluenaBanner.error(
               'Analytics could not be loaded for this month.',
-              onRetry: () =>
-                  ref.invalidate(walletAnalyticsProvider(walletId)),
+              onRetry: () => ref.invalidate(walletAnalyticsProvider(walletId)),
             ),
           ),
           data: (data) => _AnalyticsCard(analytics: data),

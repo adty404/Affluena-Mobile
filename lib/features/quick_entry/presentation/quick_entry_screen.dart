@@ -1,19 +1,11 @@
-import '../../wallets/presentation/wallet_format.dart';
-import '../../../core/formatters/tag_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../../core/formatters/tag_formatter.dart';
 import '../../dashboard/application/dashboard_home_controller.dart';
-import '../../tags/data/tag_models.dart';
-import '../../transactions/application/transactions_controller.dart';
-import '../../transactions/data/transaction_models.dart';
-import '../../transactions/data/transaction_repository.dart';
-import '../application/quick_entry_lookup_controller.dart';
-import '../data/quick_entry_models.dart';
-import '../data/quick_entry_repository.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -21,6 +13,14 @@ import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../tags/data/tag_models.dart';
+import '../../transactions/application/transactions_controller.dart';
+import '../../transactions/data/transaction_models.dart';
+import '../../transactions/data/transaction_repository.dart';
+import '../../wallets/presentation/wallet_format.dart';
+import '../application/quick_entry_lookup_controller.dart';
+import '../data/quick_entry_models.dart';
+import '../data/quick_entry_repository.dart';
 import 'quick_entry_templates_screen.dart';
 import 'tag_multi_select_sheet.dart';
 

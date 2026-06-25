@@ -18,8 +18,11 @@ class AffluenaSkeleton extends StatefulWidget {
   });
 
   /// Convenience constructor for a single text-line placeholder.
-  const AffluenaSkeleton.line({double width = double.infinity, double height = 12, Key? key})
-    : this(width: width, height: height, radius: 6, key: key);
+  const AffluenaSkeleton.line({
+    double width = double.infinity,
+    double height = 12,
+    Key? key,
+  }) : this(width: width, height: height, radius: 6, key: key);
 
   /// Convenience constructor for a circular avatar/icon placeholder.
   const AffluenaSkeleton.circle({double size = 40, Key? key})
