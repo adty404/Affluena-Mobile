@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../dashboard/application/dashboard_home_controller.dart';
-import '../../categories/data/category_models.dart';
 import '../../tags/data/tag_models.dart';
 import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
@@ -17,10 +16,12 @@ import '../data/quick_entry_repository.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import 'quick_entry_templates_screen.dart';
+import 'tag_multi_select_sheet.dart';
 
 class QuickEntryScreen extends ConsumerStatefulWidget {
   const QuickEntryScreen({super.key});
@@ -38,7 +39,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
   String? _selectedWalletId;
   String? _selectedToWalletId;
   String? _selectedCategoryId;
-  String? _selectedTagId;
+  List<String> _selectedTagIds = const [];
   bool _isSaving = false;
   String? _message;
   String? _error;
@@ -75,7 +76,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
           selectedWalletId: _selectedWalletId,
           selectedToWalletId: _selectedToWalletId,
           selectedCategoryId: _selectedCategoryId,
-          selectedTagId: _selectedTagId,
+          selectedTagIds: _selectedTagIds,
           isSaving: _isSaving,
           message: _message,
           error: _error,
@@ -89,7 +90,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
           onSelectWallet: _selectWallet,
           onSelectToWallet: _selectToWallet,
           onSelectCategory: _selectCategory,
-          onSelectTag: _selectTag,
+          onSelectTags: _selectTags,
           onChanged: () => setState(() {
             _message = null;
             _error = null;
@@ -119,8 +120,13 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
       }
       _selectedToWalletId = null;
     }
-    if (lookup.tagById(_selectedTagId) == null) {
-      _selectedTagId = lookup.defaultTag?.id;
+    // Tags are optional — never auto-select one. Just drop any ids that no
+    // longer exist in the available tag list.
+    final validTagIds = _selectedTagIds
+        .where((id) => lookup.tagById(id) != null)
+        .toList(growable: false);
+    if (validTagIds.length != _selectedTagIds.length) {
+      _selectedTagIds = validTagIds;
     }
   }
 
@@ -173,38 +179,33 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
 
   Future<void> _selectCategory(QuickEntryLookup lookup) async {
     final categories = lookup.categoriesFor(_type);
-    final selected = await showLookupSelectorSheet<String>(
+    final selected = await showCategoryTreePicker(
       context: context,
       title: 'Select category',
-      selectedValue: _selectedCategoryId,
-      options: [
+      selectedId: _selectedCategoryId,
+      categories: [
         for (final category in categories)
-          LookupSelectorOption(
-            value: category.id,
-            label: category.name,
-            subtitle: _categoryTypeLabel(category.type),
-            icon: Icons.restaurant_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );
-    if (selected != null) setState(() => _selectedCategoryId = selected);
+    if (selected != null && selected.isNotEmpty) {
+      setState(() => _selectedCategoryId = selected);
+    }
   }
 
-  Future<void> _selectTag(QuickEntryLookup lookup) async {
-    final selected = await showLookupSelectorSheet<String>(
+  Future<void> _selectTags(QuickEntryLookup lookup) async {
+    final selected = await showTagMultiSelectSheet(
       context: context,
-      title: 'Select tag',
-      selectedValue: _selectedTagId,
-      options: [
-        for (final tag in lookup.tags)
-          LookupSelectorOption(
-            value: tag.id,
-            label: _tagLabel(tag),
-            icon: Icons.sell_outlined,
-          ),
-      ],
+      tags: lookup.tags,
+      selectedIds: _selectedTagIds,
     );
-    if (selected != null) setState(() => _selectedTagId = selected);
+    if (selected != null) {
+      setState(() => _selectedTagIds = selected);
+    }
   }
 
   bool _canSave(QuickEntryLookup lookup) {
@@ -240,7 +241,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
       note: _noteController.text.trim().isEmpty
           ? null
           : _noteController.text.trim(),
-      tagIds: _selectedTagId == null ? const [] : [_selectedTagId!],
+      tagIds: _selectedTagIds,
     );
 
     try {
@@ -307,7 +308,7 @@ class _QuickEntryContent extends StatelessWidget {
     required this.selectedWalletId,
     required this.selectedToWalletId,
     required this.selectedCategoryId,
-    required this.selectedTagId,
+    required this.selectedTagIds,
     required this.isSaving,
     required this.message,
     required this.error,
@@ -317,7 +318,7 @@ class _QuickEntryContent extends StatelessWidget {
     required this.onSelectWallet,
     required this.onSelectToWallet,
     required this.onSelectCategory,
-    required this.onSelectTag,
+    required this.onSelectTags,
     required this.onChanged,
     required this.onSave,
     required this.onDismissMessage,
@@ -332,7 +333,7 @@ class _QuickEntryContent extends StatelessWidget {
   final String? selectedWalletId;
   final String? selectedToWalletId;
   final String? selectedCategoryId;
-  final String? selectedTagId;
+  final List<String> selectedTagIds;
   final bool isSaving;
   final String? message;
   final String? error;
@@ -342,7 +343,7 @@ class _QuickEntryContent extends StatelessWidget {
   final ValueChanged<QuickEntryLookup> onSelectWallet;
   final ValueChanged<QuickEntryLookup> onSelectToWallet;
   final ValueChanged<QuickEntryLookup> onSelectCategory;
-  final ValueChanged<QuickEntryLookup> onSelectTag;
+  final ValueChanged<QuickEntryLookup> onSelectTags;
   final VoidCallback onChanged;
   final VoidCallback onSave;
   final VoidCallback onDismissMessage;
@@ -356,8 +357,18 @@ class _QuickEntryContent extends StatelessWidget {
     final selectedWallet = lookup.walletById(selectedWalletId);
     final selectedToWallet = lookup.walletById(selectedToWalletId);
     final selectedCategory = lookup.categoryById(type, selectedCategoryId);
-    final selectedTag = lookup.tagById(selectedTagId);
+    final selectedTags = [
+      for (final id in selectedTagIds) lookup.tagById(id),
+    ].whereType<Tag>().toList(growable: false);
+    final tagSummary = selectedTags.isEmpty
+        ? 'Optional — tap to add'
+        : selectedTags.map(_tagLabel).join('  ');
     final categories = lookup.categoriesFor(type);
+    // Templates are scoped to the active tab so an expense template never shows
+    // (or fires) while the Income/Transfer tab is selected.
+    final typeTemplates = lookup.templates
+        .where((template) => template.type == type)
+        .toList(growable: false);
     final setupGuidance = _lookupGuidanceMessage(lookup, type);
 
     return SafeArea(
@@ -479,20 +490,19 @@ class _QuickEntryContent extends StatelessWidget {
                 SelectorRow(
                   key: const Key('quick-entry-tags-row'),
                   label: 'Tags',
-                  value: selectedTag == null
-                      ? 'Optional'
-                      : _tagLabel(selectedTag),
+                  value: tagSummary,
                   icon: Icons.sell_outlined,
                   enabled: lookup.tags.isNotEmpty,
-                  onTap: lookup.tags.isEmpty ? null : () => onSelectTag(lookup),
+                  onTap: lookup.tags.isEmpty ? null : () => onSelectTags(lookup),
                 ),
-                const Divider(height: 1),
+                const SizedBox(height: AffluenaSpacing.space4),
                 TextField(
                   key: const Key('quick-entry-note-field'),
                   controller: noteController,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.notes_outlined),
                     labelText: 'Note',
+                    helperText: 'Optional',
                   ),
                   onChanged: (_) => onChanged(),
                 ),
@@ -510,10 +520,24 @@ class _QuickEntryContent extends StatelessWidget {
             AffluenaBanner.success(message!, onDismiss: onDismissMessage),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
-          Text('Saved templates', style: textTheme.titleMedium),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Saved ${_typeLabel(type)} templates',
+                  style: textTheme.titleMedium,
+                ),
+              ),
+              TextButton(
+                onPressed: () => context.push(QuickEntryTemplatesScreen.path),
+                child: const Text('Manage'),
+              ),
+            ],
+          ),
           const SizedBox(height: AffluenaSpacing.space3),
-          lookup.templates.isEmpty
+          typeTemplates.isEmpty
               ? _SavedTemplatesEmpty(
+                  type: type,
                   onCreate: () =>
                       context.push(QuickEntryTemplatesScreen.path),
                 )
@@ -521,7 +545,7 @@ class _QuickEntryContent extends StatelessWidget {
                   spacing: AffluenaSpacing.space3,
                   runSpacing: AffluenaSpacing.space3,
                   children: [
-                    for (final template in lookup.templates)
+                    for (final template in typeTemplates)
                       _TemplateChip(
                         label: template.name,
                         amount: MoneyFormatter.idr(template.amountMinor),
@@ -632,8 +656,9 @@ class _QuickEntryError extends StatelessWidget {
 }
 
 class _SavedTemplatesEmpty extends StatelessWidget {
-  const _SavedTemplatesEmpty({required this.onCreate});
+  const _SavedTemplatesEmpty({required this.type, required this.onCreate});
 
+  final TransactionType type;
   final VoidCallback onCreate;
 
   @override
@@ -649,11 +674,11 @@ class _SavedTemplatesEmpty extends StatelessWidget {
         children: [
           Icon(Icons.bolt_outlined, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No saved templates yet', style: textTheme.titleMedium),
+          Text('No ${_typeLabel(type)} templates yet', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Save a recurring entry once — coffee, commute, salary — then '
-            'record it here in a single tap.',
+            'Save a recurring ${_typeLabel(type)} entry once — then record it '
+            'here in a single tap.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
@@ -734,10 +759,12 @@ String? _lookupGuidanceMessage(QuickEntryLookup lookup, TransactionType type) {
   return null;
 }
 
-String _categoryTypeLabel(CategoryType type) {
+String _typeLabel(TransactionType type) {
   return switch (type) {
-    CategoryType.income => 'Income',
-    CategoryType.expense => 'Expense',
+    TransactionType.income => 'income',
+    TransactionType.expense => 'expense',
+    TransactionType.transfer => 'transfer',
+    TransactionType.adjustment => 'adjustment',
   };
 }
 

@@ -42,7 +42,9 @@ void main() {
   testWidgets('device lock gates authenticated app until local auth succeeds', (
     tester,
   ) async {
-    final deviceAuth = FakeDeviceAuthService();
+    // Start with biometric failing so the lock screen's auto-prompt does not
+    // immediately unlock; the lock screen must stay visible.
+    final deviceAuth = FakeDeviceAuthService(authenticateResult: false);
 
     await pumpAuthTestApp(
       tester,
@@ -53,13 +55,17 @@ void main() {
       deviceAuthService: deviceAuth,
     );
 
+    // The lock screen auto-prompts biometric once on appearance (call #1).
     expect(find.text('Affluena locked'), findsOneWidget);
     expect(find.text(_expectedGreeting()), findsNothing);
+    expect(deviceAuth.authenticateCalls, 1);
 
+    // Let authentication succeed, then unlock via the button (call #2).
+    deviceAuth.authenticateResult = true;
     await tester.tap(find.byKey(const Key('app-lock-unlock-button')));
     await tester.pumpAndSettle();
 
-    expect(deviceAuth.authenticateCalls, 1);
+    expect(deviceAuth.authenticateCalls, 2);
     expect(find.text('Affluena locked'), findsNothing);
     expect(find.text(_expectedGreeting()), findsOneWidget);
   });

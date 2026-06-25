@@ -226,9 +226,7 @@ void main() {
     expect(authRepository.listSessionsCalls, 2);
   });
 
-  testWidgets('device lock is configurable from settings and security center', (
-    tester,
-  ) async {
+  testWidgets('device lock is configurable from settings', (tester) async {
     final securityRepository = MemorySecurityPreferencesRepository();
     final deviceAuth = FakeDeviceAuthService();
 
@@ -255,61 +253,7 @@ void main() {
     expect(securityRepository.savedPreferences.single.deviceLockEnabled, true);
     expect(find.text('Device lock enabled.'), findsOneWidget);
     expect(find.text('On • device authentication'), findsOneWidget);
-
-    await tester.tap(find.text('Security center'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Security center'), findsOneWidget);
-    expect(find.text('Device lock'), findsOneWidget);
-    expect(find.text('On • device authentication'), findsOneWidget);
-    expect(find.byKey(const Key('security-device-lock-row')), findsOneWidget);
-    expect(find.text('Unavailable in this build'), findsNothing);
   });
-
-  testWidgets(
-    'security center shows unsupported protections without toggle controls',
-    (tester) async {
-      final securityRepository = MemorySecurityPreferencesRepository();
-
-      await pumpAuthTestApp(
-        tester,
-        tokenStore: authenticatedTokenStore(),
-        authRepository: FakeAuthRepository(),
-        securityPreferencesRepository: securityRepository,
-      );
-      await _openSettings(tester);
-
-      await tester.tap(find.text('Security center').first);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Security center'), findsOneWidget);
-      expect(find.byKey(const Key('security-device-lock-row')), findsOneWidget);
-      expect(find.byType(Switch), findsOneWidget);
-
-      await tester.drag(find.byType(ListView).first, const Offset(0, -520));
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('security-two-factor-row')), findsOneWidget);
-      expect(find.text('Security alerts'), findsOneWidget);
-      expect(find.text('Managed in notification rules'), findsOneWidget);
-      expect(find.text('Two-factor authentication'), findsOneWidget);
-      expect(find.text('Not available in this API build'), findsOneWidget);
-      expect(find.text('Push notifications'), findsOneWidget);
-      expect(find.text('Waiting for push provider support'), findsOneWidget);
-      expect(find.text('Login email alerts'), findsOneWidget);
-      expect(
-        find.text('No dedicated login-alert endpoint yet'),
-        findsOneWidget,
-      );
-
-      await tester.tap(find.byKey(const Key('security-two-factor-row')));
-      await tester.pumpAndSettle();
-
-      expect(securityRepository.savedPreferences, isEmpty);
-      expect(find.text('Two-factor authentication'), findsOneWidget);
-      expect(find.byType(Switch), findsOneWidget);
-    },
-  );
 }
 
 Future<void> _openSettings(WidgetTester tester) async {

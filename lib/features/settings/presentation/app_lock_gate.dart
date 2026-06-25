@@ -117,19 +117,24 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
         _isAuthenticating = false;
         _locked = !unlocked;
         _unlockedForSession = unlocked;
-        _error = unlocked ? null : 'Device authentication was cancelled.';
+        _error = unlocked
+            ? null
+            : 'Could not verify it was you. Tap Unlock to try again, or use '
+                  'your device passcode. Make sure a fingerprint/face or screen '
+                  'lock is set up in device settings.';
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _isAuthenticating = false;
-        _error = 'Device authentication could not be completed.';
+        _error = 'Device authentication is unavailable. Set up a fingerprint, '
+            'face, or screen lock in your device settings, or log out.';
       });
     }
   }
 }
 
-class _AppLockScreen extends StatelessWidget {
+class _AppLockScreen extends StatefulWidget {
   const _AppLockScreen({
     required this.isAuthenticating,
     required this.onUnlock,
@@ -143,7 +148,28 @@ class _AppLockScreen extends StatelessWidget {
   final VoidCallback onLogout;
 
   @override
+  State<_AppLockScreen> createState() => _AppLockScreenState();
+}
+
+class _AppLockScreenState extends State<_AppLockScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fire biometric automatically the moment the lock screen appears so the
+    // user sees the system prompt without first tapping a button.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !widget.isAuthenticating && widget.error == null) {
+        widget.onUnlock();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isAuthenticating = widget.isAuthenticating;
+    final error = widget.error;
+    final onUnlock = widget.onUnlock;
+    final onLogout = widget.onLogout;
     final colors = context.affluenaColors;
     final textTheme = Theme.of(context).textTheme;
 
@@ -192,7 +218,7 @@ class _AppLockScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(AffluenaSpacing.space3),
                         child: Text(
-                          error!,
+                          error,
                           style: textTheme.bodyMedium?.copyWith(
                             color: colors.ink,
                           ),

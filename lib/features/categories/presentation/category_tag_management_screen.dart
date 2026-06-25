@@ -6,7 +6,7 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
-import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
@@ -1062,22 +1062,18 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
     List<Category> options,
     Category? selectedParent,
   ) async {
-    final selected = await showLookupSelectorSheet<String>(
+    final selected = await showCategoryTreePicker(
       context: context,
       title: 'Parent category',
-      selectedValue: selectedParent?.id ?? '',
-      options: [
-        const LookupSelectorOption<String>(
-          value: '',
-          label: 'No parent',
-          icon: Icons.block,
-        ),
+      selectedId: selectedParent?.id,
+      allowNone: true,
+      noneLabel: 'No parent',
+      categories: [
         for (final category in options)
-          LookupSelectorOption<String>(
-            value: category.id,
-            label: category.name,
-            subtitle: category.type.label,
-            icon: Icons.category_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );

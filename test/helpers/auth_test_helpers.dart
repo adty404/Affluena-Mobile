@@ -16,6 +16,7 @@ import 'package:affluena_mobile/features/settings/application/device_auth_servic
 import 'package:affluena_mobile/features/settings/data/security_preferences_repository.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
+import 'package:affluena_mobile/features/transactions/data/split_bill_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
@@ -339,7 +340,13 @@ class FakeDashboardRepository implements DashboardRepository {
   }
 
   @override
-  Future<CashflowTrendResponse> cashflowTrend({int? months}) {
+  Future<CashflowTrendResponse> cashflowTrend({
+    int? months,
+    String? granularity,
+    int? weeks,
+    String? from,
+    String? to,
+  }) {
     throw UnimplementedError();
   }
 
@@ -401,6 +408,16 @@ class FakeTransactionRepository implements TransactionRepository {
       transactionId: 'transaction-split',
       debtIds: [],
     );
+  }
+
+  @override
+  Future<SplitBillListResponse> listSplitBills({String? status}) async {
+    return const SplitBillListResponse(splitBills: []);
+  }
+
+  @override
+  Future<SplitBillDetail> getSplitBill(String transactionId) async {
+    throw UnimplementedError();
   }
 
   @override

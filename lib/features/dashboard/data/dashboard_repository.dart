@@ -12,7 +12,13 @@ final dashboardRepositoryProvider = Provider<DashboardRepository>((ref) {
 abstract interface class DashboardRepository {
   Future<DashboardSummary> summary({String? month});
 
-  Future<CashflowTrendResponse> cashflowTrend({int? months});
+  Future<CashflowTrendResponse> cashflowTrend({
+    int? months,
+    String? granularity,
+    int? weeks,
+    String? from,
+    String? to,
+  });
 
   Future<ExpenseDistributionResponse> expenseDistribution({String? month});
 
@@ -34,10 +40,22 @@ class DioDashboardRepository implements DashboardRepository {
   }
 
   @override
-  Future<CashflowTrendResponse> cashflowTrend({int? months}) async {
+  Future<CashflowTrendResponse> cashflowTrend({
+    int? months,
+    String? granularity,
+    int? weeks,
+    String? from,
+    String? to,
+  }) async {
     final response = await _dio.get<Map<String, Object?>>(
       '/dashboard/cashflow-trend',
-      queryParameters: _query({'months': months}),
+      queryParameters: _query({
+        'months': months,
+        'granularity': granularity,
+        'weeks': weeks,
+        'from': from,
+        'to': to,
+      }),
     );
     return CashflowTrendResponse.fromJson(_responseMap(response.data));
   }

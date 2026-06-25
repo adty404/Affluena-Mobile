@@ -7,6 +7,7 @@ import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_screen.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
+import 'package:affluena_mobile/features/transactions/data/split_bill_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
@@ -36,7 +37,8 @@ void main() {
 
     expect(find.text('BCA Primary'), findsOneWidget);
     expect(find.text('Food & Dining'), findsOneWidget);
-    expect(find.text('#MonthlyBill'), findsOneWidget);
+    // Tags are optional and start unselected, so the row shows the placeholder.
+    expect(find.text('Optional — tap to add'), findsOneWidget);
     expect(find.text(lookupBankWalletId), findsNothing);
     expect(find.text(lookupExpenseCategoryId), findsNothing);
     expect(
@@ -136,6 +138,16 @@ class LookupTransactionRepository implements TransactionRepository {
   @override
   Future<Transaction> createTransaction(TransactionRequest request) async {
     return lookupTransaction;
+  }
+
+  @override
+  Future<SplitBillListResponse> listSplitBills({String? status}) async {
+    return const SplitBillListResponse(splitBills: []);
+  }
+
+  @override
+  Future<SplitBillDetail> getSplitBill(String transactionId) async {
+    throw UnimplementedError();
   }
 
   @override

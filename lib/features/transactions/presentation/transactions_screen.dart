@@ -3,17 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../core/formatters/date_formatter.dart';
+import '../../insights/application/audit_log_controller.dart';
+import '../../insights/data/insight_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
-import 'split_bill_screen.dart';
+import 'split_bill_list_screen.dart';
 import 'transaction_create_screen.dart';
 import 'transaction_detail_sheet.dart';
 import 'transaction_display.dart';
 import 'transaction_filter_sheet.dart';
+
+/// The two views of the Activity tab: the raw transactions ledger, and the
+/// broader user-action feed (split bill, debt/installment/subscription payments,
+/// etc.) sourced from the audit log.
+enum _ActivityView { transactions, activity }
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -33,22 +41,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     super.dispose();
   }
 
+  _ActivityView _view = _ActivityView.transactions;
+
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(transactionsControllerProvider);
-    final controller = ref.read(transactionsControllerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
-
-    if (state.isLoading && state.transactions.isEmpty) {
-      return const _TransactionsLoading();
-    }
-
-    if (state.loadError != null && state.transactions.isEmpty) {
-      return _TransactionsError(onRetry: () => controller.load(reset: true));
-    }
-
-    final visible = state.visibleTransactions;
-    final isSearching = state.searchQuery.trim().isNotEmpty;
 
     return SafeArea(
       child: ListView(
@@ -59,8 +56,54 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           AffluenaSpacing.space8,
         ),
         children: [
-          Text('Transactions', style: textTheme.headlineMedium),
+          Text('Activity', style: textTheme.headlineMedium),
+          const SizedBox(height: AffluenaSpacing.space4),
+          SegmentedButton<_ActivityView>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(
+                value: _ActivityView.transactions,
+                label: Text('Transactions'),
+              ),
+              ButtonSegment(
+                value: _ActivityView.activity,
+                label: Text('Activity'),
+              ),
+            ],
+            selected: {_view},
+            onSelectionChanged: (selection) =>
+                setState(() => _view = selection.first),
+          ),
           const SizedBox(height: AffluenaSpacing.space5),
+          if (_view == _ActivityView.transactions)
+            ..._buildTransactionsChildren(context)
+          else
+            ..._buildActivityChildren(context),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildTransactionsChildren(BuildContext context) {
+    final state = ref.watch(transactionsControllerProvider);
+    final controller = ref.read(transactionsControllerProvider.notifier);
+
+    if (state.isLoading && state.transactions.isEmpty) {
+      return const [_TransactionsLoadingBody()];
+    }
+    if (state.loadError != null && state.transactions.isEmpty) {
+      return [
+        AffluenaBanner.error(
+          state.loadError!,
+          onRetry: () => controller.load(reset: true),
+        ),
+      ];
+    }
+
+    final visible = state.visibleTransactions;
+    final isSearching = state.searchQuery.trim().isNotEmpty;
+
+    return [
           TextField(
             key: const Key('transactions-search-field'),
             controller: _searchController,
@@ -98,7 +141,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               Expanded(
                 child: FilledButton.tonalIcon(
                   key: const Key('split-bill-entry-button'),
-                  onPressed: () => context.push(SplitBillScreen.path),
+                  onPressed: () => context.push(SplitBillListScreen.path),
                   icon: const Icon(Icons.call_split_outlined),
                   label: const Text('Split'),
                 ),
@@ -213,9 +256,52 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             ),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
-        ],
+    ];
+  }
+
+  List<Widget> _buildActivityChildren(BuildContext context) {
+    final state = ref.watch(auditLogControllerProvider);
+    final controller = ref.read(auditLogControllerProvider.notifier);
+
+    if (state.isLoading && state.activities.isEmpty) {
+      return const [_TransactionsLoadingBody()];
+    }
+    if (state.loadError != null && state.activities.isEmpty) {
+      return [
+        AffluenaBanner.error(state.loadError!, onRetry: controller.load),
+      ];
+    }
+    if (state.activities.isEmpty) {
+      return const [
+        AffluenaCard(
+          child: Text(
+            'No activity yet. Actions like adding a transaction, paying a '
+            'debt, or settling a split bill will appear here.',
+          ),
+        ),
+      ];
+    }
+
+    return [
+      Text(
+        '${state.activityTotal} recorded ${state.activityTotal == 1 ? 'action' : 'actions'}',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: context.affluenaColors.inkMuted,
+        ),
       ),
-    );
+      const SizedBox(height: AffluenaSpacing.space3),
+      AffluenaCard(
+        child: Column(
+          children: [
+            for (final entry in state.activities.indexed) ...[
+              _ActivityFeedRow(activity: entry.$2),
+              if (entry.$1 < state.activities.length - 1)
+                const Divider(height: 1),
+            ],
+          ],
+        ),
+      ),
+    ];
   }
 
   Future<void> _openFilters(
@@ -232,35 +318,76 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 }
 
-class _TransactionsLoading extends StatelessWidget {
-  const _TransactionsLoading();
+class _TransactionsLoadingBody extends StatelessWidget {
+  const _TransactionsLoadingBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const AffluenaSkeleton(height: 56),
+        const SizedBox(height: AffluenaSpacing.space3),
+        const AffluenaSkeleton(height: 44),
+        const SizedBox(height: AffluenaSpacing.space5),
+        AffluenaCard(
+          child: Column(
+            children: [
+              for (var i = 0; i < 4; i++) ...[
+                const _TransactionTileSkeleton(),
+                if (i < 3) const Divider(height: 1),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActivityFeedRow extends StatelessWidget {
+  const _ActivityFeedRow({required this.activity});
+
+  final ActivityItem activity;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space3),
+      child: Row(
         children: [
-          Text('Transactions', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
-          const AffluenaSkeleton(height: 56),
-          const SizedBox(height: AffluenaSpacing.space3),
-          const AffluenaSkeleton(height: 44),
-          const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.surfaceTintSoft,
+              borderRadius: BorderRadius.circular(AffluenaRadii.md),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AffluenaSpacing.space2),
+              child: Icon(
+                _activityIcon(activity.entityType),
+                color: colors.forest,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: AffluenaSpacing.space3),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (var i = 0; i < 4; i++) ...[
-                  const _TransactionTileSkeleton(),
-                  if (i < 3) const Divider(height: 1),
-                ],
+                Text(
+                  activity.description,
+                  style: textTheme.bodyLarge,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AffluenaSpacing.space1),
+                Text(
+                  AffluenaDateFormatter.shortDate(activity.createdAt),
+                  style: textTheme.bodySmall,
+                ),
               ],
             ),
           ),
@@ -268,6 +395,22 @@ class _TransactionsLoading extends StatelessWidget {
       ),
     );
   }
+}
+
+IconData _activityIcon(String entityType) {
+  return switch (entityType.toUpperCase()) {
+    'TRANSACTION' => Icons.receipt_long_outlined,
+    'SPLIT_BILL' => Icons.call_split_outlined,
+    'DEBT' || 'DEBT_PAYMENT' => Icons.handshake_outlined,
+    'INSTALLMENT' || 'INSTALLMENT_PAYMENT' => Icons.calendar_month_rounded,
+    'SUBSCRIPTION' || 'SUBSCRIPTION_PAYMENT' => Icons.autorenew_rounded,
+    'WALLET' => Icons.account_balance_wallet_outlined,
+    'CATEGORY' => Icons.category_outlined,
+    'TAG' => Icons.sell_outlined,
+    'BUDGET' => Icons.pie_chart_outline,
+    'GOAL' => Icons.flag_outlined,
+    _ => Icons.bolt_outlined,
+  };
 }
 
 class _TransactionTileSkeleton extends StatelessWidget {
@@ -405,35 +548,6 @@ class _ActiveFilterSummary extends StatelessWidget {
   }
 }
 
-class _TransactionsError extends StatelessWidget {
-  const _TransactionsError({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
-        children: [
-          Text('Transactions unavailable', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaBanner.error(
-            'We could not load your transactions.',
-            onRetry: onRetry,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _EmptyTransactionsState extends StatelessWidget {
   const _EmptyTransactionsState({

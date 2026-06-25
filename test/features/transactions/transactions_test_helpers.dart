@@ -6,6 +6,7 @@ import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
+import 'package:affluena_mobile/features/transactions/data/split_bill_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
 import 'package:affluena_mobile/features/transactions/presentation/transactions_screen.dart';
@@ -198,6 +199,16 @@ class RecordingTransactionRepository implements TransactionMutationRepository {
     );
     _transactions[index] = updated;
     return updated;
+  }
+
+  @override
+  Future<SplitBillListResponse> listSplitBills({String? status}) async {
+    return const SplitBillListResponse(splitBills: []);
+  }
+
+  @override
+  Future<SplitBillDetail> getSplitBill(String transactionId) async {
+    throw UnimplementedError();
   }
 
   @override
