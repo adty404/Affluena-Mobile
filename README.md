@@ -58,7 +58,7 @@ This app includes:
 
 - Android and iOS Flutter project wrappers
 - App shell with bottom navigation (Home, Wallets, Add, Activity, More)
-- Auth flows: login, register, forgot password, reset password
+- Auth flows: login, register, forgot password, reset password, change password (revokes other sessions; persists the refreshed token pair to secure storage)
 - Home dashboard screen
 - Quick Entry screen and quick-entry templates
 - Transactions screen and split bill
