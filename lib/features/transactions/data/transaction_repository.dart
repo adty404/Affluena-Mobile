@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_json.dart';
+import 'split_bill_models.dart';
 import 'transaction_models.dart';
 
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
@@ -27,6 +28,10 @@ abstract interface class TransactionRepository {
   Future<Transaction> createTransaction(TransactionRequest request);
 
   Future<SplitTransactionResponse> splitBill(SplitTransactionRequest request);
+
+  Future<SplitBillListResponse> listSplitBills({String? status});
+
+  Future<SplitBillDetail> getSplitBill(String transactionId);
 
   Future<void> deleteTransaction(String id);
 }
@@ -94,6 +99,23 @@ class DioTransactionRepository implements TransactionMutationRepository {
       data: request.toJson(),
     );
     return SplitTransactionResponse.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<SplitBillListResponse> listSplitBills({String? status}) async {
+    final response = await _dio.get<Map<String, Object?>>(
+      '/split-bills',
+      queryParameters: _query({'status': status}),
+    );
+    return SplitBillListResponse.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<SplitBillDetail> getSplitBill(String transactionId) async {
+    final response = await _dio.get<Map<String, Object?>>(
+      '/split-bills/$transactionId',
+    );
+    return SplitBillDetail.fromJson(_responseMap(response.data));
   }
 
   @override

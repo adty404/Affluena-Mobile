@@ -9,6 +9,7 @@ import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
@@ -296,20 +297,20 @@ class _TransactionCreateScreenState
   }
 
   Future<void> _selectCategory(List<Category> categories) async {
-    final selected = await showLookupSelectorSheet<String>(
+    final selected = await showCategoryTreePicker(
       context: context,
       title: 'Category',
-      selectedValue: _categoryId,
-      options: [
+      selectedId: _categoryId,
+      categories: [
         for (final category in categories)
-          LookupSelectorOption<String>(
-            value: category.id,
-            label: category.name,
-            icon: Icons.category_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );
-    if (!mounted || selected == null) return;
+    if (!mounted || selected == null || selected.isEmpty) return;
     setState(() {
       _categoryId = selected;
       _clearErrors();

@@ -152,8 +152,8 @@ class _CashflowTrendPainter extends CustomPainter {
     painter.paint(canvas, Offset(dx, dy));
   }
 
-  static String _monthLabel(String monthKey) {
-    // monthKey is "yyyy-MM"; render a short month name without a new dep.
+  static String _monthLabel(String key) {
+    // key is "yyyy-MM" for month buckets or "yyyy-MM-dd" for week buckets.
     const months = [
       'Jan',
       'Feb',
@@ -168,10 +168,15 @@ class _CashflowTrendPainter extends CustomPainter {
       'Nov',
       'Dec',
     ];
-    final parts = monthKey.split('-');
-    if (parts.length < 2) return monthKey;
+    final parts = key.split('-');
+    if (parts.length < 2) return key;
     final month = int.tryParse(parts[1]);
-    if (month == null || month < 1 || month > 12) return monthKey;
+    if (month == null || month < 1 || month > 12) return key;
+    // Week bucket: show "d/M" (e.g. 22/6) so adjacent weeks are distinguishable.
+    if (parts.length >= 3) {
+      final day = int.tryParse(parts[2]);
+      if (day != null) return '$day/$month';
+    }
     return months[month - 1];
   }
 

@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
-import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
@@ -833,21 +833,20 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
   }
 
   Future<void> _selectCategory(QuickEntryTemplatesState state) async {
-    final selected = await showLookupSelectorSheet<String>(
+    final selected = await showCategoryTreePicker(
       context: context,
       title: 'Template category',
-      selectedValue: _categoryId,
-      options: [
+      selectedId: _categoryId,
+      categories: [
         for (final category in state.categoriesFor(_type))
-          LookupSelectorOption<String>(
-            value: category.id,
-            label: category.name,
-            subtitle: _categoryTypeLabel(category.type),
-            icon: Icons.category_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );
-    if (!mounted || selected == null) return;
+    if (!mounted || selected == null || selected.isEmpty) return;
     setState(() => _categoryId = selected);
   }
 
@@ -1061,12 +1060,6 @@ IconData _typeIcon(TransactionType type) {
   };
 }
 
-String _categoryTypeLabel(CategoryType type) {
-  return switch (type) {
-    CategoryType.expense => 'Expense',
-    CategoryType.income => 'Income',
-  };
-}
 
 String _tagLabel(String name) {
   final normalized = name.trim().replaceFirst(RegExp(r'^#+'), '');

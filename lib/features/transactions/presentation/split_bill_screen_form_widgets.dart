@@ -146,50 +146,60 @@ class _MetricTile extends StatelessWidget {
 class _ParticipantList extends StatelessWidget {
   const _ParticipantList({
     required this.participants,
+    required this.totalAmountMinor,
     required this.onAdd,
     required this.onRemove,
   });
 
   final List<SplitBillParticipantDraft> participants;
+  final int totalAmountMinor;
   final VoidCallback? onAdd;
   final ValueChanged<int>? onRemove;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
 
     return AffluenaCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  participants.isEmpty
-                      ? 'No participants added yet.'
-                      : 'Receivable debt per participant',
-                  style: textTheme.bodyMedium,
-                ),
+          if (participants.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AffluenaSpacing.space3,
               ),
-              IconButton.filledTonal(
-                key: const Key('split-add-participant-button'),
-                onPressed: onAdd,
-                tooltip: 'Add participant',
-                icon: const Icon(Icons.add),
+              child: Column(
+                children: [
+                  Icon(Icons.group_add_outlined, color: colors.inkMuted),
+                  const SizedBox(height: AffluenaSpacing.space2),
+                  Text(
+                    'Add the people splitting this bill with you.',
+                    style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-            ],
-          ),
-          if (participants.isNotEmpty) ...[
-            const SizedBox(height: AffluenaSpacing.space4),
+            )
+          else
             for (final entry in participants.indexed) ...[
               _ParticipantRow(
                 participant: entry.$2,
+                sharePercent: totalAmountMinor > 0
+                    ? entry.$2.amountMinor / totalAmountMinor * 100
+                    : null,
                 onRemove: onRemove == null ? null : () => onRemove!(entry.$1),
               ),
               if (entry.$1 < participants.length - 1) const Divider(height: 1),
             ],
-          ],
+          const SizedBox(height: AffluenaSpacing.space3),
+          OutlinedButton.icon(
+            key: const Key('split-add-participant-button'),
+            onPressed: onAdd,
+            icon: const Icon(Icons.person_add_alt_1_outlined),
+            label: const Text('Add participant'),
+          ),
         ],
       ),
     );
@@ -197,19 +207,36 @@ class _ParticipantList extends StatelessWidget {
 }
 
 class _ParticipantRow extends StatelessWidget {
-  const _ParticipantRow({required this.participant, required this.onRemove});
+  const _ParticipantRow({
+    required this.participant,
+    required this.sharePercent,
+    required this.onRemove,
+  });
 
   final SplitBillParticipantDraft participant;
+  final double? sharePercent;
   final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+    final name = participant.counterpartyName.trim();
+    final initial = name.isEmpty ? '?' : name[0].toUpperCase();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space2),
       child: Row(
         children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: colors.forestSoft,
+            child: Text(
+              initial,
+              style: textTheme.labelLarge?.copyWith(color: colors.forest),
+            ),
+          ),
+          const SizedBox(width: AffluenaSpacing.space3),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,19 +244,24 @@ class _ParticipantRow extends StatelessWidget {
                 Text(
                   participant.counterpartyName,
                   style: textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AffluenaSpacing.space1),
                 Text(
-                  MoneyFormatter.idr(participant.amountMinor),
-                  style: textTheme.bodySmall,
+                  sharePercent == null
+                      ? MoneyFormatter.idr(participant.amountMinor)
+                      : '${MoneyFormatter.idr(participant.amountMinor)} · ${sharePercent!.round()}%',
+                  style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
                 ),
               ],
             ),
           ),
           IconButton(
             tooltip: 'Remove participant',
+            visualDensity: VisualDensity.compact,
             onPressed: onRemove,
-            icon: const Icon(Icons.close),
+            icon: Icon(Icons.delete_outline, color: colors.coral),
           ),
         ],
       ),

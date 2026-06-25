@@ -7,6 +7,7 @@ import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_screen.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
+import 'package:affluena_mobile/features/transactions/data/split_bill_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
@@ -81,11 +82,10 @@ void main() {
     await _scrollToSave(tester);
     expect(_saveButton(tester).onPressed, isNull);
 
-    await tester.scrollUntilVisible(
+    await tester.ensureVisible(
       find.byKey(const Key('quick-entry-to-wallet-row')),
-      -300,
-      scrollable: find.byType(Scrollable).first,
     );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('quick-entry-to-wallet-row')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('BCA Primary').last);
@@ -232,6 +232,16 @@ class WriteTransactionRepository implements TransactionRepository {
     createRequests.add(request);
     if (createError != null) throw createError!;
     return createdTransaction;
+  }
+
+  @override
+  Future<SplitBillListResponse> listSplitBills({String? status}) async {
+    return const SplitBillListResponse(splitBills: []);
+  }
+
+  @override
+  Future<SplitBillDetail> getSplitBill(String transactionId) async {
+    throw UnimplementedError();
   }
 
   @override

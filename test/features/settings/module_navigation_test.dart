@@ -19,7 +19,6 @@ import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_sc
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import 'package:affluena_mobile/features/recurring/data/recurring_repository.dart';
 import 'package:affluena_mobile/features/recurring/presentation/recurring_screen.dart';
-import 'package:affluena_mobile/features/settings/presentation/security_screen.dart';
 import 'package:affluena_mobile/features/settings/presentation/settings_screen.dart';
 import 'package:affluena_mobile/features/trackers/data/tracker_repository.dart';
 import 'package:affluena_mobile/features/trackers/presentation/tracker_screen.dart';
@@ -99,7 +98,6 @@ void main() {
       QuickEntryTemplatesScreen.path,
       SplitBillScreen.path,
       AuditLogScreen.path,
-      SecurityScreen.path,
       InsightsScreen.location(InsightTab.rules),
       WalletDetailScreen.location('wallet-main'),
       WalletSharingScreen.location('wallet-main'),
@@ -218,11 +216,6 @@ class _NavigationScenario {
 
 final _settingsNavigationScenarios = [
   _NavigationScenario(
-    entry: 'Security center',
-    location: SecurityScreen.path,
-    expected: 'Security center',
-  ),
-  _NavigationScenario(
     entry: 'Quick-entry templates',
     location: QuickEntryTemplatesScreen.path,
     expected: 'Quick-entry templates',
@@ -307,7 +300,6 @@ final _rawIdSmokeLocations = [
   TransactionsScreen.path,
   SplitBillScreen.path,
   SettingsScreen.path,
-  SecurityScreen.path,
   BudgetScreen.path,
   DebtScreen.path,
   TrackerScreen.path,

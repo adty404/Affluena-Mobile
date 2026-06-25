@@ -59,10 +59,11 @@ This app includes:
 - Android and iOS Flutter project wrappers
 - App shell with bottom navigation (Home, Wallets, Add, Activity, More)
 - Auth flows: login, register, forgot password, reset password, change password (revokes other sessions; persists the refreshed token pair to secure storage)
-- Home dashboard screen
-- Quick Entry screen and quick-entry templates
-- Transactions screen and split bill
-- Wallets screen with wallet detail and sharing
-- Settings screen with security/device-lock and parity modules (budgets, categories/tags, debts, trackers, recurring, goals, insights, audit log)
-- Shared UI primitives and theme tokens
+- Home dashboard with interactive sections: tappable Upcoming rows, a Cashflow trend with monthly/weekly toggle (drill-in to Insights), a "Where money went" breakdown with a month stepper + per-category drill-in, and tappable recent transactions
+- Quick Entry + templates with a tree-aware category picker, optional multi-select tags, and templates scoped to the active expense/income/transfer tab
+- Activity tab with a Transactions/Activity segmented view (the Activity feed surfaces transaction-related actions: split bill, debt/installment/subscription payments)
+- Split bill is list-first: see ongoing splits and who owes you, open a detail, then add a new split
+- Wallets shown as a two-per-row grid; wallet detail and sharing
+- Settings with inline security (account, password, sessions, device lock with auto-prompt biometric) and parity modules (budgets, categories/tags as a tree, debts, trackers, recurring, goals, insights, audit log)
+- Shared UI primitives, a reusable tree category picker, and theme tokens
 - API client and secure token storage providers

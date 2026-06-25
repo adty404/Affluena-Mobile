@@ -17,10 +17,10 @@ import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/recurring/presentation/recurring_screen.dart';
-import '../features/settings/presentation/security_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/shared/presentation/app_shell.dart';
 import '../features/trackers/presentation/tracker_screen.dart';
+import '../features/transactions/presentation/split_bill_list_screen.dart';
 import '../features/transactions/presentation/split_bill_screen.dart';
 import '../features/transactions/presentation/transaction_create_screen.dart';
 import '../features/transactions/presentation/transactions_screen.dart';
@@ -165,6 +165,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: _fadePage((_) => const TransactionsScreen()),
               ),
               GoRoute(
+                path: SplitBillListScreen.path,
+                pageBuilder: _slidePage((_) => const SplitBillListScreen()),
+              ),
+              GoRoute(
                 path: SplitBillScreen.path,
                 pageBuilder: _slidePage((_) => const SplitBillScreen()),
               ),
@@ -226,10 +230,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AuditLogScreen.path,
                 pageBuilder: _slidePage((_) => const AuditLogScreen()),
-              ),
-              GoRoute(
-                path: SecurityScreen.path,
-                pageBuilder: _slidePage((_) => const SecurityScreen()),
               ),
             ],
           ),

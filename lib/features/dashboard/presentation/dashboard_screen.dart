@@ -9,6 +9,8 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../budgets/presentation/budget_screen.dart';
+import '../../debts/presentation/debt_detail_screen.dart';
+import '../../insights/presentation/insights_screen.dart';
 import '../../quick_entry/presentation/quick_entry_screen.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
@@ -16,12 +18,16 @@ import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
+import '../../trackers/presentation/tracker_screen.dart';
+import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
+import '../../transactions/presentation/transaction_detail_sheet.dart';
 import '../../transactions/presentation/transactions_screen.dart';
 import '../../wallets/presentation/wallets_screen.dart';
 import '../application/dashboard_home_controller.dart';
 import '../data/dashboard_models.dart';
 import 'cashflow_trend_chart.dart';
+import 'category_month_transactions_sheet.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -81,13 +87,9 @@ class _DashboardContent extends ConsumerWidget {
             _UpcomingSection(summary: summary),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
-          const SectionHeader(title: 'Cashflow trend'),
-          const SizedBox(height: AffluenaSpacing.space2),
-          const _CashflowTrendSection(),
+          const _CashflowTrendBlock(),
           const SizedBox(height: AffluenaSpacing.space6),
-          const SectionHeader(title: 'Where money went'),
-          const SizedBox(height: AffluenaSpacing.space2),
-          const _ExpenseDistributionSection(),
+          _ExpenseDistributionBlock(walletNames: home.walletNames),
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
             title: 'Recent transactions',
@@ -374,6 +376,7 @@ class _UpcomingSection extends StatelessWidget {
           title: sub.name,
           subtitle: 'Due ${AffluenaDateFormatter.shortDate(sub.nextDueDate)}',
           amountMinor: sub.amountMinor,
+          onTap: () => context.push(TrackerScreen.path),
         ),
       for (final inst in summary.upcomingInstallments)
         _UpcomingItem(
@@ -383,6 +386,7 @@ class _UpcomingSection extends StatelessWidget {
               '${inst.remainingMonths} payments left · '
               'Due ${AffluenaDateFormatter.shortDate(inst.dueDate)}',
           amountMinor: inst.monthlyAmountMinor,
+          onTap: () => context.push(TrackerScreen.path),
         ),
       for (final debt in summary.upcomingDebts)
         _UpcomingItem(
@@ -392,6 +396,7 @@ class _UpcomingSection extends StatelessWidget {
               '${_debtTypeLabel(debt.type)} · '
               'Due ${AffluenaDateFormatter.shortDate(debt.dueDate)}',
           amountMinor: debt.remainingAmountMinor,
+          onTap: () => context.push(DebtDetailScreen.location(debt.id)),
         ),
     ];
 
@@ -421,12 +426,14 @@ class _UpcomingItem {
     required this.title,
     required this.subtitle,
     required this.amountMinor,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final int amountMinor;
+  final VoidCallback? onTap;
 }
 
 class _UpcomingRow extends StatelessWidget {
@@ -439,48 +446,96 @@ class _UpcomingRow extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space2),
-      child: Row(
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.surfaceTintSoft,
-              borderRadius: BorderRadius.circular(AffluenaRadii.md),
+    return InkWell(
+      onTap: item.onTap,
+      borderRadius: BorderRadius.circular(AffluenaRadii.md),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space2),
+        child: Row(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.surfaceTintSoft,
+                borderRadius: BorderRadius.circular(AffluenaRadii.md),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AffluenaSpacing.space2),
+                child: Icon(item.icon, color: colors.forest, size: 20),
+              ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(AffluenaSpacing.space2),
-              child: Icon(item.icon, color: colors.forest, size: 20),
+            const SizedBox(width: AffluenaSpacing.space3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: textTheme.bodyLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: AffluenaSpacing.space1),
+                  Text(
+                    item.subtitle,
+                    style: textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: AffluenaSpacing.space3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: textTheme.bodyLarge,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: AffluenaSpacing.space1),
-                Text(
-                  item.subtitle,
-                  style: textTheme.bodySmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            const SizedBox(width: AffluenaSpacing.space3),
+            Text(
+              MoneyFormatter.idr(item.amountMinor),
+              style: textTheme.titleMedium,
             ),
-          ),
-          const SizedBox(width: AffluenaSpacing.space3),
-          Text(
-            MoneyFormatter.idr(item.amountMinor),
-            style: textTheme.titleMedium,
-          ),
-        ],
+            if (item.onTap != null) ...[
+              const SizedBox(width: AffluenaSpacing.space1),
+              Icon(Icons.chevron_right, size: 18, color: colors.inkMuted),
+            ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _CashflowTrendBlock extends ConsumerWidget {
+  const _CashflowTrendBlock();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final granularity = ref.watch(dashboardCashflowGranularityProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: 'Cashflow trend',
+          actionLabel: 'Details',
+          onAction: () => context.push(InsightsScreen.path),
+        ),
+        const SizedBox(height: AffluenaSpacing.space3),
+        SegmentedButton<CashflowGranularity>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(
+              value: CashflowGranularity.month,
+              label: Text('Monthly'),
+            ),
+            ButtonSegment(
+              value: CashflowGranularity.week,
+              label: Text('Weekly'),
+            ),
+          ],
+          selected: {granularity},
+          onSelectionChanged: (selection) => ref
+              .read(dashboardCashflowGranularityProvider.notifier)
+              .set(selection.first),
+        ),
+        const SizedBox(height: AffluenaSpacing.space3),
+        const _CashflowTrendSection(),
+      ],
     );
   }
 }
@@ -513,18 +568,22 @@ class _CashflowTrendSection extends ConsumerWidget {
             icon: Icons.show_chart_rounded,
             title: 'No trend yet',
             message:
-                'Record income and expenses across a few months to see how '
+                'Record income and expenses across a few periods to see how '
                 'your cashflow moves.',
           );
         }
-        return AffluenaCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _TrendLegend(),
-              const SizedBox(height: AffluenaSpacing.space4),
-              CashflowTrendChart(points: points),
-            ],
+        return InkWell(
+          onTap: () => context.push(InsightsScreen.path),
+          borderRadius: BorderRadius.circular(AffluenaRadii.card),
+          child: AffluenaCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _TrendLegend(),
+                const SizedBox(height: AffluenaSpacing.space4),
+                CashflowTrendChart(points: points),
+              ],
+            ),
           ),
         );
       },
@@ -573,8 +632,74 @@ class _LegendDot extends StatelessWidget {
   }
 }
 
+class _ExpenseDistributionBlock extends ConsumerWidget {
+  const _ExpenseDistributionBlock({required this.walletNames});
+
+  final Map<String, String> walletNames;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+    final month = ref.watch(dashboardDistributionMonthProvider);
+    final now = DateTime.now();
+    final isCurrentMonth = month.year == now.year && month.month == now.month;
+
+    void shift(int delta) {
+      ref
+          .read(dashboardDistributionMonthProvider.notifier)
+          .set(DateTime(month.year, month.month + delta));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Where money went', style: textTheme.titleMedium),
+                  Text(
+                    AffluenaDateFormatter.monthLabel(month),
+                    style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              key: const Key('distribution-prev-month'),
+              visualDensity: VisualDensity.compact,
+              onPressed: () => shift(-1),
+              icon: const Icon(Icons.chevron_left),
+              tooltip: 'Previous month',
+            ),
+            IconButton(
+              key: const Key('distribution-next-month'),
+              visualDensity: VisualDensity.compact,
+              // Don't let the user page into the future.
+              onPressed: isCurrentMonth ? null : () => shift(1),
+              icon: const Icon(Icons.chevron_right),
+              tooltip: 'Next month',
+            ),
+          ],
+        ),
+        const SizedBox(height: AffluenaSpacing.space2),
+        _ExpenseDistributionSection(month: month, walletNames: walletNames),
+      ],
+    );
+  }
+}
+
 class _ExpenseDistributionSection extends ConsumerWidget {
-  const _ExpenseDistributionSection();
+  const _ExpenseDistributionSection({
+    required this.month,
+    required this.walletNames,
+  });
+
+  final DateTime month;
+  final Map<String, String> walletNames;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -612,6 +737,15 @@ class _ExpenseDistributionSection extends ConsumerWidget {
                 _DistributionRow(
                   item: entry.$2,
                   maxPercentage: maxPercentage,
+                  onTap: entry.$2.categoryId.isEmpty
+                      ? null
+                      : () => showCategoryMonthTransactionsSheet(
+                          context: context,
+                          categoryId: entry.$2.categoryId,
+                          categoryName: entry.$2.categoryName,
+                          month: month,
+                          walletNames: walletNames,
+                        ),
                 ),
                 if (entry.$1 < rows.length - 1)
                   const SizedBox(height: AffluenaSpacing.space4),
@@ -625,10 +759,15 @@ class _ExpenseDistributionSection extends ConsumerWidget {
 }
 
 class _DistributionRow extends StatelessWidget {
-  const _DistributionRow({required this.item, required this.maxPercentage});
+  const _DistributionRow({
+    required this.item,
+    required this.maxPercentage,
+    this.onTap,
+  });
 
   final ExpenseDistribution item;
   final double maxPercentage;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -638,42 +777,50 @@ class _DistributionRow extends StatelessWidget {
         ? 0.0
         : (item.percentage / maxPercentage).clamp(0.0, 1.0);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AffluenaRadii.md),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space1),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                item.categoryName,
-                style: textTheme.bodyLarge,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.categoryName,
+                    style: textTheme.bodyLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: AffluenaSpacing.space3),
+                Text('${item.percentage.round()}%', style: textTheme.labelMedium),
+                const SizedBox(width: AffluenaSpacing.space2),
+                Text(
+                  MoneyFormatter.idr(item.amountMinor),
+                  style: textTheme.titleMedium,
+                ),
+                if (onTap != null) ...[
+                  const SizedBox(width: AffluenaSpacing.space1),
+                  Icon(Icons.chevron_right, size: 18, color: colors.inkMuted),
+                ],
+              ],
+            ),
+            const SizedBox(height: AffluenaSpacing.space2),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AffluenaRadii.pill),
+              child: LinearProgressIndicator(
+                value: fraction,
+                minHeight: 6,
+                backgroundColor: colors.surfaceTintSoft,
+                valueColor: AlwaysStoppedAnimation<Color>(colors.forest),
               ),
-            ),
-            const SizedBox(width: AffluenaSpacing.space3),
-            Text(
-              '${item.percentage.round()}%',
-              style: textTheme.labelMedium,
-            ),
-            const SizedBox(width: AffluenaSpacing.space2),
-            Text(
-              MoneyFormatter.idr(item.amountMinor),
-              style: textTheme.titleMedium,
             ),
           ],
         ),
-        const SizedBox(height: AffluenaSpacing.space2),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AffluenaRadii.pill),
-          child: LinearProgressIndicator(
-            value: fraction,
-            minHeight: 6,
-            backgroundColor: colors.surfaceTintSoft,
-            valueColor: AlwaysStoppedAnimation<Color>(colors.forest),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -758,14 +905,14 @@ class _RecentTransactions extends StatelessWidget {
   }
 }
 
-class _TransactionRow extends StatelessWidget {
+class _TransactionRow extends ConsumerWidget {
   const _TransactionRow({required this.home, required this.transaction});
 
   final DashboardHome home;
   final Transaction transaction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final categoryName = home.categoryName(transaction);
     final walletName = home.walletName(transaction.walletId);
     final toWalletName = transaction.toWalletId == null
@@ -773,18 +920,27 @@ class _TransactionRow extends StatelessWidget {
         : home.walletName(transaction.toWalletId!);
     final date = AffluenaDateFormatter.shortDate(transaction.transactionAt);
 
-    return TransactionTile(
-      title: transaction.note.isEmpty ? categoryName : transaction.note,
-      metadata: _transactionMetadata(
-        transaction,
-        categoryName,
-        walletName,
-        toWalletName,
-        date,
+    return InkWell(
+      onTap: () {
+        // The detail sheet resolves names/edit-permissions from the
+        // transactions controller state; reading it also kicks off its load.
+        final state = ref.read(transactionsControllerProvider);
+        showTransactionDetail(context, ref, state, transaction);
+      },
+      borderRadius: BorderRadius.circular(AffluenaRadii.md),
+      child: TransactionTile(
+        title: transaction.note.isEmpty ? categoryName : transaction.note,
+        metadata: _transactionMetadata(
+          transaction,
+          categoryName,
+          walletName,
+          toWalletName,
+          date,
+        ),
+        amount: _transactionAmount(transaction),
+        icon: _transactionIcon(transaction, categoryName),
+        isIncome: transaction.type == TransactionType.income,
       ),
-      amount: _transactionAmount(transaction),
-      icon: _transactionIcon(transaction, categoryName),
-      isIncome: transaction.type == TransactionType.income,
     );
   }
 }

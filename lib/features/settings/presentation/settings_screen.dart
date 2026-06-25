@@ -19,10 +19,9 @@ import '../../recurring/presentation/recurring_screen.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/section_header.dart';
-import '../../transactions/presentation/split_bill_screen.dart';
+import '../../transactions/presentation/split_bill_list_screen.dart';
 import '../../trackers/presentation/tracker_screen.dart';
 import '../application/settings_controller.dart';
-import 'security_screen.dart';
 import 'settings_screen_widgets.dart';
 import 'settings_sheets.dart';
 import 'theme_settings_sheet.dart';
@@ -89,13 +88,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           AffluenaCard(
             child: Column(
               children: [
-                SettingsRow(
-                  icon: Icons.security_outlined,
-                  title: 'Security center',
-                  value: 'Account, password, and sessions',
-                  onTap: () => context.push(SecurityScreen.path),
-                ),
-                const Divider(height: 1),
                 SettingsRow(
                   key: const Key('settings-account-row'),
                   icon: Icons.person_outline,
@@ -169,8 +161,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 SettingsRow(
                   icon: Icons.call_split_outlined,
                   title: 'Split bill',
-                  value: 'Shared spending and debt records',
-                  onTap: () => context.push(SplitBillScreen.path),
+                  value: 'Ongoing splits and who owes you',
+                  onTap: () => context.push(SplitBillListScreen.path),
                 ),
                 const Divider(height: 1),
                 SettingsRow(

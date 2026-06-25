@@ -83,17 +83,30 @@ class _WalletsContent extends ConsumerWidget {
             const SizedBox(height: AffluenaSpacing.space6),
             const SectionHeader(title: 'Your wallets'),
             const SizedBox(height: AffluenaSpacing.space3),
-            for (final wallet in wallets) ...[
-              _WalletCard(
-                wallet: wallet,
-                onOpen: () =>
-                    context.push(WalletDetailScreen.location(wallet.id)),
-                onEdit: wallet.isGoal
-                    ? null
-                    : () => _showWalletForm(context, ref, wallet),
-              ),
-              const SizedBox(height: AffluenaSpacing.space3),
-            ],
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemCount: wallets.length,
+              gridDelegate:
+                  const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: AffluenaSpacing.space3,
+                    crossAxisSpacing: AffluenaSpacing.space3,
+                    mainAxisExtent: 188,
+                  ),
+              itemBuilder: (context, index) {
+                final wallet = wallets[index];
+                return _WalletCard(
+                  wallet: wallet,
+                  onOpen: () =>
+                      context.push(WalletDetailScreen.location(wallet.id)),
+                  onEdit: wallet.isGoal
+                      ? null
+                      : () => _showWalletForm(context, ref, wallet),
+                );
+              },
+            ),
           ],
         ],
       ),
@@ -117,48 +130,61 @@ class _WalletCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(AffluenaRadii.card),
       onTap: onOpen,
       child: AffluenaCard(
-        child: Row(
+        padding: const EdgeInsets.all(AffluenaSpacing.space4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.forestSoft,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(AffluenaSpacing.space4),
-                child: Icon(_walletIcon(wallet.type), color: colors.forest),
-              ),
+            Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.forestSoft,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AffluenaSpacing.space3),
+                    child: Icon(_walletIcon(wallet.type), color: colors.forest),
+                  ),
+                ),
+                const Spacer(),
+                if (_isShared(wallet))
+                  Icon(Icons.group, size: 18, color: colors.inkMuted),
+                if (onEdit != null)
+                  IconButton(
+                    key: Key('edit-wallet-${_walletKey(wallet)}'),
+                    onPressed: onEdit,
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(
+                      maxWidth: 36,
+                      maxHeight: 36,
+                    ),
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                  ),
+              ],
             ),
-            const SizedBox(width: AffluenaSpacing.space4),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(wallet.name, style: textTheme.titleMedium),
-                      ),
-                      if (_isShared(wallet)) const Icon(Icons.group, size: 18),
-                      if (onEdit != null)
-                        IconButton(
-                          key: Key('edit-wallet-${_walletKey(wallet)}'),
-                          onPressed: onEdit,
-                          icon: const Icon(Icons.edit_outlined),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AffluenaSpacing.space1),
-                  Text(
-                    '${_walletTypeLabel(wallet.type)} · ${_walletDescription(wallet)}',
-                    style: textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: AffluenaSpacing.space2),
-                  Text(
-                    MoneyFormatter.idr(wallet.balanceMinor),
-                    style: textTheme.bodyLarge,
-                  ),
-                ],
+            const SizedBox(height: AffluenaSpacing.space3),
+            Text(
+              wallet.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.titleMedium,
+            ),
+            const SizedBox(height: AffluenaSpacing.space1),
+            Text(
+              '${_walletTypeLabel(wallet.type)} · ${_walletDescription(wallet)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.bodySmall,
+            ),
+            const Spacer(),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                MoneyFormatter.idr(wallet.balanceMinor),
+                maxLines: 1,
+                style: textTheme.titleMedium,
               ),
             ),
           ],

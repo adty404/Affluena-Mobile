@@ -82,6 +82,12 @@ class SplitBillController extends Notifier<SplitBillState> {
     }
   }
 
+  /// Clears the transient "created" result/error so it does not linger when the
+  /// create form is re-opened.
+  void clearResult() {
+    state = state.copyWith(result: null, actionError: null);
+  }
+
   Future<bool> createSplitBill(SplitTransactionRequest request) async {
     state = state.copyWith(isSaving: true, actionError: null, result: null);
 

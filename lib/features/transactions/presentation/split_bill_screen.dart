@@ -27,7 +27,7 @@ part 'split_bill_screen_result_widgets.dart';
 class SplitBillScreen extends ConsumerStatefulWidget {
   const SplitBillScreen({super.key});
 
-  static const path = '/transactions/split';
+  static const path = '/transactions/split/new';
 
   @override
   ConsumerState<SplitBillScreen> createState() => _SplitBillScreenState();
@@ -48,6 +48,13 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
   void initState() {
     super.initState();
     _noteController = TextEditingController();
+    // Clear any "created" result/error from a previous visit so a stale success
+    // card never lingers when the form is reopened.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(splitBillControllerProvider.notifier).clearResult();
+      }
+    });
   }
 
   @override
@@ -140,6 +147,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
           const SizedBox(height: AffluenaSpacing.space3),
           _ParticipantList(
             participants: _participants,
+            totalAmountMinor: totalAmount,
             onAdd: state.isSaving ? null : () => _addParticipant(state),
             onRemove: state.isSaving
                 ? null
@@ -260,6 +268,9 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
     await ref
         .read(splitBillControllerProvider.notifier)
         .createSplitBill(request);
+    // The success result card (with View transactions/debts) renders from state.
+    // It is cleared on the next visit via clearResult() in initState, so it no
+    // longer lingers when the form is reopened from the split-bill list.
   }
 }
 
