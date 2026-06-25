@@ -141,7 +141,10 @@ class _CashflowTrendPainter extends CustomPainter {
     double baselineY,
   ) {
     final painter = TextPainter(
-      text: TextSpan(text: text, style: labelStyle?.copyWith(color: label)),
+      text: TextSpan(
+        text: text,
+        style: labelStyle?.copyWith(color: label),
+      ),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
     )..layout();

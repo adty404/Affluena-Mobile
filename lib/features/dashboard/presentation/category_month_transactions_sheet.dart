@@ -48,7 +48,8 @@ class _CategoryMonthSheet extends ConsumerStatefulWidget {
   final Map<String, String> walletNames;
 
   @override
-  ConsumerState<_CategoryMonthSheet> createState() => _CategoryMonthSheetState();
+  ConsumerState<_CategoryMonthSheet> createState() =>
+      _CategoryMonthSheetState();
 }
 
 class _CategoryMonthSheetState extends ConsumerState<_CategoryMonthSheet> {
@@ -119,8 +120,7 @@ class _CategoryMonthSheetState extends ConsumerState<_CategoryMonthSheet> {
                   if (snapshot.hasError) {
                     return AffluenaBanner.error(
                       'We could not load these transactions.',
-                      onRetry: () =>
-                          setState(() => _future = _load()),
+                      onRetry: () => setState(() => _future = _load()),
                     );
                   }
                   final transactions =
@@ -147,8 +147,7 @@ class _CategoryMonthSheetState extends ConsumerState<_CategoryMonthSheet> {
                     separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final t = transactions[index];
-                      final wallet =
-                          widget.walletNames[t.walletId] ?? 'Wallet';
+                      final wallet = widget.walletNames[t.walletId] ?? 'Wallet';
                       return TransactionTile(
                         title: t.note.isEmpty ? widget.categoryName : t.note,
                         metadata:
