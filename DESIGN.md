@@ -126,7 +126,7 @@ All spacing derives from a base of 4.
 ### Selector Row
 
 - **Structure**: label, selected value, trailing chevron.
-- **Variants**: wallet, category, tags, date, note.
+- **Variants**: wallet, category, tags, date, date & time, note.
 - **Spacing**: `space4` vertical padding.
 - **States**: default, focused, error.
 - **Accessibility**: selected values must be names, never raw IDs.
@@ -174,9 +174,16 @@ All spacing derives from a base of 4.
 ### Date Picker Field
 
 - **Structure**: a Selector Row-styled field (label, formatted value, chevron) that opens the native date picker on tap.
-- **Usage**: every date / datetime field. Replaces hand-typed `YYYY-MM-DD` / RFC3339 entry; machine date formats are never shown to the user.
+- **Usage**: date-only fields where time-of-day is irrelevant — debt/installment due dates, goal target dates, tracker dates, recurring schedules, and the transaction filter range. Replaces hand-typed `YYYY-MM-DD` / RFC3339 entry; machine date formats are never shown to the user.
 - **States**: empty (placeholder), selected, disabled.
 - **Accessibility**: exposes label + selected value via `Semantics`; the displayed date uses the `id_ID` locale.
+
+### Date & Time Picker Field
+
+- **Structure**: a Selector Row-styled field (label, formatted value, chevron) that opens the native date picker followed by the native time picker on tap.
+- **Usage**: every transaction input — transaction create/edit, quick entry (manual save and template execute), split bill, and the wallet balance-adjustment (penyesuaian) sheet. Captures a full date **and** time-of-day; values may be backdated or future-dated. The picked local datetime is normalized to UTC and sent as a full RFC3339 timestamp (`transaction_at`); machine date formats are never shown to the user.
+- **States**: empty (placeholder), selected, disabled.
+- **Accessibility**: exposes label + selected value via `Semantics`; the displayed date and time use the `id_ID` locale.
 
 ### Status Banner
 
