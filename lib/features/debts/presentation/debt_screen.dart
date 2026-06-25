@@ -68,12 +68,7 @@ class _DebtBody extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: () => controller.load(),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           _DebtSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -384,12 +379,7 @@ class _DebtSkeleton extends StatelessWidget {
     return SafeArea(
       top: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const AffluenaCard(
             child: Column(
@@ -436,12 +426,7 @@ class _DebtLoadError extends StatelessWidget {
     return SafeArea(
       top: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
             'We could not load your debts.',

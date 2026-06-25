@@ -94,12 +94,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
     return DrillInScaffold(
       title: 'Split bill',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const _SplitBillIntro(),
           const SizedBox(height: AffluenaSpacing.space5),

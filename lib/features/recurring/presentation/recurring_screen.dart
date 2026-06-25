@@ -49,12 +49,7 @@ class RecurringScreen extends ConsumerWidget {
         ),
       ],
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           _RecurringSummaryCard(state: state),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -329,12 +324,7 @@ class _RecurringLoading extends StatelessWidget {
     return DrillInScaffold(
       title: 'Recurring',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const AffluenaCard(
             child: Column(
@@ -381,12 +371,7 @@ class _RecurringError extends StatelessWidget {
     return DrillInScaffold(
       title: 'Recurring',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
             'We could not load recurring rules.',

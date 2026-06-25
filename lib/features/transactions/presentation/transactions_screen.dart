@@ -50,12 +50,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           Text('Activity', style: textTheme.headlineMedium),
           const SizedBox(height: AffluenaSpacing.space4),

@@ -46,12 +46,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     return DrillInScaffold(
       title: 'Audit logs',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           _AuditSummaryCard(state: state),
           if (_detailError != null) ...[
@@ -368,12 +363,7 @@ class _AuditLogLoading extends StatelessWidget {
     return DrillInScaffold(
       title: 'Audit logs',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           const AffluenaCard(
             child: Row(

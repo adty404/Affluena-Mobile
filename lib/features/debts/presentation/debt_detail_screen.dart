@@ -54,12 +54,7 @@ class _DebtDetailContent extends StatelessWidget {
     final accent = isPayable ? colors.coral : colors.success;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AffluenaSpacing.space5,
-        AffluenaSpacing.space4,
-        AffluenaSpacing.space5,
-        AffluenaSpacing.space8,
-      ),
+      padding: AffluenaInsets.screen,
       children: [
         AffluenaCard(
           child: Column(
@@ -358,12 +353,7 @@ class _DebtDetailSkeleton extends StatelessWidget {
     return SafeArea(
       top: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaCard(
             child: Column(
@@ -426,12 +416,7 @@ class _DebtDetailError extends StatelessWidget {
     return SafeArea(
       top: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
-          AffluenaSpacing.space5,
-          AffluenaSpacing.space8,
-        ),
+        padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
             'We could not load this debt.',
