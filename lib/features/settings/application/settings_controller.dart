@@ -87,7 +87,19 @@ class SettingsProfileController extends AsyncNotifier<AuthUser> {
     ChangePasswordRequest request,
   ) async {
     try {
-      await ref.read(authRepositoryProvider).changePassword(request);
+      final session = await ref
+          .read(authRepositoryProvider)
+          .changePassword(request);
+      // The password change revoked every other session; persist the fresh
+      // token pair so this device stays signed in with the new credentials.
+      await ref
+          .read(secureTokenStoreProvider)
+          .saveTokens(
+            accessToken: session.tokens.accessToken,
+            refreshToken: session.tokens.refreshToken,
+          );
+      ref.read(authControllerProvider.notifier).replaceUser(session.user);
+      state = AsyncData(session.user);
       return const SettingsActionResult.success('Password updated.');
     } catch (error) {
       return SettingsActionResult.failure(settingsErrorMessage(error));
