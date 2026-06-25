@@ -18,9 +18,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Groceries at Indomaret'), findsOneWidget);
-    expect(find.text('Food & Dining · GoPay · 20 Jun 2026'), findsOneWidget);
+    // Day-grouped list: the date is the section header, the row shows category ·
+    // wallet · time. Assert the time-agnostic prefix so the test is tz-stable.
+    expect(find.textContaining('Food & Dining · GoPay'), findsOneWidget);
     expect(find.text('Monthly Salary'), findsOneWidget);
-    expect(find.text('Salary · BCA Primary · 21 Jun 2026'), findsOneWidget);
+    expect(find.textContaining('Salary · BCA Primary'), findsOneWidget);
     expect(find.text(gopayWallet.id), findsNothing);
     expect(find.text(foodCategory.id), findsNothing);
   });
@@ -120,6 +122,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Groceries at Indomaret'), findsNothing);
+    // The day-grouped list is taller than the viewport; scroll the remaining
+    // item (from the refreshed backend state) into view before asserting.
+    await tester.scrollUntilVisible(
+      find.text('Movie Night'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Movie Night'), findsOneWidget);
     expect(find.text('Load more'), findsNothing);
   });

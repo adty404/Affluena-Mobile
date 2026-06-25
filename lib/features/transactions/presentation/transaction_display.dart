@@ -23,6 +23,23 @@ String transactionMetadata(TransactionsState state, Transaction transaction) {
   return '${state.categoryName(transaction)} · $walletName · $date';
 }
 
+/// Metadata for the day-grouped Activity list: the day is the section header,
+/// so each row shows the time-of-day instead of the full date.
+String transactionGroupedMetadata(
+  TransactionsState state,
+  Transaction transaction,
+) {
+  final time = AffluenaDateFormatter.time(transaction.transactionAt);
+  final walletName = state.walletName(transaction.walletId);
+  if (transaction.type == TransactionType.transfer) {
+    final toWalletName = transaction.toWalletId == null
+        ? 'Unknown wallet'
+        : state.walletName(transaction.toWalletId!);
+    return 'Transfer · $walletName to $toWalletName · $time';
+  }
+  return '${state.categoryName(transaction)} · $walletName · $time';
+}
+
 String transactionAmount(Transaction transaction) {
   return switch (transaction.type) {
     TransactionType.income => MoneyFormatter.signedIdr(transaction.amountMinor),
