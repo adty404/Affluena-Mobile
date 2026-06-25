@@ -9,7 +9,7 @@ import '../../debts/presentation/debt_screen.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
-import '../../shared/presentation/widgets/date_picker_field.dart';
+import '../../shared/presentation/widgets/date_time_picker_field.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -271,7 +271,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
 }
 
 String _transactionAtFromDate(DateTime date) {
-  final month = date.month.toString().padLeft(2, '0');
-  final day = date.day.toString().padLeft(2, '0');
-  return '${date.year}-$month-${day}T00:00:00Z';
+  // Send the full local date+time (UTC-normalized) so split bills can be
+  // backdated and carry a time-of-day, matching the other transaction inputs.
+  return date.toUtc().toIso8601String();
 }

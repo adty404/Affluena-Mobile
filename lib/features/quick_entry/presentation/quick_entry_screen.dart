@@ -10,6 +10,7 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
+import '../../shared/presentation/widgets/date_time_picker_field.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
@@ -41,6 +42,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
   String? _selectedToWalletId;
   String? _selectedCategoryId;
   List<String> _selectedTagIds = const [];
+  DateTime _dateTime = DateTime.now();
   bool _isSaving = false;
   String? _message;
   String? _error;
@@ -78,11 +80,17 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
           selectedToWalletId: _selectedToWalletId,
           selectedCategoryId: _selectedCategoryId,
           selectedTagIds: _selectedTagIds,
+          dateTime: _dateTime,
           isSaving: _isSaving,
           message: _message,
           error: _error,
           canSave: _canSave(lookup),
           onTypeChanged: _setType,
+          onDateTimeChanged: (value) => setState(() {
+            _dateTime = value;
+            _message = null;
+            _error = null;
+          }),
           onAmountChanged: (value) => setState(() {
             _amountMinor = value ?? 0;
             _message = null;
@@ -238,7 +246,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
           ? null
           : _selectedCategoryId,
       amountMinor: _amountMinor,
-      transactionAt: DateTime.now().toUtc().toIso8601String(),
+      transactionAt: _dateTime.toUtc().toIso8601String(),
       note: _noteController.text.trim().isEmpty
           ? null
           : _noteController.text.trim(),
@@ -276,7 +284,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
           .executeTemplate(
             template.id,
             ExecuteQuickEntryRequest(
-              transactionAt: DateTime.now().toUtc().toIso8601String(),
+              transactionAt: _dateTime.toUtc().toIso8601String(),
             ),
           );
       _invalidateMoneySurfaces();
@@ -310,11 +318,13 @@ class _QuickEntryContent extends StatelessWidget {
     required this.selectedToWalletId,
     required this.selectedCategoryId,
     required this.selectedTagIds,
+    required this.dateTime,
     required this.isSaving,
     required this.message,
     required this.error,
     required this.canSave,
     required this.onTypeChanged,
+    required this.onDateTimeChanged,
     required this.onAmountChanged,
     required this.onSelectWallet,
     required this.onSelectToWallet,
@@ -335,11 +345,13 @@ class _QuickEntryContent extends StatelessWidget {
   final String? selectedToWalletId;
   final String? selectedCategoryId;
   final List<String> selectedTagIds;
+  final DateTime dateTime;
   final bool isSaving;
   final String? message;
   final String? error;
   final bool canSave;
   final ValueChanged<TransactionType> onTypeChanged;
+  final ValueChanged<DateTime> onDateTimeChanged;
   final ValueChanged<int?> onAmountChanged;
   final ValueChanged<QuickEntryLookup> onSelectWallet;
   final ValueChanged<QuickEntryLookup> onSelectToWallet;
@@ -492,6 +504,14 @@ class _QuickEntryContent extends StatelessWidget {
                   onTap: lookup.tags.isEmpty
                       ? null
                       : () => onSelectTags(lookup),
+                ),
+                const Divider(height: 1),
+                DateTimePickerField(
+                  key: const Key('quick-entry-datetime-field'),
+                  label: 'Date & time',
+                  value: dateTime,
+                  enabled: !isSaving,
+                  onChanged: onDateTimeChanged,
                 ),
                 const SizedBox(height: AffluenaSpacing.space4),
                 TextField(

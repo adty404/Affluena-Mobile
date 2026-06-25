@@ -25,6 +25,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 Widget authTestApp({
   required MemoryTokenStore tokenStore,
@@ -90,6 +91,9 @@ Future<void> pumpAuthTestApp(
   CategoryRepository? categoryRepository,
   List<dynamic> extraOverrides = const [],
 }) async {
+  // Date widgets (e.g. DateTimePickerField) format with the 'id_ID' locale,
+  // mirroring main(); initialize it before pumping. Idempotent, so safe here.
+  await initializeDateFormatting('id_ID');
   await tester.pumpWidget(
     authTestApp(
       tokenStore: tokenStore ?? MemoryTokenStore(),

@@ -9,7 +9,7 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
-import '../../shared/presentation/widgets/date_picker_field.dart';
+import '../../shared/presentation/widgets/date_time_picker_field.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -153,12 +153,11 @@ class _TransactionCreateScreenState
                 ],
                 const Divider(height: 1),
                 const SizedBox(height: AffluenaSpacing.space3),
-                DatePickerField(
+                DateTimePickerField(
                   key: const Key('transaction-create-date-field'),
-                  label: 'Date',
+                  label: 'Date & time',
                   value: _date,
                   enabled: !state.isSaving,
-                  lastDate: DateTime.now(),
                   onChanged: (value) => setState(() {
                     _date = value;
                     _validationError = null;
@@ -364,10 +363,9 @@ class _TransactionCreateScreenState
     return null;
   }
 
-  static String _transactionAt(DateTime date) {
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
-    return '${date.year}-$month-${day}T00:00:00Z';
+  static String _transactionAt(DateTime dateTime) {
+    // Preserve the chosen time-of-day; send as a UTC RFC3339 instant.
+    return dateTime.toUtc().toIso8601String();
   }
 }
 

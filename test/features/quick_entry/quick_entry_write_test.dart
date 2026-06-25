@@ -15,8 +15,15 @@ import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
+  setUpAll(() async {
+    // The quick-entry form's DateTimePickerField formats with the 'id_ID'
+    // locale, mirroring main(); initialize it before the widgets build.
+    await initializeDateFormatting('id_ID');
+  });
+
   testWidgets('amount validity gates save and API failure preserves values', (
     tester,
   ) async {
