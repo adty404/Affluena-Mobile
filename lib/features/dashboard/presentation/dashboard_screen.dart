@@ -174,11 +174,15 @@ class _BalanceCard extends StatelessWidget {
                 color: cashflowColor,
               ),
               const SizedBox(width: AffluenaSpacing.space1),
-              Text(
-                '${MoneyFormatter.signedIdr(cashflow)} this month',
-                style: textTheme.bodySmall?.copyWith(
-                  color: cashflowColor,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  '${MoneyFormatter.signedIdr(cashflow)} this month',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: cashflowColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
