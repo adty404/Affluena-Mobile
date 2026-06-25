@@ -61,6 +61,7 @@ This app includes:
 - Auth flows: login, register, forgot password, reset password, change password (revokes other sessions; persists the refreshed token pair to secure storage)
 - Home dashboard with interactive sections: tappable Upcoming rows, a Cashflow trend with monthly/weekly toggle (drill-in to Insights), a "Where money went" breakdown with a month stepper + per-category drill-in, and tappable recent transactions
 - Quick Entry + templates with a tree-aware category picker, optional multi-select tags, and templates scoped to the active expense/income/transfer tab
+- A reusable date + time picker on every transaction input (transaction create, quick entry manual save and template execute, split bill, and the wallet adjust-balance/penyesuaian sheet): the picked local datetime is normalized to UTC and sent as a full RFC3339 `transaction_at` timestamp, so entries capture the exact time of day and can be backdated or future-dated rather than defaulting to "now"
 - Activity tab with a Transactions/Activity segmented view (the Activity feed surfaces transaction-related actions: split bill, debt/installment/subscription payments)
 - Split bill is list-first: see ongoing splits and who owes you, open a detail, then add a new split
 - Wallets shown as a two-per-row grid; wallet detail and sharing
