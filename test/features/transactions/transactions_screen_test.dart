@@ -1,3 +1,4 @@
+import 'package:affluena_mobile/core/formatters/date_formatter.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -80,6 +81,12 @@ void main() {
     expect(find.text('Transaction detail'), findsOneWidget);
     expect(find.text('GoPay'), findsWidgets);
     expect(find.text('Food & Dining'), findsWidgets);
+    // The detail shows the full date AND time-of-day, not just the date.
+    expect(find.text('Date & time'), findsOneWidget);
+    expect(
+      find.text(AffluenaDateFormatter.dateTime(groceriesTransaction.transactionAt)),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Delete transaction'));
     await tester.pumpAndSettle();

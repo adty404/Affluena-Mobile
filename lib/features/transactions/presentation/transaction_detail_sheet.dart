@@ -88,8 +88,8 @@ class _TransactionDetailSheet extends ConsumerWidget {
                 value: state.categoryName(transaction),
               ),
               _DetailLine(
-                label: 'Date',
-                value: AffluenaDateFormatter.shortDate(
+                label: 'Date & time',
+                value: AffluenaDateFormatter.dateTime(
                   transaction.transactionAt,
                 ),
               ),

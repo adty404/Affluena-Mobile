@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 
 abstract final class AffluenaDateFormatter {
   static final DateFormat _shortDate = DateFormat('d MMM yyyy');
+  static final DateFormat _dateTime = DateFormat('d MMM yyyy · HH:mm');
   static final DateFormat _monthKey = DateFormat('yyyy-MM');
   static final DateFormat _monthLabel = DateFormat('MMM yyyy');
   static final DateFormat _time = DateFormat('HH:mm');
@@ -9,6 +10,11 @@ abstract final class AffluenaDateFormatter {
 
   static String shortDate(String isoString) {
     return _shortDate.format(DateTime.parse(isoString).toLocal());
+  }
+
+  /// Local date and time-of-day, e.g. "20 Jun 2026 · 14:05".
+  static String dateTime(String isoString) {
+    return _dateTime.format(DateTime.parse(isoString).toLocal());
   }
 
   /// Local time-of-day, e.g. "14:05".
