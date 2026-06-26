@@ -10,6 +10,7 @@ import '../../shared/presentation/widgets/section_header.dart';
 import '../application/wallets_controller.dart';
 import '../data/wallet_models.dart';
 import '../data/wallet_repository.dart';
+import 'wallet_adjust_sheet.dart';
 import 'wallet_detail_screen.dart';
 import 'wallet_format.dart';
 
@@ -365,6 +366,26 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
                 keyboardType: TextInputType.number,
               ),
             ],
+            // When editing, the balance is never silently overwritten: the user
+            // adjusts it through an `adjustment` (penyesuaian) transaction so the
+            // change stays in the audit trail.
+            if (isEditing) ...[
+              const SizedBox(height: AffluenaSpacing.space4),
+              Text(
+                'Current balance ${MoneyFormatter.idr(widget.wallet!.balanceMinor)}',
+                style: textTheme.bodySmall,
+              ),
+              const SizedBox(height: AffluenaSpacing.space2),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  key: const Key('wallet-edit-adjust-balance'),
+                  onPressed: _isSaving ? null : _adjustBalance,
+                  icon: const Icon(Icons.tune_outlined, size: 18),
+                  label: const Text('Adjust balance (penyesuaian)'),
+                ),
+              ),
+            ],
             if (_error != null) ...[
               const SizedBox(height: AffluenaSpacing.space3),
               Text(
@@ -384,6 +405,17 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
         ),
       ),
     );
+  }
+
+  Future<void> _adjustBalance() async {
+    final wallet = widget.wallet;
+    if (wallet == null) return;
+    // Stack the adjustment sheet over this edit sheet. On success, close the
+    // edit sheet too and signal a refresh so the new balance shows immediately.
+    final adjusted = await showWalletAdjustSheet(context, wallet);
+    if (adjusted == true && mounted) {
+      Navigator.of(context).pop(true);
+    }
   }
 
   Future<void> _save() async {
