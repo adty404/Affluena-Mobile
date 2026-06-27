@@ -87,53 +87,6 @@ void main() {
     expect(find.text('Restaurants & Cafes'), findsNothing);
   });
 
-  testWidgets('creates edits and deletes a tag without showing raw ids', (
-    tester,
-  ) async {
-    final tagRepository = TestTagManagementRepository();
-
-    await tester.pumpWidget(categoryTagTestApp(tagRepository: tagRepository));
-    await tester.pumpManagementState();
-
-    await tester.tap(find.byKey(const Key('add-tag-button')));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('tag-name-field')), 'Weekend');
-    await tester.pump();
-    await tester.tap(find.byKey(const Key('tag-save-button')));
-    await tester.pumpManagementState();
-
-    expect(tagRepository.createdRequests.single.name, 'Weekend');
-    await tester.scrollUntilTextVisible('#MonthlyBill');
-    expect(find.text('#MonthlyBill'), findsOneWidget);
-    expect(find.text(monthlyTag.id), findsNothing);
-    await tester.scrollUntilTextVisible('#Weekend');
-    expect(find.text('#Weekend'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('tag-menu-tag-weekend')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit'));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('tag-name-field')), 'Family');
-    await tester.pump();
-    await tester.tap(find.byKey(const Key('tag-save-button')));
-    await tester.pumpManagementState();
-
-    expect(tagRepository.updatedIds.single, 'tag-weekend');
-    expect(tagRepository.updatedRequests.single.name, 'Family');
-    await tester.scrollUntilTextVisible('#Family');
-    expect(find.text('#Family'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('tag-menu-tag-weekend')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete tag'));
-    await tester.pumpManagementState();
-
-    expect(tagRepository.deletedIds.single, 'tag-weekend');
-    expect(find.text('#Family'), findsNothing);
-  });
-
   testWidgets('delete category error keeps list state and allows retry', (
     tester,
   ) async {

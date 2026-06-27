@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
-import '../../../core/formatters/tag_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -11,7 +10,6 @@ import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
-import '../../tags/data/tag_models.dart';
 import '../application/category_tag_management_controller.dart';
 import '../data/category_models.dart';
 
@@ -73,15 +71,9 @@ class _CategoryTagManagementScreenState
               category.type.apiValue.contains(normalizedQuery);
         })
         .toList(growable: false);
-    final visibleTags = state.tags
-        .where((tag) {
-          if (normalizedQuery.isEmpty) return true;
-          return tagLabel(tag.name).toLowerCase().contains(normalizedQuery);
-        })
-        .toList(growable: false);
 
     return DrillInScaffold(
-      title: 'Categories & Tags',
+      title: 'Categories',
       actions: [
         IconButton.filledTonal(
           key: const Key('add-category-button'),
@@ -90,13 +82,6 @@ class _CategoryTagManagementScreenState
               ? null
               : () => _showCategoryForm(context, ref, state: state),
           icon: const Icon(Icons.account_tree_outlined),
-        ),
-        const SizedBox(width: AffluenaSpacing.space2),
-        IconButton.filledTonal(
-          key: const Key('add-tag-button'),
-          tooltip: 'Add tag',
-          onPressed: state.isSaving ? null : () => _showTagForm(context),
-          icon: const Icon(Icons.label_outline),
         ),
         const SizedBox(width: AffluenaSpacing.space2),
       ],
@@ -108,7 +93,7 @@ class _CategoryTagManagementScreenState
             autocorrect: false,
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
-              labelText: 'Search categories and tags',
+              labelText: 'Search categories',
             ),
             onChanged: (value) => setState(() => _query = value),
           ),
@@ -168,48 +153,6 @@ class _CategoryTagManagementScreenState
                     : 'Load more (${state.categories.length} of ${state.categoryTotal})',
               ),
             ),
-          ],
-          const SizedBox(height: AffluenaSpacing.space5),
-          SectionHeader(
-            title: 'Tags',
-            actionLabel: '${visibleTags.length} shown',
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          if (visibleTags.isEmpty)
-            _EmptyManagementState(
-              icon: Icons.label_outline,
-              title: normalizedQuery.isEmpty ? 'No tags yet' : 'No tags match',
-              message: normalizedQuery.isEmpty
-                  ? 'Tags label transactions across categories. Create your first tag.'
-                  : 'Try a different search to find a tag.',
-              actionLabel: normalizedQuery.isEmpty ? 'Add tag' : null,
-              onAction: normalizedQuery.isEmpty
-                  ? () => _showTagForm(context)
-                  : null,
-            )
-          else ...[
-            for (final tag in visibleTags) ...[
-              _TagCard(
-                tag: tag,
-                onEdit: () => _showTagForm(context, tag: tag),
-                onDelete: () => _confirmDeleteTag(context, controller, tag),
-              ),
-              const SizedBox(height: AffluenaSpacing.space3),
-            ],
-            if (state.hasMoreTags && normalizedQuery.isEmpty) ...[
-              const SizedBox(height: AffluenaSpacing.space2),
-              OutlinedButton(
-                key: const Key('tag-load-more-button'),
-                onPressed: state.isLoadingMoreTags
-                    ? null
-                    : controller.loadMoreTags,
-                child: Text(
-                  state.isLoadingMoreTags
-                      ? 'Loading...'
-                      : 'Load more (${state.tags.length} of ${state.tagTotal})',
-                ),
-              ),
-            ],
           ],
         ],
       ),

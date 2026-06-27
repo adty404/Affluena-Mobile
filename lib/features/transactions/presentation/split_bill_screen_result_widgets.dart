@@ -26,22 +26,12 @@ class _SplitResultCard extends StatelessWidget {
           const SizedBox(height: AffluenaSpacing.space1),
           Text(debtLabel),
           const SizedBox(height: AffluenaSpacing.space4),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => context.go(TransactionsScreen.path),
-                  child: const Text('View transactions'),
-                ),
-              ),
-              const SizedBox(width: AffluenaSpacing.space3),
-              Expanded(
-                child: FilledButton.tonal(
-                  onPressed: () => context.go(DebtScreen.path),
-                  child: const Text('View debts'),
-                ),
-              ),
-            ],
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => context.go(TransactionsScreen.path),
+              child: const Text('View transactions'),
+            ),
           ),
         ],
       ),

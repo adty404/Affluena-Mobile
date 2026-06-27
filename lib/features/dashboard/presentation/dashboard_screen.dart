@@ -10,10 +10,7 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../budgets/presentation/budget_screen.dart';
-import '../../debts/presentation/debt_detail_screen.dart';
-import '../../insights/presentation/insights_screen.dart';
 import '../../quick_entry/presentation/quick_entry_screen.dart';
-import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
@@ -27,9 +24,6 @@ import '../../transactions/presentation/transactions_screen.dart';
 import '../../wallets/presentation/wallets_screen.dart';
 import '../application/dashboard_home_controller.dart';
 import '../data/dashboard_models.dart';
-import 'cashflow_trend_chart.dart';
-import 'category_month_transactions_sheet.dart';
-
 part 'dashboard_sections.dart';
 part 'dashboard_support.dart';
 
@@ -79,7 +73,6 @@ class _DashboardContent extends ConsumerWidget {
           const SizedBox(height: AffluenaSpacing.space5),
           const _QuickActions(),
           const SizedBox(height: AffluenaSpacing.space6),
-          const _ForecastSection(),
           home.isEmpty
               ? const _EmptyDashboardState()
               : _BudgetCard(summary: summary),
@@ -87,10 +80,6 @@ class _DashboardContent extends ConsumerWidget {
             const SizedBox(height: AffluenaSpacing.space6),
             _UpcomingSection(summary: summary),
           ],
-          const SizedBox(height: AffluenaSpacing.space6),
-          const _CashflowTrendBlock(),
-          const SizedBox(height: AffluenaSpacing.space6),
-          _ExpenseDistributionBlock(walletNames: home.walletNames),
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
             title: 'Recent transactions',
