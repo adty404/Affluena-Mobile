@@ -16,21 +16,6 @@ List<_NamedOption> _walletOptions(
   return options;
 }
 
-List<_NamedOption> _categoryOptions(
-  TransactionsState state,
-  Transaction transaction,
-  String? categoryId,
-) {
-  final options = [
-    for (final entry in state.categoryNames.entries)
-      _NamedOption(entry.key, entry.value),
-  ];
-  if (categoryId != null) {
-    _addMissingOption(options, categoryId, state.categoryName(transaction));
-  }
-  return options;
-}
-
 void _addMissingOption(List<_NamedOption> options, String? id, String label) {
   if (id == null || options.any((option) => option.id == id)) return;
   options.add(_NamedOption(id, label));
