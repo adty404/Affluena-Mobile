@@ -27,6 +27,16 @@ enum WalletType {
   }
 }
 
+/// What a shared-wallet member is allowed to do.
+/// - member: read + write (can record transactions)
+/// - viewer: read only (can see the wallet, cannot record)
+enum WalletInviteRole {
+  viewer,
+  member;
+
+  String get apiValue => name;
+}
+
 enum WalletShareStatus {
   pending,
   joined,
@@ -139,6 +149,14 @@ class Wallet {
   final List<WalletMember> members;
 
   bool get isGoal => type == WalletType.goal;
+
+  /// True when the current user only has read-only (viewer) access to this
+  /// shared wallet. Owners and read/write members have role 'owner'/'member'
+  /// (or null for a private owned wallet).
+  bool get isViewer => role == 'viewer';
+
+  /// Whether the current user may record/edit transactions in this wallet.
+  bool get canWrite => !isViewer;
 }
 
 class WalletListResponse {
@@ -238,11 +256,15 @@ class WalletRequest {
 }
 
 class WalletInviteRequest {
-  const WalletInviteRequest({required this.email});
+  const WalletInviteRequest({
+    required this.email,
+    this.role = WalletInviteRole.member,
+  });
 
   final String email;
+  final WalletInviteRole role;
 
-  JsonMap toJson() => {'email': email};
+  JsonMap toJson() => {'email': email, 'role': role.apiValue};
 }
 
 class WalletInviteResponse {

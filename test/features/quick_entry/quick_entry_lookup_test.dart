@@ -85,6 +85,37 @@ void main() {
     );
   });
 
+  testWidgets('view-only (viewer) wallets are not selectable for recording', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      lookupTestApp(
+        walletRepository: const LookupWalletRepository(
+          wallets: [lookupBankWallet, lookupViewerWallet],
+        ),
+        categoryRepository: const RecordingCategoryRepository(
+          categories: [lookupExpenseCategory],
+        ),
+        tagRepository: const LookupTagRepository(tags: [lookupMonthlyTag]),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('quick-entry-wallet-row')));
+    await tester.pumpAndSettle();
+
+    final sheet = find.byType(BottomSheet);
+    expect(
+      find.descendant(of: sheet, matching: find.text('BCA Primary')),
+      findsOneWidget,
+    );
+    // The view-only wallet must not be offered as a recording target.
+    expect(
+      find.descendant(of: sheet, matching: find.text('Shared (view only)')),
+      findsNothing,
+    );
+  });
+
   testWidgets('empty lookup data explains the blocker and disables save', (
     tester,
   ) async {
@@ -421,6 +452,21 @@ const lookupGoPayWallet = Wallet(
   balanceMinor: 320000,
   color: 'green',
   description: 'Daily wallet',
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+// A wallet shared to the current user with read-only (viewer) access.
+const lookupViewerWallet = Wallet(
+  id: '22222222-2222-2222-2222-222222220009',
+  userId: '11111111-1111-1111-1111-111111111111',
+  name: 'Shared (view only)',
+  type: WalletType.bank,
+  currencyCode: 'IDR',
+  balanceMinor: 5000000,
+  color: 'blue',
+  description: '',
+  role: 'viewer',
   createdAt: '2026-06-01T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
 );
