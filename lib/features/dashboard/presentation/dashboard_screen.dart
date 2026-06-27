@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,7 +69,9 @@ class _DashboardContent extends ConsumerWidget {
         padding: AffluenaInsets.screen,
         children: [
           _DashboardHeader(
-            greeting: _greetingForNow(DateTime.now()),
+            // clock.now() (not DateTime.now()) so golden tests can freeze the
+            // time-of-day greeting via withClock; identical to now() in prod.
+            greeting: _greetingForNow(clock.now()),
             initial: _avatarInitial(user?.name, user?.email),
           ),
           const SizedBox(height: AffluenaSpacing.space6),
