@@ -31,9 +31,7 @@ void main() {
     expect(state.rules.single.title, 'Budget alerts');
   });
 
-  testWidgets('renders reports and exports CSV from the mobile surface', (
-    tester,
-  ) async {
+  testWidgets('renders reports from the mobile surface', (tester) async {
     final repository = TestInsightsRepository();
 
     await tester.pumpWidget(insightsTestApp(repository));
@@ -45,15 +43,8 @@ void main() {
     expect(find.text('79%'), findsOneWidget);
     expect(find.text('Rp 79'), findsNothing);
 
-    await tester.tap(find.byKey(const Key('insights-tab-exports')));
-    await tester.pumpAndSettle();
-    expect(find.text('Transaction CSV'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('insights-export-button')));
-    await tester.pumpAndSettle();
-
-    expect(repository.exportRequests, hasLength(1));
-    expect(find.text('CSV export shared.'), findsOneWidget);
+    // CSV export is hidden from the UI for now, so its tab chip is not offered.
+    expect(find.byKey(const Key('insights-tab-exports')), findsNothing);
   });
 
   testWidgets('opens alert and activity detail cards', (tester) async {

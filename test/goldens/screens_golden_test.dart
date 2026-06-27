@@ -51,14 +51,4 @@ void main() {
       matchesGoldenFile('goldens/more.png'),
     );
   });
-
-  testWidgets('split bill list golden', (tester) async {
-    await openTab(tester, 'Activity');
-    await tester.tap(find.byKey(const Key('split-bill-entry-button')));
-    await tester.pumpAndSettle();
-    await expectLater(
-      find.byType(MaterialApp),
-      matchesGoldenFile('goldens/split_bill_list.png'),
-    );
-  });
 }

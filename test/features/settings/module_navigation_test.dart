@@ -221,24 +221,14 @@ final _settingsNavigationScenarios = [
     expected: 'Quick-entry templates',
   ),
   _NavigationScenario(
-    entry: 'Split bill',
-    location: SplitBillScreen.path,
-    expected: 'Split bill',
-  ),
-  _NavigationScenario(
-    entry: 'Categories & Tags',
+    entry: 'Categories',
     location: CategoryTagManagementScreen.path,
-    expected: 'Categories & Tags',
+    expected: 'Categories',
   ),
   _NavigationScenario(
     entry: 'Budgets',
     location: BudgetScreen.path,
     expected: 'Category budgets',
-  ),
-  _NavigationScenario(
-    entry: 'Debt & Tracker',
-    location: DebtScreen.path,
-    expected: 'Debts',
   ),
   _NavigationScenario(
     entry: 'Installments & Subscriptions',
@@ -256,9 +246,9 @@ final _settingsNavigationScenarios = [
     expected: 'Saving goals',
   ),
   _NavigationScenario(
-    entry: 'Reports & Exports',
-    location: InsightsScreen.location(InsightTab.exports),
-    expected: 'Transaction CSV',
+    entry: 'Reports',
+    location: InsightsScreen.location(InsightTab.reports),
+    expected: 'Overview balance',
   ),
   _NavigationScenario(
     entry: 'Audit logs',
@@ -278,6 +268,19 @@ final _settingsNavigationScenarios = [
 ];
 
 final _directNavigationScenarios = [
+  // Split bill and Debt are hidden from the More menu but their routes still
+  // resolve (kept reachable via deep link), so cover them here, not in the
+  // settings-menu list above.
+  _NavigationScenario(
+    entry: 'Split bill',
+    location: SplitBillScreen.path,
+    expected: 'Split bill',
+  ),
+  _NavigationScenario(
+    entry: 'Debt',
+    location: DebtScreen.path,
+    expected: 'Debts',
+  ),
   _NavigationScenario(
     entry: 'Wallet detail',
     location: WalletDetailScreen.location('wallet-main'),
