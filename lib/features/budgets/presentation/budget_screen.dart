@@ -9,8 +9,8 @@ import '../../categories/presentation/category_tag_management_screen.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
-import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
@@ -611,22 +611,26 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   }
 
   Future<void> _selectCategory() async {
-    final selected = await showLookupSelectorSheet<Category>(
+    // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    final selectedId = await showCategoryTreePicker(
       context: context,
       title: 'Budget category',
-      selectedValue: _category,
-      options: [
+      selectedId: _category?.id,
+      categories: [
         for (final category in widget.state.categories)
-          LookupSelectorOption<Category>(
-            value: category,
-            label: category.name,
-            subtitle: category.type.label,
-            icon: Icons.category_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );
-    if (selected == null) return;
-    setState(() => _category = selected);
+    if (selectedId == null || selectedId.isEmpty) return;
+    setState(
+      () => _category = widget.state.categories.firstWhere(
+        (category) => category.id == selectedId,
+      ),
+    );
   }
 
   Future<void> _save() async {
