@@ -62,6 +62,7 @@ class _WalletDetailContent extends ConsumerWidget {
     final wallet = state.wallet;
     final textTheme = Theme.of(context).textTheme;
     final canDelete = wallet.role == null || wallet.role == 'owner';
+    final canWrite = wallet.canWrite; // viewers get a read-only detail screen
 
     return DrillInScaffold(
       title: wallet.name.isEmpty ? 'Wallet' : wallet.name,
@@ -128,8 +129,9 @@ class _WalletDetailContent extends ConsumerWidget {
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
             title: 'Members',
-            actionLabel: 'Invite member',
-            onAction: () => showWalletInviteSheet(context, ref, wallet.id),
+            actionLabel: canWrite ? 'Invite member' : null,
+            onAction:
+                canWrite ? () => showWalletInviteSheet(context, ref, wallet.id) : null,
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           WalletMembersSection(walletId: wallet.id, members: state.members),
@@ -139,7 +141,7 @@ class _WalletDetailContent extends ConsumerWidget {
           AffluenaCard(
             child: Column(
               children: [
-                if (!wallet.isGoal) ...[
+                if (!wallet.isGoal && canWrite) ...[
                   _ActionRow(
                     icon: Icons.tune_rounded,
                     title: 'Adjust balance',

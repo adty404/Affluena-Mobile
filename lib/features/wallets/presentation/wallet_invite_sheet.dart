@@ -41,6 +41,7 @@ class _WalletInviteSheet extends ConsumerStatefulWidget {
 
 class _WalletInviteSheetState extends ConsumerState<_WalletInviteSheet> {
   final _emailController = TextEditingController();
+  WalletInviteRole _role = WalletInviteRole.member;
   String? _error;
   bool _isSaving = false;
 
@@ -86,6 +87,27 @@ class _WalletInviteSheetState extends ConsumerState<_WalletInviteSheet> {
                 },
                 onSubmitted: (_) => _invite(),
               ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              Text('What they can do', style: textTheme.labelMedium),
+              const SizedBox(height: AffluenaSpacing.space2),
+              SegmentedButton<WalletInviteRole>(
+                segments: const [
+                  ButtonSegment(
+                    value: WalletInviteRole.viewer,
+                    label: Text('Boleh lihat'),
+                    icon: Icon(Icons.visibility_outlined),
+                  ),
+                  ButtonSegment(
+                    value: WalletInviteRole.member,
+                    label: Text('Boleh catat'),
+                    icon: Icon(Icons.edit_outlined),
+                  ),
+                ],
+                selected: {_role},
+                onSelectionChanged: _isSaving
+                    ? null
+                    : (selection) => setState(() => _role = selection.first),
+              ),
               if (_error != null) ...[
                 const SizedBox(height: AffluenaSpacing.space3),
                 AffluenaBanner.error(_error!),
@@ -120,7 +142,10 @@ class _WalletInviteSheetState extends ConsumerState<_WalletInviteSheet> {
     try {
       await ref
           .read(walletRepositoryProvider)
-          .inviteMember(widget.walletId, WalletInviteRequest(email: email));
+          .inviteMember(
+            widget.walletId,
+            WalletInviteRequest(email: email, role: _role),
+          );
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (error) {

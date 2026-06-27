@@ -97,7 +97,7 @@ class _WalletsContent extends ConsumerWidget {
                   wallet: wallet,
                   onOpen: () =>
                       context.push(WalletDetailScreen.location(wallet.id)),
-                  onEdit: wallet.isGoal
+                  onEdit: (wallet.isGoal || wallet.isViewer)
                       ? null
                       : () => _showWalletForm(context, ref, wallet),
                 );

@@ -51,7 +51,8 @@ final quickEntryLookupProvider = FutureProvider<QuickEntryLookup>((ref) async {
   final templates = await templatesFuture;
 
   return QuickEntryLookup(
-    wallets: wallets.wallets,
+    // Only wallets the user can write to are selectable (and auto-defaulted).
+    wallets: wallets.wallets.where((w) => w.canWrite).toList(growable: false),
     expenseCategories: expenseCategories.categories,
     incomeCategories: incomeCategories.categories,
     tags: tags.tags,
