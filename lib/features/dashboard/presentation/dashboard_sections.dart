@@ -542,7 +542,7 @@ class _ExpenseDistributionBlock extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
     final month = ref.watch(dashboardDistributionMonthProvider);
-    final now = DateTime.now();
+    final now = clock.now();
     final isCurrentMonth = month.year == now.year && month.month == now.month;
 
     void shift(int delta) {

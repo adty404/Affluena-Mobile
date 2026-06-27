@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/formatters/date_formatter.dart';
@@ -13,7 +14,7 @@ import '../data/dashboard_repository.dart';
 final dashboardHomeProvider = FutureProvider.autoDispose<DashboardHome>((
   ref,
 ) async {
-  final month = AffluenaDateFormatter.monthKey(DateTime.now());
+  final month = AffluenaDateFormatter.monthKey(clock.now());
   final responses = await Future.wait<Object>([
     ref.read(dashboardRepositoryProvider).summary(month: month),
     ref
@@ -109,7 +110,7 @@ final dashboardCashflowTrendProvider =
 class DistributionMonthController extends Notifier<DateTime> {
   @override
   DateTime build() {
-    final now = DateTime.now();
+    final now = clock.now();
     return DateTime(now.year, now.month);
   }
 
@@ -135,7 +136,7 @@ final dashboardExpenseDistributionProvider =
 /// End-of-month spending projection used to surface an over-budget warning.
 final dashboardForecastProvider = FutureProvider.autoDispose<DashboardForecast>(
   (ref) async {
-    final month = AffluenaDateFormatter.monthKey(DateTime.now());
+    final month = AffluenaDateFormatter.monthKey(clock.now());
     return ref.read(dashboardRepositoryProvider).forecast(month: month);
   },
 );
