@@ -172,14 +172,6 @@ String _avatarInitial(String? name, String? email) {
   return source.characters.first.toUpperCase();
 }
 
-String _debtTypeLabel(String type) {
-  return switch (type.trim().toLowerCase()) {
-    'payable' => 'You owe',
-    'receivable' => 'Owed to you',
-    _ => 'Debt',
-  };
-}
-
 String _transactionMetadata(
   Transaction transaction,
   String categoryName,

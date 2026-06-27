@@ -13,7 +13,6 @@ import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
-import 'split_bill_list_screen.dart';
 import 'transaction_create_screen.dart';
 import 'transaction_detail_sheet.dart';
 import 'transaction_display.dart';
@@ -131,15 +130,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               onPressed: () => context.push(TransactionCreateScreen.path),
               icon: const Icon(Icons.add),
               label: const Text('New transaction'),
-            ),
-          ),
-          const SizedBox(width: AffluenaSpacing.space3),
-          Expanded(
-            child: FilledButton.tonalIcon(
-              key: const Key('split-bill-entry-button'),
-              onPressed: () => context.push(SplitBillListScreen.path),
-              icon: const Icon(Icons.call_split_outlined),
-              label: const Text('Split'),
             ),
           ),
         ],
