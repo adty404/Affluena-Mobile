@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,12 +16,17 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
-    await tester.pumpAndSettle();
+    // The dashboard header greeting is time-of-day dependent
+    // (_greetingForNow). Freeze the clock at a morning hour so the golden is
+    // stable regardless of when the suite runs.
+    await withClock(Clock.fixed(DateTime(2026, 6, 25, 9)), () async {
+      await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
+      await tester.pumpAndSettle();
 
-    await expectLater(
-      find.byType(MaterialApp),
-      matchesGoldenFile('goldens/home_dashboard.png'),
-    );
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('goldens/home_dashboard.png'),
+      );
+    });
   });
 }
