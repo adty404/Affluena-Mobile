@@ -293,56 +293,6 @@ class _ElbowPainter extends CustomPainter {
       oldDelegate.color != color || oldDelegate.isLast != isLast;
 }
 
-class _TagCard extends StatelessWidget {
-  const _TagCard({
-    required this.tag,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  final Tag tag;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = context.affluenaColors;
-
-    return AffluenaCard(
-      child: Row(
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.surfaceTintSoft,
-              borderRadius: BorderRadius.circular(AffluenaRadii.md),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AffluenaSpacing.space2),
-              child: Icon(Icons.label_outline, color: colors.forest, size: 18),
-            ),
-          ),
-          const SizedBox(width: AffluenaSpacing.space3),
-          Expanded(
-            child: Text(tagLabel(tag.name), style: textTheme.titleMedium),
-          ),
-          PopupMenuButton<String>(
-            key: Key('tag-menu-${tag.id}'),
-            onSelected: (value) {
-              if (value == 'edit') onEdit();
-              if (value == 'delete') onDelete();
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'edit', child: Text('Edit')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _EmptyManagementState extends StatelessWidget {
   const _EmptyManagementState({
     required this.icon,
@@ -394,7 +344,7 @@ class _CategoryTagLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Categories & Tags',
+      title: 'Categories',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -443,7 +393,7 @@ class _CategoryTagError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Categories & Tags',
+      title: 'Categories',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [

@@ -191,7 +191,8 @@ class _InsightTabs extends StatelessWidget {
       spacing: AffluenaSpacing.space2,
       runSpacing: AffluenaSpacing.space2,
       children: [
-        for (final tab in InsightTab.values)
+        // CSV export is hidden for now; only the reports/insights tabs show.
+        for (final tab in InsightTab.values.where((t) => t != InsightTab.exports))
           ChoiceChip(
             key: Key('insights-tab-${tab.name}'),
             showCheckmark: false,

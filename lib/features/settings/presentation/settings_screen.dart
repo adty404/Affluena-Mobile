@@ -8,7 +8,6 @@ import '../../auth/application/auth_controller.dart';
 import '../../auth/data/auth_models.dart';
 import '../../budgets/presentation/budget_screen.dart';
 import '../../categories/presentation/category_tag_management_screen.dart';
-import '../../debts/presentation/debt_screen.dart';
 import '../../goals/presentation/goal_screen.dart';
 import '../../insights/application/insights_controller.dart';
 import '../../insights/presentation/audit_log_screen.dart';
@@ -20,7 +19,6 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../trackers/presentation/tracker_screen.dart';
-import '../../transactions/presentation/split_bill_list_screen.dart';
 import '../application/settings_controller.dart';
 import 'settings_screen_widgets.dart';
 import 'settings_sheets.dart';
@@ -154,16 +152,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const Divider(height: 1),
                 SettingsRow(
-                  icon: Icons.call_split_outlined,
-                  title: 'Split bill',
-                  value: 'Ongoing splits and who owes you',
-                  onTap: () => context.push(SplitBillListScreen.path),
-                ),
-                const Divider(height: 1),
-                SettingsRow(
                   icon: Icons.category_outlined,
-                  title: 'Categories & Tags',
-                  value: 'Hierarchy and labels',
+                  title: 'Categories',
+                  value: 'Nested spending categories',
                   onTap: () => context.push(CategoryTagManagementScreen.path),
                 ),
               ],
@@ -180,13 +171,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: 'Budgets',
                   value: 'Monthly category limits and alerts',
                   onTap: () => context.push(BudgetScreen.path),
-                ),
-                const Divider(height: 1),
-                SettingsRow(
-                  icon: Icons.handshake_outlined,
-                  title: 'Debt & Tracker',
-                  value: 'Payable, receivable, and payments',
-                  onTap: () => context.push(DebtScreen.path),
                 ),
                 const Divider(height: 1),
                 SettingsRow(
@@ -220,10 +204,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 SettingsRow(
                   icon: Icons.analytics_outlined,
-                  title: 'Reports & Exports',
-                  value: 'Monthly reports and transaction CSV',
-                  onTap: () =>
-                      context.push(InsightsScreen.location(InsightTab.exports)),
+                  title: 'Reports',
+                  value: 'Monthly income & expense reports',
+                  onTap: () => context.push(InsightsScreen.path),
                 ),
                 const Divider(height: 1),
                 SettingsRow(

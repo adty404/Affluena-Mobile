@@ -126,7 +126,7 @@ class InsightsController extends Notifier<InsightsState> {
       await _refreshExportJobs(repository);
       state = state.copyWith(
         isSaving: false,
-        selectedTab: InsightTab.exports,
+        selectedTab: InsightTab.reports,
         actionError: 'CSV export was generated but could not be shared.',
       );
       return;
@@ -136,7 +136,7 @@ class InsightsController extends Notifier<InsightsState> {
 
     state = state.copyWith(
       isSaving: false,
-      selectedTab: InsightTab.exports,
+      selectedTab: InsightTab.reports,
       actionMessage: outcome == CsvShareOutcome.shared
           ? 'CSV export shared.'
           : null,

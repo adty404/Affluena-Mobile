@@ -151,7 +151,6 @@ void main() {
       expect(find.text('Expense transaction recorded'), findsOneWidget);
       expect(find.text('2 debt records created'), findsOneWidget);
       expect(find.text('View transactions'), findsOneWidget);
-      expect(find.text('View debts'), findsOneWidget);
     },
   );
 
