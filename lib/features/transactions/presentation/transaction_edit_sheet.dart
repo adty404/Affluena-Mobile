@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
+import '../../shared/presentation/widgets/selector_row.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
 import 'adjustment_direction_control.dart';
@@ -79,11 +81,9 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
         transaction.type == TransactionType.income ||
         transaction.type == TransactionType.expense;
     final walletOptions = _walletOptions(widget.state, _walletId, _toWalletId);
-    final categoryOptions = _categoryOptions(
-      widget.state,
-      transaction,
-      _categoryId,
-    );
+    final categoryLabel = _categoryId == null
+        ? 'Select category'
+        : (widget.state.categoryNames[_categoryId] ?? 'Uncategorized');
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -105,9 +105,8 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
                 noteController: _noteController,
                 walletId: _walletId,
                 toWalletId: _toWalletId,
-                categoryId: _categoryId,
+                categoryLabel: categoryLabel,
                 walletOptions: walletOptions,
-                categoryOptions: categoryOptions,
                 isTransfer: isTransfer,
                 isAdjustment: isAdjustment,
                 decrease: _decrease,
@@ -132,10 +131,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
                   _toWalletId = value;
                   _error = null;
                 }),
-                onCategoryChanged: (value) => setState(() {
-                  _categoryId = value;
-                  _error = null;
-                }),
+                onSelectCategory: _selectCategory,
                 onSave: _save,
               ),
             ],
@@ -148,6 +144,28 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
   void _clearError() {
     if (_error == null) return;
     setState(() => _error = null);
+  }
+
+  Future<void> _selectCategory() async {
+    // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    final selectedId = await showCategoryTreePicker(
+      context: context,
+      title: 'Category',
+      selectedId: _categoryId,
+      categories: [
+        for (final category in widget.state.categories)
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
+          ),
+      ],
+    );
+    if (!mounted || selectedId == null || selectedId.isEmpty) return;
+    setState(() {
+      _categoryId = selectedId;
+      _error = null;
+    });
   }
 
   Future<void> _save() async {

@@ -8,6 +8,7 @@ import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
@@ -690,22 +691,26 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
   }
 
   Future<void> _selectCategory() async {
-    final selected = await showLookupSelectorSheet<Category>(
+    // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    final selectedId = await showCategoryTreePicker(
       context: context,
       title: 'Recurring category',
-      selectedValue: _category,
-      options: [
+      selectedId: _category?.id,
+      categories: [
         for (final category in widget.state.categories)
-          LookupSelectorOption<Category>(
-            value: category,
-            label: category.name,
-            subtitle: category.type.apiValue,
-            icon: Icons.category_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );
-    if (selected == null) return;
-    setState(() => _category = selected);
+    if (selectedId == null || selectedId.isEmpty) return;
+    setState(
+      () => _category = widget.state.categories.firstWhere(
+        (category) => category.id == selectedId,
+      ),
+    );
   }
 
   Future<void> _save() async {

@@ -47,6 +47,7 @@ class _AuthenticatedAuthController extends AuthController {
 Widget transactionsTestApp({
   required RecordingTransactionRepository transactionRepository,
   AuthUser currentUser = _transactionsTestUser,
+  List<Category> categories = const [foodCategory, salaryCategory],
 }) {
   return ProviderScope(
     retry: noProviderRetry,
@@ -59,9 +60,7 @@ Widget transactionsTestApp({
         const StaticWalletRepository(wallets: [gopayWallet, bcaWallet]),
       ),
       categoryRepositoryProvider.overrideWithValue(
-        const StaticCategoryRepository(
-          categories: [foodCategory, salaryCategory],
-        ),
+        StaticCategoryRepository(categories: categories),
       ),
       tagRepositoryProvider.overrideWithValue(
         const StaticTransactionsTagRepository(tags: []),

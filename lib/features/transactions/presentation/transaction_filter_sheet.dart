@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/tag_formatter.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
@@ -194,23 +195,26 @@ class _TransactionFilterSheetState extends State<_TransactionFilterSheet> {
   }
 
   Future<void> _selectCategory() async {
-    final selected = await showLookupSelectorSheet<String>(
+    // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    // Picking a parent filters its whole subtree (the API matches descendants).
+    final selected = await showCategoryTreePicker(
       context: context,
       title: 'Filter by category',
-      selectedValue: _categoryId,
-      options: [
+      selectedId: _categoryId,
+      allowNone: true,
+      noneLabel: 'All categories',
+      categories: [
         for (final category in widget.state.categories)
-          LookupSelectorOption<String>(
-            value: category.id,
-            label: category.name,
-            subtitle: category.type.name,
-            icon: Icons.category_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );
     if (!mounted || selected == null) return;
     setState(() {
-      _categoryId = _categoryId == selected ? null : selected;
+      _categoryId = selected.isEmpty ? null : selected;
       _error = null;
     });
   }
