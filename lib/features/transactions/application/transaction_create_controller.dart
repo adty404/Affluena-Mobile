@@ -52,7 +52,8 @@ class TransactionCreateController extends Notifier<TransactionCreateState> {
 
       state = state.copyWith(
         isLoading: false,
-        wallets: wallets.wallets,
+        // Only wallets the user can write to are selectable as a target.
+        wallets: wallets.wallets.where((w) => w.canWrite).toList(growable: false),
         categories: categories.categories,
         tags: tags.tags,
       );

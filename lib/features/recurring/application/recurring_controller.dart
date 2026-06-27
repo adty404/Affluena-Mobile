@@ -46,7 +46,7 @@ class RecurringController extends Notifier<RecurringState> {
       final walletsResponse = await walletsFuture;
       final categoriesResponse = await categoriesFuture;
       final selectableWallets = walletsResponse.wallets
-          .where((wallet) => !wallet.isGoal)
+          .where((wallet) => !wallet.isGoal && wallet.canWrite)
           .toList(growable: false);
 
       state = state.copyWith(

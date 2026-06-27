@@ -148,7 +148,12 @@ class TransactionsController extends Notifier<TransactionsState> {
           ...transactionResponse.transactions,
         ],
         total: transactionResponse.pagination.total,
-        wallets: walletResponse.wallets,
+        // Only write-capable wallets are pickable when re-targeting an edit;
+        // walletNames stays unfiltered so an existing transaction's wallet name
+        // still resolves even if it later became view-only.
+        wallets: walletResponse.wallets
+            .where((w) => w.canWrite)
+            .toList(growable: false),
         categories: categoryResponse.categories,
         tags: tagResponse.tags,
         walletNames: {
