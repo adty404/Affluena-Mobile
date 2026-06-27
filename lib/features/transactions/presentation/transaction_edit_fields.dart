@@ -6,9 +6,8 @@ class _TransactionEditFields extends StatelessWidget {
     required this.noteController,
     required this.walletId,
     required this.toWalletId,
-    required this.categoryId,
+    required this.categoryLabel,
     required this.walletOptions,
-    required this.categoryOptions,
     required this.isTransfer,
     required this.isAdjustment,
     required this.decrease,
@@ -20,7 +19,7 @@ class _TransactionEditFields extends StatelessWidget {
     required this.onTextChanged,
     required this.onWalletChanged,
     required this.onToWalletChanged,
-    required this.onCategoryChanged,
+    required this.onSelectCategory,
     required this.onSave,
   });
 
@@ -28,9 +27,8 @@ class _TransactionEditFields extends StatelessWidget {
   final TextEditingController noteController;
   final String? walletId;
   final String? toWalletId;
-  final String? categoryId;
+  final String categoryLabel;
   final List<_NamedOption> walletOptions;
-  final List<_NamedOption> categoryOptions;
   final bool isTransfer;
   final bool isAdjustment;
   final bool decrease;
@@ -42,7 +40,7 @@ class _TransactionEditFields extends StatelessWidget {
   final VoidCallback onTextChanged;
   final ValueChanged<String?> onWalletChanged;
   final ValueChanged<String?> onToWalletChanged;
-  final ValueChanged<String?> onCategoryChanged;
+  final VoidCallback onSelectCategory;
   final VoidCallback onSave;
 
   @override
@@ -91,14 +89,15 @@ class _TransactionEditFields extends StatelessWidget {
         ],
         if (needsCategory) ...[
           const SizedBox(height: AffluenaSpacing.space3),
-          DropdownButtonFormField<String>(
-            initialValue: categoryId,
-            decoration: const InputDecoration(labelText: 'Category'),
-            items: [
-              for (final option in categoryOptions)
-                DropdownMenuItem(value: option.id, child: Text(option.label)),
-            ],
-            onChanged: isSaving ? null : onCategoryChanged,
+          // Categories are a hierarchy: use the tree-aware picker, not a flat
+          // dropdown.
+          SelectorRow(
+            key: const Key('transaction-edit-category-selector'),
+            label: 'Category',
+            value: categoryLabel,
+            icon: Icons.category_outlined,
+            enabled: !isSaving,
+            onTap: isSaving ? null : onSelectCategory,
           ),
         ],
         const SizedBox(height: AffluenaSpacing.space3),

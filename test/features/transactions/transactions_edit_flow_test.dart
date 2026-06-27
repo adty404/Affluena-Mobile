@@ -1,9 +1,83 @@
+import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'transactions_test_helpers.dart';
 
 void main() {
+  testWidgets(
+    'edit category opens the tree picker and saves the chosen child',
+    (tester) async {
+      // A child expense category nested under Food & Dining so the
+      // hierarchy-aware picker (not a flat dropdown) is exercised.
+      const groceriesSubcategory = Category(
+        id: '44444444-4444-4444-4444-444444440002',
+        userId: transactionsTestUserId,
+        name: 'Groceries',
+        type: CategoryType.expense,
+        // foodCategory.id — inlined because const expressions can't read it.
+        parentId: '44444444-4444-4444-4444-444444440001',
+        createdAt: '2026-06-01T00:00:00Z',
+        updatedAt: '2026-06-01T00:00:00Z',
+      );
+      final repository = RecordingTransactionRepository(
+        transactions: [groceriesTransaction],
+      );
+
+      await tester.pumpWidget(
+        transactionsTestApp(
+          transactionRepository: repository,
+          categories: const [
+            foodCategory,
+            groceriesSubcategory,
+            salaryCategory,
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Groceries at Indomaret'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit transaction'));
+      await tester.pumpAndSettle();
+
+      // The selector row resolves the current category to its name.
+      final selector = find.byKey(
+        const Key('transaction-edit-category-selector'),
+      );
+      expect(selector, findsOneWidget);
+      expect(
+        find.descendant(of: selector, matching: find.text('Food & Dining')),
+        findsOneWidget,
+      );
+
+      // Tapping it opens the tree picker (identified by its search field).
+      await tester.tap(selector);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('category-tree-search-field')),
+        findsOneWidget,
+      );
+
+      // Pick the nested child; the picker pops and the selector updates.
+      await tester.tap(find.text('Groceries'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('category-tree-search-field')), findsNothing);
+      expect(
+        find.descendant(of: selector, matching: find.text('Groceries')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const Key('transaction-edit-save-button')));
+      await tester.pumpAndSettle();
+
+      expect(
+        repository.updatedRequests.single.categoryId,
+        groceriesSubcategory.id,
+      );
+    },
+  );
+
   testWidgets('edits an existing transaction and refreshes the list', (
     tester,
   ) async {

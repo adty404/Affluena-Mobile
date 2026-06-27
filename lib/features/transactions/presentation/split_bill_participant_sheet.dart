@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/affluena_theme.dart';
-import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../application/split_bill_controller.dart';
@@ -178,38 +178,40 @@ class _SplitBillParticipantSheetState
   }
 
   Future<void> _selectDisbursementCategory() async {
-    final selected = await showLookupSelectorSheet<String>(
+    // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    final selected = await showCategoryTreePicker(
       context: context,
       title: 'Disbursement category',
-      selectedValue: _disbursementCategoryId,
-      options: [
+      selectedId: _disbursementCategoryId,
+      categories: [
         for (final category in widget.state.expenseCategories)
-          LookupSelectorOption<String>(
-            value: category.id,
-            label: category.name,
-            icon: Icons.category_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );
-    if (!mounted || selected == null) return;
+    if (!mounted || selected == null || selected.isEmpty) return;
     setState(() => _disbursementCategoryId = selected);
   }
 
   Future<void> _selectPaymentCategory() async {
-    final selected = await showLookupSelectorSheet<String>(
+    // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    final selected = await showCategoryTreePicker(
       context: context,
       title: 'Payment category',
-      selectedValue: _paymentCategoryId,
-      options: [
+      selectedId: _paymentCategoryId,
+      categories: [
         for (final category in widget.state.incomeCategories)
-          LookupSelectorOption<String>(
-            value: category.id,
-            label: category.name,
-            icon: Icons.savings_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );
-    if (!mounted || selected == null) return;
+    if (!mounted || selected == null || selected.isEmpty) return;
     setState(() => _paymentCategoryId = selected);
   }
 

@@ -122,19 +122,22 @@ class _SplitBillInfoSection extends StatelessWidget {
   }
 
   Future<void> _selectCategory(BuildContext context) async {
-    final selected = await showLookupSelectorSheet<String>(
+    // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    final selected = await showCategoryTreePicker(
       context: context,
       title: 'Bill category',
-      selectedValue: categoryId,
-      options: [
+      selectedId: categoryId,
+      categories: [
         for (final category in state.expenseCategories)
-          LookupSelectorOption<String>(
-            value: category.id,
-            label: category.name,
-            icon: Icons.category_outlined,
+          CategoryTreeEntry(
+            id: category.id,
+            name: category.name,
+            parentId: category.parentId,
           ),
       ],
     );
-    if (context.mounted && selected != null) onCategoryChanged(selected);
+    if (context.mounted && selected != null && selected.isNotEmpty) {
+      onCategoryChanged(selected);
+    }
   }
 }
