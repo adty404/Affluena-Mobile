@@ -13,6 +13,7 @@ import '../../insights/application/insights_controller.dart';
 import '../../insights/presentation/audit_log_screen.dart';
 import '../../insights/presentation/insights_screen.dart';
 import '../../onboarding/presentation/onboarding_screen.dart';
+import '../../quick_entry/presentation/quick_entry_screen.dart';
 import '../../quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../../recurring/presentation/recurring_screen.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
@@ -20,6 +21,8 @@ import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../trackers/presentation/tracker_screen.dart';
+import '../../transactions/presentation/transactions_screen.dart';
+import '../../wallets/presentation/wallets_screen.dart';
 import '../application/settings_controller.dart';
 import 'settings_screen_widgets.dart';
 import 'settings_sheets.dart';
@@ -145,6 +148,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             AffluenaCard(
               child: Column(
                 children: [
+                  SettingsRow(
+                    key: const Key('settings-wallets-row'),
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: 'Dompet',
+                    value: 'Kelola dompet dan saldo',
+                    onTap: () => context.push(WalletsScreen.path),
+                  ),
+                  const Divider(height: 1),
+                  SettingsRow(
+                    key: const Key('settings-transactions-row'),
+                    icon: Icons.list_alt_outlined,
+                    title: 'Transaksi',
+                    value: 'Riwayat lengkap dengan filter & pencarian',
+                    onTap: () => context.push(TransactionsScreen.path),
+                  ),
+                  const Divider(height: 1),
+                  SettingsRow(
+                    key: const Key('settings-quick-entry-row'),
+                    icon: Icons.edit_note_outlined,
+                    title: 'Catat cepat',
+                    value: 'Form catat transaksi lengkap',
+                    onTap: () => context.push(QuickEntryScreen.path),
+                  ),
+                  const Divider(height: 1),
                   SettingsRow(
                     icon: Icons.bolt_outlined,
                     title: 'Template catat cepat',
