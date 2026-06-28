@@ -2,33 +2,39 @@
 
 ## 1. Atmosphere & Identity
 
-Affluena Mobile feels like a calm personal finance companion for daily use: light, tactile, trustworthy, and quick to operate. The signature is editorial calm with practical finance clarity: warm paper-like surfaces, clear money hierarchy, muted forest accents, and touch-friendly rows that make recording small daily transactions feel low-friction.
+Affluena Mobile feels like a calm personal finance companion for daily use: light, tactile, trustworthy, and quick to operate. The visual language is **"Sky & Denim"** — cool blue-grey surfaces with a calm denim-blue accent, clear money hierarchy, and touch-friendly rows that make recording small daily transactions feel low-friction. (The earlier warm-paper / forest "Editorial Light" direction is fully retired.)
+
+### Information architecture — "Spaces / rooms"
+
+Money is spatial: the home is a set of wallet **"rooms"**, and you enter a room to see and act on it. The authenticated shell (`RedesignShell`, route `/beranda`) is a **floating pill** bottom-nav with three tabs — **Beranda** (rooms) · **Aktivitas** (cross-wallet feed) · **Wawasan** (insights) — plus a center quick-add FAB and a **"Lainnya"** item that opens Pengaturan (Settings), the hub for the remaining feature screens. Logging is a fast quick-add keypad sheet, with the wallet pre-set when opened from a room.
 
 ## 2. Color
 
-### Palette
+The redesign surfaces read colours from **`SkyColors`** (`lib/app/theme/sky_palette.dart`) via the `context.sky` extension, which resolves **light and dark** by the active brightness. The themed feature screens use the `AffluenaColors` / `AffluenaSemanticColors` theme extension (`lib/app/theme/affluena_theme.dart`), kept aligned to the same Sky & Denim values (its `forest` token now carries the denim accent).
+
+### Sky & Denim palette (`SkyColors`)
 
 | Role | Token | Light | Dark | Usage |
 |------|-------|-------|------|-------|
-| Surface/primary | `surfaceCanvas` | `#F7F2EA` | `#151411` | Main app background |
-| Surface/secondary | `surfaceSoft` | `#FFFDF8` | `#211F1A` | Cards, sheets, panels |
-| Surface/elevated | `surfaceElevated` | `#FFFFFF` | `#2A261F` | Raised controls and dialogs |
-| Surface/tint | `surfaceTintSoft` | `#ECE4D8` | `#342F26` | Subtle grouped sections |
-| Text/primary | `ink` | `#171714` | `#F8F3EA` | Headlines, body, money values |
-| Text/secondary | `inkMuted` | `#6E665B` | `#BFB6AA` | Captions, hints, metadata |
-| Border/subtle | `borderSubtle` | `#E5DCCC` | `#3B352C` | Dividers and card outlines |
-| Accent/primary | `forest` | `#315C46` | `#7EB694` | Primary actions, selected tabs |
-| Accent/soft | `forestSoft` | `#DCEADF` | `#20382D` | Selected surfaces and chips |
-| Status/warning | `amber` | `#B4772E` | `#E0A552` | Budget warnings and due reminders |
-| Status/error | `coral` | `#B55342` | `#F09483` | Destructive actions and errors |
-| Status/success | `success` | `#49764F` | `#88C28F` | Positive cashflow and completed states |
+| Ground | `ground` | `#EEF3F8` | `#0F1822` | App background |
+| Surface | `surface` | `#FFFFFF` | `#16212E` | Cards, the floating nav pill |
+| Sheet | `sheet` | `#F4F8FC` | `#1C2A39` | Bottom sheets, tinted tiles |
+| Line | `line` | `#E0E8F0` | `#2A3A48` | Borders, dividers |
+| Ink | `ink` | `#1E2A38` | `#E8EEF4` | Headlines, body, money values |
+| Muted | `muted` | `#6B7B8C` | `#9FB0C0` | Secondary text |
+| Faint | `faint` | `#9FB0C0` | `#6E7E8E` | Tertiary text, inactive icons |
+| Accent (denim) | `accent` | `#3E72B8` | `#6BA0D8` | Primary actions, active nav, FAB |
+| Accent soft | `accentSoft` | `#E6EFF8` | `#1E3147` | Selected surfaces, active-nav circle |
+| Accent soft border | `accentSoftBorder` | `#D3E2F1` | `#34527A` | Pill / badge borders |
+| Accent ink | `accentInk` | `#2F5C97` | `#A9C8E8` | Text on accent-soft pills |
+| Income / success | `income` | `#2E8B57` | `#6BC089` | Positive cashflow |
+| Danger | `danger` | `#C2553F` | `#E08070` | Destructive actions, errors |
 
 ### Rules
 
-- The UI uses warm light surfaces by default; dark mode is supported structurally but not the initial brand default.
-- Forest is reserved for primary actions, selected navigation, and meaningful positive emphasis.
-- Amber and coral are status colors only. They are never decorative.
-- No raw colors in widgets. Extend `AffluenaColors` first when a semantic color is needed.
+- The app is **dark-mode aware** (follows the system / in-app theme controller); both palettes above ship.
+- Denim `accent` is reserved for primary actions, the active nav tab, and the quick-add FAB.
+- No raw colors in redesign widgets — read from `context.sky`. For themed feature screens, extend `AffluenaColors`. (`AffluenaColors` also keeps `amber` for budget/due warnings on feature screens.)
 
 ## 3. Typography
 
@@ -88,7 +94,7 @@ All spacing derives from a base of 4.
 - Primary layout: single-column mobile scroll with safe-area top and bottom.
 - Screen padding: 20 horizontal for main content.
 - Cards: 16 to 20 inner padding, 16 to 24 vertical gaps.
-- Bottom navigation: persistent, four destinations plus central add action.
+- Bottom navigation: a **floating pill** hovering over the content — 3 tabs (Beranda/Aktivitas/Wawasan) plus "Lainnya" and a center quick-add FAB.
 
 ### Rules
 
