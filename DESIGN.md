@@ -1,12 +1,42 @@
 # Affluena Mobile Design System
 
+> **📐 Visual source of truth:** pixel-level mockups of every screen live in
+> [`design/affluena-design-guide.html`](design/affluena-design-guide.html) — one
+> self-contained file (open it in any browser). This `DESIGN.md` is the *written*
+> spec; the HTML is the *visual* reference. Keep the two in sync.
+>
+> **Build status:** the guide is the **target**. The live app already ships the
+> Sky & Denim palette, dark mode, and the floating pill nav; the main in-flight
+> change is **Beranda**, redesigned from wallet "rooms" into a **6-section
+> dashboard** (see §1). The per-screen re-skin to fully match the guide is in
+> progress.
+
 ## 1. Atmosphere & Identity
 
 Affluena Mobile feels like a calm personal finance companion for daily use: light, tactile, trustworthy, and quick to operate. The visual language is **"Sky & Denim"** — cool blue-grey surfaces with a calm denim-blue accent, clear money hierarchy, and touch-friendly rows that make recording small daily transactions feel low-friction. (The earlier warm-paper / forest "Editorial Light" direction is fully retired.)
 
-### Information architecture — "Spaces / rooms"
+### Information architecture
 
-Money is spatial: the home is a set of wallet **"rooms"**, and you enter a room to see and act on it. The authenticated shell (`RedesignShell`, route `/beranda`) is a **floating pill** bottom-nav with three tabs — **Beranda** (rooms) · **Aktivitas** (cross-wallet feed) · **Wawasan** (insights) — plus a center quick-add FAB and a **"Lainnya"** item that opens Pengaturan (Settings), the hub for the remaining feature screens. Logging is a fast quick-add keypad sheet, with the wallet pre-set when opened from a room.
+The authenticated shell (`RedesignShell`, route `/beranda`) is an **icon-only floating pill** bottom-nav with three tabs — **Beranda** · **Aktivitas** (cross-wallet feed) · **Wawasan** (insights) — plus a center quick-add **FAB** and a **"Lainnya"** item that opens **Pengaturan** (Settings), the hub for the remaining feature screens.
+
+#### Beranda — sectioned dashboard
+
+Beranda is a single scrollable dashboard. A `Total saldo` hero (with a month delta) sits on top, followed by money-domain **sections** — each a titled header with a "Lihat semua" link over a **2-column card grid**; tapping a card opens that item's detail. The sections, in order:
+
+1. **Dompet** — wallets (shared wallets show member avatars + a "Bersama" badge)
+2. **Anggaran** — budgets (each card shows a spend-progress track)
+3. **Tabungan** — savings goals
+4. **Cicilan** — installments
+5. **Langganan** — subscriptions
+6. **Berulang** — recurring
+
+Cicilan, Langganan, and Berulang stay **separate** — deliberately *not* merged into a single "Tagihan" section.
+
+#### Quick-add — "Catat cepat"
+
+Logging is a fast bottom-sheet: a **template row inside the sheet** (one-tap presets like *Kopi · Rp 25.000*), an expense/income segment, an `Rp` amount with a calculator keypad, and wallet + category pickers — the wallet is pre-set when the sheet is opened from a wallet context. Templates live **inside** the sheet, not as chips on top of Beranda.
+
+> **Build note:** the live app currently renders Beranda as wallet **"rooms"** (`RoomsHomeView`) — you enter a room to act on it. The 6-section dashboard above is the redesign target; the re-skin replaces rooms with it. Aktivitas, Wawasan, Lainnya→Pengaturan, and the quick-add flow are unchanged in intent.
 
 ## 2. Color
 
@@ -42,9 +72,9 @@ The redesign surfaces read colours from **`SkyColors`** (`lib/app/theme/sky_pale
 
 | Level | Size | Weight | Line Height | Tracking | Usage |
 |-------|------|--------|-------------|----------|-------|
-| Display | 34 | 700 | 1.12 | 0 | Hero money values |
-| H1 | 28 | 700 | 1.18 | 0 | Screen titles |
-| H2 | 22 | 700 | 1.25 | 0 | Section headers |
+| Display | 34 | 800 | 1.12 | -0.02em | Hero money values (`Total saldo`, detail balances) |
+| H1 | 28 | 800 | 1.18 | -0.02em | Screen titles |
+| H2 | 22 | 800 | 1.25 | -0.02em | Onboarding headline, large section headers |
 | H3 | 18 | 700 | 1.30 | 0 | Card titles |
 | Body/lg | 16 | 500 | 1.45 | 0 | Prominent row text |
 | Body | 14 | 400 | 1.45 | 0 | Default mobile body |
@@ -53,15 +83,21 @@ The redesign surfaces read colours from **`SkyColors`** (`lib/app/theme/sky_pale
 
 ### Font Stack
 
-- Primary: system UI stack via Flutter platform defaults.
-- Numerals: tabular figures where money values appear.
+- Primary: a **bundled grotesque/geometric sans** shipped as a font asset, so the
+  type looks identical on every device (planned: **Inter**). Until it lands, the
+  system UI stack is the fallback.
+- Display & title weights run **heavy (800)** with tight tracking so money reads
+  bold and decisive — the guide's signature "tegas" look. Earlier builds felt
+  *sepi / kurang tegas* with lighter system weights; the guide and the re-skin
+  correct this.
+- Numerals: tabular figures wherever money values appear.
 - Mono: not used in the mobile UI baseline.
 
 ### Rules
 
 - Body text must not drop below 12 and primary content should stay at 14 or above.
-- Money values use strong weight, clear contrast, and enough breathing room.
-- Avoid uppercase microcopy except short labels in chips.
+- Money values use **strong weight (800)**, clear contrast, and enough breathing room.
+- Avoid uppercase microcopy except short labels in chips and section eyebrows.
 
 ## 4. Spacing & Layout
 
@@ -235,3 +271,21 @@ Affluena uses mixed tonal shift and subtle borders. Shadows are minimal and rese
 | Selected | accent soft fill | Active chips, selected nav |
 
 The UI should feel tactile, not glossy. Avoid glassmorphism, neon effects, and heavy shadows.
+
+## 8. Screen guide (visual reference)
+
+The full set of mockups lives in
+[`design/affluena-design-guide.html`](design/affluena-design-guide.html) — 21
+screens across 7 flows, all in the Sky & Denim language (light + a dark sample).
+Open it in any browser; it is self-contained, no build step.
+
+1. **Onboarding & Auth** — onboarding (shared-wallet hero), Masuk (login), Daftar (register).
+2. **Beranda** — the 6-section dashboard (Dompet → Anggaran → Tabungan → Cicilan → Langganan → Berulang).
+3. **Detail — Dompet · Anggaran · Tabungan** — wallet detail (members + access), budget detail (progress + transactions), savings-goal detail ("Liburan Bali": progress + deposits).
+4. **Detail — Cicilan · Langganan · Berulang** — installment detail (schedule), subscription detail (history, pause/pay), recurring detail ("Transfer ke Tabungan").
+5. **Quick-add · Aktivitas · Wawasan** — the "Catat cepat" sheet (templates + keypad), the activity feed, the insights/charts screen.
+6. **Pengaturan** — Lainnya (settings hub), Keamanan (password, device lock, active sessions), Kategori (category hierarchy).
+7. **State & aksi** — empty, loading (skeleton), error, a confirmation modal, and a dark-mode sample.
+
+When a screen's visual changes, update **both** the HTML guide and the relevant
+spec section above so the two never drift.
