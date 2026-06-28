@@ -14,7 +14,9 @@ cd "$(dirname "$0")/.."
 source scripts/shorebird_env.sh
 
 echo "Patching against API: $AFFLUENA_API_BASE_URL"
-shorebird patch android \
-  --flutter-version "$SHOREBIRD_FLUTTER_VERSION" \
+# `shorebird patch` uses --platforms (not a positional) and inherits the
+# release's Flutter version automatically (no --flutter-version).
+shorebird patch \
+  --platforms android \
   --dart-define=AFFLUENA_API_BASE_URL="$AFFLUENA_API_BASE_URL" \
   "$@"
