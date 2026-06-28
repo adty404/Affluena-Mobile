@@ -17,6 +17,7 @@ import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../features/recurring/presentation/recurring_screen.dart';
+import '../features/redesign/presentation/rooms_home_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/shared/presentation/app_shell.dart';
 import '../features/trackers/presentation/tracker_screen.dart';
@@ -234,6 +235,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      // Redesign Tahap 2 (additive): the new Spaces home, reachable at /rooms
+      // without disturbing the live shell. Promoted to default in a later stage.
+      GoRoute(
+        path: RoomsHomeScreen.path,
+        pageBuilder: _fadePage((_) => const RoomsHomeScreen()),
       ),
     ],
   );
