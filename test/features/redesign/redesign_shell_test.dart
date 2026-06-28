@@ -131,19 +131,19 @@ void main() {
     await _pump(tester);
 
     // Home tab is the rooms view.
-    expect(find.text('TOTAL'), findsOneWidget);
+    expect(find.text('Total'), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsOneWidget);
-    expect(find.text('Lainnya'), findsOneWidget);
+    expect(find.byKey(const Key('nav-lainnya')), findsOneWidget);
 
     // Switch to Wawasan -> a unique card title appears.
-    await tester.tap(find.text('Wawasan'));
+    await tester.tap(find.byKey(const Key('nav-wawasan')));
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 10));
     }
     expect(find.text('Arus kas'), findsOneWidget);
 
     // Switch to Aktivitas -> the merged feed shows the transaction.
-    await tester.tap(find.text('Aktivitas'));
+    await tester.tap(find.byKey(const Key('nav-aktivitas')));
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 10));
     }

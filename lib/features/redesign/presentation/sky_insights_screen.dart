@@ -121,20 +121,34 @@ class _DistributionRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(
+              Flexible(
                 child: Text(
                   item.categoryName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12.5, color: context.sky.ink),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: context.sky.ink,
+                  ),
                 ),
               ),
-              const SizedBox(width: AffluenaSpacing.space2),
+              const SizedBox(width: 6),
+              Text(
+                '${item.percentage.round()}%',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: context.sky.faint,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              const Spacer(),
               Text(
                 MoneyFormatter.idr(item.amountMinor),
                 style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
                   color: context.sky.ink,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
@@ -142,7 +156,10 @@ class _DistributionRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          SkyProgressBar(value: (item.percentage / 100).clamp(0, 1).toDouble()),
+          SkyProgressBar(
+            value: (item.percentage / 100).clamp(0, 1).toDouble(),
+            height: 8,
+          ),
         ],
       ),
     );
@@ -214,10 +231,10 @@ class _SkyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: AffluenaSpacing.space3),
-      padding: const EdgeInsets.all(AffluenaSpacing.space4),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: context.sky.surface,
-        borderRadius: BorderRadius.circular(AffluenaRadii.card),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.sky.line),
       ),
       child: Column(
@@ -226,7 +243,7 @@ class _SkyCard extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
               color: context.sky.ink,
             ),
