@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,7 +6,6 @@ import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/auth_screens.dart';
 import '../features/budgets/presentation/budget_screen.dart';
 import '../features/categories/presentation/category_tag_management_screen.dart';
-import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/debts/presentation/debt_detail_screen.dart';
 import '../features/debts/presentation/debt_screen.dart';
 import '../features/goals/presentation/goal_screen.dart';
@@ -23,7 +22,6 @@ import '../features/redesign/presentation/room_detail_screen.dart';
 import '../features/redesign/presentation/rooms_home_screen.dart';
 import '../features/redesign/presentation/sky_insights_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
-import '../features/shared/presentation/app_shell.dart';
 import '../features/trackers/presentation/tracker_screen.dart';
 import '../features/transactions/presentation/split_bill_list_screen.dart';
 import '../features/transactions/presentation/split_bill_screen.dart';
@@ -61,7 +59,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         // flow just finished, so move on to the normal auth destination.
         if (state.uri.queryParameters['replay'] == 'true') return null;
         return authState.isAuthenticated
-            ? DashboardScreen.path
+            ? RedesignShell.path
             : LoginScreen.path;
       }
 
@@ -70,7 +68,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (authState.isAuthenticated) {
-        if (isBootstrap || isAuthRoute) return DashboardScreen.path;
+        if (isBootstrap || isAuthRoute) return RedesignShell.path;
         return null;
       }
 
@@ -112,136 +110,108 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ),
       ),
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {
-          return AppShell(navigationShell: navigationShell);
-        },
-        branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: DashboardScreen.path,
-                pageBuilder: _fadePage((_) => const DashboardScreen()),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: WalletsScreen.path,
-                pageBuilder: _fadePage((_) => const WalletsScreen()),
-              ),
-              GoRoute(
-                path: WalletDetailScreen.path,
-                pageBuilder: _slidePage(
-                  (state) => WalletDetailScreen(
-                    walletId: state.pathParameters['walletId']!,
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: WalletSharingScreen.path,
-                pageBuilder: _slidePage(
-                  (state) => WalletSharingScreen(
-                    walletId: state.pathParameters['walletId']!,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: QuickEntryScreen.path,
-                pageBuilder: _fadePage((_) => const QuickEntryScreen()),
-              ),
-              GoRoute(
-                path: QuickEntryTemplatesScreen.path,
-                pageBuilder: _slidePage(
-                  (_) => const QuickEntryTemplatesScreen(),
-                ),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: TransactionsScreen.path,
-                pageBuilder: _fadePage((_) => const TransactionsScreen()),
-              ),
-              GoRoute(
-                path: SplitBillListScreen.path,
-                pageBuilder: _slidePage((_) => const SplitBillListScreen()),
-              ),
-              GoRoute(
-                path: SplitBillScreen.path,
-                pageBuilder: _slidePage((_) => const SplitBillScreen()),
-              ),
-              GoRoute(
-                path: TransactionCreateScreen.path,
-                pageBuilder: _slidePage((_) => const TransactionCreateScreen()),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: SettingsScreen.path,
-                pageBuilder: _fadePage((_) => const SettingsScreen()),
-              ),
-              GoRoute(
-                path: BudgetScreen.path,
-                pageBuilder: _slidePage((_) => const BudgetScreen()),
-              ),
-              GoRoute(
-                path: CategoryTagManagementScreen.path,
-                pageBuilder: _slidePage(
-                  (_) => const CategoryTagManagementScreen(),
-                ),
-              ),
-              GoRoute(
-                path: DebtScreen.path,
-                pageBuilder: _slidePage((_) => const DebtScreen()),
-              ),
-              GoRoute(
-                path: DebtDetailScreen.path,
-                pageBuilder: _slidePage(
-                  (state) =>
-                      DebtDetailScreen(debtId: state.pathParameters['debtId']!),
-                ),
-              ),
-              GoRoute(
-                path: TrackerScreen.path,
-                pageBuilder: _slidePage((_) => const TrackerScreen()),
-              ),
-              GoRoute(
-                path: RecurringScreen.path,
-                pageBuilder: _slidePage((_) => const RecurringScreen()),
-              ),
-              GoRoute(
-                path: GoalScreen.path,
-                pageBuilder: _slidePage((_) => const GoalScreen()),
-              ),
-              GoRoute(
-                path: InsightsScreen.path,
-                pageBuilder: _slidePage(
-                  (state) => InsightsScreen(
-                    initialTab: InsightsScreen.tabFromQuery(
-                      state.uri.queryParameters['tab'],
-                    ),
-                  ),
-                ),
-              ),
-              GoRoute(
-                path: AuditLogScreen.path,
-                pageBuilder: _slidePage((_) => const AuditLogScreen()),
-              ),
-            ],
-          ),
-        ],
+      // Feature surfaces. The old dashboard + 5-tab AppShell were retired in the
+      // redesign final flip; these are now plain top-level routes reached from
+      // the new shell (Home rooms → wallet detail, "Lainnya" → Settings → the
+      // planning/insight modules) or via deep link.
+      // The ex-tab screens (wallets/quick-entry/transactions/settings) rendered
+      // their body inside the retired AppShell Scaffold, so they carry no
+      // Scaffold of their own — wrap them to supply Material + the canvas.
+      GoRoute(
+        path: WalletsScreen.path,
+        pageBuilder: _fadePage((_) => const Scaffold(body: WalletsScreen())),
       ),
-      // Redesign Tahap 2 (additive): the new Spaces home, reachable at /rooms
-      // without disturbing the live shell. Promoted to default in a later stage.
+      GoRoute(
+        path: WalletDetailScreen.path,
+        pageBuilder: _slidePage(
+          (state) =>
+              WalletDetailScreen(walletId: state.pathParameters['walletId']!),
+        ),
+      ),
+      GoRoute(
+        path: WalletSharingScreen.path,
+        pageBuilder: _slidePage(
+          (state) =>
+              WalletSharingScreen(walletId: state.pathParameters['walletId']!),
+        ),
+      ),
+      GoRoute(
+        path: QuickEntryScreen.path,
+        pageBuilder: _fadePage((_) => const Scaffold(body: QuickEntryScreen())),
+      ),
+      GoRoute(
+        path: QuickEntryTemplatesScreen.path,
+        pageBuilder: _slidePage((_) => const QuickEntryTemplatesScreen()),
+      ),
+      GoRoute(
+        path: TransactionsScreen.path,
+        pageBuilder: _fadePage(
+          (_) => const Scaffold(body: TransactionsScreen()),
+        ),
+      ),
+      GoRoute(
+        path: SplitBillListScreen.path,
+        pageBuilder: _slidePage((_) => const SplitBillListScreen()),
+      ),
+      GoRoute(
+        path: SplitBillScreen.path,
+        pageBuilder: _slidePage((_) => const SplitBillScreen()),
+      ),
+      GoRoute(
+        path: TransactionCreateScreen.path,
+        pageBuilder: _slidePage((_) => const TransactionCreateScreen()),
+      ),
+      GoRoute(
+        path: SettingsScreen.path,
+        pageBuilder: _fadePage((_) => const Scaffold(body: SettingsScreen())),
+      ),
+      GoRoute(
+        path: BudgetScreen.path,
+        pageBuilder: _slidePage((_) => const BudgetScreen()),
+      ),
+      GoRoute(
+        path: CategoryTagManagementScreen.path,
+        pageBuilder: _slidePage((_) => const CategoryTagManagementScreen()),
+      ),
+      GoRoute(
+        path: DebtScreen.path,
+        pageBuilder: _slidePage((_) => const DebtScreen()),
+      ),
+      GoRoute(
+        path: DebtDetailScreen.path,
+        pageBuilder: _slidePage(
+          (state) => DebtDetailScreen(debtId: state.pathParameters['debtId']!),
+        ),
+      ),
+      GoRoute(
+        path: TrackerScreen.path,
+        pageBuilder: _slidePage((_) => const TrackerScreen()),
+      ),
+      GoRoute(
+        path: RecurringScreen.path,
+        pageBuilder: _slidePage((_) => const RecurringScreen()),
+      ),
+      GoRoute(
+        path: GoalScreen.path,
+        pageBuilder: _slidePage((_) => const GoalScreen()),
+      ),
+      GoRoute(
+        path: InsightsScreen.path,
+        pageBuilder: _slidePage(
+          (state) => InsightsScreen(
+            initialTab: InsightsScreen.tabFromQuery(
+              state.uri.queryParameters['tab'],
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AuditLogScreen.path,
+        pageBuilder: _slidePage((_) => const AuditLogScreen()),
+      ),
+      // Redesign surfaces. [RedesignShell] (/beranda) is the authenticated home;
+      // the rooms/activity/insights standalone routes remain as deep-link
+      // targets, and /rooms/:walletId is the room detail pushed from Home.
       GoRoute(
         path: RoomsHomeScreen.path,
         pageBuilder: _fadePage((_) => const RoomsHomeScreen()),
