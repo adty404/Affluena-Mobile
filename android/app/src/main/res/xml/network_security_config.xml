@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Affluena API is served over plain HTTP (http://43.133.147.101/api/v1).
+  Android 9+ (API 28+) blocks cleartext traffic by default, which would make
+  release APKs fail to reach the backend ("Tidak bisa terhubung ke Affluena").
+  Permit cleartext only for the known API host + local dev hosts; everything
+  else stays HTTPS-only.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">43.133.147.101</domain>
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>
