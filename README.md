@@ -20,13 +20,15 @@ retired**.
   **light + dark** by brightness; read via `context.sky` (e.g. `context.sky.accent`).
   The legacy theme + spacing/radii/typography tokens live in `lib/app/theme/affluena_theme.dart`.
 - **Dark mode aware** (follows the system / the in-app theme controller).
-- See [`DESIGN.md`](DESIGN.md) for the palette, IA, and component specs.
+- **Visual guide:** [`design/affluena-design-guide.html`](design/affluena-design-guide.html)
+  — pixel-level mockups of all 21 screens (open in a browser; self-contained).
+  [`DESIGN.md`](DESIGN.md) is the written spec (palette, IA, components). Keep both in sync.
 
 ## Information architecture — "Spaces / rooms"
 
 The authenticated home is **`RedesignShell`** (route `/beranda`,
-`lib/features/redesign/presentation/redesign_shell.dart`) — a **floating pill**
-bottom-nav with three tabs plus a center quick-add FAB:
+`lib/features/redesign/presentation/redesign_shell.dart`) — an **icon-only
+floating pill** bottom-nav with three tabs plus a center quick-add FAB:
 
 - **Beranda** — wallets as "rooms" (`RoomsHomeView`); tap a room → room detail; long-press → quick-add.
 - **Aktivitas** — cross-wallet merged transaction feed (`ActivityFeedView`).
@@ -34,9 +36,16 @@ bottom-nav with three tabs plus a center quick-add FAB:
 - **Lainnya** (+ FAB) — "Lainnya" pushes **Pengaturan** (Settings), the hub for the
   remaining feature screens; the center FAB opens the quick-add capture sheet.
 
-The old 5-tab dashboard shell (Home/Wallets/Add/Activity/More) was **deleted**
+The old 5-tab bottom-nav shell (Home/Wallets/Add/Activity/More) was **deleted**
 in the redesign; feature screens are now reached from the rooms home and from
 Pengaturan, and remain plain top-level routes in `lib/app/router.dart`.
+
+> **Design target:** the guide
+> ([`design/affluena-design-guide.html`](design/affluena-design-guide.html))
+> redesigns Beranda from wallet "rooms" into a **6-section dashboard** — Dompet ·
+> Anggaran · Tabungan · Cicilan · Langganan · Berulang (2-column cards → detail).
+> The rooms home above is the **current build**; the re-skin to the dashboard is
+> in progress. See [`DESIGN.md` §1](DESIGN.md).
 
 ## Setup
 
