@@ -9,7 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 Future<void> _pump(WidgetTester tester, Widget child) {
   return tester.pumpWidget(
-    MaterialApp(home: Scaffold(body: Center(child: child))),
+    MaterialApp(
+      home: Scaffold(body: Center(child: child)),
+    ),
   );
 }
 
@@ -66,7 +68,10 @@ void main() {
   });
 
   testWidgets('SkyProgressBar clamps its fill width', (tester) async {
-    await _pump(tester, const SizedBox(width: 200, child: SkyProgressBar(value: 1.6)));
+    await _pump(
+      tester,
+      const SizedBox(width: 200, child: SkyProgressBar(value: 1.6)),
+    );
     final fraction = tester.widget<FractionallySizedBox>(
       find.byType(FractionallySizedBox),
     );
@@ -80,10 +85,7 @@ void main() {
       tester,
       SizedBox(
         width: 280,
-        child: SkyKeypad(
-          onKey: keys.add,
-          onBackspace: () => backspaces++,
-        ),
+        child: SkyKeypad(onKey: keys.add, onBackspace: () => backspaces++),
       ),
     );
 

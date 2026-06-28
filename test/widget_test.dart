@@ -17,9 +17,9 @@ void main() {
     // The Spaces home (rooms) is the default tab.
     expect(find.text('TOTAL'), findsOneWidget);
     // The Sky bottom nav tabs + center quick-add FAB.
-    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Beranda'), findsOneWidget);
     expect(find.text('Aktivitas'), findsOneWidget);
-    expect(find.text('Insights'), findsOneWidget);
+    expect(find.text('Wawasan'), findsOneWidget);
     expect(find.text('Lainnya'), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsOneWidget);
   });

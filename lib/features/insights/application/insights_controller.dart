@@ -13,11 +13,11 @@ final insightsControllerProvider =
     NotifierProvider<InsightsController, InsightsState>(InsightsController.new);
 
 enum InsightTab {
-  reports('Reports'),
-  exports('Exports'),
-  alerts('Alerts'),
-  activity('Activity'),
-  rules('Rules');
+  reports('Laporan'),
+  exports('Ekspor'),
+  alerts('Peringatan'),
+  activity('Aktivitas'),
+  rules('Aturan');
 
   const InsightTab(this.label);
 
@@ -54,7 +54,7 @@ class InsightsController extends Notifier<InsightsState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Insights could not be loaded.',
+        loadError: 'Wawasan tidak dapat dimuat.',
       );
     }
   }
@@ -74,7 +74,7 @@ class InsightsController extends Notifier<InsightsState> {
     } catch (_) {
       state = state.copyWith(
         isReportLoading: false,
-        actionError: 'Report could not be loaded.',
+        actionError: 'Laporan tidak dapat dimuat.',
       );
     }
   }
@@ -106,7 +106,7 @@ class InsightsController extends Notifier<InsightsState> {
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'CSV export could not be generated.',
+        actionError: 'Ekspor CSV tidak dapat dibuat.',
       );
       return;
     }
@@ -114,7 +114,7 @@ class InsightsController extends Notifier<InsightsState> {
     if (result.bytes.isEmpty) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'No transactions found to export for this month.',
+        actionError: 'Tidak ada transaksi yang bisa diekspor untuk bulan ini.',
       );
       return;
     }
@@ -127,7 +127,7 @@ class InsightsController extends Notifier<InsightsState> {
       state = state.copyWith(
         isSaving: false,
         selectedTab: InsightTab.reports,
-        actionError: 'CSV export was generated but could not be shared.',
+        actionError: 'Ekspor CSV berhasil dibuat tetapi tidak dapat dibagikan.',
       );
       return;
     }
@@ -138,11 +138,11 @@ class InsightsController extends Notifier<InsightsState> {
       isSaving: false,
       selectedTab: InsightTab.reports,
       actionMessage: outcome == CsvShareOutcome.shared
-          ? 'CSV export shared.'
+          ? 'Ekspor CSV dibagikan.'
           : null,
       actionError: switch (outcome) {
         CsvShareOutcome.unavailable =>
-          'Sharing is not available on this device.',
+          'Berbagi tidak tersedia di perangkat ini.',
         _ => null,
       },
     );
@@ -196,7 +196,7 @@ class InsightsController extends Notifier<InsightsState> {
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'Notification rule could not be updated.',
+        actionError: 'Aturan notifikasi tidak dapat diperbarui.',
       );
       return;
     }
@@ -212,14 +212,14 @@ class InsightsController extends Notifier<InsightsState> {
         activityTotal: sections.activities.pagination.total,
         alerts: sections.alerts.alerts,
         rules: sections.rules.rules,
-        actionMessage: 'Notification rule updated.',
+        actionMessage: 'Aturan notifikasi diperbarui.',
       );
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
         rules: _replaceNotificationRule(state.rules, updated),
         actionError:
-            'Notification rule updated, but insights could not be refreshed.',
+            'Aturan notifikasi diperbarui, tetapi wawasan tidak dapat disegarkan.',
       );
     }
   }

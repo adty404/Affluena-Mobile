@@ -88,7 +88,7 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEditing ? 'Edit category' : 'Create category',
+                _isEditing ? 'Ubah kategori' : 'Buat kategori',
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
@@ -98,7 +98,7 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.category_outlined),
-                  labelText: 'Category name',
+                  labelText: 'Nama kategori',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -108,12 +108,12 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
                   ButtonSegment(
                     value: CategoryType.expense,
                     icon: Icon(Icons.trending_down),
-                    label: Text('Expense'),
+                    label: Text('Pengeluaran'),
                   ),
                   ButtonSegment(
                     value: CategoryType.income,
                     icon: Icon(Icons.trending_up),
-                    label: Text('Income'),
+                    label: Text('Pemasukan'),
                   ),
                 ],
                 selected: {_type},
@@ -128,15 +128,15 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
               ),
               const SizedBox(height: AffluenaSpacing.space3),
               SelectorRow(
-                label: 'Parent category',
-                value: selectedParent?.name ?? 'No parent',
+                label: 'Kategori induk',
+                value: selectedParent?.name ?? 'Tanpa induk',
                 icon: Icons.account_tree_outlined,
                 enabled: !state.isSaving,
                 onTap: () => _selectParent(parentOptions, selectedParent),
               ),
               const SizedBox(height: AffluenaSpacing.space1),
               Text(
-                'Categories nest up to 3 levels. Only categories with room for a child are shown.',
+                'Kategori bisa bertingkat hingga 3 level. Hanya kategori yang masih bisa menampung subkategori yang ditampilkan.',
                 style: textTheme.bodySmall?.copyWith(
                   color: context.affluenaColors.inkMuted,
                 ),
@@ -149,7 +149,9 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
               FilledButton(
                 key: const Key('category-save-button'),
                 onPressed: canSave ? () => _save(selectedParent) : null,
-                child: Text(state.isSaving ? 'Saving...' : 'Save category'),
+                child: Text(
+                  state.isSaving ? 'Menyimpan...' : 'Simpan kategori',
+                ),
               ),
             ],
           ),
@@ -186,10 +188,10 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
   ) async {
     final selected = await showCategoryTreePicker(
       context: context,
-      title: 'Parent category',
+      title: 'Kategori induk',
       selectedId: selectedParent?.id,
       allowNone: true,
-      noneLabel: 'No parent',
+      noneLabel: 'Tanpa induk',
       categories: [
         for (final category in options)
           CategoryTreeEntry(
@@ -237,17 +239,17 @@ Future<void> _confirmDeleteCategory(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Delete category?'),
-      content: Text('Delete ${category.name} from your category hierarchy?'),
+      title: const Text('Hapus kategori?'),
+      content: Text('Hapus ${category.name} dari hierarki kategori kamu?'),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: const Text('Batal'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Delete category'),
+          child: const Text('Hapus kategori'),
         ),
       ],
     ),

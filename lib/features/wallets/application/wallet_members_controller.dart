@@ -83,8 +83,8 @@ class WalletMembersController extends Notifier<WalletMembersActionState> {
 
   String _errorMessage(Object error, WalletShareStatus status) {
     final fallback = status == WalletShareStatus.joined
-        ? 'Invitation could not be accepted.'
-        : 'Invitation could not be declined.';
+        ? 'Undangan gagal diterima.'
+        : 'Undangan gagal ditolak.';
     if (error is ApiException) return error.message;
     if (error is DioException) {
       final inner = error.error;

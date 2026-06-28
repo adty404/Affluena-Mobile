@@ -15,18 +15,18 @@ void main() {
     await tester.pumpWidget(auditLogTestApp(TestAuditLogRepository()));
     await tester.pumpAuditState();
 
-    expect(find.text('Audit logs'), findsOneWidget);
-    expect(find.text('1 activity'), findsOneWidget);
-    expect(find.text('1 system request'), findsOneWidget);
+    expect(find.text('Log audit'), findsOneWidget);
+    expect(find.text('1 aktivitas'), findsOneWidget);
+    expect(find.text('1 permintaan sistem'), findsOneWidget);
     expect(find.text('Created transaction Lunch'), findsOneWidget);
     // Audit copy is now humanized ("Create · Transaction" not the raw tokens).
     expect(find.text('Create · Transaction'), findsOneWidget);
-    expect(find.text('Activity'), findsWidgets);
+    expect(find.text('Aktivitas'), findsWidgets);
 
     await tester.tap(find.byKey(const Key('audit-log-tab-system')));
     await tester.pumpAndSettle();
 
-    expect(find.text('System logs'), findsWidgets);
+    expect(find.text('Log sistem'), findsWidgets);
     expect(find.text('GET /api/v1/wallets'), findsOneWidget);
     expect(find.text('200 · 12 ms'), findsOneWidget);
     expect(find.text('Flutter test'), findsOneWidget);
@@ -45,7 +45,7 @@ void main() {
 
       expect(repository.activityDetailRequests, ['activity-1']);
       // The raw entity id is now a de-emphasized "Reference ID (debug)" row.
-      expect(find.text('Reference ID (debug)'), findsOneWidget);
+      expect(find.text('ID referensi (debug)'), findsOneWidget);
       expect(find.text('Entity ID'), findsNothing);
       expect(find.text('transaction-1'), findsOneWidget);
 
@@ -74,7 +74,7 @@ void main() {
 
     // The error state is now an AffluenaBanner.error showing the load error
     // message (not a "Audit logs unavailable" title) with a keyed Retry button.
-    expect(find.text('Audit logs could not be loaded.'), findsOneWidget);
+    expect(find.text('Log audit tidak dapat dimuat.'), findsOneWidget);
     expect(find.text('Audit logs unavailable'), findsNothing);
     expect(find.byKey(const Key('audit-log-retry-button')), findsOneWidget);
 

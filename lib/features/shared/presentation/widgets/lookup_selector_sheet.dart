@@ -93,7 +93,7 @@ class _LookupSelectorSheetState<T> extends State<LookupSelectorSheet<T>> {
               textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.search),
-                hintText: 'Search',
+                hintText: 'Cari',
               ),
               onChanged: (value) => setState(() => _query = value),
             ),
@@ -107,7 +107,7 @@ class _LookupSelectorSheetState<T> extends State<LookupSelectorSheet<T>> {
                       ),
                       child: Center(
                         child: Text(
-                          'No options found',
+                          'Tidak ada pilihan.',
                           style: textTheme.bodyMedium?.copyWith(
                             color: colors.inkMuted,
                           ),

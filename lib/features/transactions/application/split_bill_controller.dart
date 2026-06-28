@@ -71,7 +71,9 @@ class SplitBillController extends Notifier<SplitBillState> {
       state = state.copyWith(
         isLoading: false,
         // Only wallets the user can write to are selectable as a target.
-        wallets: wallets.wallets.where((w) => w.canWrite).toList(growable: false),
+        wallets: wallets.wallets
+            .where((w) => w.canWrite)
+            .toList(growable: false),
         expenseCategories: expenseCategories.categories,
         incomeCategories: incomeCategories.categories,
         tags: tags.tags,
@@ -79,7 +81,7 @@ class SplitBillController extends Notifier<SplitBillState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Split bill data could not be loaded.',
+        loadError: 'Data bagi tagihan gagal dimuat.',
       );
     }
   }
@@ -104,7 +106,7 @@ class SplitBillController extends Notifier<SplitBillState> {
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'Split bill could not be created.',
+        actionError: 'Bagi tagihan gagal dibuat.',
       );
       return false;
     }
@@ -142,19 +144,19 @@ class SplitBillState {
 
   Tag? tagById(String? id) => _findById(tags, id);
 
-  String walletName(String? id) => walletById(id)?.name ?? 'Choose wallet';
+  String walletName(String? id) => walletById(id)?.name ?? 'Pilih dompet';
 
   String expenseCategoryName(String? id) {
-    return expenseCategoryById(id)?.name ?? 'Choose category';
+    return expenseCategoryById(id)?.name ?? 'Pilih kategori';
   }
 
   String incomeCategoryName(String? id) {
-    return incomeCategoryById(id)?.name ?? 'Choose category';
+    return incomeCategoryById(id)?.name ?? 'Pilih kategori';
   }
 
   String tagName(String? id) {
     final tag = tagById(id);
-    return tag == null ? 'Optional' : tagLabel(tag.name);
+    return tag == null ? 'Opsional' : tagLabel(tag.name);
   }
 
   SplitBillState copyWith({

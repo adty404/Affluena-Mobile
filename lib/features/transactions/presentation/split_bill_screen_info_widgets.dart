@@ -35,14 +35,14 @@ class _SplitBillInfoSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SectionHeader(title: 'Bill information', actionLabel: 'Expense'),
+        SectionHeader(title: 'Informasi tagihan', actionLabel: 'Pengeluaran'),
         const SizedBox(height: AffluenaSpacing.space3),
         AffluenaCard(
           child: Column(
             children: [
               SelectorRow(
                 key: const Key('split-wallet-selector'),
-                label: 'Wallet',
+                label: 'Dompet',
                 value: state.walletName(walletId),
                 icon: Icons.account_balance_wallet_outlined,
                 enabled: state.wallets.isNotEmpty && !state.isSaving,
@@ -53,7 +53,7 @@ class _SplitBillInfoSection extends StatelessWidget {
               const Divider(height: 1),
               SelectorRow(
                 key: const Key('split-category-selector'),
-                label: 'Category',
+                label: 'Kategori',
                 value: state.expenseCategoryName(categoryId),
                 icon: Icons.category_outlined,
                 enabled: state.expenseCategories.isNotEmpty && !state.isSaving,
@@ -72,7 +72,7 @@ class _SplitBillInfoSection extends StatelessWidget {
               const SizedBox(height: AffluenaSpacing.space3),
               MoneyInput(
                 key: const Key('split-total-amount-field'),
-                label: 'Total bill',
+                label: 'Total tagihan',
                 initialValue: totalAmountMinor,
                 enabled: !state.isSaving,
                 onChanged: onAmountChanged,
@@ -80,7 +80,7 @@ class _SplitBillInfoSection extends StatelessWidget {
               const SizedBox(height: AffluenaSpacing.space3),
               DateTimePickerField(
                 key: const Key('split-date-field'),
-                label: 'Date & time',
+                label: 'Tanggal & waktu',
                 value: date,
                 enabled: !state.isSaving,
                 onChanged: onDateChanged,
@@ -92,7 +92,7 @@ class _SplitBillInfoSection extends StatelessWidget {
                 textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
-                  labelText: 'Note',
+                  labelText: 'Catatan',
                 ),
                 onChanged: (_) => onTextChanged(),
               ),
@@ -106,7 +106,7 @@ class _SplitBillInfoSection extends StatelessWidget {
   Future<void> _selectWallet(BuildContext context) async {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
-      title: 'Split wallet',
+      title: 'Dompet bagi tagihan',
       selectedValue: walletId,
       options: [
         for (final wallet in state.wallets)
@@ -125,7 +125,7 @@ class _SplitBillInfoSection extends StatelessWidget {
     // Categories are a hierarchy: use the tree-aware picker, not a flat list.
     final selected = await showCategoryTreePicker(
       context: context,
-      title: 'Bill category',
+      title: 'Kategori tagihan',
       selectedId: categoryId,
       categories: [
         for (final category in state.expenseCategories)

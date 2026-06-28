@@ -16,9 +16,9 @@ String transactionMetadata(TransactionsState state, Transaction transaction) {
   final walletName = state.walletName(transaction.walletId);
   if (transaction.type == TransactionType.transfer) {
     final toWalletName = transaction.toWalletId == null
-        ? 'Unknown wallet'
+        ? 'Dompet tidak dikenal'
         : state.walletName(transaction.toWalletId!);
-    return 'Transfer · $walletName to $toWalletName · $date';
+    return 'Transfer · $walletName ke $toWalletName · $date';
   }
   return '${state.categoryName(transaction)} · $walletName · $date';
 }
@@ -33,9 +33,9 @@ String transactionGroupedMetadata(
   final walletName = state.walletName(transaction.walletId);
   if (transaction.type == TransactionType.transfer) {
     final toWalletName = transaction.toWalletId == null
-        ? 'Unknown wallet'
+        ? 'Dompet tidak dikenal'
         : state.walletName(transaction.toWalletId!);
-    return 'Transfer · $walletName to $toWalletName · $time';
+    return 'Transfer · $walletName ke $toWalletName · $time';
   }
   return '${state.categoryName(transaction)} · $walletName · $time';
 }

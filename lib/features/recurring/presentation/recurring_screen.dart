@@ -40,7 +40,7 @@ class RecurringScreen extends ConsumerWidget {
     }
 
     return DrillInScaffold(
-      title: 'Recurring',
+      title: 'Aturan berulang',
       actions: [
         IconButton.filledTonal(
           onPressed: state.wallets.isEmpty || state.isSaving
@@ -59,7 +59,7 @@ class RecurringScreen extends ConsumerWidget {
             const SizedBox(height: AffluenaSpacing.space4),
           ],
           SectionHeader(
-            title: 'Rules',
+            title: 'Aturan',
             actionLabel: state.total == 0 ? null : '${state.total} total',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
@@ -88,10 +88,10 @@ class RecurringScreen extends ConsumerWidget {
                           controller.setStatus(rule, RecurringStatus.cancelled),
                 onDelete: () => _confirm(
                   context,
-                  title: 'Delete recurring rule?',
+                  title: 'Hapus aturan berulang?',
                   body:
-                      'This removes the rule. Existing transactions stay intact.',
-                  actionLabel: 'Delete rule',
+                      'Ini menghapus aturan. Transaksi yang sudah ada tetap utuh.',
+                  actionLabel: 'Hapus aturan',
                   onConfirm: () => controller.deleteRule(rule),
                 ),
               ),
@@ -116,16 +116,16 @@ class _RecurringSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Monthly spend',
+                label: 'Pengeluaran bulanan',
                 value: MoneyFormatter.idr(state.monthlyExpenseMinor),
-                helper: 'Active rules',
+                helper: 'Aturan aktif',
                 icon: Icons.autorenew,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Active',
+                label: 'Aktif',
                 value: state.activeCount.toString(),
-                helper: 'Running rules',
+                helper: 'Aturan berjalan',
                 icon: Icons.play_circle_outline,
               ),
             ],
@@ -134,16 +134,16 @@ class _RecurringSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Due soon',
+                label: 'Segera jatuh tempo',
                 value: state.upcomingCount.toString(),
-                helper: 'Next 7 days',
+                helper: '7 hari ke depan',
                 icon: Icons.event_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
                 label: 'Total',
                 value: state.total.toString(),
-                helper: 'Rules',
+                helper: 'Aturan',
                 icon: Icons.rule_folder_outlined,
               ),
             ],
@@ -184,7 +184,7 @@ class _RecurringCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
     final detail = rule.type == RecurringType.transfer
-        ? '$walletName to ${destinationName ?? 'Unknown wallet'}'
+        ? '$walletName ke ${destinationName ?? 'Dompet tidak diketahui'}'
         : '$walletName · $categoryName';
 
     return AffluenaCard(
@@ -226,25 +226,25 @@ class _RecurringCard extends StatelessWidget {
                   if (value == 'delete') onDelete();
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  const PopupMenuItem(value: 'edit', child: Text('Ubah')),
                   if (onPause != null)
-                    const PopupMenuItem(value: 'pause', child: Text('Pause')),
+                    const PopupMenuItem(value: 'pause', child: Text('Jeda')),
                   if (onResume != null)
-                    const PopupMenuItem(value: 'resume', child: Text('Resume')),
+                    const PopupMenuItem(
+                      value: 'resume',
+                      child: Text('Lanjutkan'),
+                    ),
                   if (onCancel != null)
                     PopupMenuItem(
                       value: 'cancel',
                       child: Text(
-                        'Cancel rule',
+                        'Batalkan aturan',
                         style: TextStyle(color: colors.coral),
                       ),
                     ),
                   PopupMenuItem(
                     value: 'delete',
-                    child: Text(
-                      'Delete',
-                      style: TextStyle(color: colors.coral),
-                    ),
+                    child: Text('Hapus', style: TextStyle(color: colors.coral)),
                   ),
                 ],
               ),
@@ -257,7 +257,7 @@ class _RecurringCard extends StatelessWidget {
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            '${rule.frequencyLabel} · next ${AffluenaDateFormatter.shortDate(rule.nextRunAt)}',
+            '${rule.frequencyLabel} · berikutnya ${AffluenaDateFormatter.shortDate(rule.nextRunAt)}',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
@@ -265,7 +265,7 @@ class _RecurringCard extends StatelessWidget {
           if (rule.lastRunAt != null) ...[
             const SizedBox(height: AffluenaSpacing.space1),
             Text(
-              'Last run ${AffluenaDateFormatter.shortDate(rule.lastRunAt!)}',
+              'Terakhir dijalankan ${AffluenaDateFormatter.shortDate(rule.lastRunAt!)}',
               style: textTheme.bodySmall,
             ),
           ],
@@ -278,7 +278,7 @@ class _RecurringCard extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRun,
               icon: const Icon(Icons.play_arrow_outlined),
-              label: const Text('Run now'),
+              label: const Text('Jalankan'),
             ),
           ],
         ],
@@ -302,10 +302,10 @@ class _RecurringEmptyState extends StatelessWidget {
         children: [
           Icon(Icons.autorenew, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No recurring rules yet', style: textTheme.titleMedium),
+          Text('Belum ada aturan berulang', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Automate regular income, expenses, and transfers from the API scheduler.',
+            'Otomatiskan pemasukan, pengeluaran, dan transfer rutin lewat penjadwal API.',
             style: textTheme.bodySmall,
           ),
         ],
@@ -320,7 +320,7 @@ class _RecurringLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Recurring',
+      title: 'Aturan berulang',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -367,12 +367,12 @@ class _RecurringError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Recurring',
+      title: 'Aturan berulang',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
-            'We could not load recurring rules.',
+            'Kami tidak dapat memuat aturan berulang.',
             onRetry: onRetry,
           ),
         ],
@@ -475,7 +475,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEditing ? 'Edit recurring' : 'Create recurring',
+                _isEditing ? 'Ubah aturan berulang' : 'Buat aturan berulang',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
@@ -489,7 +489,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                   ButtonSegment(
                     value: RecurringType.expense,
                     label: Text(
-                      'Expense',
+                      'Pengeluaran',
                       maxLines: 1,
                       overflow: TextOverflow.fade,
                       softWrap: false,
@@ -498,7 +498,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                   ButtonSegment(
                     value: RecurringType.income,
                     label: Text(
-                      'Income',
+                      'Pemasukan',
                       maxLines: 1,
                       overflow: TextOverflow.fade,
                       softWrap: false,
@@ -516,7 +516,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                   ButtonSegment(
                     value: RecurringType.adjustment,
                     label: Text(
-                      'Adjust',
+                      'Sesuaikan',
                       maxLines: 1,
                       overflow: TextOverflow.fade,
                       softWrap: false,
@@ -538,30 +538,30 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 controller: _nameController,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.label_outline),
-                  labelText: 'Name',
+                  labelText: 'Nama',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               SelectorRow(
-                label: 'Wallet',
-                value: _wallet?.name ?? 'Choose wallet',
+                label: 'Dompet',
+                value: _wallet?.name ?? 'Pilih dompet',
                 icon: Icons.account_balance_wallet_outlined,
                 onTap: () => _selectWallet(isDestination: false),
               ),
               if (_type == RecurringType.transfer) ...[
                 const Divider(height: 1),
                 SelectorRow(
-                  label: 'Destination wallet',
-                  value: _toWallet?.name ?? 'Choose destination',
+                  label: 'Dompet tujuan',
+                  value: _toWallet?.name ?? 'Pilih tujuan',
                   icon: Icons.swap_horiz,
                   onTap: () => _selectWallet(isDestination: true),
                 ),
               ] else ...[
                 const Divider(height: 1),
                 SelectorRow(
-                  label: 'Category',
-                  value: _category?.name ?? 'Choose category',
+                  label: 'Kategori',
+                  value: _category?.name ?? 'Pilih kategori',
                   icon: Icons.category_outlined,
                   onTap: _selectCategory,
                 ),
@@ -570,7 +570,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
               const SizedBox(height: AffluenaSpacing.space2),
               MoneyInput(
                 key: const Key('recurring-amount-field'),
-                label: 'Amount',
+                label: 'Jumlah',
                 initialValue: _amountMinor,
                 onChanged: (value) => setState(() => _amountMinor = value),
               ),
@@ -579,7 +579,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 initialValue: _frequency,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.repeat),
-                  labelText: 'Frequency',
+                  labelText: 'Frekuensi',
                 ),
                 items: RecurringFrequency.values
                     .map(
@@ -600,25 +600,25 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.timelapse_outlined),
-                  labelText: 'Interval count',
+                  labelText: 'Jumlah interval',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
                 key: const Key('recurring-next-run-field'),
-                label: 'Next run date',
+                label: 'Tanggal jalan berikutnya',
                 value: _nextRunAt,
                 icon: Icons.event_outlined,
-                placeholder: 'Choose date',
+                placeholder: 'Pilih tanggal',
                 onChanged: (value) => setState(() => _nextRunAt = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
-                label: 'End date',
+                label: 'Tanggal berakhir',
                 value: _endAt,
                 icon: Icons.event_busy_outlined,
-                placeholder: 'Optional',
+                placeholder: 'Opsional',
                 onChanged: (value) => setState(() => _endAt = value),
               ),
               if (_isEditing) ...[
@@ -649,14 +649,16 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 maxLines: 2,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
-                  labelText: 'Note',
+                  labelText: 'Catatan',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton(
                 key: const Key('recurring-save-button'),
                 onPressed: canSave ? _save : null,
-                child: Text(state.isSaving ? 'Saving...' : 'Save recurring'),
+                child: Text(
+                  state.isSaving ? 'Menyimpan...' : 'Simpan aturan berulang',
+                ),
               ),
             ],
           ),
@@ -668,7 +670,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
   Future<void> _selectWallet({required bool isDestination}) async {
     final selected = await showLookupSelectorSheet<Wallet>(
       context: context,
-      title: isDestination ? 'Destination wallet' : 'Recurring wallet',
+      title: isDestination ? 'Dompet tujuan' : 'Dompet aturan berulang',
       selectedValue: isDestination ? _toWallet : _wallet,
       options: [
         for (final wallet in widget.state.wallets)
@@ -694,7 +696,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
     // Categories are a hierarchy: use the tree-aware picker, not a flat list.
     final selectedId = await showCategoryTreePicker(
       context: context,
-      title: 'Recurring category',
+      title: 'Kategori aturan berulang',
       selectedId: _category?.id,
       categories: [
         for (final category in widget.state.categories)
@@ -758,7 +760,7 @@ Future<void> _confirm(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Keep'),
+          child: const Text('Pertahankan'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: colors.coral),

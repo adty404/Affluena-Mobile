@@ -37,7 +37,7 @@ class _SessionsSheetState extends ConsumerState<_SessionsSheet> {
         .asData
         ?.value;
     return SettingsSheetFrame(
-      title: 'Signed-in sessions',
+      title: 'Sesi yang masuk',
       child: sessions.when(
         loading: () => const _SessionsSkeleton(),
         error: (error, _) => _sessionError(error),
@@ -91,23 +91,23 @@ class _SessionsSheetState extends ConsumerState<_SessionsSheet> {
     final shouldRevoke = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Revoke this session?'),
+        title: const Text('Cabut sesi ini?'),
         content: Text(
           isCurrent
-              ? 'This is the session on this device. Revoking it will sign you '
-                    'out here.'
-              : 'That device will be signed out and need to log in again.',
+              ? 'Ini adalah sesi di perangkat ini. Mencabutnya akan '
+                    'mengeluarkanmu dari sini.'
+              : 'Perangkat itu akan dikeluarkan dan perlu masuk lagi.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Batal'),
           ),
           FilledButton(
             key: const Key('settings-confirm-revoke-button'),
             style: FilledButton.styleFrom(backgroundColor: colors.coral),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Revoke session'),
+            child: const Text('Cabut sesi'),
           ),
         ],
       ),
@@ -134,7 +134,7 @@ class _SessionsSheetState extends ConsumerState<_SessionsSheet> {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Could not revoke'),
+        title: const Text('Tidak dapat mencabut'),
         content: Text(message),
         actions: [
           TextButton(
@@ -168,8 +168,8 @@ class _SessionRow extends StatelessWidget {
     final location = session.locationLabel;
 
     final detailParts = <String>[
-      'Signed in ${session.createdLabel}',
-      if (lastUsed != null) 'Last used $lastUsed',
+      'Masuk ${session.createdLabel}',
+      if (lastUsed != null) 'Terakhir dipakai $lastUsed',
       ?location,
     ];
 
@@ -199,7 +199,7 @@ class _SessionRow extends StatelessWidget {
                     if (isCurrent) ...[
                       const SizedBox(width: AffluenaSpacing.space2),
                       const StatusBadge(
-                        label: 'This device',
+                        label: 'Perangkat ini',
                         tone: StatusTone.success,
                       ),
                     ],
@@ -216,7 +216,7 @@ class _SessionRow extends StatelessWidget {
           TextButton(
             key: Key('settings-revoke-session-${session.id.substring(0, 8)}'),
             onPressed: onRevoke,
-            child: Text(isRevoking ? 'Revoking' : 'Revoke'),
+            child: Text(isRevoking ? 'Mencabut...' : 'Cabut'),
           ),
         ],
       ),
@@ -275,13 +275,13 @@ class _EmptySessions extends StatelessWidget {
           Icon(Icons.devices_outlined, size: 40, color: colors.inkMuted),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
-            'No other sessions',
+            'Tidak ada sesi lain',
             style: textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'This is the only device signed in to your account.',
+            'Hanya perangkat ini yang masuk ke akunmu.',
             style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
             textAlign: TextAlign.center,
           ),

@@ -59,7 +59,7 @@ class _TransactionEditFields extends StatelessWidget {
         ],
         MoneyInput(
           key: const Key('transaction-edit-amount-field'),
-          label: 'Amount',
+          label: 'Jumlah',
           initialValue: initialAmountMinor,
           enabled: !isSaving,
           onChanged: onAmountChanged,
@@ -67,7 +67,7 @@ class _TransactionEditFields extends StatelessWidget {
         const SizedBox(height: AffluenaSpacing.space3),
         DropdownButtonFormField<String>(
           initialValue: walletId,
-          decoration: const InputDecoration(labelText: 'Wallet'),
+          decoration: const InputDecoration(labelText: 'Dompet'),
           items: [
             for (final option in walletOptions)
               DropdownMenuItem(value: option.id, child: Text(option.label)),
@@ -78,7 +78,7 @@ class _TransactionEditFields extends StatelessWidget {
           const SizedBox(height: AffluenaSpacing.space3),
           DropdownButtonFormField<String>(
             initialValue: toWalletId,
-            decoration: const InputDecoration(labelText: 'Destination wallet'),
+            decoration: const InputDecoration(labelText: 'Dompet tujuan'),
             items: [
               for (final option in walletOptions)
                 if (option.id != walletId)
@@ -93,7 +93,7 @@ class _TransactionEditFields extends StatelessWidget {
           // dropdown.
           SelectorRow(
             key: const Key('transaction-edit-category-selector'),
-            label: 'Category',
+            label: 'Kategori',
             value: categoryLabel,
             icon: Icons.category_outlined,
             enabled: !isSaving,
@@ -104,7 +104,7 @@ class _TransactionEditFields extends StatelessWidget {
         TextField(
           key: const Key('transaction-edit-note-field'),
           controller: noteController,
-          decoration: const InputDecoration(labelText: 'Note'),
+          decoration: const InputDecoration(labelText: 'Catatan'),
           textInputAction: TextInputAction.done,
           onChanged: (_) => onTextChanged(),
         ),
@@ -118,7 +118,7 @@ class _TransactionEditFields extends StatelessWidget {
           child: FilledButton(
             key: const Key('transaction-edit-save-button'),
             onPressed: isSaving ? null : onSave,
-            child: Text(isSaving ? 'Saving...' : 'Save transaction'),
+            child: Text(isSaving ? 'Menyimpan...' : 'Simpan transaksi'),
           ),
         ),
       ],

@@ -6,11 +6,11 @@ import '../data/wallet_models.dart';
 /// the same everywhere.
 String walletTypeLabel(WalletType type) {
   return switch (type) {
-    WalletType.cash => 'Cash',
+    WalletType.cash => 'Tunai',
     WalletType.bank => 'Bank',
     WalletType.eWallet => 'E-wallet',
-    WalletType.investment => 'Investment',
-    WalletType.goal => 'Goal',
+    WalletType.investment => 'Investasi',
+    WalletType.goal => 'Target',
   };
 }
 

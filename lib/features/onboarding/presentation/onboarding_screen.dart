@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../redesign/presentation/redesign_shell.dart';
 import '../application/onboarding_controller.dart';
 
 class _Slide {
@@ -15,24 +16,24 @@ class _Slide {
 const _slides = <_Slide>[
   _Slide(
     icon: Icons.bolt_outlined,
-    title: 'Track money in seconds',
+    title: 'Catat uang dalam hitungan detik',
     body:
-        'Log income and expenses fast, manage cash, bank, and e-wallet '
-        'accounts, and reuse one-tap quick entries.',
+        'Catat pemasukan dan pengeluaran dengan cepat, kelola akun tunai, '
+        'bank, dan e-wallet, serta pakai ulang catat cepat sekali ketuk.',
   ),
   _Slide(
     icon: Icons.insights_outlined,
-    title: 'Plan budgets, reach goals',
+    title: 'Rencanakan anggaran, capai target',
     body:
-        'Set monthly category limits, follow installments and subscriptions, '
-        'and grow your savings toward every goal.',
+        'Atur batas kategori bulanan, pantau cicilan dan langganan, serta '
+        'kembangkan tabunganmu menuju setiap target.',
   ),
   _Slide(
     icon: Icons.verified_user_outlined,
-    title: 'Private and always in sync',
+    title: 'Privat dan selalu sinkron',
     body:
-        'A biometric app lock, a full activity trail, and your data synced '
-        'across every device.',
+        'Kunci aplikasi biometrik, jejak aktivitas lengkap, dan datamu '
+        'tersinkron di setiap perangkat.',
   ),
 ];
 
@@ -67,7 +68,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       if (context.canPop()) {
         context.pop();
       } else {
-        context.go('/');
+        context.go(RedesignShell.path);
       }
       return;
     }
@@ -106,7 +107,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                     child: TextButton(
                       onPressed: _isLast ? null : _finish,
-                      child: const Text('Skip'),
+                      child: const Text('Lewati'),
                     ),
                   ),
                 ),
@@ -131,7 +132,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: FilledButton(
                 key: const Key('onboarding-primary-button'),
                 onPressed: _next,
-                child: Text(_isLast ? 'Get started' : 'Next'),
+                child: Text(_isLast ? 'Mulai' : 'Lanjut'),
               ),
             ),
           ],

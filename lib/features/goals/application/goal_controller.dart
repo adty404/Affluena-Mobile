@@ -28,7 +28,7 @@ class GoalController extends Notifier<GoalState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Goals could not be loaded.',
+        loadError: 'Target gagal dimuat.',
       );
     }
   }
@@ -106,7 +106,7 @@ class GoalController extends Notifier<GoalState> {
               toWalletId: goalWalletId,
               amountMinor: amountMinor,
               transactionAt: contributedAt.toUtc().toIso8601String(),
-              note: 'Contribution to ${goal.name}',
+              note: 'Kontribusi ke ${goal.name}',
             ),
           ),
     );
@@ -132,7 +132,7 @@ class GoalController extends Notifier<GoalState> {
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'That action could not be completed.',
+        actionError: 'Tindakan itu gagal diselesaikan.',
       );
       return false;
     }

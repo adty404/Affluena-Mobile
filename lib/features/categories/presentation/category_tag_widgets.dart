@@ -17,8 +17,8 @@ class _TreeSectionHeader extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final isIncome = type == CategoryType.income;
     final accent = isIncome ? colors.success : colors.inkMuted;
-    final parentLabel = parentCount == 1 ? '1 parent' : '$parentCount parents';
-    final totalLabel = total == 1 ? '1 total' : '$total total';
+    final parentLabel = parentCount == 1 ? '1 induk' : '$parentCount induk';
+    final totalLabel = '$total total';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AffluenaSpacing.space1),
@@ -138,7 +138,7 @@ class _CategoryTreeNode extends StatelessWidget {
     final chevron = hasChildren
         ? IconButton(
             key: Key('category-toggle-${category.id}'),
-            tooltip: collapsed ? 'Expand' : 'Collapse',
+            tooltip: collapsed ? 'Buka' : 'Tutup',
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -208,7 +208,7 @@ class _CategoryTreeNode extends StatelessWidget {
           ),
           PopupMenuButton<String>(
             key: Key('category-menu-${category.id}'),
-            tooltip: 'Category actions',
+            tooltip: 'Aksi kategori',
             onSelected: (value) {
               switch (value) {
                 case 'add':
@@ -227,7 +227,7 @@ class _CategoryTreeNode extends StatelessWidget {
                     dense: true,
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(Icons.add),
-                    title: Text('Add subcategory'),
+                    title: Text('Tambah subkategori'),
                   ),
                 ),
               const PopupMenuItem(
@@ -236,7 +236,7 @@ class _CategoryTreeNode extends StatelessWidget {
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.edit_outlined),
-                  title: Text('Edit'),
+                  title: Text('Ubah'),
                 ),
               ),
               const PopupMenuItem(
@@ -245,7 +245,7 @@ class _CategoryTreeNode extends StatelessWidget {
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.delete_outline),
-                  title: Text('Delete'),
+                  title: Text('Hapus'),
                 ),
               ),
             ],
@@ -344,7 +344,7 @@ class _CategoryTagLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Categories',
+      title: 'Kategori',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -393,12 +393,12 @@ class _CategoryTagError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Categories',
+      title: 'Kategori',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
-            'We could not load your categories and tags.',
+            'Kami tidak dapat memuat kategori dan tag kamu.',
             onRetry: onRetry,
           ),
         ],

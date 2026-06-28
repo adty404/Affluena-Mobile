@@ -43,7 +43,7 @@ class TrackerScreen extends ConsumerWidget {
     }
 
     return DrillInScaffold(
-      title: 'Trackers',
+      title: 'Cicilan & Langganan',
       actions: [
         IconButton.filledTonal(
           onPressed:
@@ -89,16 +89,16 @@ class _TrackerSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Installments',
+                label: 'Cicilan',
                 value: MoneyFormatter.idr(state.installmentMonthlyMinor),
-                helper: 'Monthly due',
+                helper: 'Jatuh tempo bulanan',
                 icon: Icons.receipt_long_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Subscriptions',
+                label: 'Langganan',
                 value: MoneyFormatter.idr(state.subscriptionMonthlyMinor),
-                helper: 'Monthly',
+                helper: 'Bulanan',
                 icon: Icons.autorenew,
               ),
             ],
@@ -107,16 +107,16 @@ class _TrackerSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Weekly',
+                label: 'Mingguan',
                 value: MoneyFormatter.idr(state.weeklySubscriptionMinor),
-                helper: 'Subscriptions',
+                helper: 'Langganan',
                 icon: Icons.view_week_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Due soon',
+                label: 'Segera jatuh tempo',
                 value: state.dueSoonCount.toString(),
-                helper: 'Next 7 days',
+                helper: '7 hari ke depan',
                 icon: Icons.event_outlined,
               ),
             ],
@@ -139,11 +139,11 @@ class _TrackerTabs extends StatelessWidget {
       segments: const [
         ButtonSegment(
           value: TrackerTab.installments,
-          label: Text('Installments', key: Key('tracker-installments-tab')),
+          label: Text('Cicilan', key: Key('tracker-installments-tab')),
         ),
         ButtonSegment(
           value: TrackerTab.subscriptions,
-          label: Text('Subscriptions', key: Key('tracker-subscriptions-tab')),
+          label: Text('Langganan', key: Key('tracker-subscriptions-tab')),
         ),
       ],
       selected: {selected},
@@ -164,7 +164,7 @@ class _InstallmentList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'Installments',
+          title: 'Cicilan',
           actionLabel: state.installmentTotal == 0
               ? null
               : '${state.installmentTotal} total',
@@ -172,8 +172,9 @@ class _InstallmentList extends StatelessWidget {
         const SizedBox(height: AffluenaSpacing.space3),
         if (state.installments.isEmpty)
           const _TrackerEmptyState(
-            title: 'No installments yet',
-            body: 'Track tenor, monthly due amount, and remaining payments.',
+            title: 'Belum ada cicilan',
+            body:
+                'Pantau tenor, jumlah jatuh tempo bulanan, dan sisa pembayaran.',
             icon: Icons.receipt_long_outlined,
           )
         else
@@ -185,7 +186,7 @@ class _InstallmentList extends StatelessWidget {
               onPay: item.canPay
                   ? () => _showTrackerPaymentSheet(
                       context,
-                      title: 'Pay installment',
+                      title: 'Bayar cicilan',
                       subtitle:
                           '${item.name} · ${MoneyFormatter.idr(item.monthlyAmountMinor)}',
                       onSave: (request) =>
@@ -197,18 +198,18 @@ class _InstallmentList extends StatelessWidget {
                   ? null
                   : () => _confirm(
                       context,
-                      title: 'Cancel installment?',
+                      title: 'Batalkan cicilan?',
                       body:
-                          'This keeps the record and marks the installment cancelled.',
-                      actionLabel: 'Cancel installment',
+                          'Ini menyimpan catatan dan menandai cicilan sebagai dibatalkan.',
+                      actionLabel: 'Batalkan cicilan',
                       onConfirm: () => controller.cancelInstallment(item),
                     ),
               onDelete: () => _confirm(
                 context,
-                title: 'Delete installment?',
+                title: 'Hapus cicilan?',
                 body:
-                    'This permanently removes the installment and its schedule. This cannot be undone.',
-                actionLabel: 'Delete installment',
+                    'Ini menghapus cicilan dan jadwalnya secara permanen. Tindakan ini tidak dapat dibatalkan.',
+                actionLabel: 'Hapus cicilan',
                 onConfirm: () => controller.deleteInstallment(item),
               ),
             ),
@@ -231,7 +232,7 @@ class _SubscriptionList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'Subscriptions',
+          title: 'Langganan',
           actionLabel: state.subscriptionTotal == 0
               ? null
               : '${state.subscriptionTotal} total',
@@ -239,8 +240,9 @@ class _SubscriptionList extends StatelessWidget {
         const SizedBox(height: AffluenaSpacing.space3),
         if (state.subscriptions.isEmpty)
           const _TrackerEmptyState(
-            title: 'No subscriptions yet',
-            body: 'Track app, service, and recurring subscription payments.',
+            title: 'Belum ada langganan',
+            body:
+                'Pantau pembayaran langganan aplikasi, layanan, dan langganan berulang.',
             icon: Icons.autorenew,
           )
         else
@@ -252,7 +254,7 @@ class _SubscriptionList extends StatelessWidget {
               onPay: item.canPay
                   ? () => _showTrackerPaymentSheet(
                       context,
-                      title: 'Pay subscription',
+                      title: 'Bayar langganan',
                       subtitle:
                           '${item.name} · ${MoneyFormatter.idr(item.amountMinor)}',
                       onSave: (request) =>
@@ -277,10 +279,10 @@ class _SubscriptionList extends StatelessWidget {
                   ? null
                   : () => _confirm(
                       context,
-                      title: 'Cancel subscription?',
+                      title: 'Batalkan langganan?',
                       body:
-                          'This keeps the record and marks the subscription cancelled.',
-                      actionLabel: 'Cancel subscription',
+                          'Ini menyimpan catatan dan menandai langganan sebagai dibatalkan.',
+                      actionLabel: 'Batalkan langganan',
                       onConfirm: () => controller.setSubscriptionStatus(
                         item,
                         SubscriptionStatus.cancelled,
@@ -288,10 +290,10 @@ class _SubscriptionList extends StatelessWidget {
                     ),
               onDelete: () => _confirm(
                 context,
-                title: 'Delete subscription?',
+                title: 'Hapus langganan?',
                 body:
-                    'This permanently removes the subscription. This cannot be undone.',
-                actionLabel: 'Delete subscription',
+                    'Ini menghapus langganan secara permanen. Tindakan ini tidak dapat dibatalkan.',
+                actionLabel: 'Hapus langganan',
                 onConfirm: () => controller.deleteSubscription(item),
               ),
             ),
@@ -330,21 +332,21 @@ class _InstallmentCard extends StatelessWidget {
       amount: MoneyFormatter.idr(item.monthlyAmountMinor),
       progress: item.paidPercent / 100,
       meta:
-          '${item.remainingMonths}/${item.tenorMonths} months left · due day ${item.dueDay}',
+          'Sisa ${item.remainingMonths}/${item.tenorMonths} bulan · jatuh tempo tanggal ${item.dueDay}',
       detail: '$walletName · $categoryName',
       note: item.note,
-      actionLabel: 'Pay installment',
+      actionLabel: 'Bayar cicilan',
       onAction: onPay,
       menuItems: [
-        _TrackerMenuItem(label: 'Edit', onTap: onEdit),
+        _TrackerMenuItem(label: 'Ubah', onTap: onEdit),
         if (onCancel != null)
           _TrackerMenuItem(
-            label: 'Cancel installment',
+            label: 'Batalkan cicilan',
             onTap: onCancel!,
             destructive: true,
           ),
         _TrackerMenuItem(
-          label: 'Delete installment',
+          label: 'Hapus cicilan',
           onTap: onDelete,
           destructive: true,
         ),
@@ -385,24 +387,24 @@ class _SubscriptionCard extends StatelessWidget {
       amount: MoneyFormatter.idr(item.amountMinor),
       progress: item.status == SubscriptionStatus.active ? 1 : 0,
       meta:
-          '${item.billingCycle.label} · due ${AffluenaDateFormatter.shortDate(item.nextDueDate)}',
+          '${item.billingCycle.label} · jatuh tempo ${AffluenaDateFormatter.shortDate(item.nextDueDate)}',
       detail: '$walletName · $categoryName',
       note: item.accountDetail.isNotEmpty ? item.accountDetail : item.note,
-      actionLabel: 'Pay subscription',
+      actionLabel: 'Bayar langganan',
       onAction: onPay,
       menuItems: [
-        _TrackerMenuItem(label: 'Edit', onTap: onEdit),
-        if (onPause != null) _TrackerMenuItem(label: 'Pause', onTap: onPause!),
+        _TrackerMenuItem(label: 'Ubah', onTap: onEdit),
+        if (onPause != null) _TrackerMenuItem(label: 'Jeda', onTap: onPause!),
         if (onResume != null)
-          _TrackerMenuItem(label: 'Resume', onTap: onResume!),
+          _TrackerMenuItem(label: 'Lanjutkan', onTap: onResume!),
         if (onCancel != null)
           _TrackerMenuItem(
-            label: 'Cancel subscription',
+            label: 'Batalkan langganan',
             onTap: onCancel!,
             destructive: true,
           ),
         _TrackerMenuItem(
-          label: 'Delete subscription',
+          label: 'Hapus langganan',
           onTap: onDelete,
           destructive: true,
         ),
@@ -558,7 +560,7 @@ class _TrackerLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Trackers',
+      title: 'Cicilan & Langganan',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -605,12 +607,12 @@ class _TrackerError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Trackers',
+      title: 'Cicilan & Langganan',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
-            'We could not load your trackers.',
+            'Kami tidak dapat memuat cicilan & langganan kamu.',
             onRetry: onRetry,
           ),
         ],
@@ -726,10 +728,10 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
   Widget build(BuildContext context) {
     final state = ref.watch(trackerControllerProvider);
     final title = _isEditing
-        ? 'Edit tracker'
+        ? 'Ubah catatan'
         : _tab == TrackerTab.installments
-        ? 'Create installment'
-        : 'Create subscription';
+        ? 'Buat cicilan'
+        : 'Buat langganan';
     final canSave =
         _nameController.text.trim().isNotEmpty &&
         _wallet != null &&
@@ -767,11 +769,11 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                   segments: const [
                     ButtonSegment(
                       value: TrackerTab.installments,
-                      label: Text('Installment'),
+                      label: Text('Cicilan'),
                     ),
                     ButtonSegment(
                       value: TrackerTab.subscriptions,
-                      label: Text('Subscription'),
+                      label: Text('Langganan'),
                     ),
                   ],
                   selected: {_tab},
@@ -783,7 +785,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                 controller: _nameController,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.label_outline),
-                  labelText: 'Name',
+                  labelText: 'Nama',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -793,21 +795,21 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                   controller: _accountController,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.badge_outlined),
-                    labelText: 'Account detail',
+                    labelText: 'Detail akun',
                   ),
                 ),
               ],
               const SizedBox(height: AffluenaSpacing.space2),
               SelectorRow(
-                label: 'Wallet',
-                value: _wallet?.name ?? 'Choose wallet',
+                label: 'Dompet',
+                value: _wallet?.name ?? 'Pilih dompet',
                 icon: Icons.account_balance_wallet_outlined,
                 onTap: () => _selectWallet(widget.state.wallets),
               ),
               const Divider(height: 1),
               SelectorRow(
-                label: 'Expense category',
-                value: _category?.name ?? 'Choose category',
+                label: 'Kategori pengeluaran',
+                value: _category?.name ?? 'Pilih kategori',
                 icon: Icons.category_outlined,
                 onTap: () => _selectCategory(widget.state.categories),
               ),
@@ -816,15 +818,15 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
               MoneyInput(
                 key: const Key('tracker-amount-field'),
                 label: _tab == TrackerTab.installments
-                    ? 'Total amount'
-                    : 'Amount',
+                    ? 'Total jumlah'
+                    : 'Jumlah',
                 initialValue: _amountMinor,
                 onChanged: (value) => setState(() => _amountMinor = value),
               ),
               if (_tab == TrackerTab.installments) ...[
                 const SizedBox(height: AffluenaSpacing.space2),
                 MoneyInput(
-                  label: 'Monthly amount',
+                  label: 'Jumlah bulanan',
                   initialValue: _monthlyMinor,
                   onChanged: (value) => setState(() => _monthlyMinor = value),
                 ),
@@ -834,7 +836,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.timelapse_outlined),
-                    labelText: 'Tenor months',
+                    labelText: 'Tenor (bulan)',
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -844,7 +846,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.event_outlined),
-                    labelText: 'Due day',
+                    labelText: 'Tanggal jatuh tempo',
                     hintText: '1-31',
                   ),
                   onChanged: (_) => setState(() {}),
@@ -855,7 +857,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                   initialValue: _billingCycle,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.repeat),
-                    labelText: 'Billing cycle',
+                    labelText: 'Siklus penagihan',
                   ),
                   items: BillingCycle.values
                       .map(
@@ -875,11 +877,11 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
               DatePickerField(
                 key: const Key('tracker-date-field'),
                 label: _tab == TrackerTab.installments
-                    ? 'Start date'
-                    : 'Next due date',
+                    ? 'Tanggal mulai'
+                    : 'Tanggal jatuh tempo berikutnya',
                 value: _date,
                 icon: Icons.today_outlined,
-                placeholder: 'Choose date',
+                placeholder: 'Pilih tanggal',
                 onChanged: (value) => setState(() => _date = value),
               ),
               if (_isEditing && _tab == TrackerTab.installments) ...[
@@ -928,14 +930,14 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                 maxLines: 2,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
-                  labelText: 'Note',
+                  labelText: 'Catatan',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton(
                 key: const Key('tracker-save-button'),
                 onPressed: canSave ? _save : null,
-                child: Text(state.isSaving ? 'Saving...' : 'Save tracker'),
+                child: Text(state.isSaving ? 'Menyimpan...' : 'Simpan'),
               ),
             ],
           ),
@@ -947,7 +949,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
   Future<void> _selectWallet(List<Wallet> wallets) async {
     final selected = await showLookupSelectorSheet<Wallet>(
       context: context,
-      title: 'Tracker wallet',
+      title: 'Dompet',
       selectedValue: _wallet,
       options: [
         for (final wallet in wallets)
@@ -966,7 +968,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
   Future<void> _selectCategory(List<Category> categories) async {
     final selected = await showLookupSelectorSheet<Category>(
       context: context,
-      title: 'Expense category',
+      title: 'Kategori pengeluaran',
       selectedValue: _category,
       options: [
         for (final category in categories)
@@ -1100,10 +1102,10 @@ class _TrackerPaymentSheetState extends ConsumerState<_TrackerPaymentSheet> {
               ],
               DatePickerField(
                 key: const Key('tracker-payment-date-field'),
-                label: 'Paid at',
+                label: 'Dibayar pada',
                 value: _paidAt,
                 icon: Icons.today_outlined,
-                placeholder: 'Optional · defaults to today',
+                placeholder: 'Opsional · default hari ini',
                 onChanged: (value) => setState(() => _paidAt = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
@@ -1112,14 +1114,16 @@ class _TrackerPaymentSheetState extends ConsumerState<_TrackerPaymentSheet> {
                 maxLines: 2,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
-                  labelText: 'Note',
+                  labelText: 'Catatan',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton(
                 key: const Key('tracker-payment-save-button'),
                 onPressed: canSave ? _save : null,
-                child: Text(state.isSaving ? 'Saving...' : 'Save payment'),
+                child: Text(
+                  state.isSaving ? 'Menyimpan...' : 'Simpan pembayaran',
+                ),
               ),
             ],
           ),
@@ -1158,7 +1162,7 @@ Future<void> _confirm(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Keep'),
+          child: const Text('Pertahankan'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: colors.coral),

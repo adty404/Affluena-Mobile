@@ -103,7 +103,7 @@ void main() {
     ]) {
       router.go(location);
       await tester.pumpAndSettle();
-      expect(find.text('Welcome back'), findsOneWidget);
+      expect(find.text('Selamat datang kembali'), findsOneWidget);
       expect(find.byKey(const Key('login-email-field')), findsOneWidget);
     }
   });
@@ -167,7 +167,7 @@ Future<void> _openMore(WidgetTester tester) async {
     await tester.pumpAndSettle();
   }
   expect(find.byType(SettingsScreen), findsOneWidget);
-  expect(find.text('Profile'), findsOneWidget);
+  expect(find.text('Pengaturan'), findsOneWidget);
 }
 
 Future<void> _expectSettingsEntry(WidgetTester tester, String entry) async {
@@ -215,53 +215,56 @@ class _NavigationScenario {
 
 final _settingsNavigationScenarios = [
   _NavigationScenario(
-    entry: 'Quick-entry templates',
+    entry: 'Template catat cepat',
     location: QuickEntryTemplatesScreen.path,
-    expected: 'Quick-entry templates',
+    expected: 'Template catat cepat',
   ),
   _NavigationScenario(
-    entry: 'Categories',
+    entry: 'Kategori',
     location: CategoryTagManagementScreen.path,
-    expected: 'Categories',
+    expected: 'Kategori',
   ),
   _NavigationScenario(
-    entry: 'Budgets',
+    entry: 'Anggaran',
     location: BudgetScreen.path,
-    expected: 'Category budgets',
+    expected: 'Anggaran kategori',
   ),
   _NavigationScenario(
-    entry: 'Installments & Subscriptions',
+    entry: 'Cicilan & Langganan',
     location: TrackerScreen.path,
-    expected: 'Trackers',
+    expected: 'Cicilan & Langganan',
   ),
   _NavigationScenario(
-    entry: 'Recurring',
+    entry: 'Aturan berulang',
     location: RecurringScreen.path,
-    expected: 'Rules',
+    expected: 'Aturan',
   ),
   _NavigationScenario(
-    entry: 'Goals',
+    entry: 'Target tabungan',
     location: GoalScreen.path,
-    expected: 'Saving goals',
+    expected: 'Target tabungan',
   ),
   _NavigationScenario(
-    entry: 'Reports',
+    entry: 'Laporan',
     location: InsightsScreen.location(InsightTab.reports),
+    // Metric label is fixture data, not a translated UI string.
     expected: 'Overview balance',
   ),
   _NavigationScenario(
-    entry: 'Audit logs',
+    entry: 'Log audit',
     location: AuditLogScreen.path,
-    expected: 'Audit logs',
+    expected: 'Log audit',
   ),
   _NavigationScenario(
-    entry: 'Alerts & Activity',
+    entry: 'Peringatan & Aktivitas',
     location: InsightsScreen.location(InsightTab.alerts),
+    // Alert title is fixture data, not a translated UI string.
     expected: 'Food limit reached',
   ),
   _NavigationScenario(
-    entry: 'Notification rules',
+    entry: 'Aturan notifikasi',
     location: InsightsScreen.location(InsightTab.rules),
+    // Rule title is fixture data, not a translated UI string.
     expected: 'Budget alerts',
   ),
 ];
@@ -271,24 +274,24 @@ final _directNavigationScenarios = [
   // resolve (kept reachable via deep link), so cover them here, not in the
   // settings-menu list above.
   _NavigationScenario(
-    entry: 'Split bill',
+    entry: 'Bagi tagihan',
     location: SplitBillScreen.path,
-    expected: 'Split bill',
+    expected: 'Bagi tagihan',
   ),
   _NavigationScenario(
-    entry: 'Debt',
+    entry: 'Utang',
     location: DebtScreen.path,
-    expected: 'Debts',
+    expected: 'Utang',
   ),
   _NavigationScenario(
-    entry: 'Wallet detail',
+    entry: 'Detail dompet',
     location: WalletDetailScreen.location('wallet-main'),
     expected: 'Main Wallet',
   ),
   _NavigationScenario(
-    entry: 'Wallet sharing',
+    entry: 'Berbagi',
     location: WalletSharingScreen.location('wallet-main'),
-    expected: 'Sharing',
+    expected: 'Berbagi',
   ),
 ];
 

@@ -41,7 +41,7 @@ void main() {
     await tester.pumpWidget(budgetTestApp());
     await tester.pumpBudgetState();
 
-    expect(find.text('Budgets'), findsOneWidget);
+    expect(find.text('Anggaran'), findsOneWidget);
     // The alert is now rendered inside an AffluenaBanner whose Text combines the
     // title and message, so match on substring.
     expect(find.textContaining('Food near limit'), findsOneWidget);
@@ -53,8 +53,8 @@ void main() {
     );
     expect(find.text('Food & Dining'), findsOneWidget);
     // The budget card now carries a StatusBadge label reflecting usage.
-    expect(find.widgetWithText(StatusBadge, 'Near limit'), findsOneWidget);
-    expect(find.text('85% used'), findsOneWidget);
+    expect(find.widgetWithText(StatusBadge, 'Mendekati batas'), findsOneWidget);
+    expect(find.text('85% terpakai'), findsOneWidget);
     expect(find.textContaining('category-food'), findsNothing);
   });
 
@@ -68,11 +68,11 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
-    expect(find.text('Create budget'), findsOneWidget);
+    expect(find.text('Buat anggaran'), findsOneWidget);
 
-    await tester.tap(find.text('Choose expense category'));
+    await tester.tap(find.text('Pilih kategori pengeluaran'));
     await tester.pumpAndSettle();
-    expect(find.text('Budget category'), findsOneWidget);
+    expect(find.text('Kategori anggaran'), findsOneWidget);
 
     await tester.tap(find.text('Transportation'));
     await tester.pumpAndSettle();

@@ -10,6 +10,7 @@ import '../../insights/data/insight_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
@@ -45,36 +46,35 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return SafeArea(
-      child: ListView(
-        padding: AffluenaInsets.screen,
-        children: [
-          Text('Activity', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space4),
-          SegmentedButton<_ActivityView>(
-            showSelectedIcon: false,
-            segments: const [
-              ButtonSegment(
-                value: _ActivityView.transactions,
-                label: Text('Transactions'),
-              ),
-              ButtonSegment(
-                value: _ActivityView.activity,
-                label: Text('Activity'),
-              ),
-            ],
-            selected: {_view},
-            onSelectionChanged: (selection) =>
-                setState(() => _view = selection.first),
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
-          if (_view == _ActivityView.transactions)
-            ..._buildTransactionsChildren(context)
-          else
-            ..._buildActivityChildren(context),
-        ],
+    return DrillInScaffold(
+      title: 'Transaksi',
+      body: SafeArea(
+        child: ListView(
+          padding: AffluenaInsets.screen,
+          children: [
+            SegmentedButton<_ActivityView>(
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(
+                  value: _ActivityView.transactions,
+                  label: Text('Transaksi'),
+                ),
+                ButtonSegment(
+                  value: _ActivityView.activity,
+                  label: Text('Aktivitas'),
+                ),
+              ],
+              selected: {_view},
+              onSelectionChanged: (selection) =>
+                  setState(() => _view = selection.first),
+            ),
+            const SizedBox(height: AffluenaSpacing.space5),
+            if (_view == _ActivityView.transactions)
+              ..._buildTransactionsChildren(context)
+            else
+              ..._buildActivityChildren(context),
+          ],
+        ),
       ),
     );
   }
@@ -106,11 +106,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           prefixIcon: const Icon(Icons.search),
-          hintText: 'Search note, wallet, or category',
+          hintText: 'Cari catatan, dompet, atau kategori',
           suffixIcon: isSearching
               ? IconButton(
                   key: const Key('transactions-search-clear'),
-                  tooltip: 'Clear search',
+                  tooltip: 'Hapus pencarian',
                   icon: const Icon(Icons.close),
                   onPressed: () {
                     _searchController.clear();
@@ -129,7 +129,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               key: const Key('transaction-create-entry-button'),
               onPressed: () => context.push(TransactionCreateScreen.path),
               icon: const Icon(Icons.add),
-              label: const Text('New transaction'),
+              label: const Text('Transaksi baru'),
             ),
           ),
         ],
@@ -143,18 +143,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               runSpacing: AffluenaSpacing.space2,
               children: [
                 _TypeFilterChip(
-                  label: 'All',
+                  label: 'Semua',
                   selected: state.typeFilter == null,
                   onSelected: () => controller.setTypeFilter(null),
                 ),
                 _TypeFilterChip(
-                  label: 'Income',
+                  label: 'Pemasukan',
                   selected: state.typeFilter == TransactionType.income,
                   onSelected: () =>
                       controller.setTypeFilter(TransactionType.income),
                 ),
                 _TypeFilterChip(
-                  label: 'Expense',
+                  label: 'Pengeluaran',
                   selected: state.typeFilter == TransactionType.expense,
                   onSelected: () =>
                       controller.setTypeFilter(TransactionType.expense),
@@ -166,7 +166,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       controller.setTypeFilter(TransactionType.transfer),
                 ),
                 _TypeFilterChip(
-                  label: 'Adjustment',
+                  label: 'Penyesuaian',
                   selected: state.typeFilter == TransactionType.adjustment,
                   onSelected: () =>
                       controller.setTypeFilter(TransactionType.adjustment),
@@ -215,7 +215,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           onPressed: state.isLoadingMore
               ? null
               : () => controller.load(reset: false),
-          child: Text(state.isLoadingMore ? 'Loading...' : 'Load more'),
+          child: Text(state.isLoadingMore ? 'Memuat...' : 'Muat lebih banyak'),
         ),
       ],
       const SizedBox(height: AffluenaSpacing.space6),
@@ -236,8 +236,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       return const [
         AffluenaCard(
           child: Text(
-            'No activity yet. Actions like adding a transaction, paying a '
-            'debt, or settling a split bill will appear here.',
+            'Belum ada aktivitas. Tindakan seperti menambah transaksi, '
+            'membayar utang, atau melunasi bagi tagihan akan muncul di sini.',
           ),
         ),
       ];
@@ -245,7 +245,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     return [
       Text(
-        '${state.activityTotal} recorded ${state.activityTotal == 1 ? 'action' : 'actions'}',
+        '${state.activityTotal} tindakan tercatat',
         style: Theme.of(
           context,
         ).textTheme.bodySmall?.copyWith(color: context.affluenaColors.inkMuted),
@@ -508,7 +508,7 @@ class _FilterButton extends StatelessWidget {
       backgroundColor: colors.coral,
       child: IconButton.filledTonal(
         key: const Key('transactions-filter-button'),
-        tooltip: 'Filter transactions',
+        tooltip: 'Saring transaksi',
         onPressed: onTap,
         icon: const Icon(Icons.tune),
       ),
@@ -530,10 +530,10 @@ class _ActiveFilterSummary extends StatelessWidget {
     final labels = <String>[
       if (filters.walletId != null) state.walletName(filters.walletId!),
       if (filters.categoryId != null)
-        (state.categoryNames[filters.categoryId] ?? 'Category'),
+        (state.categoryNames[filters.categoryId] ?? 'Kategori'),
       if (filters.tagId != null) tagLabel(state.tagName(filters.tagId!)),
-      if (filters.from != null) 'From ${state.filterDateLabel(filters.from!)}',
-      if (filters.to != null) 'To ${state.filterDateLabel(filters.to!)}',
+      if (filters.from != null) 'Dari ${state.filterDateLabel(filters.from!)}',
+      if (filters.to != null) 'Sampai ${state.filterDateLabel(filters.to!)}',
     ];
 
     return DecoratedBox(
@@ -561,7 +561,7 @@ class _ActiveFilterSummary extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               onTap: onClear,
               child: Text(
-                'Clear',
+                'Hapus',
                 style: textTheme.labelMedium?.copyWith(
                   color: colors.forest,
                   fontWeight: FontWeight.w700,
@@ -600,14 +600,16 @@ class _EmptyTransactionsState extends StatelessWidget {
           Icon(Icons.receipt_long_outlined, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
-            hasFilters ? 'No matches for these filters' : 'No transactions yet',
+            hasFilters
+                ? 'Tidak ada yang cocok dengan filter ini'
+                : 'Belum ada transaksi',
             style: textTheme.titleMedium,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             hasFilters
-                ? 'Adjust or clear your filters to see more activity.'
-                : 'Track income, expenses, and transfers to watch your money move.',
+                ? 'Sesuaikan atau hapus filter untuk melihat lebih banyak aktivitas.'
+                : 'Catat pemasukan, pengeluaran, dan transfer untuk memantau uangmu.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
@@ -616,14 +618,14 @@ class _EmptyTransactionsState extends StatelessWidget {
               key: const Key('transactions-empty-clear-filters'),
               onPressed: onClearFilters,
               icon: const Icon(Icons.filter_alt_off_outlined),
-              label: const Text('Clear filters'),
+              label: const Text('Hapus filter'),
             )
           else
             FilledButton.icon(
               key: const Key('transactions-empty-create'),
               onPressed: onCreate,
               icon: const Icon(Icons.add),
-              label: const Text('Add a transaction'),
+              label: const Text('Tambah transaksi'),
             ),
         ],
       ),
@@ -648,11 +650,11 @@ class _NoSearchMatchesState extends StatelessWidget {
         children: [
           Icon(Icons.search_off_outlined, color: colors.inkMuted),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No results for "$query"', style: textTheme.titleMedium),
+          Text('Tidak ada hasil untuk "$query"', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Search runs over the loaded transactions by note, wallet, or '
-            'category.',
+            'Pencarian menjelajahi transaksi yang sudah dimuat berdasarkan '
+            'catatan, dompet, atau kategori.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
@@ -660,7 +662,7 @@ class _NoSearchMatchesState extends StatelessWidget {
             key: const Key('transactions-clear-search'),
             onPressed: onClear,
             icon: const Icon(Icons.close),
-            label: const Text('Clear search'),
+            label: const Text('Hapus pencarian'),
           ),
         ],
       ),

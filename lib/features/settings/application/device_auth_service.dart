@@ -28,7 +28,7 @@ class LocalDeviceAuthService implements DeviceAuthService {
   @override
   Future<bool> authenticate() async {
     return _localAuthentication.authenticate(
-      localizedReason: 'Authenticate to protect your Affluena session.',
+      localizedReason: 'Autentikasi untuk melindungi sesi Affluena-mu.',
       biometricOnly: false,
       sensitiveTransaction: true,
       persistAcrossBackgrounding: true,

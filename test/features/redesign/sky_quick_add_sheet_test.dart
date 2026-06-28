@@ -53,9 +53,7 @@ Future<_StubCreateController> _openSheet(WidgetTester tester) async {
   );
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [
-        transactionCreateControllerProvider.overrideWith(() => stub),
-      ],
+      overrides: [transactionCreateControllerProvider.overrideWith(() => stub)],
       child: MaterialApp(
         home: Scaffold(
           body: Builder(
@@ -117,7 +115,7 @@ void main() {
     await tester.pump();
 
     // Open the category picker and choose "Makan".
-    await tester.tap(find.text('Choose category'));
+    await tester.tap(find.text('Pilih kategori'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Makan'));
     await tester.pumpAndSettle();

@@ -7,7 +7,7 @@ import '../../../app/theme/affluena_theme.dart';
 /// a wallet balance.
 ///
 /// Mirrors the [ChoiceChip] style used by the transaction type selector:
-/// "Increase (+)" leans on the forest/success tone, "Decrease (−)" on coral.
+/// "Tambah (+)" leans on the forest/success tone, "Kurangi (−)" on coral.
 class AdjustmentDirectionControl extends StatelessWidget {
   const AdjustmentDirectionControl({
     required this.decrease,
@@ -16,7 +16,7 @@ class AdjustmentDirectionControl extends StatelessWidget {
     super.key,
   });
 
-  /// `true` when the "Decrease (−)" option is selected.
+  /// `true` when the "Kurangi (−)" option is selected.
   final bool decrease;
   final bool enabled;
   final ValueChanged<bool> onChanged;
@@ -31,7 +31,7 @@ class AdjustmentDirectionControl extends StatelessWidget {
       children: [
         _DirectionChip(
           key: const Key('adjustment-direction-increase'),
-          label: 'Increase (+)',
+          label: 'Tambah (+)',
           selected: !decrease,
           enabled: enabled,
           selectedColor: colors.forestSoft,
@@ -40,7 +40,7 @@ class AdjustmentDirectionControl extends StatelessWidget {
         ),
         _DirectionChip(
           key: const Key('adjustment-direction-decrease'),
-          label: 'Decrease (−)',
+          label: 'Kurangi (−)',
           selected: decrease,
           enabled: enabled,
           selectedColor: colors.coral.withAlpha(36),

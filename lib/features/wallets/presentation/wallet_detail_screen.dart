@@ -65,7 +65,7 @@ class _WalletDetailContent extends ConsumerWidget {
     final canWrite = wallet.canWrite; // viewers get a read-only detail screen
 
     return DrillInScaffold(
-      title: wallet.name.isEmpty ? 'Wallet' : wallet.name,
+      title: wallet.name.isEmpty ? 'Dompet' : wallet.name,
       body: ListView(
         padding: _screenPadding,
         children: [
@@ -123,20 +123,21 @@ class _WalletDetailContent extends ConsumerWidget {
             _PendingInviteCard(wallet: wallet),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
-          const SectionHeader(title: 'Monthly analytics'),
+          const SectionHeader(title: 'Analitik bulanan'),
           const SizedBox(height: AffluenaSpacing.space3),
           WalletAnalyticsSection(walletId: wallet.id),
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
-            title: 'Members',
-            actionLabel: canWrite ? 'Invite member' : null,
-            onAction:
-                canWrite ? () => showWalletInviteSheet(context, ref, wallet.id) : null,
+            title: 'Anggota',
+            actionLabel: canWrite ? 'Undang anggota' : null,
+            onAction: canWrite
+                ? () => showWalletInviteSheet(context, ref, wallet.id)
+                : null,
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           WalletMembersSection(walletId: wallet.id, members: state.members),
           const SizedBox(height: AffluenaSpacing.space6),
-          const SectionHeader(title: 'Actions'),
+          const SectionHeader(title: 'Tindakan'),
           const SizedBox(height: AffluenaSpacing.space3),
           AffluenaCard(
             child: Column(
@@ -144,16 +145,16 @@ class _WalletDetailContent extends ConsumerWidget {
                 if (!wallet.isGoal && canWrite) ...[
                   _ActionRow(
                     icon: Icons.tune_rounded,
-                    title: 'Adjust balance',
-                    value: 'Set a new balance (penyesuaian)',
+                    title: 'Sesuaikan saldo',
+                    value: 'Tetapkan saldo baru (penyesuaian)',
                     onTap: () => showWalletAdjustSheet(context, wallet),
                   ),
                   const Divider(height: 1),
                 ],
                 _ActionRow(
                   icon: Icons.group_add_outlined,
-                  title: 'Wallet sharing',
-                  value: 'Invites and member status',
+                  title: 'Berbagi dompet',
+                  value: 'Undangan dan status anggota',
                   onTap: () =>
                       context.push(WalletSharingScreen.location(wallet.id)),
                 ),
@@ -161,8 +162,8 @@ class _WalletDetailContent extends ConsumerWidget {
                   const Divider(height: 1),
                   _ActionRow(
                     icon: Icons.delete_outline,
-                    title: 'Delete wallet',
-                    value: 'Requires confirmation',
+                    title: 'Hapus dompet',
+                    value: 'Perlu konfirmasi',
                     isDestructive: true,
                     onTap: () => _confirmDelete(context, wallet),
                   ),
@@ -209,7 +210,7 @@ class _PendingInviteCard extends ConsumerWidget {
               const SizedBox(width: AffluenaSpacing.space3),
               Expanded(
                 child: Text(
-                  'You have a pending invitation to this shared wallet.',
+                  'Kamu punya undangan yang menunggu untuk dompet bersama ini.',
                   style: textTheme.bodyMedium?.copyWith(color: colors.ink),
                 ),
               ),
@@ -222,7 +223,7 @@ class _PendingInviteCard extends ConsumerWidget {
           const SizedBox(height: AffluenaSpacing.space4),
           if (self == null)
             Text(
-              'This invitation can be answered from the device it was sent to.',
+              'Undangan ini bisa dijawab dari perangkat tujuan undangan.',
               style: textTheme.bodySmall,
             )
           else
@@ -236,7 +237,7 @@ class _PendingInviteCard extends ConsumerWidget {
                             self,
                             WalletShareStatus.rejected,
                           ),
-                    child: const Text('Decline'),
+                    child: const Text('Tolak'),
                   ),
                 ),
                 const SizedBox(width: AffluenaSpacing.space3),
@@ -248,7 +249,7 @@ class _PendingInviteCard extends ConsumerWidget {
                             self,
                             WalletShareStatus.joined,
                           ),
-                    child: Text(isBusy ? 'Working…' : 'Accept'),
+                    child: Text(isBusy ? 'Memproses…' : 'Terima'),
                   ),
                 ),
               ],
@@ -278,7 +279,7 @@ class _WalletDetailLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Wallet',
+      title: 'Dompet',
       body: ListView(
         padding: _screenPadding,
         children: [
@@ -339,12 +340,12 @@ class _WalletDetailError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Wallet',
+      title: 'Dompet',
       body: ListView(
         padding: _screenPadding,
         children: [
           AffluenaBanner.error(
-            'We could not load this wallet.',
+            'Kami tidak dapat memuat dompet ini.',
             onRetry: onRetry,
           ),
         ],
@@ -457,12 +458,12 @@ class _DeleteWalletDialogState extends ConsumerState<_DeleteWalletDialog> {
     final colors = context.affluenaColors;
 
     return AlertDialog(
-      title: Text('Delete ${widget.wallet.name}?'),
+      title: Text('Hapus ${widget.wallet.name}?'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('This removes the wallet after confirmation.'),
+          const Text('Ini akan menghapus dompet setelah dikonfirmasi.'),
           if (_error != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
             AffluenaBanner.error(_error!),
@@ -472,12 +473,12 @@ class _DeleteWalletDialogState extends ConsumerState<_DeleteWalletDialog> {
       actions: [
         TextButton(
           onPressed: _isDeleting ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: const Text('Batal'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: _isDeleting ? null : _delete,
-          child: Text(_isDeleting ? 'Deleting…' : 'Delete'),
+          child: Text(_isDeleting ? 'Menghapus…' : 'Hapus'),
         ),
       ],
     );
@@ -500,7 +501,7 @@ class _DeleteWalletDialogState extends ConsumerState<_DeleteWalletDialog> {
       if (!mounted) return;
       setState(() {
         _isDeleting = false;
-        _error = 'Wallet could not be deleted.';
+        _error = 'Dompet tidak dapat dihapus.';
       });
     }
   }

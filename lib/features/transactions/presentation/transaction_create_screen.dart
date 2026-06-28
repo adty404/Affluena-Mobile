@@ -79,13 +79,13 @@ class _TransactionCreateScreenState
         : const <Category>[];
 
     return DrillInScaffold(
-      title: 'New transaction',
+      title: 'Transaksi baru',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           const _Intro(),
           const SizedBox(height: AffluenaSpacing.space5),
-          SectionHeader(title: 'Type'),
+          SectionHeader(title: 'Jenis'),
           const SizedBox(height: AffluenaSpacing.space3),
           _TypeChips(
             selected: _type,
@@ -110,7 +110,7 @@ class _TransactionCreateScreenState
                 ],
                 MoneyInput(
                   key: const Key('transaction-create-amount-field'),
-                  label: 'Amount',
+                  label: 'Jumlah',
                   initialValue: _amountMinor,
                   enabled: !state.isSaving,
                   onChanged: (value) => setState(() {
@@ -121,7 +121,7 @@ class _TransactionCreateScreenState
                 const SizedBox(height: AffluenaSpacing.space3),
                 SelectorRow(
                   key: const Key('transaction-create-wallet-selector'),
-                  label: _isTransfer ? 'From wallet' : 'Wallet',
+                  label: _isTransfer ? 'Dari dompet' : 'Dompet',
                   value: state.walletName(_walletId),
                   icon: Icons.account_balance_wallet_outlined,
                   enabled: state.wallets.isNotEmpty && !state.isSaving,
@@ -131,7 +131,7 @@ class _TransactionCreateScreenState
                   const Divider(height: 1),
                   SelectorRow(
                     key: const Key('transaction-create-to-wallet-selector'),
-                    label: 'To wallet',
+                    label: 'Ke dompet',
                     value: state.walletName(_toWalletId),
                     icon: Icons.swap_horiz_rounded,
                     enabled: state.wallets.length > 1 && !state.isSaving,
@@ -142,7 +142,7 @@ class _TransactionCreateScreenState
                   const Divider(height: 1),
                   SelectorRow(
                     key: const Key('transaction-create-category-selector'),
-                    label: 'Category',
+                    label: 'Kategori',
                     value: state.categoryName(_categoryId),
                     icon: Icons.category_outlined,
                     enabled: categories.isNotEmpty && !state.isSaving,
@@ -155,7 +155,7 @@ class _TransactionCreateScreenState
                 const SizedBox(height: AffluenaSpacing.space3),
                 DateTimePickerField(
                   key: const Key('transaction-create-date-field'),
-                  label: 'Date & time',
+                  label: 'Tanggal & waktu',
                   value: _date,
                   enabled: !state.isSaving,
                   onChanged: (value) => setState(() {
@@ -171,7 +171,7 @@ class _TransactionCreateScreenState
                   textInputAction: TextInputAction.done,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.notes_outlined),
-                    labelText: 'Note (optional)',
+                    labelText: 'Catatan (opsional)',
                   ),
                   onChanged: (_) => _clearErrors(),
                 ),
@@ -214,7 +214,7 @@ class _TransactionCreateScreenState
               onPressed: state.isSaving ? null : () => _submit(state),
               icon: const Icon(Icons.check),
               label: Text(
-                state.isSaving ? 'Saving...' : 'Create transaction',
+                state.isSaving ? 'Menyimpan...' : 'Simpan transaksi',
                 style: textTheme.labelLarge,
               ),
             ),
@@ -248,7 +248,7 @@ class _TransactionCreateScreenState
     final state = ref.read(transactionCreateControllerProvider);
     final selected = await showLookupSelectorSheet<String>(
       context: context,
-      title: _isTransfer ? 'From wallet' : 'Wallet',
+      title: _isTransfer ? 'Dari dompet' : 'Dompet',
       selectedValue: _walletId,
       options: [
         for (final wallet in state.wallets)
@@ -272,7 +272,7 @@ class _TransactionCreateScreenState
     final state = ref.read(transactionCreateControllerProvider);
     final selected = await showLookupSelectorSheet<String>(
       context: context,
-      title: 'To wallet',
+      title: 'Ke dompet',
       selectedValue: _toWalletId,
       options: [
         for (final wallet in state.wallets)
@@ -295,7 +295,7 @@ class _TransactionCreateScreenState
   Future<void> _selectCategory(List<Category> categories) async {
     final selected = await showCategoryTreePicker(
       context: context,
-      title: 'Category',
+      title: 'Kategori',
       selectedId: _categoryId,
       categories: [
         for (final category in categories)
@@ -343,22 +343,22 @@ class _TransactionCreateScreenState
 
   String? _validate() {
     if (_walletId == null) {
-      return _isTransfer ? 'Source wallet is required.' : 'Wallet is required.';
+      return _isTransfer ? 'Dompet asal wajib diisi.' : 'Dompet wajib diisi.';
     }
     if (!_isAdjustment && (_amountMinor == null || _amountMinor! <= 0)) {
-      return 'Enter an amount greater than zero.';
+      return 'Masukkan jumlah lebih dari nol.';
     }
     if (_isAdjustment && (_amountMinor == null || _amountMinor! == 0)) {
-      return 'Enter an amount greater than zero.';
+      return 'Masukkan jumlah lebih dari nol.';
     }
     if (_isTransfer) {
-      if (_toWalletId == null) return 'Destination wallet is required.';
+      if (_toWalletId == null) return 'Dompet tujuan wajib diisi.';
       if (_toWalletId == _walletId) {
-        return 'Destination wallet must differ from the source wallet.';
+        return 'Dompet tujuan harus berbeda dari dompet asal.';
       }
     }
     if (_needsCategory && _categoryId == null) {
-      return 'Category is required.';
+      return 'Kategori wajib diisi.';
     }
     return null;
   }
@@ -377,7 +377,7 @@ class _Intro extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Text(
-      'Record income, an expense, a transfer, or a balance adjustment.',
+      'Catat pemasukan, pengeluaran, transfer, atau penyesuaian saldo.',
       style: textTheme.bodySmall,
     );
   }
@@ -434,7 +434,7 @@ class _TagChips extends StatelessWidget {
       children: [
         ChoiceChip(
           key: const Key('transaction-create-tag-none'),
-          label: const Text('None'),
+          label: const Text('Tanpa tag'),
           selected: selectedTagId == null,
           onSelected: enabled ? (_) => onChanged(null) : null,
         ),
@@ -456,7 +456,7 @@ class _TransactionCreateLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'New transaction',
+      title: 'Transaksi baru',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -518,12 +518,12 @@ class _TransactionCreateLoadError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'New transaction',
+      title: 'Transaksi baru',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
-            'We could not load wallets and categories.',
+            'Kami tidak dapat memuat dompet dan kategori.',
             onRetry: onRetry,
           ),
         ],
@@ -534,9 +534,9 @@ class _TransactionCreateLoadError extends StatelessWidget {
 
 String _typeLabel(TransactionType type) {
   return switch (type) {
-    TransactionType.income => 'Income',
-    TransactionType.expense => 'Expense',
+    TransactionType.income => 'Pemasukan',
+    TransactionType.expense => 'Pengeluaran',
     TransactionType.transfer => 'Transfer',
-    TransactionType.adjustment => 'Adjustment',
+    TransactionType.adjustment => 'Penyesuaian',
   };
 }
