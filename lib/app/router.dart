@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/auth_screens.dart';
+import '../features/budgets/presentation/budget_detail_screen.dart';
 import '../features/budgets/presentation/budget_screen.dart';
 import '../features/categories/presentation/category_tag_management_screen.dart';
 import '../features/debts/presentation/debt_detail_screen.dart';
 import '../features/debts/presentation/debt_screen.dart';
+import '../features/goals/presentation/goal_detail_screen.dart';
 import '../features/goals/presentation/goal_screen.dart';
 import '../features/insights/presentation/audit_log_screen.dart';
 import '../features/insights/presentation/insights_screen.dart';
@@ -15,6 +17,7 @@ import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_templates_screen.dart';
+import '../features/recurring/presentation/recurring_detail_screen.dart';
 import '../features/recurring/presentation/recurring_screen.dart';
 import '../features/redesign/presentation/activity_feed_screen.dart';
 import '../features/redesign/presentation/redesign_shell.dart';
@@ -22,6 +25,8 @@ import '../features/redesign/presentation/room_detail_screen.dart';
 import '../features/redesign/presentation/rooms_home_screen.dart';
 import '../features/redesign/presentation/sky_insights_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/trackers/presentation/installment_detail_screen.dart';
+import '../features/trackers/presentation/subscription_detail_screen.dart';
 import '../features/trackers/presentation/tracker_screen.dart';
 import '../features/transactions/presentation/split_bill_list_screen.dart';
 import '../features/transactions/presentation/split_bill_screen.dart';
@@ -219,6 +224,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: _slidePage(
           (state) =>
               RoomDetailScreen(walletId: state.pathParameters['walletId']!),
+        ),
+      ),
+      // Per-item detail screens opened from the Beranda dashboard cards.
+      GoRoute(
+        path: BudgetDetailScreen.path,
+        pageBuilder: _slidePage(
+          (state) => BudgetDetailScreen(id: state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: GoalDetailScreen.path,
+        pageBuilder: _slidePage(
+          (state) => GoalDetailScreen(id: state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: InstallmentDetailScreen.path,
+        pageBuilder: _slidePage(
+          (state) => InstallmentDetailScreen(id: state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: SubscriptionDetailScreen.path,
+        pageBuilder: _slidePage(
+          (state) => SubscriptionDetailScreen(id: state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: RecurringDetailScreen.path,
+        pageBuilder: _slidePage(
+          (state) => RecurringDetailScreen(id: state.pathParameters['id']!),
         ),
       ),
       GoRoute(
