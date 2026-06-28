@@ -44,10 +44,10 @@ void main() {
     await tester.tap(find.byKey(const Key('template-detail-template-coffee')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Daily Coffee details'), findsOneWidget);
-    expect(find.text('Wallet: GoPay'), findsOneWidget);
-    expect(find.text('Category: Food & Dining'), findsOneWidget);
-    expect(find.text('Tags: #MonthlyBill'), findsOneWidget);
+    expect(find.text('Rincian Daily Coffee'), findsOneWidget);
+    expect(find.text('Dompet: GoPay'), findsOneWidget);
+    expect(find.text('Kategori: Food & Dining'), findsOneWidget);
+    expect(find.text('Tag: #MonthlyBill'), findsOneWidget);
   });
 
   testWidgets(
@@ -62,7 +62,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('add-template-button')));
       await tester.pumpAndSettle();
-      expect(find.text('Create template'), findsOneWidget);
+      expect(find.text('Buat template'), findsOneWidget);
 
       await tester.enterText(
         find.byKey(const Key('template-name-field')),
@@ -104,9 +104,9 @@ void main() {
         find.byKey(const Key('template-menu-template-weekend-lunch')),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Edit'));
+      await tester.tap(find.text('Ubah'));
       await tester.pumpAndSettle();
-      expect(find.text('Edit template'), findsOneWidget);
+      expect(find.text('Ubah template'), findsOneWidget);
       expect(find.text('BCA Primary'), findsWidgets);
       expect(find.text('Transportation'), findsWidgets);
 
@@ -131,9 +131,9 @@ void main() {
         find.byKey(const Key('template-menu-template-weekend-lunch')),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Delete'));
+      await tester.tap(find.text('Hapus'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Delete template'));
+      await tester.tap(find.text('Hapus template'));
       await tester.pumpTemplateState();
 
       expect(repository.deletedIds.single, 'template-weekend-lunch');
@@ -158,7 +158,7 @@ void main() {
         find.byKey(const Key('execute-template-template-coffee')),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Execute Daily Coffee'), findsOneWidget);
+      expect(find.text('Jalankan Daily Coffee'), findsOneWidget);
 
       // The execute date is now a tappable DatePickerField backed by the native
       // date picker (no typed YYYY-MM-DD). Open it and confirm via the picker's
@@ -177,8 +177,11 @@ void main() {
         contains(expectedDate),
       );
       expect(repository.executeRequests.single.note, 'Override note');
-      expect(find.text('Template could not be executed.'), findsWidgets);
-      expect(find.text('Execute Daily Coffee'), findsOneWidget);
+      // This banner text is produced by the quick-entry templates controller
+      // (application layer), which is outside this translation's scope, so it
+      // remains in English.
+      expect(find.text('Template gagal dijalankan.'), findsWidgets);
+      expect(find.text('Jalankan Daily Coffee'), findsOneWidget);
       expect(find.text('Daily Coffee'), findsWidgets);
     },
   );

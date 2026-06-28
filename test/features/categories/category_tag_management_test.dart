@@ -30,13 +30,13 @@ void main() {
 
     await tester.tap(find.byKey(const Key('add-category-button')));
     await tester.pumpAndSettle();
-    expect(find.text('Create category'), findsOneWidget);
+    expect(find.text('Buat kategori'), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const Key('category-name-field')),
       'Restaurants',
     );
-    await tester.tap(find.text('No parent'));
+    await tester.tap(find.text('Tanpa induk'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Food & Dining').last);
     await tester.pumpAndSettle();
@@ -58,9 +58,9 @@ void main() {
       find.byKey(const Key('category-menu-category-restaurants')),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit'));
+    await tester.tap(find.text('Ubah'));
     await tester.pumpAndSettle();
-    expect(find.text('Edit category'), findsOneWidget);
+    expect(find.text('Ubah kategori'), findsOneWidget);
     expect(find.text('Food & Dining'), findsWidgets);
 
     await tester.enterText(
@@ -78,9 +78,9 @@ void main() {
       find.byKey(const Key('category-menu-category-restaurants')),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.text('Hapus'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete category'));
+    await tester.tap(find.text('Hapus kategori'));
     await tester.pumpManagementState();
 
     expect(categoryRepository.deletedIds.single, 'category-restaurants');
@@ -100,12 +100,12 @@ void main() {
 
     await tester.tap(find.byKey(const Key('category-menu-category-coffee')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.text('Hapus'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete category'));
+    await tester.tap(find.text('Hapus kategori'));
     await tester.pumpManagementState();
 
-    expect(find.text('Category could not be deleted.'), findsOneWidget);
+    expect(find.text('Kategori gagal dihapus.'), findsOneWidget);
     await tester.scrollUntilTextVisible('Coffee');
     expect(find.text('Coffee'), findsOneWidget);
     expect(categoryRepository.deletedIds, isEmpty);
@@ -113,9 +113,9 @@ void main() {
     categoryRepository.deleteError = null;
     await tester.tap(find.byKey(const Key('category-menu-category-coffee')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.text('Hapus'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete category'));
+    await tester.tap(find.text('Hapus kategori'));
     await tester.pumpManagementState();
 
     expect(categoryRepository.deletedIds.single, 'category-coffee');

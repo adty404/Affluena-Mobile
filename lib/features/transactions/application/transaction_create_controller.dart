@@ -53,14 +53,16 @@ class TransactionCreateController extends Notifier<TransactionCreateState> {
       state = state.copyWith(
         isLoading: false,
         // Only wallets the user can write to are selectable as a target.
-        wallets: wallets.wallets.where((w) => w.canWrite).toList(growable: false),
+        wallets: wallets.wallets
+            .where((w) => w.canWrite)
+            .toList(growable: false),
         categories: categories.categories,
         tags: tags.tags,
       );
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'We could not load wallets and categories.',
+        loadError: 'Kami tidak bisa memuat dompet dan kategori.',
       );
     }
   }
@@ -75,7 +77,7 @@ class TransactionCreateController extends Notifier<TransactionCreateState> {
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'Transaction could not be created.',
+        actionError: 'Transaksi gagal dibuat.',
       );
       return false;
     }
@@ -136,10 +138,9 @@ class TransactionCreateState {
     return null;
   }
 
-  String walletName(String? id) => walletById(id)?.name ?? 'Choose wallet';
+  String walletName(String? id) => walletById(id)?.name ?? 'Pilih dompet';
 
-  String categoryName(String? id) =>
-      categoryById(id)?.name ?? 'Choose category';
+  String categoryName(String? id) => categoryById(id)?.name ?? 'Pilih kategori';
 
   TransactionCreateState copyWith({
     List<Wallet>? wallets,

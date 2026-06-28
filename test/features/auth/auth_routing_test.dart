@@ -12,7 +12,7 @@ void main() {
 
     await pumpAuthTestApp(tester, authRepository: authRepository);
 
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Selamat datang kembali'), findsOneWidget);
     expect(find.byKey(const Key('login-email-field')), findsOneWidget);
     expect(authRepository.meCalls, 0);
   });
@@ -50,7 +50,7 @@ void main() {
     );
 
     // The lock screen auto-prompts biometric once on appearance (call #1).
-    expect(find.text('Affluena locked'), findsOneWidget);
+    expect(find.text('Affluena terkunci'), findsOneWidget);
     expect(find.text('TOTAL'), findsNothing);
     expect(deviceAuth.authenticateCalls, 1);
 
@@ -60,7 +60,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(deviceAuth.authenticateCalls, 2);
-    expect(find.text('Affluena locked'), findsNothing);
+    expect(find.text('Affluena terkunci'), findsNothing);
     expect(find.text('TOTAL'), findsOneWidget);
   });
 
@@ -78,8 +78,8 @@ void main() {
       authRepository: authRepository,
     );
 
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Session expired. Please log in again.'), findsOneWidget);
+    expect(find.text('Selamat datang kembali'), findsOneWidget);
+    expect(find.text('Sesi berakhir. Silakan masuk lagi.'), findsOneWidget);
     expect(await tokenStore.readAccessToken(), isNull);
     expect(await tokenStore.readRefreshToken(), isNull);
   });
@@ -131,7 +131,7 @@ void main() {
     await tester.tap(find.byKey(const Key('login-submit-button')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Selamat datang kembali'), findsOneWidget);
     expect(find.text('Invalid email or password.'), findsOneWidget);
   });
 
@@ -154,8 +154,8 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-logout-button')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('You have logged out.'), findsOneWidget);
+    expect(find.text('Selamat datang kembali'), findsOneWidget);
+    expect(find.text('Kamu telah keluar.'), findsOneWidget);
     expect(await tokenStore.readAccessToken(), isNull);
     expect(await tokenStore.readRefreshToken(), isNull);
   });

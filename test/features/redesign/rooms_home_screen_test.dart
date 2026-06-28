@@ -111,7 +111,10 @@ Future<void> _pump(WidgetTester tester, {required List<Wallet> wallets}) async {
 
 void main() {
   testWidgets('renders wallets as rooms with the summed total', (tester) async {
-    await _pump(tester, wallets: const [_cash, _bca, _shared, _viewer, _goalWallet]);
+    await _pump(
+      tester,
+      wallets: const [_cash, _bca, _shared, _viewer, _goalWallet],
+    );
 
     // Total = sum of non-goal wallet balances (380k + 9.52m + 1.25m + 500k).
     expect(find.text('Rp 11.650.000'), findsOneWidget);

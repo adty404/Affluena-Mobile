@@ -117,7 +117,7 @@ class AuthSessionRecord {
   /// not a wall of version tokens.
   String get deviceLabel {
     final agent = userAgent?.trim();
-    if (agent == null || agent.isEmpty) return 'Unknown device';
+    if (agent == null || agent.isEmpty) return 'Perangkat tidak dikenal';
 
     final platform = _platformLabel(agent);
     final browser = _browserLabel(agent);

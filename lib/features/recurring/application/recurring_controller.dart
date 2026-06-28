@@ -66,7 +66,7 @@ class RecurringController extends Notifier<RecurringState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Recurring transactions could not be loaded.',
+        loadError: 'Transaksi berulang gagal dimuat.',
       );
     }
   }
@@ -89,14 +89,14 @@ class RecurringController extends Notifier<RecurringState> {
   Future<void> deleteRule(RecurringRule rule) async {
     await _save(
       () => ref.read(recurringRepositoryProvider).deleteRule(rule.id),
-      errorMessage: 'Recurring rule could not be deleted.',
+      errorMessage: 'Aturan berulang gagal dihapus.',
     );
   }
 
   Future<void> runRule(RecurringRule rule) async {
     await _save(
       () => ref.read(recurringRepositoryProvider).runRule(rule.id),
-      errorMessage: 'Recurring rule could not be run.',
+      errorMessage: 'Aturan berulang gagal dijalankan.',
     );
   }
 
@@ -106,7 +106,7 @@ class RecurringController extends Notifier<RecurringState> {
 
   Future<void> _save(
     Future<Object?> Function() action, {
-    String errorMessage = 'Recurring rule could not be saved.',
+    String errorMessage = 'Aturan berulang gagal disimpan.',
   }) async {
     state = state.copyWith(isSaving: true, actionError: null);
     try {
@@ -179,11 +179,11 @@ class RecurringState {
 
   int get upcomingCount => rules.where(_isUpcoming).length;
 
-  String walletName(String id) => walletNames[id] ?? 'Unknown wallet';
+  String walletName(String id) => walletNames[id] ?? 'Dompet tidak dikenal';
 
   String categoryName(String? id) {
-    if (id == null || id.isEmpty) return 'Uncategorized';
-    return categoryNames[id] ?? 'Uncategorized';
+    if (id == null || id.isEmpty) return 'Tanpa kategori';
+    return categoryNames[id] ?? 'Tanpa kategori';
   }
 
   RecurringState copyWith({

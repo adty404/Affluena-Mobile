@@ -20,14 +20,14 @@ void main() {
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Name'),
+      find.widgetWithText(TextField, 'Nama'),
       'Travel Cash',
     );
     await tester.enterText(
-      find.widgetWithText(TextField, 'Starting balance'),
+      find.widgetWithText(TextField, 'Saldo awal'),
       '250000',
     );
-    await tester.tap(find.text('Save wallet'));
+    await tester.tap(find.text('Simpan dompet'));
     await tester.pumpAndSettle();
 
     expect(repository.createRequests, hasLength(1));
@@ -50,15 +50,15 @@ void main() {
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Name'),
+      find.widgetWithText(TextField, 'Nama'),
       'Travel Cash',
     );
-    await tester.tap(find.text('Save wallet'));
+    await tester.tap(find.text('Simpan dompet'));
     await tester.pumpAndSettle();
 
     expect(repository.createRequests, hasLength(1));
-    expect(find.text('New wallet'), findsOneWidget);
-    expect(find.text('Wallet could not be saved.'), findsOneWidget);
+    expect(find.text('Dompet baru'), findsOneWidget);
+    expect(find.text('Dompet tidak dapat disimpan.'), findsOneWidget);
   });
 
   testWidgets('create wallet validates required name before request', (
@@ -71,12 +71,12 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Save wallet'));
+    await tester.tap(find.text('Simpan dompet'));
     await tester.pumpAndSettle();
 
     expect(repository.createRequests, isEmpty);
-    expect(find.text('Wallet name is required.'), findsOneWidget);
-    expect(find.text('New wallet'), findsOneWidget);
+    expect(find.text('Nama dompet wajib diisi.'), findsOneWidget);
+    expect(find.text('Dompet baru'), findsOneWidget);
   });
 
   testWidgets('create wallet can be cancelled without a repository request', (
@@ -90,14 +90,14 @@ void main() {
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Name'),
+      find.widgetWithText(TextField, 'Nama'),
       'Travel Cash',
     );
     await tester.tapAt(const Offset(20, 20));
     await tester.pumpAndSettle();
 
     expect(repository.createRequests, isEmpty);
-    expect(find.text('New wallet'), findsNothing);
+    expect(find.text('Dompet baru'), findsNothing);
     expect(find.text('Travel Cash'), findsNothing);
   });
 
@@ -110,10 +110,10 @@ void main() {
     await tester.tap(find.byKey(const Key('edit-wallet-cash-wallet')));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Name'),
+      find.widgetWithText(TextField, 'Nama'),
       'Daily Cash',
     );
-    await tester.tap(find.text('Save wallet'));
+    await tester.tap(find.text('Simpan dompet'));
     await tester.pumpAndSettle();
 
     expect(repository.updateIds, [cashWallet.id]);
@@ -135,7 +135,7 @@ void main() {
 
     // Balance is not editable inline on the edit form; it is changed through an
     // adjustment (penyesuaian) transaction reached from this entry.
-    expect(find.text('Edit wallet'), findsOneWidget);
+    expect(find.text('Ubah dompet'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Starting balance'), findsNothing);
     final adjustEntry = find.byKey(const Key('wallet-edit-adjust-balance'));
     expect(adjustEntry, findsOneWidget);
@@ -144,7 +144,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // The adjustment sheet (records an adjustment transaction) is now open.
-    expect(find.text('Adjust balance'), findsOneWidget);
+    expect(find.text('Sesuaikan saldo'), findsOneWidget);
     expect(find.byKey(const Key('wallet-adjust-amount-field')), findsOneWidget);
     expect(find.byKey(const Key('wallet-adjust-save-button')), findsOneWidget);
   });
@@ -163,15 +163,15 @@ void main() {
     await tester.tap(find.byKey(const Key('edit-wallet-cash-wallet')));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Name'),
+      find.widgetWithText(TextField, 'Nama'),
       'Daily Cash',
     );
-    await tester.tap(find.text('Save wallet'));
+    await tester.tap(find.text('Simpan dompet'));
     await tester.pumpAndSettle();
 
     expect(repository.updateIds, [cashWallet.id]);
-    expect(find.text('Edit wallet'), findsOneWidget);
-    expect(find.text('Wallet could not be saved.'), findsOneWidget);
+    expect(find.text('Ubah dompet'), findsOneWidget);
+    expect(find.text('Dompet tidak dapat disimpan.'), findsOneWidget);
   });
 
   testWidgets('edit wallet can be cancelled without a repository request', (
@@ -185,14 +185,14 @@ void main() {
     await tester.tap(find.byKey(const Key('edit-wallet-cash-wallet')));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Name'),
+      find.widgetWithText(TextField, 'Nama'),
       'Daily Cash',
     );
     await tester.tapAt(const Offset(20, 20));
     await tester.pumpAndSettle();
 
     expect(repository.updateRequests, isEmpty);
-    expect(find.text('Edit wallet'), findsNothing);
+    expect(find.text('Ubah dompet'), findsNothing);
     expect(find.text('Cash Wallet'), findsOneWidget);
     expect(find.text('Daily Cash'), findsNothing);
   });

@@ -14,5 +14,5 @@ class ApiException implements Exception {
 
 class SessionExpiredException extends ApiException {
   const SessionExpiredException({super.path})
-    : super(message: 'Session expired. Please log in again.', statusCode: 401);
+    : super(message: 'Sesi berakhir. Silakan masuk lagi.', statusCode: 401);
 }

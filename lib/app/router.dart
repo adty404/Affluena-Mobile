@@ -114,12 +114,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // redesign final flip; these are now plain top-level routes reached from
       // the new shell (Home rooms → wallet detail, "Lainnya" → Settings → the
       // planning/insight modules) or via deep link.
-      // The ex-tab screens (wallets/quick-entry/transactions/settings) rendered
-      // their body inside the retired AppShell Scaffold, so they carry no
-      // Scaffold of their own — wrap them to supply Material + the canvas.
+      // The ex-tab screens (wallets/quick-entry/transactions/settings) each own
+      // a DrillInScaffold (AppBar + back button) so they work as pushed routes
+      // reached from the new shell.
       GoRoute(
         path: WalletsScreen.path,
-        pageBuilder: _fadePage((_) => const Scaffold(body: WalletsScreen())),
+        pageBuilder: _fadePage((_) => const WalletsScreen()),
       ),
       GoRoute(
         path: WalletDetailScreen.path,
@@ -137,7 +137,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: QuickEntryScreen.path,
-        pageBuilder: _fadePage((_) => const Scaffold(body: QuickEntryScreen())),
+        pageBuilder: _fadePage((_) => const QuickEntryScreen()),
       ),
       GoRoute(
         path: QuickEntryTemplatesScreen.path,
@@ -145,9 +145,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: TransactionsScreen.path,
-        pageBuilder: _fadePage(
-          (_) => const Scaffold(body: TransactionsScreen()),
-        ),
+        pageBuilder: _fadePage((_) => const TransactionsScreen()),
       ),
       GoRoute(
         path: SplitBillListScreen.path,
@@ -163,7 +161,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: SettingsScreen.path,
-        pageBuilder: _fadePage((_) => const Scaffold(body: SettingsScreen())),
+        pageBuilder: _fadePage((_) => const SettingsScreen()),
       ),
       GoRoute(
         path: BudgetScreen.path,

@@ -44,7 +44,7 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
   @override
   Widget build(BuildContext context) {
     return SettingsSheetFrame(
-      title: 'Password',
+      title: 'Kata sandi',
       child: Form(
         key: _formKey,
         autovalidateMode: _autovalidate,
@@ -60,10 +60,10 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
               textInputAction: TextInputAction.next,
               validator: (value) => AuthValidators.required(
                 value,
-                message: 'Enter your current password.',
+                message: 'Masukkan kata sandimu saat ini.',
               ),
               decoration: const InputDecoration(
-                labelText: 'Current password',
+                labelText: 'Kata sandi saat ini',
                 prefixIcon: Icon(Icons.lock_outline),
               ),
             ),
@@ -76,8 +76,8 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
               textInputAction: TextInputAction.next,
               validator: AuthValidators.password,
               decoration: const InputDecoration(
-                labelText: 'New password',
-                helperText: 'At least 8 characters.',
+                labelText: 'Kata sandi baru',
+                helperText: 'Minimal 8 karakter.',
                 prefixIcon: Icon(Icons.lock_reset_outlined),
               ),
             ),
@@ -92,7 +92,7 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
                   AuthValidators.confirmPassword(_newController.text, value),
               onFieldSubmitted: (_) => _save(),
               decoration: const InputDecoration(
-                labelText: 'Confirm new password',
+                labelText: 'Konfirmasi kata sandi baru',
                 prefixIcon: Icon(Icons.lock_outline),
               ),
             ),
@@ -110,7 +110,7 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.lock_reset_outlined),
-              label: Text(_isSaving ? 'Updating' : 'Update password'),
+              label: Text(_isSaving ? 'Memperbarui...' : 'Perbarui kata sandi'),
             ),
           ],
         ),

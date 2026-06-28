@@ -38,7 +38,7 @@ class WalletAnalyticsSection extends ConsumerWidget {
           loading: () => const _AnalyticsLoading(),
           error: (error, stackTrace) => AffluenaCard(
             child: AffluenaBanner.error(
-              'Analytics could not be loaded for this month.',
+              'Analitik bulan ini tidak dapat dimuat.',
               onRetry: () => ref.invalidate(walletAnalyticsProvider(walletId)),
             ),
           ),
@@ -72,12 +72,12 @@ class _MonthStepper extends StatelessWidget {
           IconButton(
             onPressed: () => onChanged(DateTime(month.year, month.month - 1)),
             icon: const Icon(Icons.chevron_left),
-            tooltip: 'Previous month',
+            tooltip: 'Bulan sebelumnya',
           ),
           Expanded(
             child: Column(
               children: [
-                Text('Analytics month', style: textTheme.labelMedium),
+                Text('Bulan analitik', style: textTheme.labelMedium),
                 const SizedBox(height: AffluenaSpacing.space1),
                 Text(
                   walletMonthLabelFromDate(month),
@@ -94,7 +94,7 @@ class _MonthStepper extends StatelessWidget {
               Icons.chevron_right,
               color: atLatest ? colors.inkMuted : null,
             ),
-            tooltip: 'Next month',
+            tooltip: 'Bulan berikutnya',
           ),
         ],
       ),
@@ -118,14 +118,14 @@ class _AnalyticsCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Inflow',
+                label: 'Pemasukan',
                 value: MoneyFormatter.idr(analytics.inflowMinor),
                 helper: monthLabel,
                 icon: Icons.south_west,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Outflow',
+                label: 'Pengeluaran',
                 value: MoneyFormatter.idr(analytics.outflowMinor),
                 helper: monthLabel,
                 icon: Icons.north_east,
@@ -135,16 +135,16 @@ class _AnalyticsCard extends StatelessWidget {
           const SizedBox(height: AffluenaSpacing.space3),
           _DetailRow(
             icon: Icons.receipt_long_outlined,
-            title: 'Transactions',
+            title: 'Transaksi',
             value: analytics.transactionCount == 1
-                ? '1 transaction'
-                : '${analytics.transactionCount} transactions',
+                ? '1 transaksi'
+                : '${analytics.transactionCount} transaksi',
           ),
           if (activity != null) ...[
             const Divider(height: 1),
             _DetailRow(
               icon: Icons.history,
-              title: 'Last activity',
+              title: 'Aktivitas terakhir',
               value: activity,
             ),
           ],

@@ -45,7 +45,7 @@ void main() {
     expect(find.text('BCA Primary'), findsOneWidget);
     expect(find.text('Food & Dining'), findsOneWidget);
     // Tags are optional and start unselected, so the row shows the placeholder.
-    expect(find.text('Optional — tap to add'), findsOneWidget);
+    expect(find.text('Opsional — ketuk untuk menambah'), findsOneWidget);
     expect(find.text(lookupBankWalletId), findsNothing);
     expect(find.text(lookupExpenseCategoryId), findsNothing);
     expect(
@@ -128,10 +128,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Finish setup first'), findsOneWidget);
+    expect(find.text('Selesaikan persiapan dulu'), findsOneWidget);
     expect(
       find.text(
-        'Add at least one wallet and an expense category before saving.',
+        'Tambah minimal satu dompet dan satu kategori pengeluaran dulu '
+        'sebelum menyimpan.',
       ),
       findsOneWidget,
     );

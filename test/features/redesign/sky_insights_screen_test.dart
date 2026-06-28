@@ -48,8 +48,9 @@ Future<void> _pump(WidgetTester tester) async {
     ProviderScope(
       overrides: [
         dashboardCashflowTrendProvider.overrideWith((ref) async => _trend),
-        dashboardExpenseDistributionProvider
-            .overrideWith((ref) async => _distribution),
+        dashboardExpenseDistributionProvider.overrideWith(
+          (ref) async => _distribution,
+        ),
         dashboardForecastProvider.overrideWith((ref) async => _forecast),
       ],
       child: const MaterialApp(home: SkyInsightsScreen()),
@@ -64,13 +65,15 @@ void main() {
   testWidgets('renders the three analytics sections', (tester) async {
     await _pump(tester);
 
-    expect(find.text('Insights'), findsOneWidget);
+    expect(find.text('Wawasan'), findsOneWidget);
     expect(find.text('Arus kas'), findsOneWidget);
     expect(find.text('Ke mana uang pergi'), findsOneWidget);
     expect(find.text('Perkiraan bulan ini'), findsOneWidget);
   });
 
-  testWidgets('shows distribution category and forecast status', (tester) async {
+  testWidgets('shows distribution category and forecast status', (
+    tester,
+  ) async {
     await _pump(tester);
 
     expect(find.text('Makan & Minum'), findsOneWidget);

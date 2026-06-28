@@ -61,7 +61,7 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Contribute', style: textTheme.titleLarge),
+              Text('Setor', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space1),
               Text(
                 widget.goal.name,
@@ -71,7 +71,7 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
               walletsAsync.when(
                 loading: () => const _ContributeFormSkeleton(),
                 error: (_, _) => AffluenaBanner.error(
-                  'Wallets could not be loaded.',
+                  'Dompet tidak dapat dimuat.',
                   onRetry: () => ref.invalidate(walletListProvider),
                 ),
                 data: (wallets) => _buildForm(context, wallets),
@@ -90,16 +90,16 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
     if (goalWallet == null) {
       return AffluenaBanner(
         message:
-            'This goal has no linked goal wallet yet, so it cannot receive '
-            'contributions.',
+            'Target ini belum punya dompet target terhubung, jadi belum bisa '
+            'menerima setoran.',
         tone: AffluenaBannerTone.warning,
       );
     }
     if (sourceWallets.isEmpty) {
       return const AffluenaBanner(
         message:
-            'Add a spending wallet first — contributions transfer from one of '
-            'your wallets into this goal.',
+            'Tambah dompet pengeluaran dulu — setoran ditransfer dari salah '
+            'satu dompetmu ke target ini.',
         tone: AffluenaBannerTone.info,
       );
     }
@@ -110,7 +110,7 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
       children: [
         MoneyInput(
           key: const Key('goal-contribute-amount-field'),
-          label: 'Amount',
+          label: 'Jumlah',
           initialValue: _amountMinor,
           enabled: !_isSaving,
           autofocus: true,
@@ -121,9 +121,9 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
         ),
         const SizedBox(height: AffluenaSpacing.space2),
         SelectorRow(
-          label: 'From wallet',
+          label: 'Dari dompet',
           value: selected == null
-              ? 'Select a wallet'
+              ? 'Pilih dompet'
               : '${selected.name} · ${MoneyFormatter.idr(selected.balanceMinor)}',
           icon: Icons.account_balance_wallet_outlined,
           enabled: !_isSaving,
@@ -131,7 +131,7 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
         ),
         const SizedBox(height: AffluenaSpacing.space2),
         DatePickerField(
-          label: 'Contribution date',
+          label: 'Tanggal setoran',
           value: _contributedAt,
           enabled: !_isSaving,
           lastDate: DateTime.now(),
@@ -148,7 +148,7 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
         FilledButton(
           key: const Key('goal-contribute-save-button'),
           onPressed: _isSaving ? null : () => _save(goalWallet),
-          child: Text(_isSaving ? 'Contributing...' : 'Contribute'),
+          child: Text(_isSaving ? 'Menyetor...' : 'Setor'),
         ),
       ],
     );
@@ -183,12 +183,12 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
   Future<void> _save(Wallet goalWallet) async {
     final amount = _amountMinor ?? 0;
     if (amount <= 0) {
-      setState(() => _error = 'Enter an amount greater than zero.');
+      setState(() => _error = 'Masukkan jumlah lebih dari nol.');
       return;
     }
     final source = _sourceWalletId;
     if (source == null) {
-      setState(() => _error = 'Choose the wallet to contribute from.');
+      setState(() => _error = 'Pilih dompet sumber setoran.');
       return;
     }
 
@@ -214,7 +214,7 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
     }
     setState(() {
       _isSaving = false;
-      _error = 'Contribution could not be recorded. Try again.';
+      _error = 'Setoran tidak dapat dicatat. Coba lagi.';
     });
   }
 
@@ -255,7 +255,7 @@ class _SourceWalletPicker extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('From wallet', style: textTheme.titleLarge),
+            Text('Dari dompet', style: textTheme.titleLarge),
             const SizedBox(height: AffluenaSpacing.space3),
             for (final wallet in wallets)
               Padding(

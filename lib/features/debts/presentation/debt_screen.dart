@@ -33,10 +33,10 @@ class DebtScreen extends ConsumerWidget {
     final controller = ref.read(debtControllerProvider.notifier);
 
     return DrillInScaffold(
-      title: 'Debt & Tracker',
+      title: 'Utang',
       actions: [
         IconButton(
-          tooltip: 'Add debt',
+          tooltip: 'Tambah utang',
           onPressed: state.wallets.isEmpty || state.isSaving
               ? null
               : () => _showDebtForm(context, state),
@@ -85,7 +85,7 @@ class _DebtBody extends StatelessWidget {
           ),
           const SizedBox(height: AffluenaSpacing.space5),
           SectionHeader(
-            title: 'Debts',
+            title: 'Utang',
             actionLabel: state.total == 0 ? null : '${state.total} total',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
@@ -142,7 +142,7 @@ class _LoadMoreButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: const Icon(Icons.expand_more),
-      label: const Text('Load more'),
+      label: const Text('Muat lebih banyak'),
     );
   }
 }
@@ -160,16 +160,16 @@ class _DebtSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Payable',
+                label: 'Utang',
                 value: MoneyFormatter.idr(state.payableMinor),
-                helper: 'To pay',
+                helper: 'Harus dibayar',
                 icon: Icons.arrow_upward,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Receivable',
+                label: 'Piutang',
                 value: MoneyFormatter.idr(state.receivableMinor),
-                helper: 'To collect',
+                helper: 'Harus ditagih',
                 icon: Icons.arrow_downward,
               ),
             ],
@@ -178,16 +178,16 @@ class _DebtSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Due soon',
+                label: 'Jatuh tempo',
                 value: state.dueSoonCount.toString(),
-                helper: 'Next 7 days',
+                helper: '7 hari ke depan',
                 icon: Icons.event_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Paid',
+                label: 'Terbayar',
                 value: MoneyFormatter.idr(state.paidMinor),
-                helper: 'Closed debt',
+                helper: 'Utang lunas',
                 icon: Icons.done_all,
               ),
             ],
@@ -208,9 +208,9 @@ class _DebtTypeFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return SegmentedButton<DebtType?>(
       segments: const [
-        ButtonSegment(value: null, label: Text('All')),
-        ButtonSegment(value: DebtType.payable, label: Text('Payable')),
-        ButtonSegment(value: DebtType.receivable, label: Text('Receivable')),
+        ButtonSegment(value: null, label: Text('Semua')),
+        ButtonSegment(value: DebtType.payable, label: Text('Utang')),
+        ButtonSegment(value: DebtType.receivable, label: Text('Piutang')),
       ],
       selected: {selected},
       onSelectionChanged: (values) => onChanged(values.first),
@@ -265,7 +265,7 @@ class _DebtCard extends StatelessWidget {
                         runSpacing: AffluenaSpacing.space2,
                         children: [
                           StatusBadge(
-                            label: isPayable ? 'Payable' : 'Receivable',
+                            label: isPayable ? 'Utang' : 'Piutang',
                             tone: isPayable
                                 ? StatusTone.danger
                                 : StatusTone.success,
@@ -286,13 +286,13 @@ class _DebtCard extends StatelessWidget {
                     if (value == 'cancel' && onCancel != null) onCancel!();
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'open', child: Text('View')),
-                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                    const PopupMenuItem(value: 'open', child: Text('Lihat')),
+                    const PopupMenuItem(value: 'edit', child: Text('Ubah')),
                     if (onCancel != null)
                       PopupMenuItem(
                         value: 'cancel',
                         child: Text(
-                          'Cancel debt',
+                          'Batalkan utang',
                           style: TextStyle(color: colors.coral),
                         ),
                       ),
@@ -317,12 +317,12 @@ class _DebtCard extends StatelessWidget {
             ),
             const SizedBox(height: AffluenaSpacing.space1),
             Text(
-              '${debt.paidPercent.round()}% settled from ${MoneyFormatter.idr(debt.principalAmountMinor)}',
+              '${debt.paidPercent.round()}% lunas dari ${MoneyFormatter.idr(debt.principalAmountMinor)}',
               style: textTheme.bodySmall,
             ),
             const SizedBox(height: AffluenaSpacing.space2),
             Text(
-              '${debt.dueDate == null || debt.dueDate!.isEmpty ? 'No due date' : 'Due ${AffluenaDateFormatter.shortDate(debt.dueDate!)}'} · $walletName · $paymentCategoryName',
+              '${debt.dueDate == null || debt.dueDate!.isEmpty ? 'Tanpa jatuh tempo' : 'Jatuh tempo ${AffluenaDateFormatter.shortDate(debt.dueDate!)}'} · $walletName · $paymentCategoryName',
               style: textTheme.bodySmall,
             ),
             if (debt.note.isNotEmpty) ...[
@@ -334,7 +334,7 @@ class _DebtCard extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onPay,
                 icon: const Icon(Icons.payments_outlined),
-                label: const Text('Record payment'),
+                label: const Text('Catat pembayaran'),
               ),
             ],
           ],
@@ -359,10 +359,10 @@ class _EmptyDebtState extends StatelessWidget {
         children: [
           Icon(Icons.handshake_outlined, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No debts yet', style: textTheme.titleMedium),
+          Text('Belum ada utang', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Track payable and receivable balances with payment history.',
+            'Lacak saldo utang dan piutang lengkap dengan riwayat pembayaran.',
             style: textTheme.bodySmall,
           ),
         ],
@@ -429,7 +429,7 @@ class _DebtLoadError extends StatelessWidget {
         padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
-            'We could not load your debts.',
+            'Kami tidak dapat memuat utang kamu.',
             onRetry: onRetry,
           ),
         ],
@@ -531,7 +531,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEditing ? 'Edit debt' : 'Create debt',
+                _isEditing ? 'Ubah utang' : 'Buat utang',
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
@@ -544,11 +544,11 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                   segments: const [
                     ButtonSegment(
                       value: DebtType.payable,
-                      label: Text('Payable'),
+                      label: Text('Utang'),
                     ),
                     ButtonSegment(
                       value: DebtType.receivable,
-                      label: Text('Receivable'),
+                      label: Text('Piutang'),
                     ),
                   ],
                   selected: {_type},
@@ -566,25 +566,27 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 controller: _counterpartyController,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.person_outline),
-                  labelText: 'Counterparty',
+                  labelText: 'Pihak terkait',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               if (!_isEditing) ...[
                 SelectorRow(
-                  label: 'Wallet',
-                  value: _wallet?.name ?? 'Choose wallet',
+                  label: 'Dompet',
+                  value: _wallet?.name ?? 'Pilih dompet',
                   icon: Icons.account_balance_wallet_outlined,
                   onTap: () => _selectWallet(widget.state.wallets),
                 ),
                 const Divider(height: 1),
                 SelectorRow(
-                  label: _type == DebtType.payable ? 'Borrowed as' : 'Lent as',
-                  value: _disbursementCategory?.name ?? 'Choose category',
+                  label: _type == DebtType.payable
+                      ? 'Dicatat sebagai pinjaman'
+                      : 'Dicatat sebagai pemberian',
+                  value: _disbursementCategory?.name ?? 'Pilih kategori',
                   icon: Icons.category_outlined,
                   onTap: () => _selectCategory(
-                    title: 'Origination category',
+                    title: 'Kategori awal',
                     options: widget.state.disbursementCategories(_type),
                     selected: _disbursementCategory,
                     onSelected: (category) =>
@@ -594,12 +596,12 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 const Divider(height: 1),
                 SelectorRow(
                   label: _type == DebtType.payable
-                      ? 'Payment expense'
-                      : 'Collection income',
-                  value: _paymentCategory?.name ?? 'Choose category',
+                      ? 'Pengeluaran pembayaran'
+                      : 'Pemasukan penagihan',
+                  value: _paymentCategory?.name ?? 'Pilih kategori',
                   icon: Icons.payments_outlined,
                   onTap: () => _selectCategory(
-                    title: 'Payment category',
+                    title: 'Kategori pembayaran',
                     options: widget.state.paymentCategories(_type),
                     selected: _paymentCategory,
                     onSelected: (category) =>
@@ -609,7 +611,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 const SizedBox(height: AffluenaSpacing.space2),
                 MoneyInput(
                   key: const Key('debt-amount-field'),
-                  label: 'Principal amount',
+                  label: 'Jumlah pokok',
                   initialValue: _amountMinor,
                   onChanged: (value) => setState(() => _amountMinor = value),
                 ),
@@ -633,9 +635,9 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
               ],
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
-                label: 'Due date',
+                label: 'Jatuh tempo',
                 value: _dueDate,
-                placeholder: 'Optional',
+                placeholder: 'Opsional',
                 onChanged: (value) => setState(() => _dueDate = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
@@ -644,14 +646,14 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 maxLines: 2,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
-                  labelText: 'Note',
+                  labelText: 'Catatan',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton(
                 key: const Key('debt-save-button'),
                 onPressed: canSave ? _save : null,
-                child: Text(state.isSaving ? 'Saving...' : 'Save debt'),
+                child: Text(state.isSaving ? 'Menyimpan...' : 'Simpan utang'),
               ),
             ],
           ),
@@ -663,7 +665,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
   Future<void> _selectWallet(List<Wallet> wallets) async {
     final selected = await showLookupSelectorSheet<Wallet>(
       context: context,
-      title: 'Debt wallet',
+      title: 'Dompet utang',
       selectedValue: _wallet,
       options: [
         for (final wallet in wallets)
@@ -798,12 +800,12 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Record payment',
+                'Catat pembayaran',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               Text(
-                '${widget.debt.counterpartyName} · ${MoneyFormatter.idr(widget.debt.remainingAmountMinor)} remaining',
+                '${widget.debt.counterpartyName} · sisa ${MoneyFormatter.idr(widget.debt.remainingAmountMinor)}',
               ),
               const SizedBox(height: AffluenaSpacing.space4),
               if (state.actionError != null) ...[
@@ -812,24 +814,24 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
               ],
               MoneyInput(
                 key: const Key('debt-payment-amount-field'),
-                label: 'Payment amount',
+                label: 'Jumlah pembayaran',
                 initialValue: _amountMinor,
                 onChanged: (value) => setState(() => _amountMinor = value),
                 validator: (value) {
                   final entered = value ?? 0;
-                  if (entered <= 0) return 'Enter an amount.';
+                  if (entered <= 0) return 'Masukkan jumlah.';
                   if (entered > widget.debt.remainingAmountMinor) {
-                    return 'Cannot exceed remaining balance.';
+                    return 'Tidak boleh melebihi sisa saldo.';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
-                label: 'Paid at',
+                label: 'Dibayar pada',
                 value: _paidAt,
                 icon: Icons.today_outlined,
-                placeholder: 'Optional',
+                placeholder: 'Opsional',
                 onChanged: (value) => setState(() => _paidAt = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
@@ -838,14 +840,16 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
                 maxLines: 2,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
-                  labelText: 'Note',
+                  labelText: 'Catatan',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton(
                 key: const Key('debt-payment-save-button'),
                 onPressed: canSave ? _save : null,
-                child: Text(state.isSaving ? 'Saving...' : 'Save payment'),
+                child: Text(
+                  state.isSaving ? 'Menyimpan...' : 'Simpan pembayaran',
+                ),
               ),
             ],
           ),
@@ -881,19 +885,19 @@ Future<void> _confirmCancel(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Cancel debt?'),
+      title: const Text('Batalkan utang?'),
       content: const Text(
-        'This keeps the audit trail and marks the debt cancelled.',
+        'Ini tetap menyimpan jejak audit dan menandai utang sebagai dibatalkan.',
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Keep'),
+          child: const Text('Pertahankan'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Cancel debt'),
+          child: const Text('Batalkan utang'),
         ),
       ],
     ),

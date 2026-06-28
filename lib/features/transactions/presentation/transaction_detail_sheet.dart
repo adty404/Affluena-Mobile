@@ -62,7 +62,7 @@ class _TransactionDetailSheet extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Transaction detail', style: textTheme.titleLarge),
+              Text('Detail transaksi', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space4),
               Text(
                 transactionTitle(state, transaction),
@@ -73,36 +73,36 @@ class _TransactionDetailSheet extends ConsumerWidget {
               const SizedBox(height: AffluenaSpacing.space4),
               _DetailLine(
                 label: transaction.type == TransactionType.transfer
-                    ? 'From wallet'
-                    : 'Wallet',
+                    ? 'Dari dompet'
+                    : 'Dompet',
                 value: state.walletName(transaction.walletId),
               ),
               if (transaction.type == TransactionType.transfer &&
                   transaction.toWalletId != null)
                 _DetailLine(
-                  label: 'To wallet',
+                  label: 'Ke dompet',
                   value: state.walletName(transaction.toWalletId!),
                 ),
               _DetailLine(
-                label: 'Category',
+                label: 'Kategori',
                 value: state.categoryName(transaction),
               ),
               _DetailLine(
-                label: 'Date & time',
+                label: 'Tanggal & waktu',
                 value: AffluenaDateFormatter.dateTime(
                   transaction.transactionAt,
                 ),
               ),
               if (transaction.note.isNotEmpty)
-                _DetailLine(label: 'Note', value: transaction.note),
+                _DetailLine(label: 'Catatan', value: transaction.note),
               const SizedBox(height: AffluenaSpacing.space5),
               if (_isCreator)
                 _CreatorActions(state: state, transaction: transaction)
               else
                 AffluenaBanner(
                   message:
-                      'Only the person who created this transaction can edit '
-                      'or delete it.',
+                      'Hanya orang yang membuat transaksi ini yang dapat '
+                      'mengubah atau menghapusnya.',
                   tone: AffluenaBannerTone.info,
                 ),
             ],
@@ -133,7 +133,7 @@ class _CreatorActions extends ConsumerWidget {
             showTransactionEditForm(context, state, transaction);
           },
           icon: const Icon(Icons.edit_outlined),
-          label: const Text('Edit transaction'),
+          label: const Text('Ubah transaksi'),
         ),
         const SizedBox(height: AffluenaSpacing.space3),
         OutlinedButton.icon(
@@ -144,7 +144,7 @@ class _CreatorActions extends ConsumerWidget {
           ),
           onPressed: () => _confirmDelete(context, ref),
           icon: const Icon(Icons.delete_outline),
-          label: const Text('Delete transaction'),
+          label: const Text('Hapus transaksi'),
         ),
       ],
     );
@@ -166,9 +166,7 @@ class _CreatorActions extends ConsumerWidget {
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          deleted
-              ? 'Transaction deleted.'
-              : 'Transaction could not be deleted.',
+          deleted ? 'Transaksi dihapus.' : 'Transaksi tidak dapat dihapus.',
         ),
       ),
     );
@@ -190,22 +188,23 @@ class _DeleteConfirmationDialog extends StatelessWidget {
 
     return AlertDialog(
       icon: Icon(Icons.delete_outline, color: colors.coral),
-      title: const Text('Delete this transaction?'),
+      title: const Text('Hapus transaksi ini?'),
       content: Text(
-        'This permanently removes "${transactionTitle(state, transaction)}" '
-        'and reverses its effect on your wallet balance. This cannot be undone.',
+        'Ini menghapus permanen "${transactionTitle(state, transaction)}" '
+        'dan membatalkan pengaruhnya pada saldo dompetmu. Tindakan ini tidak '
+        'bisa dibatalkan.',
       ),
       actions: [
         TextButton(
           key: const Key('transaction-delete-cancel'),
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: const Text('Batal'),
         ),
         FilledButton(
           key: const Key('transaction-delete-confirm'),
           style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Delete'),
+          child: const Text('Hapus'),
         ),
       ],
     );

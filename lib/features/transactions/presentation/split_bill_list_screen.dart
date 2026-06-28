@@ -47,12 +47,12 @@ class _SplitBillListScreenState extends ConsumerState<SplitBillListScreen> {
     final listing = ref.watch(splitBillListProvider(_status));
 
     return DrillInScaffold(
-      title: 'Split bills',
+      title: 'Bagi tagihan',
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('split-bill-create-fab'),
         onPressed: _openCreate,
         icon: const Icon(Icons.add),
-        label: const Text('New split'),
+        label: const Text('Bagi baru'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -68,13 +68,13 @@ class _SplitBillListScreenState extends ConsumerState<SplitBillListScreen> {
               ChoiceChip(
                 showCheckmark: false,
                 selected: _status == 'ongoing',
-                label: const Text('Ongoing'),
+                label: const Text('Berjalan'),
                 onSelected: (_) => setState(() => _status = 'ongoing'),
               ),
               ChoiceChip(
                 showCheckmark: false,
                 selected: _status == null,
-                label: const Text('All'),
+                label: const Text('Semua'),
                 onSelected: (_) => setState(() => _status = null),
               ),
             ],
@@ -84,7 +84,7 @@ class _SplitBillListScreenState extends ConsumerState<SplitBillListScreen> {
             skipLoadingOnReload: true,
             loading: () => const _SplitListSkeleton(),
             error: (error, _) => AffluenaBanner.error(
-              'We could not load your split bills.',
+              'Kami tidak dapat memuat bagi tagihanmu.',
               onRetry: () => ref.invalidate(splitBillListProvider),
             ),
             data: (response) {
@@ -143,14 +143,14 @@ class _SplitBillCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    bill.note.isEmpty ? 'Split bill' : bill.note,
+                    bill.note.isEmpty ? 'Bagi tagihan' : bill.note,
                     style: textTheme.titleMedium,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 StatusBadge(
-                  label: bill.isOngoing ? 'Ongoing' : 'Settled',
+                  label: bill.isOngoing ? 'Berjalan' : 'Lunas',
                   tone: bill.isOngoing
                       ? StatusTone.warning
                       : StatusTone.success,
@@ -160,15 +160,15 @@ class _SplitBillCard extends StatelessWidget {
             const SizedBox(height: AffluenaSpacing.space2),
             Text(
               '${MoneyFormatter.idr(bill.totalAmountMinor)} · '
-              '${bill.participantCount} ${bill.participantCount == 1 ? 'person' : 'people'} · '
+              '${bill.participantCount} orang · '
               '${AffluenaDateFormatter.shortDate(bill.transactionAt)}',
               style: textTheme.bodySmall,
             ),
             const SizedBox(height: AffluenaSpacing.space2),
             Text(
               bill.isOngoing
-                  ? '${MoneyFormatter.idr(bill.totalRemainingMinor)} still owed to you'
-                  : 'Everyone has paid you back',
+                  ? '${MoneyFormatter.idr(bill.totalRemainingMinor)} masih terutang kepadamu'
+                  : 'Semua sudah membayar kamu',
               style: textTheme.bodyLarge?.copyWith(
                 color: bill.isOngoing ? colors.forest : colors.inkMuted,
               ),
@@ -209,7 +209,7 @@ class _SplitBillDetailSheet extends ConsumerWidget {
               vertical: AffluenaSpacing.space5,
             ),
             child: AffluenaBanner.error(
-              'We could not load this split bill.',
+              'Kami tidak dapat memuat bagi tagihan ini.',
               onRetry: () =>
                   ref.invalidate(_splitBillDetailProvider(transactionId)),
             ),
@@ -219,7 +219,7 @@ class _SplitBillDetailSheet extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                d.note.isEmpty ? 'Split bill' : d.note,
+                d.note.isEmpty ? 'Bagi tagihan' : d.note,
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space1),
@@ -231,12 +231,12 @@ class _SplitBillDetailSheet extends ConsumerWidget {
               const SizedBox(height: AffluenaSpacing.space2),
               Text(
                 d.isOngoing
-                    ? '${MoneyFormatter.idr(d.totalRemainingMinor)} still owed to you'
-                    : 'Fully settled',
+                    ? '${MoneyFormatter.idr(d.totalRemainingMinor)} masih terutang kepadamu'
+                    : 'Sudah lunas sepenuhnya',
                 style: textTheme.bodyLarge?.copyWith(color: colors.forest),
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              Text('Participants', style: textTheme.titleSmall),
+              Text('Peserta', style: textTheme.titleSmall),
               const SizedBox(height: AffluenaSpacing.space2),
               Flexible(
                 child: ListView.separated(
@@ -299,10 +299,10 @@ class _ParticipantTile extends StatelessWidget {
                 ),
                 Text(
                   paid
-                      ? 'Paid in full'
+                      ? 'Lunas'
                       : cancelled
-                      ? 'Cancelled'
-                      : '${MoneyFormatter.idr(participant.remainingAmountMinor)} of ${MoneyFormatter.idr(participant.principalAmountMinor)} left',
+                      ? 'Dibatalkan'
+                      : 'Sisa ${MoneyFormatter.idr(participant.remainingAmountMinor)} dari ${MoneyFormatter.idr(participant.principalAmountMinor)}',
                   style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
                 ),
               ],
@@ -310,10 +310,10 @@ class _ParticipantTile extends StatelessWidget {
           ),
           StatusBadge(
             label: paid
-                ? 'Paid'
+                ? 'Lunas'
                 : cancelled
-                ? 'Cancelled'
-                : 'Owes',
+                ? 'Dibatalkan'
+                : 'Berutang',
             tone: paid
                 ? StatusTone.success
                 : cancelled
@@ -379,14 +379,14 @@ class _SplitListEmpty extends StatelessWidget {
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
             status == 'ongoing'
-                ? 'No ongoing split bills'
-                : 'No split bills yet',
+                ? 'Tidak ada bagi tagihan yang berjalan'
+                : 'Belum ada bagi tagihan',
             style: textTheme.titleMedium,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Split a bill with friends — you pay upfront and track what each '
-            'person owes you back.',
+            'Bagi tagihan dengan teman — kamu membayar di muka dan memantau '
+            'berapa yang harus dibayar tiap orang kepadamu.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
@@ -394,7 +394,7 @@ class _SplitListEmpty extends StatelessWidget {
             key: const Key('split-bill-empty-create'),
             onPressed: onCreate,
             icon: const Icon(Icons.add),
-            label: const Text('New split bill'),
+            label: const Text('Bagi tagihan baru'),
           ),
         ],
       ),

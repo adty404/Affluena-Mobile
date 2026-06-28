@@ -10,10 +10,10 @@ enum RecurringType {
   String get apiValue => name;
 
   String get label => switch (this) {
-    RecurringType.income => 'Income',
-    RecurringType.expense => 'Expense',
+    RecurringType.income => 'Pemasukan',
+    RecurringType.expense => 'Pengeluaran',
     RecurringType.transfer => 'Transfer',
-    RecurringType.adjustment => 'Adjustment',
+    RecurringType.adjustment => 'Penyesuaian',
   };
 
   static RecurringType fromApiValue(String value) {
@@ -34,8 +34,8 @@ enum RecurringFrequency {
   String get apiValue => name;
 
   String get label => switch (this) {
-    RecurringFrequency.weekly => 'Weekly',
-    RecurringFrequency.monthly => 'Monthly',
+    RecurringFrequency.weekly => 'Mingguan',
+    RecurringFrequency.monthly => 'Bulanan',
   };
 
   static RecurringFrequency fromApiValue(String value) {
@@ -55,9 +55,9 @@ enum RecurringStatus {
   String get apiValue => name;
 
   String get label => switch (this) {
-    RecurringStatus.active => 'Active',
-    RecurringStatus.paused => 'Paused',
-    RecurringStatus.cancelled => 'Cancelled',
+    RecurringStatus.active => 'Aktif',
+    RecurringStatus.paused => 'Dijeda',
+    RecurringStatus.cancelled => 'Dibatalkan',
   };
 
   static RecurringStatus fromApiValue(String value) {

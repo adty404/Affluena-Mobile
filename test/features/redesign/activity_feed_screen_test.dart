@@ -67,7 +67,9 @@ Future<void> _pump(WidgetTester tester) async {
       overrides: [
         authControllerProvider.overrideWith(_AuthedController.new),
         walletListProvider.overrideWith((ref) async => const [_gopay]),
-        recentActivityProvider.overrideWith((ref) async => const [_byMe, _bySarah]),
+        recentActivityProvider.overrideWith(
+          (ref) async => const [_byMe, _bySarah],
+        ),
       ],
       child: const MaterialApp(home: ActivityFeedScreen()),
     ),

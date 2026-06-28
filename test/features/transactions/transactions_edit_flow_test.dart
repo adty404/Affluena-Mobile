@@ -38,7 +38,7 @@ void main() {
 
       await tester.tap(find.text('Groceries at Indomaret'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Edit transaction'));
+      await tester.tap(find.text('Ubah transaksi'));
       await tester.pumpAndSettle();
 
       // The selector row resolves the current category to its name.
@@ -92,7 +92,7 @@ void main() {
 
     await tester.tap(find.text('Groceries at Indomaret'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit transaction'));
+    await tester.tap(find.text('Ubah transaksi'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('transaction-edit-amount-field')),
@@ -130,7 +130,7 @@ void main() {
 
     await tester.tap(find.text('Groceries at Indomaret'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit transaction'));
+    await tester.tap(find.text('Ubah transaksi'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('transaction-edit-amount-field')),
@@ -140,8 +140,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.updatedRequests, isEmpty);
-    expect(find.text('Amount must be greater than 0.'), findsOneWidget);
-    expect(find.text('Edit transaction'), findsOneWidget);
+    expect(find.text('Jumlah harus lebih dari 0.'), findsOneWidget);
+    expect(find.text('Ubah transaksi'), findsOneWidget);
   });
 
   testWidgets('edit transaction failure stays open and can retry', (
@@ -159,7 +159,7 @@ void main() {
 
     await tester.tap(find.text('Groceries at Indomaret'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit transaction'));
+    await tester.tap(find.text('Ubah transaksi'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('transaction-edit-note-field')),
@@ -169,8 +169,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.updatedIds, [groceriesTransaction.id]);
-    expect(find.text('Transaction could not be updated.'), findsWidgets);
-    expect(find.text('Edit transaction'), findsOneWidget);
+    expect(find.text('Transaksi tidak dapat diperbarui.'), findsWidgets);
+    expect(find.text('Ubah transaksi'), findsOneWidget);
     expect(
       find.byKey(const Key('transaction-edit-save-button')),
       findsOneWidget,
@@ -199,7 +199,7 @@ void main() {
 
       await tester.tap(find.text('Correct overstated balance'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Edit transaction'));
+      await tester.tap(find.text('Ubah transaksi'));
       await tester.pumpAndSettle();
 
       // The positive-only MoneyInput shows the magnitude, not the signed value.
@@ -208,7 +208,7 @@ void main() {
       // Decrease is preselected for a negative adjustment.
       final decreaseChip = tester.widget<ChoiceChip>(
         find.ancestor(
-          of: find.text('Decrease (−)'),
+          of: find.text('Kurangi (−)'),
           matching: find.byType(ChoiceChip),
         ),
       );
@@ -236,10 +236,10 @@ void main() {
 
     await tester.tap(find.text('Correct overstated balance'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit transaction'));
+    await tester.tap(find.text('Ubah transaksi'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Increase (+)'));
+    await tester.tap(find.text('Tambah (+)'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('transaction-edit-save-button')));
     await tester.pumpAndSettle();
@@ -261,7 +261,7 @@ void main() {
 
     await tester.tap(find.text('Move to savings'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit transaction'));
+    await tester.tap(find.text('Ubah transaksi'));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
@@ -271,7 +271,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.updatedRequests, isEmpty);
-    expect(find.text('Destination wallet is required.'), findsOneWidget);
-    expect(find.text('Edit transaction'), findsOneWidget);
+    expect(find.text('Dompet tujuan wajib diisi.'), findsOneWidget);
+    expect(find.text('Ubah transaksi'), findsOneWidget);
   });
 }

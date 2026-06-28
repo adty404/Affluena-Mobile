@@ -211,7 +211,7 @@ void main() {
           isA<ApiException>().having(
             (error) => error.message,
             'message',
-            'Unable to reach Affluena. Check your connection and try again.',
+            'Tidak bisa terhubung ke Affluena. Periksa koneksimu dan coba lagi.',
           ),
         ),
       ),

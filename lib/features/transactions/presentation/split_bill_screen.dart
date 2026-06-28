@@ -92,7 +92,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
         splitError == null;
 
     return DrillInScaffold(
-      title: 'Split bill',
+      title: 'Bagi tagihan',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -137,8 +137,8 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
           ),
           const SizedBox(height: AffluenaSpacing.space5),
           SectionHeader(
-            title: 'Participants',
-            actionLabel: '${_participants.length} added',
+            title: 'Peserta',
+            actionLabel: '${_participants.length} ditambahkan',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           _ParticipantList(
@@ -174,7 +174,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
                 ? () => _confirmSubmit(state, walletId, categoryId)
                 : null,
             icon: const Icon(Icons.call_split_outlined),
-            label: Text(state.isSaving ? 'Creating...' : 'Create split bill'),
+            label: Text(state.isSaving ? 'Membuat...' : 'Buat bagi tagihan'),
           ),
         ],
       ),
@@ -191,7 +191,7 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
   String? _splitValidationError(int totalAmount, int participantTotal) {
     if (totalAmount <= 0 || participantTotal == 0) return null;
     if (participantTotal > totalAmount) {
-      return 'Participant share exceeds total bill.';
+      return 'Bagian peserta melebihi total tagihan.';
     }
     return null;
   }
@@ -241,7 +241,8 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
         categoryId.isEmpty) {
       setState(() {
         _formError =
-            splitError ?? 'Complete valid split details before submitting.';
+            splitError ??
+            'Lengkapi detail bagi tagihan yang valid sebelum mengirim.';
       });
       return;
     }
