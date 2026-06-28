@@ -76,9 +76,9 @@ class GoalMember {
   /// reference derived from that id rather than inventing a display name.
   String get identityLabel {
     final trimmed = userId.trim();
-    if (trimmed.isEmpty) return 'Member';
+    if (trimmed.isEmpty) return 'Anggota';
     final head = trimmed.length <= 8 ? trimmed : trimmed.substring(0, 8);
-    return 'Member $head';
+    return 'Anggota $head';
   }
 }
 

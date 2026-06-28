@@ -1,12 +1,16 @@
 import 'package:intl/intl.dart';
 
 abstract final class AffluenaDateFormatter {
-  static final DateFormat _shortDate = DateFormat('d MMM yyyy');
-  static final DateFormat _dateTime = DateFormat('d MMM yyyy · HH:mm');
+  // Text-bearing formats use the 'id_ID' locale so month/weekday names render
+  // in Bahasa Indonesia (e.g. "Jun" -> "Jun"/"Mei", "Mon" -> "Sen"). The locale
+  // data is loaded at startup via initializeDateFormatting('id_ID'). _monthKey
+  // (an API key) and _time stay locale-neutral.
+  static final DateFormat _shortDate = DateFormat('d MMM yyyy', 'id_ID');
+  static final DateFormat _dateTime = DateFormat('d MMM yyyy · HH:mm', 'id_ID');
   static final DateFormat _monthKey = DateFormat('yyyy-MM');
-  static final DateFormat _monthLabel = DateFormat('MMM yyyy');
+  static final DateFormat _monthLabel = DateFormat('MMM yyyy', 'id_ID');
   static final DateFormat _time = DateFormat('HH:mm');
-  static final DateFormat _dayHeader = DateFormat('EEE, d MMM yyyy');
+  static final DateFormat _dayHeader = DateFormat('EEE, d MMM yyyy', 'id_ID');
 
   static String shortDate(String isoString) {
     return _shortDate.format(DateTime.parse(isoString).toLocal());
@@ -28,15 +32,15 @@ abstract final class AffluenaDateFormatter {
     return DateTime(dt.year, dt.month, dt.day);
   }
 
-  /// A day-group heading: "Today", "Yesterday", or "EEE, d MMM yyyy".
+  /// A day-group heading: "Hari ini", "Kemarin", or "EEE, d MMM yyyy".
   static String dayHeader(DateTime day) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final diff = today
         .difference(DateTime(day.year, day.month, day.day))
         .inDays;
-    if (diff == 0) return 'Today';
-    if (diff == 1) return 'Yesterday';
+    if (diff == 0) return 'Hari ini';
+    if (diff == 1) return 'Kemarin';
     return _dayHeader.format(day);
   }
 
