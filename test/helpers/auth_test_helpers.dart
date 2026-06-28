@@ -9,6 +9,8 @@ import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_repository.dart';
+import 'package:affluena_mobile/features/goals/data/goal_models.dart';
+import 'package:affluena_mobile/features/goals/data/goal_repository.dart';
 import 'package:affluena_mobile/features/onboarding/application/onboarding_controller.dart';
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_models.dart';
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository.dart';
@@ -34,6 +36,7 @@ Widget authTestApp({
   DeviceAuthService? deviceAuthService,
   WalletRepository? walletRepository,
   CategoryRepository? categoryRepository,
+  GoalRepository? goalRepository,
   List<dynamic> extraOverrides = const [],
 }) {
   return ProviderScope(
@@ -52,6 +55,11 @@ Widget authTestApp({
       ),
       categoryRepositoryProvider.overrideWithValue(
         categoryRepository ?? const FakeCategoryRepository(),
+      ),
+      // The redesign home (rooms) reads goals; stub the repo so it resolves to
+      // an empty list instead of attempting a real network call in tests.
+      goalRepositoryProvider.overrideWithValue(
+        goalRepository ?? const FakeGoalRepository(),
       ),
       tagRepositoryProvider.overrideWithValue(const FakeTagRepository()),
       quickEntryRepositoryProvider.overrideWithValue(
@@ -89,6 +97,7 @@ Future<void> pumpAuthTestApp(
   DeviceAuthService? deviceAuthService,
   WalletRepository? walletRepository,
   CategoryRepository? categoryRepository,
+  GoalRepository? goalRepository,
   List<dynamic> extraOverrides = const [],
 }) async {
   // Date widgets (e.g. DateTimePickerField) format with the 'id_ID' locale,
@@ -102,6 +111,7 @@ Future<void> pumpAuthTestApp(
       deviceAuthService: deviceAuthService,
       walletRepository: walletRepository,
       categoryRepository: categoryRepository,
+      goalRepository: goalRepository,
       extraOverrides: extraOverrides,
     ),
   );
@@ -596,6 +606,39 @@ class FakeCategoryRepository implements CategoryRepository {
 
   @override
   Future<void> deleteCategory(String id) async {}
+}
+
+class FakeGoalRepository implements GoalRepository {
+  const FakeGoalRepository();
+
+  @override
+  Future<GoalListResponse> listGoals() async {
+    return const GoalListResponse(goals: []);
+  }
+
+  @override
+  Future<Goal> getGoal(String id) => throw UnimplementedError();
+
+  @override
+  Future<Goal> createGoal(GoalRequest request) => throw UnimplementedError();
+
+  @override
+  Future<Goal> updateGoal(String id, GoalRequest request) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Goal> updateGoalStatus(String id, GoalStatusRequest request) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> inviteMember(String id, GoalInviteRequest request) async {}
+
+  @override
+  Future<void> respondInvite(
+    String id,
+    String userId,
+    GoalInviteResponseRequest request,
+  ) async {}
 }
 
 class FakeTagRepository implements TagRepository {

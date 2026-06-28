@@ -25,7 +25,6 @@ extension FinancialRefresh on Ref {
     // currently-alive instance.
     invalidate(walletDetailProvider);
     invalidate(walletAnalyticsProvider);
-    invalidate(dashboardHomeProvider);
     invalidate(dashboardCashflowTrendProvider);
     invalidate(dashboardExpenseDistributionProvider);
     invalidate(dashboardForecastProvider);
@@ -48,7 +47,6 @@ extension FinancialRefreshWidget on WidgetRef {
     invalidate(walletListProvider);
     invalidate(walletDetailProvider);
     invalidate(walletAnalyticsProvider);
-    invalidate(dashboardHomeProvider);
     invalidate(dashboardCashflowTrendProvider);
     invalidate(dashboardExpenseDistributionProvider);
     invalidate(dashboardForecastProvider);
