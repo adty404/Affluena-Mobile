@@ -31,6 +31,12 @@ These are handled/documented in `scripts/shorebird_env.sh`. Without them, the
 release build fails with *"failed to strip debug symbols from native libraries"*
 (see [flutter/flutter#186810](https://github.com/flutter/flutter/issues/186810)).
 
+The **API base URL is compile-time** (`AFFLUENA_API_BASE_URL`, default localhost).
+Both `shorebird_release.sh` and `shorebird_patch.sh` bake the VPS URL via
+`--dart-define` (from `shorebird_env.sh`). If it's ever missed, the app shows
+*"Tidak bisa terhubung ke Affluena"* because it falls back to localhost. Override
+by exporting `AFFLUENA_API_BASE_URL` before running a script.
+
 ## Releasing
 
 ```sh

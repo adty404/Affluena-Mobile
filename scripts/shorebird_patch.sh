@@ -13,6 +13,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/shorebird_env.sh
 
+echo "Patching against API: $AFFLUENA_API_BASE_URL"
 shorebird patch android \
   --flutter-version "$SHOREBIRD_FLUTTER_VERSION" \
+  --dart-define=AFFLUENA_API_BASE_URL="$AFFLUENA_API_BASE_URL" \
   "$@"
