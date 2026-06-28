@@ -18,6 +18,7 @@ import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../features/recurring/presentation/recurring_screen.dart';
 import '../features/redesign/presentation/activity_feed_screen.dart';
+import '../features/redesign/presentation/redesign_shell.dart';
 import '../features/redesign/presentation/room_detail_screen.dart';
 import '../features/redesign/presentation/rooms_home_screen.dart';
 import '../features/redesign/presentation/sky_insights_screen.dart';
@@ -259,6 +260,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: SkyInsightsScreen.path,
         pageBuilder: _slidePage((_) => const SkyInsightsScreen()),
+      ),
+      GoRoute(
+        path: RedesignShell.path,
+        pageBuilder: _fadePage((_) => const RedesignShell()),
       ),
     ],
   );
