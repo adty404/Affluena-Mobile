@@ -23,16 +23,13 @@ import 'sky_quick_add_sheet.dart';
 /// Mounted on its own additive route so the existing app/shell is untouched; a
 /// later integration stage promotes it to the default home with a new nav
 /// shell.
-class RoomsHomeScreen extends ConsumerWidget {
+class RoomsHomeScreen extends StatelessWidget {
   const RoomsHomeScreen({super.key});
 
   static const path = '/rooms';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final walletsAsync = ref.watch(walletListProvider);
-    final goals = ref.watch(goalControllerProvider).goals;
-
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SkyPalette.ground,
       floatingActionButton: FloatingActionButton(
@@ -41,17 +38,28 @@ class RoomsHomeScreen extends ConsumerWidget {
         onPressed: () => showSkyQuickAddSheet(context),
         child: const Icon(Icons.add),
       ),
-      body: SafeArea(
-        child: walletsAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: SkyPalette.accent),
-          ),
-          error: (error, _) => _RoomsError(
-            onRetry: () => ref.invalidate(walletListProvider),
-          ),
-          data: (wallets) => _RoomsContent(wallets: wallets, goals: goals),
-        ),
+      body: const SafeArea(child: RoomsHomeView()),
+    );
+  }
+}
+
+/// The Spaces home body (no Scaffold/FAB) so it can be hosted standalone
+/// ([RoomsHomeScreen]) or inside the redesign nav shell.
+class RoomsHomeView extends ConsumerWidget {
+  const RoomsHomeView({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final walletsAsync = ref.watch(walletListProvider);
+    final goals = ref.watch(goalControllerProvider).goals;
+
+    return walletsAsync.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: SkyPalette.accent),
       ),
+      error: (error, _) =>
+          _RoomsError(onRetry: () => ref.invalidate(walletListProvider)),
+      data: (wallets) => _RoomsContent(wallets: wallets, goals: goals),
     );
   }
 }
@@ -146,7 +154,9 @@ class _WalletRoom extends StatelessWidget {
       badge: wallet.isViewer
           ? const _RoomPill(label: 'LIHAT')
           : (shared ? const _RoomPill(label: 'BERSAMA') : null),
-      trailing: _AmountTrailing(amount: MoneyFormatter.idr(wallet.balanceMinor)),
+      trailing: _AmountTrailing(
+        amount: MoneyFormatter.idr(wallet.balanceMinor),
+      ),
       onTap: () => context.push(RoomDetailScreen.location(wallet.id)),
       onLongPress: () => showSkyQuickAddSheet(context, wallet: wallet),
     );
