@@ -56,7 +56,7 @@ class ActivityFeedView extends ConsumerWidget {
         Text(
           'Aktivitas',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 21,
             fontWeight: FontWeight.w700,
             color: context.sky.ink,
           ),
@@ -166,37 +166,38 @@ class _ActivityRow extends StatelessWidget {
     final amount = '$sign${MoneyFormatter.idr(tx.amountMinor.abs())}';
     final meta =
         '$walletName · ${AffluenaDateFormatter.time(tx.transactionAt)}${mine ? ' · kamu' : ''}';
+    final initial = mine
+        ? 'K'
+        : (title.isNotEmpty ? title[0].toUpperCase() : '?');
 
     return Container(
       margin: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
       padding: const EdgeInsets.symmetric(
         horizontal: AffluenaSpacing.space3,
-        vertical: AffluenaSpacing.space3,
+        vertical: 11,
       ),
       decoration: BoxDecoration(
         color: context.sky.surface,
-        borderRadius: BorderRadius.circular(AffluenaRadii.lg),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.sky.line),
       ),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 30,
+            height: 30,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isIncome ? context.sky.accentSoft : context.sky.sheet,
-              borderRadius: BorderRadius.circular(AffluenaRadii.md),
-              border: Border.all(
-                color: isIncome
-                    ? context.sky.accentSoftBorder
-                    : context.sky.line,
-              ),
+              color: mine ? context.sky.accent : context.sky.avatarSecondary,
+              shape: BoxShape.circle,
             ),
-            child: Icon(
-              isIncome ? Icons.south_west : Icons.north_east,
-              size: 17,
-              color: isIncome ? context.sky.accent : context.sky.muted,
+            child: Text(
+              initial,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(width: AffluenaSpacing.space3),
@@ -209,7 +210,7 @@ class _ActivityRow extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w600,
                     color: context.sky.ink,
                   ),
@@ -219,7 +220,7 @@ class _ActivityRow extends StatelessWidget {
                   meta,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: context.sky.faint),
+                  style: TextStyle(fontSize: 11, color: context.sky.muted),
                 ),
               ],
             ),
@@ -228,8 +229,8 @@ class _ActivityRow extends StatelessWidget {
           Text(
             amount,
             style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
               color: isIncome ? context.sky.income : context.sky.ink,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),

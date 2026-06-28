@@ -41,11 +41,24 @@ class _RedesignShellState extends State<RedesignShell> {
         bottom: false,
         child: IndexedStack(index: _index, children: _tabs),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: context.sky.accent,
-        foregroundColor: Colors.white,
-        onPressed: () => showSkyQuickAddSheet(context),
-        child: const Icon(Icons.add),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: context.sky.accent.withValues(alpha: 0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          backgroundColor: context.sky.accent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          onPressed: () => showSkyQuickAddSheet(context),
+          child: const Icon(Icons.add),
+        ),
       ),
       bottomNavigationBar: _SkyBottomNav(
         currentIndex: _index,
@@ -71,7 +84,7 @@ class _SkyBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: context.sky.surface,
+        color: context.sky.sheet,
         border: Border(top: BorderSide(color: context.sky.line)),
       ),
       padding: const EdgeInsets.fromLTRB(
@@ -84,26 +97,26 @@ class _SkyBottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _NavItem(
+            key: const ValueKey('nav-beranda'),
             icon: Icons.home_outlined,
-            label: 'Beranda',
             active: currentIndex == 0,
             onTap: () => onSelect(0),
           ),
           _NavItem(
+            key: const ValueKey('nav-aktivitas'),
             icon: Icons.receipt_long_outlined,
-            label: 'Aktivitas',
             active: currentIndex == 1,
             onTap: () => onSelect(1),
           ),
           _NavItem(
+            key: const ValueKey('nav-wawasan'),
             icon: Icons.insights_outlined,
-            label: 'Wawasan',
             active: currentIndex == 2,
             onTap: () => onSelect(2),
           ),
           _NavItem(
+            key: const ValueKey('nav-lainnya'),
             icon: Icons.more_horiz,
-            label: 'Lainnya',
             active: false,
             onTap: onMore,
           ),
@@ -115,14 +128,13 @@ class _SkyBottomNav extends StatelessWidget {
 
 class _NavItem extends StatelessWidget {
   const _NavItem({
+    super.key,
     required this.icon,
-    required this.label,
     required this.active,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
   final bool active;
   final VoidCallback onTap;
 
@@ -134,24 +146,10 @@ class _NavItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(AffluenaRadii.md),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AffluenaSpacing.space2,
-          vertical: AffluenaSpacing.space1,
+          horizontal: AffluenaSpacing.space3,
+          vertical: AffluenaSpacing.space2,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 22, color: color),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: color,
-              ),
-            ),
-          ],
-        ),
+        child: Icon(icon, size: 24, color: color),
       ),
     );
   }

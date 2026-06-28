@@ -6,7 +6,6 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
-import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
@@ -75,8 +74,6 @@ class _RoomDetailContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final wallet = detail.wallet;
     final txAsync = ref.watch(walletTransactionsProvider(walletId));
-    final me = ref.watch(authControllerProvider).user;
-    final membersById = {for (final m in detail.members) m.userId: m};
 
     return ListView(
       padding: AffluenaInsets.screen,
@@ -103,13 +100,13 @@ class _RoomDetailContent extends ConsumerWidget {
         const SizedBox(height: AffluenaSpacing.space5),
         Text(
           'Saldo',
-          style: TextStyle(fontSize: 11.5, color: context.sky.faint),
+          style: TextStyle(fontSize: 11.5, color: context.sky.muted),
         ),
         const SizedBox(height: 2),
         Text(
           MoneyFormatter.idr(wallet.balanceMinor),
           style: TextStyle(
-            fontSize: 28,
+            fontSize: 30,
             fontWeight: FontWeight.w700,
             color: context.sky.ink,
             letterSpacing: -0.4,
@@ -122,23 +119,41 @@ class _RoomDetailContent extends ConsumerWidget {
         ],
         const SizedBox(height: AffluenaSpacing.space4),
         if (wallet.canWrite)
-          FilledButton.icon(
-            onPressed: () async {
-              final saved = await showSkyQuickAddSheet(context, wallet: wallet);
-              if (saved == true) {
-                ref
-                  ..invalidate(walletDetailProvider(walletId))
-                  ..invalidate(walletTransactionsProvider(walletId));
-              }
-            },
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Catat di sini'),
-            style: FilledButton.styleFrom(
-              backgroundColor: context.sky.accent,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AffluenaRadii.control),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: context.sky.accent.withValues(alpha: 0.35),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: FilledButton.icon(
+              onPressed: () async {
+                final saved = await showSkyQuickAddSheet(
+                  context,
+                  wallet: wallet,
+                );
+                if (saved == true) {
+                  ref
+                    ..invalidate(walletDetailProvider(walletId))
+                    ..invalidate(walletTransactionsProvider(walletId));
+                }
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text(
+                'Catat di sini',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: context.sky.accent,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(46),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ),
@@ -170,12 +185,7 @@ class _RoomDetailContent extends ConsumerWidget {
                   'Belum ada transaksi di dompet ini.',
                   style: TextStyle(fontSize: 13, color: context.sky.faint),
                 )
-              : _TransactionList(
-                  txns: txns,
-                  membersById: membersById,
-                  meId: me?.id,
-                  meEmail: me?.email,
-                ),
+              : _TransactionList(txns: txns),
         ),
       ],
     );
@@ -183,27 +193,9 @@ class _RoomDetailContent extends ConsumerWidget {
 }
 
 class _TransactionList extends StatelessWidget {
-  const _TransactionList({
-    required this.txns,
-    required this.membersById,
-    required this.meId,
-    required this.meEmail,
-  });
+  const _TransactionList({required this.txns});
 
   final List<Transaction> txns;
-  final Map<String, WalletMember> membersById;
-  final String? meId;
-  final String? meEmail;
-
-  String _whoInitial(Transaction tx) {
-    if (meId != null && tx.userId == meId) {
-      return (meEmail == null || meEmail!.isEmpty)
-          ? 'A'
-          : meEmail![0].toUpperCase();
-    }
-    final email = membersById[tx.userId]?.email ?? '';
-    return email.isEmpty ? '?' : email[0].toUpperCase();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +222,7 @@ class _TransactionList extends StatelessWidget {
           ),
         );
       }
-      rows.add(_TransactionRow(tx: tx, whoInitial: _whoInitial(tx)));
+      rows.add(_TransactionRow(tx: tx));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -240,10 +232,9 @@ class _TransactionList extends StatelessWidget {
 }
 
 class _TransactionRow extends StatelessWidget {
-  const _TransactionRow({required this.tx, required this.whoInitial});
+  const _TransactionRow({required this.tx});
 
   final Transaction tx;
-  final String whoInitial;
 
   static String _typeLabel(TransactionType type) => switch (type) {
     TransactionType.income => 'Pemasukan',
@@ -263,18 +254,33 @@ class _TransactionRow extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AffluenaSpacing.space3,
-        vertical: AffluenaSpacing.space3,
-      ),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: context.sky.surface,
-        borderRadius: BorderRadius.circular(AffluenaRadii.lg),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.sky.line),
       ),
       child: Row(
         children: [
-          SkyAvatar(initial: whoInitial, size: 24),
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: context.sky.sheet,
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(color: context.sky.line),
+            ),
+            child: Icon(
+              isIncome
+                  ? Icons.south_west
+                  : (tx.type == TransactionType.expense
+                        ? Icons.north_east
+                        : Icons.swap_horiz),
+              size: 18,
+              color: context.sky.muted,
+            ),
+          ),
           const SizedBox(width: AffluenaSpacing.space3),
           Expanded(
             child: Column(
@@ -322,10 +328,10 @@ class _MembersCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AffluenaSpacing.space3),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: context.sky.surface,
-        borderRadius: BorderRadius.circular(AffluenaRadii.lg),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.sky.line),
       ),
       child: Column(
@@ -345,31 +351,7 @@ class _MembersCard extends StatelessWidget {
           for (final member in members)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 5),
-              child: Row(
-                children: [
-                  SkyAvatar(
-                    initial: member.email.isEmpty
-                        ? '?'
-                        : member.email[0].toUpperCase(),
-                    size: 26,
-                    color: context.sky.avatarSecondary,
-                  ),
-                  const SizedBox(width: AffluenaSpacing.space3),
-                  Expanded(
-                    child: Text(
-                      member.email,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: context.sky.ink,
-                      ),
-                    ),
-                  ),
-                  _RolePill(label: walletRoleLabel(member.role)),
-                ],
-              ),
+              child: _MemberRow(member: member),
             ),
         ],
       ),
@@ -377,26 +359,77 @@ class _MembersCard extends StatelessWidget {
   }
 }
 
+class _MemberRow extends StatelessWidget {
+  const _MemberRow({required this.member});
+
+  final WalletMember member;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = member.email.isEmpty ? '?' : member.email[0].toUpperCase();
+    final isOwner = member.role == 'owner';
+    return Row(
+      children: [
+        SkyAvatar(
+          initial: initial,
+          size: 30,
+          color: initial == 'A'
+              ? context.sky.accent
+              : context.sky.avatarSecondary,
+        ),
+        const SizedBox(width: AffluenaSpacing.space3),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                member.email,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: context.sky.ink,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                walletRoleLabel(member.role),
+                style: TextStyle(fontSize: 10.5, color: context.sky.muted),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: AffluenaSpacing.space2),
+        _RolePill(label: walletRoleLabel(member.role), isOwner: isOwner),
+      ],
+    );
+  }
+}
+
 class _RolePill extends StatelessWidget {
-  const _RolePill({required this.label});
+  const _RolePill({required this.label, this.isOwner = true});
 
   final String label;
+  final bool isOwner;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: context.sky.accentSoft,
-        borderRadius: BorderRadius.circular(AffluenaRadii.pill),
-        border: Border.all(color: context.sky.accentSoftBorder),
+        color: isOwner ? context.sky.accentSoft : context.sky.ground,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(
+          color: isOwner ? context.sky.accentSoftBorder : context.sky.line,
+        ),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: context.sky.accentInk,
+          color: isOwner ? context.sky.accentInk : context.sky.muted,
         ),
       ),
     );
