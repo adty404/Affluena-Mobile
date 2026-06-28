@@ -67,7 +67,10 @@ void main() {
           'GET /wallets/wallet-1/members',
           'GET /wallets/wallet-1/analytics',
         ]);
-        expect(requests[2].jsonBody, {'email': 'friend@example.com'});
+        expect(requests[2].jsonBody, {
+          'email': 'friend@example.com',
+          'role': 'member',
+        });
         expect(requests[3].jsonBody, {'status': 'joined'});
         expect(requests[5].query, {'month': '2026-06'});
       },
