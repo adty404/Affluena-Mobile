@@ -69,6 +69,9 @@ class _RedesignShellState extends State<RedesignShell> {
   }
 }
 
+/// A floating pill navigation bar: it hovers above the content with rounded
+/// ends, a soft shadow, and the ground colour showing around it (rather than a
+/// full-width bar attached to the screen edge).
 class _SkyBottomNav extends StatelessWidget {
   const _SkyBottomNav({
     required this.currentIndex,
@@ -82,45 +85,67 @@ class _SkyBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.sky.sheet,
-        border: Border(top: BorderSide(color: context.sky.line)),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AffluenaSpacing.space2,
-        AffluenaSpacing.space2,
-        AffluenaSpacing.space2,
-        AffluenaSpacing.space3,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavItem(
-            key: const ValueKey('nav-beranda'),
-            icon: Icons.home_outlined,
-            active: currentIndex == 0,
-            onTap: () => onSelect(0),
-          ),
-          _NavItem(
-            key: const ValueKey('nav-aktivitas'),
-            icon: Icons.receipt_long_outlined,
-            active: currentIndex == 1,
-            onTap: () => onSelect(1),
-          ),
-          _NavItem(
-            key: const ValueKey('nav-wawasan'),
-            icon: Icons.insights_outlined,
-            active: currentIndex == 2,
-            onTap: () => onSelect(2),
-          ),
-          _NavItem(
-            key: const ValueKey('nav-lainnya'),
-            icon: Icons.more_horiz,
-            active: false,
-            onTap: onMore,
-          ),
-        ],
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AffluenaSpacing.space5,
+          AffluenaSpacing.space2,
+          AffluenaSpacing.space5,
+          AffluenaSpacing.space3,
+        ),
+        // A Row (not Center/Align) so the bar sizes to the pill's height — a
+        // height-expanding widget here would eat the whole screen and collapse
+        // the body.
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: context.sky.surface,
+                borderRadius: BorderRadius.circular(AffluenaRadii.pill),
+                border: Border.all(color: context.sky.line),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x291E2A38), // #1E2A38 @ 16%
+                    blurRadius: 18,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _NavItem(
+                    key: const ValueKey('nav-beranda'),
+                    icon: Icons.home_outlined,
+                    active: currentIndex == 0,
+                    onTap: () => onSelect(0),
+                  ),
+                  _NavItem(
+                    key: const ValueKey('nav-aktivitas'),
+                    icon: Icons.receipt_long_outlined,
+                    active: currentIndex == 1,
+                    onTap: () => onSelect(1),
+                  ),
+                  _NavItem(
+                    key: const ValueKey('nav-wawasan'),
+                    icon: Icons.insights_outlined,
+                    active: currentIndex == 2,
+                    onTap: () => onSelect(2),
+                  ),
+                  _NavItem(
+                    key: const ValueKey('nav-lainnya'),
+                    icon: Icons.more_horiz,
+                    active: false,
+                    onTap: onMore,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -140,16 +165,21 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? context.sky.accent : context.sky.faint;
-    return InkWell(
+    final iconColor = active ? context.sky.accent : context.sky.faint;
+    return InkResponse(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AffluenaRadii.md),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AffluenaSpacing.space3,
-          vertical: AffluenaSpacing.space2,
+      radius: 28,
+      containedInkWell: true,
+      customBorder: const CircleBorder(),
+      child: Container(
+        width: 42,
+        height: 42,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: active ? context.sky.accentSoft : Colors.transparent,
+          shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 24, color: color),
+        child: Icon(icon, size: 22, color: iconColor),
       ),
     );
   }
