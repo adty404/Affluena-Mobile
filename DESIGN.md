@@ -83,9 +83,10 @@ The redesign surfaces read colours from **`SkyColors`** (`lib/app/theme/sky_pale
 
 ### Font Stack
 
-- Primary: a **bundled grotesque/geometric sans** shipped as a font asset, so the
-  type looks identical on every device (planned: **Inter**). Until it lands, the
-  system UI stack is the fallback.
+- Primary: **Inter**, bundled as a font asset (`assets/fonts/`, weights
+  400/500/600/700/800 — static instances of the Google Fonts Inter variable font,
+  OFL) and set as the app `fontFamily`, so the type looks identical on every
+  device. The system UI stack remains the implicit fallback.
 - Display & title weights run **heavy (800)** with tight tracking so money reads
   bold and decisive — the guide's signature "tegas" look. Earlier builds felt
   *sepi / kurang tegas* with lighter system weights; the guide and the re-skin
