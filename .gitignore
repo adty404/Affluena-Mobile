@@ -46,3 +46,5 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+# Flutter golden-test mismatch artifacts (auto-generated)
+test/**/failures/
