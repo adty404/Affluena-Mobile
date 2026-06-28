@@ -20,14 +20,16 @@ import 'sky_quick_add_sheet.dart';
 /// Activity filter.
 final walletTransactionsProvider =
     FutureProvider.family<List<Transaction>, String>((ref, walletId) async {
-  final response = await ref.watch(transactionRepositoryProvider).listTransactions(
-        walletId: walletId,
-        limit: 50,
-        offset: 0,
-        sort: 'transaction_at_desc',
-      );
-  return response.transactions;
-});
+      final response = await ref
+          .watch(transactionRepositoryProvider)
+          .listTransactions(
+            walletId: walletId,
+            limit: 50,
+            offset: 0,
+            sort: 'transaction_at_desc',
+          );
+      return response.transactions;
+    });
 
 /// Redesign Tahap 4 — the "room" (wallet) detail: balance, members & access
 /// (surfacing the viewer role), in-context quick-add, and this wallet's
@@ -45,17 +47,18 @@ class RoomDetailScreen extends ConsumerWidget {
     final detailAsync = ref.watch(walletDetailProvider(walletId));
 
     return Scaffold(
-      backgroundColor: SkyPalette.ground,
+      backgroundColor: context.sky.ground,
       body: SafeArea(
         child: detailAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: SkyPalette.accent),
+          loading: () => Center(
+            child: CircularProgressIndicator(color: context.sky.accent),
           ),
           error: (error, _) => _DetailError(
             onBack: () => context.pop(),
             onRetry: () => ref.invalidate(walletDetailProvider(walletId)),
           ),
-          data: (detail) => _RoomDetailContent(walletId: walletId, detail: detail),
+          data: (detail) =>
+              _RoomDetailContent(walletId: walletId, detail: detail),
         ),
       ),
     );
@@ -87,10 +90,10 @@ class _RoomDetailContent extends ConsumerWidget {
                 wallet.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: SkyPalette.ink,
+                  color: context.sky.ink,
                 ),
               ),
             ),
@@ -98,19 +101,19 @@ class _RoomDetailContent extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: AffluenaSpacing.space5),
-        const Text(
+        Text(
           'Saldo',
-          style: TextStyle(fontSize: 11.5, color: SkyPalette.faint),
+          style: TextStyle(fontSize: 11.5, color: context.sky.faint),
         ),
         const SizedBox(height: 2),
         Text(
           MoneyFormatter.idr(wallet.balanceMinor),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: SkyPalette.ink,
+            color: context.sky.ink,
             letterSpacing: -0.4,
-            fontFeatures: [FontFeature.tabularFigures()],
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         if (detail.members.isNotEmpty) ...[
@@ -131,7 +134,7 @@ class _RoomDetailContent extends ConsumerWidget {
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Catat di sini'),
             style: FilledButton.styleFrom(
-              backgroundColor: SkyPalette.accent,
+              backgroundColor: context.sky.accent,
               foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(48),
               shape: RoundedRectangleBorder(
@@ -140,32 +143,39 @@ class _RoomDetailContent extends ConsumerWidget {
             ),
           ),
         const SizedBox(height: AffluenaSpacing.space5),
-        const Text(
+        Text(
           'Transaksi',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: SkyPalette.muted,
+            color: context.sky.muted,
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space2),
         txAsync.when(
-          loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: AffluenaSpacing.space5),
+          loading: () => Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AffluenaSpacing.space5,
+            ),
             child: Center(
-              child: CircularProgressIndicator(color: SkyPalette.accent),
+              child: CircularProgressIndicator(color: context.sky.accent),
             ),
           ),
-          error: (_, _) => const Text(
+          error: (_, _) => Text(
             'Tidak bisa memuat transaksi.',
-            style: TextStyle(fontSize: 13, color: SkyPalette.muted),
+            style: TextStyle(fontSize: 13, color: context.sky.muted),
           ),
           data: (txns) => txns.isEmpty
-              ? const Text(
+              ? Text(
                   'Belum ada transaksi di dompet ini.',
-                  style: TextStyle(fontSize: 13, color: SkyPalette.faint),
+                  style: TextStyle(fontSize: 13, color: context.sky.faint),
                 )
-              : _TransactionList(txns: txns, membersById: membersById, meId: me?.id, meEmail: me?.email),
+              : _TransactionList(
+                  txns: txns,
+                  membersById: membersById,
+                  meId: me?.id,
+                  meEmail: me?.email,
+                ),
         ),
       ],
     );
@@ -211,10 +221,10 @@ class _TransactionList extends StatelessWidget {
             ),
             child: Text(
               AffluenaDateFormatter.dayHeader(day),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: SkyPalette.faint,
+                color: context.sky.faint,
               ),
             ),
           ),
@@ -222,7 +232,10 @@ class _TransactionList extends StatelessWidget {
       }
       rows.add(_TransactionRow(tx: tx, whoInitial: _whoInitial(tx)));
     }
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: rows,
+    );
   }
 }
 
@@ -233,11 +246,11 @@ class _TransactionRow extends StatelessWidget {
   final String whoInitial;
 
   static String _typeLabel(TransactionType type) => switch (type) {
-        TransactionType.income => 'Pemasukan',
-        TransactionType.expense => 'Pengeluaran',
-        TransactionType.transfer => 'Transfer',
-        TransactionType.adjustment => 'Penyesuaian',
-      };
+    TransactionType.income => 'Pemasukan',
+    TransactionType.expense => 'Pengeluaran',
+    TransactionType.transfer => 'Transfer',
+    TransactionType.adjustment => 'Penyesuaian',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -255,9 +268,9 @@ class _TransactionRow extends StatelessWidget {
         vertical: AffluenaSpacing.space3,
       ),
       decoration: BoxDecoration(
-        color: SkyPalette.surface,
+        color: context.sky.surface,
         borderRadius: BorderRadius.circular(AffluenaRadii.lg),
-        border: Border.all(color: SkyPalette.line),
+        border: Border.all(color: context.sky.line),
       ),
       child: Row(
         children: [
@@ -271,16 +284,16 @@ class _TransactionRow extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: SkyPalette.ink,
+                    color: context.sky.ink,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   AffluenaDateFormatter.time(tx.transactionAt),
-                  style: const TextStyle(fontSize: 11, color: SkyPalette.faint),
+                  style: TextStyle(fontSize: 11, color: context.sky.faint),
                 ),
               ],
             ),
@@ -291,7 +304,7 @@ class _TransactionRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: isIncome ? SkyPalette.income : SkyPalette.ink,
+              color: isIncome ? context.sky.income : context.sky.ink,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
@@ -311,21 +324,21 @@ class _MembersCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AffluenaSpacing.space3),
       decoration: BoxDecoration(
-        color: SkyPalette.surface,
+        color: context.sky.surface,
         borderRadius: BorderRadius.circular(AffluenaRadii.lg),
-        border: Border.all(color: SkyPalette.line),
+        border: Border.all(color: context.sky.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: AffluenaSpacing.space2),
+          Padding(
+            padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
             child: Text(
               'Anggota & akses',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: SkyPalette.ink,
+                color: context.sky.ink,
               ),
             ),
           ),
@@ -339,7 +352,7 @@ class _MembersCard extends StatelessWidget {
                         ? '?'
                         : member.email[0].toUpperCase(),
                     size: 26,
-                    color: SkyPalette.avatarSecondary,
+                    color: context.sky.avatarSecondary,
                   ),
                   const SizedBox(width: AffluenaSpacing.space3),
                   Expanded(
@@ -347,10 +360,10 @@ class _MembersCard extends StatelessWidget {
                       member.email,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
-                        color: SkyPalette.ink,
+                        color: context.sky.ink,
                       ),
                     ),
                   ),
@@ -374,16 +387,16 @@ class _RolePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: SkyPalette.accentSoft,
+        color: context.sky.accentSoft,
         borderRadius: BorderRadius.circular(AffluenaRadii.pill),
-        border: Border.all(color: SkyPalette.accentSoftBorder),
+        border: Border.all(color: context.sky.accentSoftBorder),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: SkyPalette.accentInk,
+          color: context.sky.accentInk,
         ),
       ),
     );
@@ -399,7 +412,7 @@ class _BackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AffluenaRadii.md);
     return Material(
-      color: SkyPalette.surface,
+      color: context.sky.surface,
       borderRadius: radius,
       child: InkWell(
         borderRadius: radius,
@@ -410,13 +423,9 @@ class _BackButton extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: radius,
-            border: Border.all(color: SkyPalette.line),
+            border: Border.all(color: context.sky.line),
           ),
-          child: const Icon(
-            Icons.arrow_back,
-            size: 19,
-            color: SkyPalette.ink,
-          ),
+          child: Icon(Icons.arrow_back, size: 19, color: context.sky.ink),
         ),
       ),
     );
@@ -438,16 +447,16 @@ class _DetailError extends StatelessWidget {
         children: [
           _BackButton(onTap: onBack),
           const Spacer(),
-          const Center(
+          Center(
             child: Text(
               'Tidak bisa memuat dompet.',
-              style: TextStyle(fontSize: 14, color: SkyPalette.muted),
+              style: TextStyle(fontSize: 14, color: context.sky.muted),
             ),
           ),
           Center(
             child: TextButton(
               onPressed: onRetry,
-              style: TextButton.styleFrom(foregroundColor: SkyPalette.accent),
+              style: TextButton.styleFrom(foregroundColor: context.sky.accent),
               child: const Text('Coba lagi'),
             ),
           ),

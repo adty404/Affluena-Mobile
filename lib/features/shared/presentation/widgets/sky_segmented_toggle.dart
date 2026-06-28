@@ -33,7 +33,7 @@ class SkySegmentedToggle<T> extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: SkyPalette.accentSoft,
+        color: context.sky.accentSoft,
         borderRadius: BorderRadius.circular(AffluenaRadii.control),
       ),
       child: Row(
@@ -66,7 +66,7 @@ class _Segment extends StatelessWidget {
       onTap: onTap,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: active ? SkyPalette.surface : Colors.transparent,
+          color: active ? context.sky.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(AffluenaRadii.md),
         ),
         child: Padding(
@@ -77,7 +77,7 @@ class _Segment extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: active ? SkyPalette.ink : SkyPalette.muted,
+                color: active ? context.sky.ink : context.sky.muted,
               ),
             ),
           ),

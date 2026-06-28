@@ -43,8 +43,9 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
   String? _categoryId;
   String? _error;
 
-  CategoryType get _categoryType =>
-      _type == TransactionType.income ? CategoryType.income : CategoryType.expense;
+  CategoryType get _categoryType => _type == TransactionType.income
+      ? CategoryType.income
+      : CategoryType.expense;
 
   int get _amountMinor => _digits.isEmpty ? 0 : int.parse(_digits);
 
@@ -144,7 +145,8 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
       return;
     }
     setState(() {
-      _error = ref.read(transactionCreateControllerProvider).actionError ??
+      _error =
+          ref.read(transactionCreateControllerProvider).actionError ??
           'Gagal menyimpan transaksi.';
     });
   }
@@ -156,9 +158,9 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: const BoxDecoration(
-          color: SkyPalette.sheet,
-          borderRadius: BorderRadius.vertical(
+        decoration: BoxDecoration(
+          color: context.sky.sheet,
+          borderRadius: const BorderRadius.vertical(
             top: Radius.circular(AffluenaRadii.sheet),
           ),
         ),
@@ -178,17 +180,17 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: AffluenaSpacing.space4),
                 decoration: BoxDecoration(
-                  color: SkyPalette.line,
+                  color: context.sky.line,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-            const Text(
+            Text(
               'Catat cepat',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: SkyPalette.ink,
+                color: context.sky.ink,
               ),
             ),
             const SizedBox(height: AffluenaSpacing.space4),
@@ -215,12 +217,12 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
             Center(
               child: Text(
                 MoneyFormatter.idr(_amountMinor),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w700,
-                  color: SkyPalette.ink,
+                  color: context.sky.ink,
                   letterSpacing: -0.5,
-                  fontFeatures: [FontFeature.tabularFigures()],
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ),
@@ -248,7 +250,7 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
               const SizedBox(height: AffluenaSpacing.space3),
               Text(
                 _error!,
-                style: const TextStyle(fontSize: 12.5, color: SkyPalette.danger),
+                style: TextStyle(fontSize: 12.5, color: context.sky.danger),
               ),
             ],
             const SizedBox(height: AffluenaSpacing.space4),
@@ -257,7 +259,7 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
             FilledButton(
               onPressed: state.isSaving ? null : _save,
               style: FilledButton.styleFrom(
-                backgroundColor: SkyPalette.accent,
+                backgroundColor: context.sky.accent,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
@@ -284,7 +286,7 @@ class _PickerChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AffluenaRadii.control);
     return Material(
-      color: SkyPalette.surface,
+      color: context.sky.surface,
       borderRadius: radius,
       child: InkWell(
         borderRadius: radius,
@@ -296,29 +298,25 @@ class _PickerChip extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: radius,
-            border: Border.all(color: SkyPalette.line),
+            border: Border.all(color: context.sky.line),
           ),
           child: Row(
             children: [
-              Icon(icon, size: 16, color: SkyPalette.accent),
+              Icon(icon, size: 16, color: context.sky.accent),
               const SizedBox(width: AffluenaSpacing.space2),
               Expanded(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: SkyPalette.ink,
+                    color: context.sky.ink,
                   ),
                 ),
               ),
-              const Icon(
-                Icons.expand_more,
-                size: 16,
-                color: SkyPalette.faint,
-              ),
+              Icon(Icons.expand_more, size: 16, color: context.sky.faint),
             ],
           ),
         ),

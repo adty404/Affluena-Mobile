@@ -9,16 +9,24 @@ import '../../../../app/theme/sky_palette.dart';
 /// and [onBackspace]; the parent owns and formats the amount value. Wiring into
 /// the capture sheet + transactions API lands in a later stage.
 class SkyKeypad extends StatelessWidget {
-  const SkyKeypad({
-    required this.onKey,
-    required this.onBackspace,
-    super.key,
-  });
+  const SkyKeypad({required this.onKey, required this.onBackspace, super.key});
 
   final ValueChanged<String> onKey;
   final VoidCallback onBackspace;
 
-  static const _digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0'];
+  static const _digits = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '000',
+    '0',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -35,21 +43,21 @@ class SkyKeypad extends StatelessWidget {
             onTap: () => onKey(digit),
             child: Text(
               digit,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: SkyPalette.ink,
-                fontFeatures: [FontFeature.tabularFigures()],
+                color: context.sky.ink,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
         _Key(
           key: const Key('sky-keypad-backspace'),
           onTap: onBackspace,
-          child: const Icon(
+          child: Icon(
             Icons.backspace_outlined,
             size: 20,
-            color: SkyPalette.muted,
+            color: context.sky.muted,
           ),
         ),
       ],
@@ -67,7 +75,7 @@ class _Key extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AffluenaRadii.md);
     return Material(
-      color: SkyPalette.surface,
+      color: context.sky.surface,
       borderRadius: radius,
       child: InkWell(
         borderRadius: radius,
@@ -75,7 +83,7 @@ class _Key extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: radius,
-            border: Border.all(color: SkyPalette.line),
+            border: Border.all(color: context.sky.line),
           ),
           child: Center(child: child),
         ),
