@@ -5,6 +5,13 @@ import 'package:affluena_mobile/core/api/pagination.dart';
 import 'package:affluena_mobile/core/storage/secure_token_store.dart';
 import 'package:affluena_mobile/features/auth/data/auth_models.dart';
 import 'package:affluena_mobile/features/auth/data/auth_repository.dart';
+import 'package:affluena_mobile/features/budgets/data/budget_models.dart'
+    show
+        BudgetAlertsResponse,
+        BudgetListResponse,
+        BudgetReportResponse,
+        BudgetReportSummary;
+import 'package:affluena_mobile/features/budgets/data/budget_repository.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart';
@@ -14,10 +21,14 @@ import 'package:affluena_mobile/features/goals/data/goal_repository.dart';
 import 'package:affluena_mobile/features/onboarding/application/onboarding_controller.dart';
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_models.dart';
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository.dart';
+import 'package:affluena_mobile/features/recurring/data/recurring_models.dart';
+import 'package:affluena_mobile/features/recurring/data/recurring_repository.dart';
 import 'package:affluena_mobile/features/settings/application/device_auth_service.dart';
 import 'package:affluena_mobile/features/settings/data/security_preferences_repository.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
+import 'package:affluena_mobile/features/trackers/data/tracker_models.dart';
+import 'package:affluena_mobile/features/trackers/data/tracker_repository.dart';
 import 'package:affluena_mobile/features/transactions/data/split_bill_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
@@ -37,6 +48,9 @@ Widget authTestApp({
   WalletRepository? walletRepository,
   CategoryRepository? categoryRepository,
   GoalRepository? goalRepository,
+  BudgetRepository? budgetRepository,
+  TrackerRepository? trackerRepository,
+  RecurringRepository? recurringRepository,
   List<dynamic> extraOverrides = const [],
 }) {
   return ProviderScope(
@@ -56,10 +70,20 @@ Widget authTestApp({
       categoryRepositoryProvider.overrideWithValue(
         categoryRepository ?? const FakeCategoryRepository(),
       ),
-      // The redesign home (rooms) reads goals; stub the repo so it resolves to
-      // an empty list instead of attempting a real network call in tests.
+      // The redesign Beranda dashboard reads goals, budgets, installments,
+      // subscriptions and recurring rules on mount; stub these repos so they
+      // resolve to empty instead of attempting real network calls in tests.
       goalRepositoryProvider.overrideWithValue(
         goalRepository ?? const FakeGoalRepository(),
+      ),
+      budgetRepositoryProvider.overrideWithValue(
+        budgetRepository ?? const FakeBudgetRepository(),
+      ),
+      trackerRepositoryProvider.overrideWithValue(
+        trackerRepository ?? const FakeTrackerRepository(),
+      ),
+      recurringRepositoryProvider.overrideWithValue(
+        recurringRepository ?? const FakeRecurringRepository(),
       ),
       tagRepositoryProvider.overrideWithValue(const FakeTagRepository()),
       quickEntryRepositoryProvider.overrideWithValue(
@@ -98,6 +122,9 @@ Future<void> pumpAuthTestApp(
   WalletRepository? walletRepository,
   CategoryRepository? categoryRepository,
   GoalRepository? goalRepository,
+  BudgetRepository? budgetRepository,
+  TrackerRepository? trackerRepository,
+  RecurringRepository? recurringRepository,
   List<dynamic> extraOverrides = const [],
 }) async {
   // Date widgets (e.g. DateTimePickerField) format with the 'id_ID' locale,
@@ -112,6 +139,9 @@ Future<void> pumpAuthTestApp(
       walletRepository: walletRepository,
       categoryRepository: categoryRepository,
       goalRepository: goalRepository,
+      budgetRepository: budgetRepository,
+      trackerRepository: trackerRepository,
+      recurringRepository: recurringRepository,
       extraOverrides: extraOverrides,
     ),
   );
@@ -639,6 +669,101 @@ class FakeGoalRepository implements GoalRepository {
     String userId,
     GoalInviteResponseRequest request,
   ) async {}
+}
+
+/// Empty-result fakes for the dashboard's extra sections. Only the read methods
+/// the controllers call on mount are implemented; the rest route through
+/// [noSuchMethod] (never exercised by these suites).
+class FakeBudgetRepository implements BudgetRepository {
+  const FakeBudgetRepository();
+
+  @override
+  Future<BudgetListResponse> listBudgets({
+    String? month,
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    return BudgetListResponse(
+      budgets: const [],
+      pagination: Pagination(total: 0, limit: limit ?? 0, offset: offset ?? 0),
+    );
+  }
+
+  @override
+  Future<BudgetAlertsResponse> getAlerts({String? month}) async {
+    return const BudgetAlertsResponse(alerts: []);
+  }
+
+  @override
+  Future<BudgetReportResponse> getReport({String? month}) async {
+    return const BudgetReportResponse(
+      report: [],
+      summary: BudgetReportSummary(
+        totalLimitMinor: 0,
+        totalSpentMinor: 0,
+        totalRemainingMinor: 0,
+        safeCount: 0,
+        warningCount: 0,
+        exceededCount: 0,
+        dailyAllowanceMinor: 0,
+        forecastMinor: 0,
+      ),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class FakeTrackerRepository implements TrackerRepository {
+  const FakeTrackerRepository();
+
+  @override
+  Future<InstallmentListResponse> listInstallments({
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    return InstallmentListResponse(
+      installments: const [],
+      pagination: Pagination(total: 0, limit: limit ?? 0, offset: offset ?? 0),
+    );
+  }
+
+  @override
+  Future<SubscriptionListResponse> listSubscriptions({
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    return SubscriptionListResponse(
+      subscriptions: const [],
+      pagination: Pagination(total: 0, limit: limit ?? 0, offset: offset ?? 0),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class FakeRecurringRepository implements RecurringRepository {
+  const FakeRecurringRepository();
+
+  @override
+  Future<RecurringRuleListResponse> listRules({
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    return RecurringRuleListResponse(
+      rules: const [],
+      pagination: Pagination(total: 0, limit: limit ?? 0, offset: offset ?? 0),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeTagRepository implements TagRepository {

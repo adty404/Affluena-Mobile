@@ -6,10 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/auth_test_helpers.dart';
 
-/// Golden (design-snapshot) test of the redesign home shell — the Spaces
-/// "rooms" home that is now the authenticated default. Freezes the current
-/// rendered look so a behavior-preserving refactor that accidentally shifts the
-/// UI is caught. Baseline generated on this machine with
+/// Golden (design-snapshot) test of the redesign home shell — the Beranda
+/// sectioned dashboard (Dompet · Anggaran · Tabungan · Cicilan · Langganan ·
+/// Berulang) that is the authenticated default. Freezes the current rendered
+/// look so a behavior-preserving refactor that accidentally shifts the UI is
+/// caught. Baseline generated on this machine with
 /// `flutter test --update-goldens` and compared on re-run.
 ///
 /// Note: goldens render with the test default font (no bundled app font), so
