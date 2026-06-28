@@ -58,9 +58,10 @@ jobs:
         with:
           platform: android
           release-version: latest
+          # Flutter flags go after `--` (proxied to flutter build).
           # --no-tree-shake-icons must match the release so the icon font asset
           # stays byte-identical (else the patch fails with "asset changes").
-          args: --dart-define=AFFLUENA_API_BASE_URL=${{ env.API_URL }} --no-tree-shake-icons
+          args: --dart-define=AFFLUENA_API_BASE_URL=${{ env.API_URL }} -- --no-tree-shake-icons
 
       # Full release — manual only (version bump / native change). Patches use
       # the release's Flutter version, so this pins the project's 3.44.2.
@@ -70,9 +71,9 @@ jobs:
         with:
           platform: android
           flutter-version: 3.44.2
-          # Bundle the full Material Icons font so future icon changes stay
-          # patchable over the air (see the patch step above).
-          args: --artifact=apk --dart-define=AFFLUENA_API_BASE_URL=${{ env.API_URL }} --no-tree-shake-icons
+          # Bundle the full Material Icons font (flutter flag, after `--`) so
+          # future icon changes stay patchable over the air (see patch step).
+          args: --artifact=apk --dart-define=AFFLUENA_API_BASE_URL=${{ env.API_URL }} -- --no-tree-shake-icons
 
       - name: Upload release APK
         if: ${{ inputs.mode == 'release' }}
