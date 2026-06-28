@@ -1,0 +1,4 @@
+tags:
+  golden:
+    # Golden image tests. Baselines are host-specific (generated on macOS), so
+    # CI runs `flutter test --exclude-tags golden`; run them locally instead.

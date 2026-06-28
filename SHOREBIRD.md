@@ -54,6 +54,32 @@ scripts/shorebird_patch.sh            # patch the latest release
 Make sure the patch is built with the **same Flutter version** as its release
 (pinned to `3.44.2` in `scripts/shorebird_env.sh`).
 
+## GitHub Actions (CI)
+
+Two workflows in `.github/workflows/`:
+
+- **`ci.yml`** (Mobile CI) — on every PR and push to `master`: `dart format`
+  check, `flutter analyze`, and `flutter test`. Golden tests are tagged `golden`
+  (see `dart_test.yaml`) and excluded in CI because their baselines are
+  macOS-specific; run them locally with plain `flutter test`.
+- **`shorebird.yml`** (Mobile Shorebird):
+  - **Auto OTA patch** on every push to `master` touching app code (`lib/**`,
+    `pubspec.yaml`, `assets/**`, `shorebird.yaml`) → `shorebird patch
+    --release-version=latest`. Installed apps self-update on next launch.
+  - **Manual release**: Actions → *Mobile Shorebird* → *Run workflow* → choose
+    `release` (for a version bump / native change). Produces an installable APK
+    as a build artifact.
+
+### One-time setup
+1. **`SHOREBIRD_TOKEN`** repo secret (required): Shorebird Console →
+   **Account → API Keys** → *Create API Key* (scope *Release & Patch only*), then
+   repo **Settings → Secrets and variables → Actions → New repository secret**.
+2. **`AFFLUENA_API_BASE_URL`** repo variable (optional): defaults to the VPS URL
+   if unset; baked into every CI build via `--dart-define`.
+
+A native change pushed to `master` makes the auto-patch fail (patches can't carry
+native diffs) — that is the signal to run the manual `release` instead.
+
 ## Notes
 
 - Free tier = 5,000 patch installs/month (1 device applying 1 patch = 1 install);

@@ -1,0 +1,79 @@
+name: Mobile Shorebird
+
+# Ships updates via Shorebird code-push.
+#   - Every push to master that touches app code -> an OTA *patch* (the common
+#     loop; installed apps self-update, no reinstall).
+#   - Run manually (Actions -> Mobile Shorebird -> Run workflow) and pick
+#     `release` for a version bump / native change (new plugin, Android config,
+#     Flutter upgrade) — that produces a fresh installable APK artifact.
+#
+# Requires repo secret SHOREBIRD_TOKEN (Shorebird Console -> Account -> API Keys,
+# "Release & Patch only" scope). Optional repo variable AFFLUENA_API_BASE_URL
+# (defaults to the VPS URL below) — baked in at build time so the app reaches the
+# API instead of falling back to localhost.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'lib/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'shorebird.yaml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'patch = OTA update (Dart-only); release = new installable build'
+        type: choice
+        options: [patch, release]
+        default: patch
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-shorebird
+  cancel-in-progress: false
+
+jobs:
+  shorebird:
+    name: Shorebird ${{ inputs.mode || 'patch' }}
+    runs-on: ubuntu-latest
+    env:
+      SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+      API_URL: ${{ vars.AFFLUENA_API_BASE_URL || 'http://43.133.147.101/api/v1' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
+
+      # OTA patch — pushes to master, and the "patch" manual option.
+      - name: Shorebird patch (OTA)
+        if: ${{ github.event_name == 'push' || inputs.mode == 'patch' }}
+        uses: shorebirdtech/shorebird-patch@v1
+        with:
+          platform: android
+          release-version: latest
+          args: --dart-define=AFFLUENA_API_BASE_URL=${{ env.API_URL }}
+
+      # Full release — manual only (version bump / native change). Patches use
+      # the release's Flutter version, so this pins the project's 3.44.2.
+      - name: Shorebird release (new installable build)
+        if: ${{ inputs.mode == 'release' }}
+        uses: shorebirdtech/shorebird-release@v1
+        with:
+          platform: android
+          flutter-version: 3.44.2
+          args: --artifact=apk --dart-define=AFFLUENA_API_BASE_URL=${{ env.API_URL }}
+
+      - name: Upload release APK
+        if: ${{ inputs.mode == 'release' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: affluena-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: warn
