@@ -1,31 +1,40 @@
 import 'package:flutter/material.dart';
 
-abstract final class AffluenaColors {
-  static const surfaceCanvas = Color(0xFFF7F2EA);
-  static const surfaceSoft = Color(0xFFFFFDF8);
-  static const surfaceElevated = Color(0xFFFFFFFF);
-  static const surfaceTintSoft = Color(0xFFECE4D8);
-  static const ink = Color(0xFF171714);
-  static const inkMuted = Color(0xFF6E665B);
-  static const borderSubtle = Color(0xFFE5DCCC);
-  static const forest = Color(0xFF315C46);
-  static const forestSoft = Color(0xFFDCEADF);
-  static const amber = Color(0xFFB4772E);
-  static const coral = Color(0xFFB55342);
-  static const success = Color(0xFF49764F);
+import 'sky_palette.dart';
 
-  static const darkCanvas = Color(0xFF151411);
-  static const darkSurface = Color(0xFF211F1A);
-  static const darkSurfaceElevated = Color(0xFF2A261F);
-  static const darkSurfaceTintSoft = Color(0xFF342F26);
-  static const darkInk = Color(0xFFF8F3EA);
-  static const darkMuted = Color(0xFFBFB6AA);
-  static const darkBorderSubtle = Color(0xFF3B352C);
-  static const darkForest = Color(0xFF7EB694);
-  static const darkForestSoft = Color(0xFF20382D);
-  static const darkAmber = Color(0xFFE0A552);
-  static const darkCoral = Color(0xFFF09483);
-  static const darkSuccess = Color(0xFF88C28F);
+/// The app-wide semantic palette. As of the redesign, these resolve to the
+/// "Sky & Denim" language ([SkyPalette]) so every themed feature screen matches
+/// the redesign surfaces — the old warm-paper palette is fully retired. The
+/// token names are kept (e.g. `forest` now holds the denim accent) so the wide
+/// surface of existing `context.affluenaColors.*` call sites is untouched.
+abstract final class AffluenaColors {
+  // Light — Sky & Denim.
+  static const surfaceCanvas = SkyPalette.ground;
+  static const surfaceSoft = SkyPalette.surface;
+  static const surfaceElevated = SkyPalette.surface;
+  static const surfaceTintSoft = SkyPalette.sheet;
+  static const ink = SkyPalette.ink;
+  static const inkMuted = SkyPalette.muted;
+  static const borderSubtle = SkyPalette.line;
+  static const forest = SkyPalette.accent;
+  static const forestSoft = SkyPalette.accentSoft;
+  static const amber = Color(0xFFB87B2E);
+  static const coral = SkyPalette.danger;
+  static const success = SkyPalette.income;
+
+  // Dark — a cool, Sky-flavoured dark (replaces the old warm dark).
+  static const darkCanvas = Color(0xFF0F1822);
+  static const darkSurface = Color(0xFF16212E);
+  static const darkSurfaceElevated = Color(0xFF1C2A39);
+  static const darkSurfaceTintSoft = Color(0xFF22323F);
+  static const darkInk = Color(0xFFE8EEF4);
+  static const darkMuted = Color(0xFF9FB0C0);
+  static const darkBorderSubtle = Color(0xFF2A3A48);
+  static const darkForest = Color(0xFF6BA0D8);
+  static const darkForestSoft = Color(0xFF1E3147);
+  static const darkAmber = Color(0xFFE0B05E);
+  static const darkCoral = Color(0xFFE08070);
+  static const darkSuccess = Color(0xFF6BC089);
 }
 
 @immutable
