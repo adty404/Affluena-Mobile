@@ -28,8 +28,8 @@ void main() {
       authRepository: authRepository,
     );
 
-    expect(find.text('TOTAL'), findsOneWidget);
-    expect(find.text('Lainnya'), findsOneWidget);
+    expect(find.text('Total'), findsOneWidget);
+    expect(find.byKey(const Key('nav-lainnya')), findsOneWidget);
     expect(authRepository.meCalls, 1);
   });
 
@@ -51,7 +51,7 @@ void main() {
 
     // The lock screen auto-prompts biometric once on appearance (call #1).
     expect(find.text('Affluena terkunci'), findsOneWidget);
-    expect(find.text('TOTAL'), findsNothing);
+    expect(find.text('Total'), findsNothing);
     expect(deviceAuth.authenticateCalls, 1);
 
     // Let authentication succeed, then unlock via the button (call #2).
@@ -61,7 +61,7 @@ void main() {
 
     expect(deviceAuth.authenticateCalls, 2);
     expect(find.text('Affluena terkunci'), findsNothing);
-    expect(find.text('TOTAL'), findsOneWidget);
+    expect(find.text('Total'), findsOneWidget);
   });
 
   testWidgets('expired session clears token and shows login reason', (
@@ -106,7 +106,7 @@ void main() {
     await tester.tap(find.byKey(const Key('login-submit-button')));
     await tester.pumpAndSettle();
 
-    expect(find.text('TOTAL'), findsOneWidget);
+    expect(find.text('Total'), findsOneWidget);
     expect(authRepository.loginCalls, 1);
     expect(await tokenStore.readAccessToken(), 'fresh-access-token');
     expect(await tokenStore.readRefreshToken(), 'fresh-refresh-token');
@@ -139,7 +139,7 @@ void main() {
     final tokenStore = authenticatedTokenStore();
 
     await pumpAuthTestApp(tester, tokenStore: tokenStore);
-    await tester.tap(find.text('Lainnya'));
+    await tester.tap(find.byKey(const Key('nav-lainnya')));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const Key('settings-logout-button')),

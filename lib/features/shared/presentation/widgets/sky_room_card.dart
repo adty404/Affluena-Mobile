@@ -38,7 +38,7 @@ class SkyRoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(AffluenaRadii.lg);
+    final radius = BorderRadius.circular(16);
     final titleRow = Row(
       children: [
         leading,
@@ -55,7 +55,7 @@ class SkyRoomCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: context.sky.ink,
                       ),
@@ -73,7 +73,7 @@ class SkyRoomCard extends StatelessWidget {
                   subtitle!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: context.sky.faint),
+                  style: TextStyle(fontSize: 10.5, color: context.sky.faint),
                 ),
               ],
             ],
