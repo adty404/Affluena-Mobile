@@ -23,3 +23,10 @@ export PATH="$HOME/.shorebird/bin:$JAVA_HOME/bin:/opt/homebrew/bin:$PATH"
 # The Flutter version Shorebird builds with. Keep this identical for the release
 # and every patch — a patch must match its release's Flutter version.
 export SHOREBIRD_FLUTTER_VERSION="3.44.2"
+
+# The API base URL is a COMPILE-TIME constant (lib/core/config/app_config.dart
+# reads AFFLUENA_API_BASE_URL via String.fromEnvironment; default is localhost).
+# It must be baked into BOTH the release and every patch via --dart-define, or
+# the app falls back to localhost and shows "Tidak bisa terhubung ke Affluena".
+# Override by exporting AFFLUENA_API_BASE_URL before running a script.
+export AFFLUENA_API_BASE_URL="${AFFLUENA_API_BASE_URL:-http://43.133.147.101/api/v1}"
