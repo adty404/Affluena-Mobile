@@ -1,0 +1,742 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../app/theme/affluena_theme.dart';
+import '../../../app/theme/sky_palette.dart';
+import '../../../core/formatters/money_formatter.dart';
+import '../../budgets/application/budget_controller.dart';
+import '../../budgets/data/budget_models.dart';
+import '../../budgets/presentation/budget_screen.dart';
+import '../../goals/application/goal_controller.dart';
+import '../../goals/data/goal_models.dart';
+import '../../goals/presentation/goal_screen.dart';
+import '../../recurring/application/recurring_controller.dart';
+import '../../recurring/data/recurring_models.dart';
+import '../../recurring/presentation/recurring_screen.dart';
+import '../../shared/presentation/widgets/sky_avatar.dart';
+import '../../shared/presentation/widgets/sky_progress_bar.dart';
+import '../../trackers/application/tracker_controller.dart';
+import '../../trackers/data/tracker_models.dart';
+import '../../trackers/presentation/tracker_screen.dart';
+import '../../wallets/application/wallets_controller.dart';
+import '../../wallets/data/wallet_models.dart';
+import '../../wallets/presentation/wallet_format.dart';
+import '../../wallets/presentation/wallets_screen.dart';
+import 'room_detail_screen.dart';
+import 'sky_quick_add_sheet.dart';
+
+/// Redesign — Beranda as a **sectioned dashboard** (Sky & Denim). A `Total saldo`
+/// hero over six money-domain sections (Dompet · Anggaran · Tabungan · Cicilan ·
+/// Langganan · Berulang); each section is a header with a "Lihat semua" link over
+/// a 2-column card grid, and tapping a card opens that domain. Replaces the
+/// earlier wallet-"rooms" home as the first nav tab.
+///
+/// See `design/affluena-design-guide.html` (the visual source of truth) and
+/// `DESIGN.md` §1.
+class BerandaDashboardView extends ConsumerWidget {
+  const BerandaDashboardView({super.key});
+
+  /// How many cards each section shows inline; the rest live behind "Lihat semua".
+  static const _previewCount = 4;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final walletsAsync = ref.watch(walletListProvider);
+    final budgetState = ref.watch(budgetControllerProvider);
+    final goalState = ref.watch(goalControllerProvider);
+    final trackerState = ref.watch(trackerControllerProvider);
+    final recurringState = ref.watch(recurringControllerProvider);
+
+    final wallets = walletsAsync.asData?.value ?? const <Wallet>[];
+    final spending = wallets.where((w) => !w.isGoal).toList(growable: false);
+    final total = spending.fold<int>(0, (sum, w) => sum + w.balanceMinor);
+
+    final savings = goalState.goals
+        .where((g) => g.isActive)
+        .toList(growable: false);
+    final installments = trackerState.installments;
+    final subscriptions = trackerState.subscriptions;
+    final recurring = recurringState.rules;
+
+    return ListView(
+      // Extra bottom padding so the last row clears the floating nav pill.
+      padding: AffluenaInsets.screen.copyWith(bottom: 120),
+      children: [
+        _Hero(
+          total: total,
+          loading: walletsAsync.isLoading && spending.isEmpty,
+        ),
+        const SizedBox(height: AffluenaSpacing.space6),
+
+        _Section(
+          title: 'Dompet',
+          onSeeAll: () => context.push(WalletsScreen.path),
+          isLoading: walletsAsync.isLoading && spending.isEmpty,
+          hasError: walletsAsync.hasError && spending.isEmpty,
+          onRetry: () => ref.invalidate(walletListProvider),
+          emptyLabel: 'Belum ada dompet',
+          onEmptyTap: () => context.push(WalletsScreen.path),
+          cards: [
+            for (final wallet in spending.take(_previewCount))
+              _walletCard(context, wallet),
+          ],
+        ),
+
+        _Section(
+          title: 'Anggaran',
+          onSeeAll: () => context.push(BudgetScreen.path),
+          isLoading: budgetState.isLoading && budgetState.budgets.isEmpty,
+          hasError:
+              budgetState.loadError != null && budgetState.budgets.isEmpty,
+          onRetry: () => ref.invalidate(budgetControllerProvider),
+          emptyLabel: 'Belum ada anggaran',
+          onEmptyTap: () => context.push(BudgetScreen.path),
+          cards: [
+            for (final budget in budgetState.budgets.take(_previewCount))
+              _budgetCard(
+                context,
+                name: budgetState.categoryName(budget.categoryId),
+                budget: budget,
+              ),
+          ],
+        ),
+
+        _Section(
+          title: 'Tabungan',
+          onSeeAll: () => context.push(GoalScreen.path),
+          isLoading: goalState.isLoading && savings.isEmpty,
+          hasError: goalState.loadError != null && savings.isEmpty,
+          onRetry: () => ref.invalidate(goalControllerProvider),
+          emptyLabel: 'Belum ada tabungan',
+          onEmptyTap: () => context.push(GoalScreen.path),
+          cards: [
+            for (final goal in savings.take(_previewCount))
+              _goalCard(context, goal),
+          ],
+        ),
+
+        _Section(
+          title: 'Cicilan',
+          onSeeAll: () => context.push(TrackerScreen.path),
+          isLoading: trackerState.isLoading && installments.isEmpty,
+          hasError: trackerState.loadError != null && installments.isEmpty,
+          onRetry: () => ref.invalidate(trackerControllerProvider),
+          emptyLabel: 'Belum ada cicilan',
+          onEmptyTap: () => context.push(TrackerScreen.path),
+          cards: [
+            for (final item in installments.take(_previewCount))
+              _installmentCard(context, item),
+          ],
+        ),
+
+        _Section(
+          title: 'Langganan',
+          onSeeAll: () => context.push(TrackerScreen.path),
+          isLoading: trackerState.isLoading && subscriptions.isEmpty,
+          hasError: trackerState.loadError != null && subscriptions.isEmpty,
+          onRetry: () => ref.invalidate(trackerControllerProvider),
+          emptyLabel: 'Belum ada langganan',
+          onEmptyTap: () => context.push(TrackerScreen.path),
+          cards: [
+            for (final item in subscriptions.take(_previewCount))
+              _subscriptionCard(context, item),
+          ],
+        ),
+
+        _Section(
+          title: 'Berulang',
+          onSeeAll: () => context.push(RecurringScreen.path),
+          isLoading: recurringState.isLoading && recurring.isEmpty,
+          hasError: recurringState.loadError != null && recurring.isEmpty,
+          onRetry: () => ref.invalidate(recurringControllerProvider),
+          emptyLabel: 'Belum ada transaksi berulang',
+          onEmptyTap: () => context.push(RecurringScreen.path),
+          isLast: true,
+          cards: [
+            for (final rule in recurring.take(_previewCount))
+              _recurringCard(context, rule),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // --- card builders -------------------------------------------------------
+
+  Widget _walletCard(BuildContext context, Wallet wallet) {
+    final shared =
+        wallet.members.isNotEmpty ||
+        (wallet.role != null && wallet.role != 'owner');
+    final useAvatars = shared && wallet.members.length >= 2;
+
+    return _DashCard(
+      leading: useAvatars
+          ? _AvatarStack(members: wallet.members)
+          : _IconTile(icon: walletIcon(wallet.type)),
+      badge: wallet.isViewer
+          ? const _Badge(label: 'LIHAT')
+          : (shared ? const _Badge(label: 'BERSAMA') : null),
+      title: wallet.name,
+      subtitle: walletTypeLabel(wallet.type),
+      value: MoneyFormatter.idr(wallet.balanceMinor),
+      onTap: () => context.push(RoomDetailScreen.location(wallet.id)),
+      onLongPress: () => showSkyQuickAddSheet(context, wallet: wallet),
+    );
+  }
+
+  Widget _budgetCard(
+    BuildContext context, {
+    required String name,
+    required BudgetSummary budget,
+  }) {
+    final over = budget.usagePercent >= 100;
+    return _DashCard(
+      leading: const _IconTile(icon: Icons.pie_chart_outline, accent: true),
+      title: name,
+      subtitle:
+          '${MoneyFormatter.idr(budget.spentMinor)} / ${MoneyFormatter.idr(budget.limitMinor)}',
+      progress: budget.usagePercent / 100,
+      progressColor: over ? context.sky.danger : context.sky.accent,
+      value: '${budget.usagePercent.round()}%',
+      valueColor: over ? context.sky.danger : context.sky.accent,
+      onTap: () => context.push(BudgetScreen.path),
+    );
+  }
+
+  Widget _goalCard(BuildContext context, Goal goal) {
+    return _DashCard(
+      leading: const _IconTile(icon: Icons.savings_outlined, accent: true),
+      title: goal.name,
+      subtitle:
+          '${MoneyFormatter.idr(goal.collectedAmountMinor)} / ${MoneyFormatter.idr(goal.targetAmountMinor)}',
+      progress: goal.progressPercent / 100,
+      value: '${goal.progressPercent}%',
+      valueColor: context.sky.accent,
+      onTap: () => context.push(GoalScreen.path),
+    );
+  }
+
+  Widget _installmentCard(BuildContext context, Installment item) {
+    final paid = item.tenorMonths - item.remainingMonths;
+    return _DashCard(
+      leading: const _IconTile(icon: Icons.credit_card_outlined),
+      title: item.name,
+      subtitle: '$paid/${item.tenorMonths} terbayar',
+      progress: item.paidPercent / 100,
+      value: '${MoneyFormatter.idr(item.monthlyAmountMinor)}/bln',
+      onTap: () => context.push(TrackerScreen.path),
+    );
+  }
+
+  Widget _subscriptionCard(BuildContext context, Subscription item) {
+    return _DashCard(
+      leading: const _IconTile(icon: Icons.subscriptions_outlined),
+      title: item.name,
+      subtitle: item.billingCycle.label,
+      value: MoneyFormatter.idr(item.amountMinor),
+      onTap: () => context.push(TrackerScreen.path),
+    );
+  }
+
+  Widget _recurringCard(BuildContext context, RecurringRule rule) {
+    final income = rule.type == RecurringType.income;
+    return _DashCard(
+      leading: _IconTile(icon: _recurringIcon(rule.type)),
+      title: rule.name,
+      subtitle: rule.type.label,
+      value: MoneyFormatter.idr(rule.amountMinor),
+      valueColor: income ? context.sky.income : context.sky.ink,
+      onTap: () => context.push(RecurringScreen.path),
+    );
+  }
+}
+
+IconData _recurringIcon(RecurringType type) {
+  return switch (type) {
+    RecurringType.income => Icons.south_west,
+    RecurringType.expense => Icons.north_east,
+    RecurringType.transfer => Icons.swap_horiz,
+    RecurringType.adjustment => Icons.tune,
+  };
+}
+
+// --- hero --------------------------------------------------------------------
+
+class _Hero extends StatelessWidget {
+  const _Hero({required this.total, required this.loading});
+
+  final int total;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Total saldo',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: context.sky.muted,
+          ),
+        ),
+        const SizedBox(height: 3),
+        if (loading)
+          _Skeleton(width: 180, height: 30)
+        else
+          Text(
+            MoneyFormatter.idr(total),
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+              color: context.sky.ink,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        const SizedBox(height: 5),
+        Text(
+          'Saldo gabungan semua dompet',
+          style: TextStyle(fontSize: 11.5, color: context.sky.faint),
+        ),
+      ],
+    );
+  }
+}
+
+// --- section -----------------------------------------------------------------
+
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.title,
+    required this.onSeeAll,
+    required this.isLoading,
+    required this.hasError,
+    required this.onRetry,
+    required this.emptyLabel,
+    required this.onEmptyTap,
+    required this.cards,
+    this.isLast = false,
+  });
+
+  final String title;
+  final VoidCallback onSeeAll;
+  final bool isLoading;
+  final bool hasError;
+  final VoidCallback onRetry;
+  final String emptyLabel;
+  final VoidCallback onEmptyTap;
+  final List<Widget> cards;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget content;
+    if (hasError) {
+      content = _SectionError(onRetry: onRetry);
+    } else if (isLoading) {
+      content = _CardGrid(children: const [_SkeletonCard(), _SkeletonCard()]);
+    } else if (cards.isEmpty) {
+      content = _EmptyTile(label: emptyLabel, onTap: onEmptyTap);
+    } else {
+      content = _CardGrid(children: cards);
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : AffluenaSpacing.space6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                  color: context.sky.ink,
+                ),
+              ),
+              const Spacer(),
+              InkWell(
+                onTap: onSeeAll,
+                borderRadius: BorderRadius.circular(AffluenaRadii.md),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  child: Text(
+                    'Lihat semua',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: context.sky.accent,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+          content,
+        ],
+      ),
+    );
+  }
+}
+
+/// Lays children out in a 2-column grid, pairing rows so the two cards in each
+/// row share a height.
+class _CardGrid extends StatelessWidget {
+  const _CardGrid({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var i = 0; i < children.length; i += 2) {
+      final left = children[i];
+      final right = i + 1 < children.length ? children[i + 1] : null;
+      rows.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: left),
+              const SizedBox(width: AffluenaSpacing.space3),
+              Expanded(child: right ?? const SizedBox.shrink()),
+            ],
+          ),
+        ),
+      );
+      if (i + 2 < children.length) {
+        rows.add(const SizedBox(height: AffluenaSpacing.space3));
+      }
+    }
+    return Column(children: rows);
+  }
+}
+
+// --- card --------------------------------------------------------------------
+
+class _DashCard extends StatelessWidget {
+  const _DashCard({
+    required this.leading,
+    required this.title,
+    required this.onTap,
+    this.subtitle,
+    this.value,
+    this.valueColor,
+    this.badge,
+    this.progress,
+    this.progressColor,
+    this.onLongPress,
+  });
+
+  final Widget leading;
+  final String title;
+  final VoidCallback onTap;
+  final String? subtitle;
+  final String? value;
+  final Color? valueColor;
+  final Widget? badge;
+  final double? progress;
+  final Color? progressColor;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.sky.surface,
+      borderRadius: BorderRadius.circular(AffluenaRadii.control),
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(AffluenaRadii.control),
+        child: Ink(
+          decoration: BoxDecoration(
+            border: Border.all(color: context.sky.line),
+            borderRadius: BorderRadius.circular(AffluenaRadii.control),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  leading,
+                  if (badge != null) ...[const Spacer(), badge!],
+                ],
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                  color: context.sky.ink,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11.5, color: context.sky.muted),
+                ),
+              ],
+              if (progress != null) ...[
+                const SizedBox(height: AffluenaSpacing.space2),
+                SkyProgressBar(
+                  value: progress!,
+                  height: 6,
+                  fillColor: progressColor,
+                ),
+              ],
+              if (value != null) ...[
+                const SizedBox(height: AffluenaSpacing.space2),
+                Text(
+                  value!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                    color: valueColor ?? context.sky.ink,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- shared bits -------------------------------------------------------------
+
+class _IconTile extends StatelessWidget {
+  const _IconTile({required this.icon, this.accent = false});
+
+  final IconData icon;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 34,
+      height: 34,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: accent ? context.sky.accentSoft : context.sky.sheet,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(
+          color: accent ? context.sky.accentSoftBorder : context.sky.line,
+        ),
+      ),
+      child: Icon(
+        icon,
+        size: 18,
+        color: accent ? context.sky.accent : context.sky.muted,
+      ),
+    );
+  }
+}
+
+class _AvatarStack extends StatelessWidget {
+  const _AvatarStack({required this.members});
+
+  final List<WalletMember> members;
+
+  @override
+  Widget build(BuildContext context) {
+    String initial(WalletMember m) =>
+        m.email.isEmpty ? '?' : m.email[0].toUpperCase();
+
+    return SizedBox(
+      width: 44,
+      height: 34,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            top: 3,
+            child: SkyAvatar(
+              initial: initial(members[0]),
+              borderColor: context.sky.accentSoft,
+            ),
+          ),
+          Positioned(
+            left: 15,
+            top: 3,
+            child: SkyAvatar(
+              initial: initial(members[1]),
+              color: context.sky.avatarSecondary,
+              borderColor: context.sky.accentSoft,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.sky.accentSoft,
+        borderRadius: BorderRadius.circular(AffluenaRadii.pill),
+        border: Border.all(color: context.sky.accentSoftBorder),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 8.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+          color: context.sky.accentInk,
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyTile extends StatelessWidget {
+  const _EmptyTile({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.sky.sheet,
+      borderRadius: BorderRadius.circular(AffluenaRadii.control),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AffluenaRadii.control),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: context.sky.line),
+            borderRadius: BorderRadius.circular(AffluenaRadii.control),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: AffluenaSpacing.space4,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.add_circle_outline,
+                size: 18,
+                color: context.sky.faint,
+              ),
+              const SizedBox(width: AffluenaSpacing.space2),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 12.5, color: context.sky.muted),
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 16, color: context.sky.faint),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionError extends StatelessWidget {
+  const _SectionError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.sky.sheet,
+        border: Border.all(color: context.sky.line),
+        borderRadius: BorderRadius.circular(AffluenaRadii.control),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: AffluenaSpacing.space3,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Gagal memuat.',
+              style: TextStyle(fontSize: 12.5, color: context.sky.muted),
+            ),
+          ),
+          TextButton(
+            onPressed: onRetry,
+            style: TextButton.styleFrom(
+              foregroundColor: context.sky.accent,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Coba lagi'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonCard extends StatelessWidget {
+  const _SkeletonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 104,
+      decoration: BoxDecoration(
+        color: context.sky.sheet,
+        border: Border.all(color: context.sky.line),
+        borderRadius: BorderRadius.circular(AffluenaRadii.control),
+      ),
+    );
+  }
+}
+
+class _Skeleton extends StatelessWidget {
+  const _Skeleton({required this.width, required this.height});
+
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: context.sky.sheet,
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
+  }
+}

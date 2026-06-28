@@ -1,7 +1,6 @@
 import 'package:affluena_mobile/app/affluena_app.dart';
 import 'package:affluena_mobile/app/router.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
-import 'package:affluena_mobile/features/budgets/data/budget_repository.dart';
 import 'package:affluena_mobile/features/budgets/presentation/budget_screen.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
@@ -15,11 +14,9 @@ import 'package:affluena_mobile/features/insights/presentation/audit_log_screen.
 import 'package:affluena_mobile/features/insights/presentation/insights_screen.dart';
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_screen.dart';
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_templates_screen.dart';
-import 'package:affluena_mobile/features/recurring/data/recurring_repository.dart';
 import 'package:affluena_mobile/features/recurring/presentation/recurring_screen.dart';
 import 'package:affluena_mobile/features/redesign/presentation/redesign_shell.dart';
 import 'package:affluena_mobile/features/settings/presentation/settings_screen.dart';
-import 'package:affluena_mobile/features/trackers/data/tracker_repository.dart';
 import 'package:affluena_mobile/features/trackers/presentation/tracker_screen.dart';
 import 'package:affluena_mobile/features/transactions/presentation/split_bill_screen.dart';
 import 'package:affluena_mobile/features/transactions/presentation/transactions_screen.dart';
@@ -130,17 +127,11 @@ Widget _navigationApp({required bool authenticated}) {
     walletRepository: const _NavigationWalletRepository(),
     categoryRepository: const _NavigationCategoryRepository(),
     goalRepository: goal_fakes.TestGoalRepository(),
+    budgetRepository: budget_fakes.TestBudgetRepository(),
+    trackerRepository: tracker_fakes.TestTrackerRepository(),
+    recurringRepository: recurring_fakes.TestRecurringRepository(),
     extraOverrides: [
-      budgetRepositoryProvider.overrideWithValue(
-        budget_fakes.TestBudgetRepository(),
-      ),
       debtRepositoryProvider.overrideWithValue(debt_fakes.TestDebtRepository()),
-      trackerRepositoryProvider.overrideWithValue(
-        tracker_fakes.TestTrackerRepository(),
-      ),
-      recurringRepositoryProvider.overrideWithValue(
-        recurring_fakes.TestRecurringRepository(),
-      ),
       insightsRepositoryProvider.overrideWithValue(
         insight_fakes.TestInsightsRepository(),
       ),
