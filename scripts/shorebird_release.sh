@@ -10,7 +10,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/shorebird_env.sh
 
+echo "Releasing against API: $AFFLUENA_API_BASE_URL"
 shorebird release android \
   --artifact apk \
   --flutter-version "$SHOREBIRD_FLUTTER_VERSION" \
+  --dart-define=AFFLUENA_API_BASE_URL="$AFFLUENA_API_BASE_URL" \
   "$@"
