@@ -36,13 +36,13 @@ class _RedesignShellState extends State<RedesignShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: SkyPalette.ground,
+      backgroundColor: context.sky.ground,
       body: SafeArea(
         bottom: false,
         child: IndexedStack(index: _index, children: _tabs),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: SkyPalette.accent,
+        backgroundColor: context.sky.accent,
         foregroundColor: Colors.white,
         onPressed: () => showSkyQuickAddSheet(context),
         child: const Icon(Icons.add),
@@ -70,9 +70,9 @@ class _SkyBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: SkyPalette.surface,
-        border: Border(top: BorderSide(color: SkyPalette.line)),
+      decoration: BoxDecoration(
+        color: context.sky.surface,
+        border: Border(top: BorderSide(color: context.sky.line)),
       ),
       padding: const EdgeInsets.fromLTRB(
         AffluenaSpacing.space2,
@@ -128,7 +128,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? SkyPalette.accent : SkyPalette.faint;
+    final color = active ? context.sky.accent : context.sky.faint;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AffluenaRadii.md),
