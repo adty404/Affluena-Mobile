@@ -39,7 +39,8 @@ class SkyInsightsView extends ConsumerWidget {
     final forecast = ref.watch(dashboardForecastProvider);
 
     return ListView(
-      padding: AffluenaInsets.screen,
+      // Extra bottom padding so the last row clears the floating nav pill.
+      padding: AffluenaInsets.screen.copyWith(bottom: 120),
       children: [
         Text(
           'Wawasan',

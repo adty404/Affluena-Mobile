@@ -76,7 +76,8 @@ class _RoomsContent extends StatelessWidget {
     final total = spending.fold<int>(0, (sum, w) => sum + w.balanceMinor);
 
     return ListView(
-      padding: AffluenaInsets.screen,
+      // Extra bottom padding so the last row clears the floating nav pill.
+      padding: AffluenaInsets.screen.copyWith(bottom: 120),
       children: [
         Text(
           'Total',
