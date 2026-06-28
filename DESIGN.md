@@ -5,11 +5,11 @@
 > self-contained file (open it in any browser). This `DESIGN.md` is the *written*
 > spec; the HTML is the *visual* reference. Keep the two in sync.
 >
-> **Build status:** the guide is the **target**. The live app already ships the
-> Sky & Denim palette, dark mode, and the floating pill nav; the main in-flight
-> change is **Beranda**, redesigned from wallet "rooms" into a **6-section
-> dashboard** (see §1). The per-screen re-skin to fully match the guide is in
-> progress.
+> **Build status:** the app now tracks the guide closely — shipped: the Sky &
+> Denim palette, dark mode, the icon-only floating pill nav, the bundled **Inter**
+> type, the **6-section Beranda dashboard** (§1), and the per-item **detail
+> screens** (§8, opened from the dashboard cards). Remaining: the quick-add
+> templates-in-sheet refinement.
 
 ## 1. Atmosphere & Identity
 
@@ -36,7 +36,7 @@ Cicilan, Langganan, and Berulang stay **separate** — deliberately *not* merged
 
 Logging is a fast bottom-sheet: a **template row inside the sheet** (one-tap presets like *Kopi · Rp 25.000*), an expense/income segment, an `Rp` amount with a calculator keypad, and wallet + category pickers — the wallet is pre-set when the sheet is opened from a wallet context. Templates live **inside** the sheet, not as chips on top of Beranda.
 
-> **Build note:** the live app currently renders Beranda as wallet **"rooms"** (`RoomsHomeView`) — you enter a room to act on it. The 6-section dashboard above is the redesign target; the re-skin replaces rooms with it. Aktivitas, Wawasan, Lainnya→Pengaturan, and the quick-add flow are unchanged in intent.
+> **Build note:** the 6-section dashboard is the **live** Beranda (the first nav tab, `BerandaDashboardView`). Tapping a card opens that item's detail screen (§8). The older wallet-**"rooms"** home (`RoomsHomeView`) remains only behind the `/rooms` deep-link route + the wallet detail. Aktivitas, Wawasan, Lainnya→Pengaturan, and the quick-add flow are unchanged in intent.
 
 ## 2. Color
 
