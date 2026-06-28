@@ -240,7 +240,10 @@ abstract final class AffluenaTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colors.surfaceCanvas,
       cardColor: colors.surfaceSoft,
-      fontFamily: null,
+      // Bundled Inter (assets/fonts/) — the app's "tegas" type. Weights
+      // 400/500/600/700/800 ship as static instances; TextStyle.fontWeight
+      // picks the matching file. See pubspec.yaml `fonts:` + DESIGN.md §3.
+      fontFamily: 'Inter',
     );
 
     return base.copyWith(

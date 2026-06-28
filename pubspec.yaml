@@ -71,6 +71,22 @@ flutter:
     - shorebird.yaml
   uses-material-design: true
 
+  # Bundled Inter (OFL) — the app's "tegas" type. Static per-weight instances
+  # of the Google Fonts Inter variable font; see assets/fonts/OFL.txt.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
