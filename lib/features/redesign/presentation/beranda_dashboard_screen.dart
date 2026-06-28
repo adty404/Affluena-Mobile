@@ -7,17 +7,22 @@ import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../budgets/application/budget_controller.dart';
 import '../../budgets/data/budget_models.dart';
+import '../../budgets/presentation/budget_detail_screen.dart';
 import '../../budgets/presentation/budget_screen.dart';
 import '../../goals/application/goal_controller.dart';
 import '../../goals/data/goal_models.dart';
+import '../../goals/presentation/goal_detail_screen.dart';
 import '../../goals/presentation/goal_screen.dart';
 import '../../recurring/application/recurring_controller.dart';
 import '../../recurring/data/recurring_models.dart';
+import '../../recurring/presentation/recurring_detail_screen.dart';
 import '../../recurring/presentation/recurring_screen.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../../trackers/application/tracker_controller.dart';
 import '../../trackers/data/tracker_models.dart';
+import '../../trackers/presentation/installment_detail_screen.dart';
+import '../../trackers/presentation/subscription_detail_screen.dart';
 import '../../trackers/presentation/tracker_screen.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
@@ -200,7 +205,7 @@ class BerandaDashboardView extends ConsumerWidget {
       progressColor: over ? context.sky.danger : context.sky.accent,
       value: '${budget.usagePercent.round()}%',
       valueColor: over ? context.sky.danger : context.sky.accent,
-      onTap: () => context.push(BudgetScreen.path),
+      onTap: () => context.push(BudgetDetailScreen.location(budget.id)),
     );
   }
 
@@ -213,7 +218,7 @@ class BerandaDashboardView extends ConsumerWidget {
       progress: goal.progressPercent / 100,
       value: '${goal.progressPercent}%',
       valueColor: context.sky.accent,
-      onTap: () => context.push(GoalScreen.path),
+      onTap: () => context.push(GoalDetailScreen.location(goal.id)),
     );
   }
 
@@ -225,7 +230,7 @@ class BerandaDashboardView extends ConsumerWidget {
       subtitle: '$paid/${item.tenorMonths} terbayar',
       progress: item.paidPercent / 100,
       value: '${MoneyFormatter.idr(item.monthlyAmountMinor)}/bln',
-      onTap: () => context.push(TrackerScreen.path),
+      onTap: () => context.push(InstallmentDetailScreen.location(item.id)),
     );
   }
 
@@ -235,7 +240,7 @@ class BerandaDashboardView extends ConsumerWidget {
       title: item.name,
       subtitle: item.billingCycle.label,
       value: MoneyFormatter.idr(item.amountMinor),
-      onTap: () => context.push(TrackerScreen.path),
+      onTap: () => context.push(SubscriptionDetailScreen.location(item.id)),
     );
   }
 
@@ -247,7 +252,7 @@ class BerandaDashboardView extends ConsumerWidget {
       subtitle: rule.type.label,
       value: MoneyFormatter.idr(rule.amountMinor),
       valueColor: income ? context.sky.income : context.sky.ink,
-      onTap: () => context.push(RecurringScreen.path),
+      onTap: () => context.push(RecurringDetailScreen.location(rule.id)),
     );
   }
 }
