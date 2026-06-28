@@ -1,18 +1,10 @@
 import 'package:affluena_mobile/core/api/api_error.dart';
 import 'package:affluena_mobile/features/settings/data/security_preferences_repository.dart';
+import 'package:affluena_mobile/features/settings/presentation/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/auth_test_helpers.dart';
-
-// Mirrors DashboardScreen's time-of-day greeting so dashboard assertions stay
-// stable regardless of the local clock when the suite runs.
-String _expectedGreeting() {
-  final hour = DateTime.now().hour;
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
 
 void main() {
   testWidgets('cold start with no token routes to login', (tester) async {
@@ -25,7 +17,9 @@ void main() {
     expect(authRepository.meCalls, 0);
   });
 
-  testWidgets('valid token routes to dashboard after auth me', (tester) async {
+  testWidgets('valid token routes to the home shell after auth me', (
+    tester,
+  ) async {
     final authRepository = FakeAuthRepository();
 
     await pumpAuthTestApp(
@@ -34,8 +28,8 @@ void main() {
       authRepository: authRepository,
     );
 
-    expect(find.text(_expectedGreeting()), findsOneWidget);
-    expect(find.text('Total balance'), findsOneWidget);
+    expect(find.text('TOTAL'), findsOneWidget);
+    expect(find.text('Lainnya'), findsOneWidget);
     expect(authRepository.meCalls, 1);
   });
 
@@ -57,7 +51,7 @@ void main() {
 
     // The lock screen auto-prompts biometric once on appearance (call #1).
     expect(find.text('Affluena locked'), findsOneWidget);
-    expect(find.text(_expectedGreeting()), findsNothing);
+    expect(find.text('TOTAL'), findsNothing);
     expect(deviceAuth.authenticateCalls, 1);
 
     // Let authentication succeed, then unlock via the button (call #2).
@@ -67,7 +61,7 @@ void main() {
 
     expect(deviceAuth.authenticateCalls, 2);
     expect(find.text('Affluena locked'), findsNothing);
-    expect(find.text(_expectedGreeting()), findsOneWidget);
+    expect(find.text('TOTAL'), findsOneWidget);
   });
 
   testWidgets('expired session clears token and shows login reason', (
@@ -112,7 +106,7 @@ void main() {
     await tester.tap(find.byKey(const Key('login-submit-button')));
     await tester.pumpAndSettle();
 
-    expect(find.text(_expectedGreeting()), findsOneWidget);
+    expect(find.text('TOTAL'), findsOneWidget);
     expect(authRepository.loginCalls, 1);
     expect(await tokenStore.readAccessToken(), 'fresh-access-token');
     expect(await tokenStore.readRefreshToken(), 'fresh-refresh-token');
@@ -145,12 +139,17 @@ void main() {
     final tokenStore = authenticatedTokenStore();
 
     await pumpAuthTestApp(tester, tokenStore: tokenStore);
-    await tester.tap(find.text('More'));
+    await tester.tap(find.text('Lainnya'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const Key('settings-logout-button')),
       500,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find
+          .descendant(
+            of: find.byType(SettingsScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
     await tester.tap(find.byKey(const Key('settings-logout-button')));
     await tester.pumpAndSettle();

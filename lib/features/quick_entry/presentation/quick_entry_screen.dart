@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../../core/formatters/tag_formatter.dart';
-import '../../dashboard/application/dashboard_home_controller.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -303,7 +302,6 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
   }
 
   void _invalidateMoneySurfaces() {
-    ref.invalidate(dashboardHomeProvider);
     ref.invalidate(transactionsControllerProvider);
   }
 }
