@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 // The async in-memory backend lives in the platform-interface package, which is
 // only a transitive dependency here; the import is test-only.
 // ignore: depend_on_referenced_packages
@@ -19,5 +20,8 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
   SharedPreferencesAsyncPlatform.instance =
       InMemorySharedPreferencesAsync.empty();
+  // The date formatters use the 'id_ID' locale (mirrors main()); load its data
+  // once so any test that renders a date works without per-file setup.
+  await initializeDateFormatting('id_ID');
   await testMain();
 }
