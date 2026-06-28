@@ -85,7 +85,7 @@ class _SkyBottomNav extends StatelessWidget {
         children: [
           _NavItem(
             icon: Icons.home_outlined,
-            label: 'Home',
+            label: 'Beranda',
             active: currentIndex == 0,
             onTap: () => onSelect(0),
           ),
@@ -97,7 +97,7 @@ class _SkyBottomNav extends StatelessWidget {
           ),
           _NavItem(
             icon: Icons.insights_outlined,
-            label: 'Insights',
+            label: 'Wawasan',
             active: currentIndex == 2,
             onTap: () => onSelect(2),
           ),

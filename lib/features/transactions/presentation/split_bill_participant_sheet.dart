@@ -103,7 +103,7 @@ class _SplitBillParticipantSheetState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Add participant', style: textTheme.titleLarge),
+                      Text('Tambah peserta', style: textTheme.titleLarge),
                       const SizedBox(height: AffluenaSpacing.space4),
                       TextField(
                         key: const Key('participant-name-field'),
@@ -111,14 +111,14 @@ class _SplitBillParticipantSheetState
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.person_outline),
-                          labelText: 'Name',
+                          labelText: 'Nama',
                         ),
                         onChanged: (_) => setState(() => _error = null),
                       ),
                       const SizedBox(height: AffluenaSpacing.space3),
                       MoneyInput(
                         key: const Key('participant-amount-field'),
-                        label: 'Share amount',
+                        label: 'Jumlah bagian',
                         initialValue: _amountMinor,
                         onChanged: (value) => setState(() {
                           _amountMinor = value;
@@ -130,7 +130,7 @@ class _SplitBillParticipantSheetState
                         key: const Key(
                           'participant-disbursement-category-selector',
                         ),
-                        label: 'Disbursement category',
+                        label: 'Kategori pencairan',
                         value: widget.state.expenseCategoryName(
                           _disbursementCategoryId,
                         ),
@@ -143,7 +143,7 @@ class _SplitBillParticipantSheetState
                       const Divider(height: 1),
                       SelectorRow(
                         key: const Key('participant-payment-category-selector'),
-                        label: 'Payment category',
+                        label: 'Kategori pembayaran',
                         value: widget.state.incomeCategoryName(
                           _paymentCategoryId,
                         ),
@@ -168,7 +168,7 @@ class _SplitBillParticipantSheetState
               FilledButton(
                 key: const Key('participant-save-button'),
                 onPressed: canSave ? _save : _showValidation,
-                child: const Text('Add participant'),
+                child: const Text('Tambah peserta'),
               ),
             ],
           ),
@@ -181,7 +181,7 @@ class _SplitBillParticipantSheetState
     // Categories are a hierarchy: use the tree-aware picker, not a flat list.
     final selected = await showCategoryTreePicker(
       context: context,
-      title: 'Disbursement category',
+      title: 'Kategori pencairan',
       selectedId: _disbursementCategoryId,
       categories: [
         for (final category in widget.state.expenseCategories)
@@ -200,7 +200,7 @@ class _SplitBillParticipantSheetState
     // Categories are a hierarchy: use the tree-aware picker, not a flat list.
     final selected = await showCategoryTreePicker(
       context: context,
-      title: 'Payment category',
+      title: 'Kategori pembayaran',
       selectedId: _paymentCategoryId,
       categories: [
         for (final category in widget.state.incomeCategories)
@@ -216,9 +216,7 @@ class _SplitBillParticipantSheetState
   }
 
   void _showValidation() {
-    setState(
-      () => _error = 'Complete participant name, amount, and categories.',
-    );
+    setState(() => _error = 'Lengkapi nama, jumlah, dan kategori peserta.');
   }
 
   void _save() {

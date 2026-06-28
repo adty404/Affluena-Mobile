@@ -66,11 +66,11 @@ class _QuickEntryTemplatesScreenState
         .toList(growable: false);
 
     return DrillInScaffold(
-      title: 'Quick-entry templates',
+      title: 'Template catat cepat',
       actions: [
         IconButton.filledTonal(
           key: const Key('add-template-button'),
-          tooltip: 'Add template',
+          tooltip: 'Tambah template',
           onPressed: state.isSaving
               ? null
               : () => _showTemplateForm(context, ref, state: state),
@@ -81,7 +81,8 @@ class _QuickEntryTemplatesScreenState
         padding: AffluenaInsets.screen,
         children: [
           Text(
-            'Manage reusable shortcuts without slowing down manual quick entry.',
+            'Kelola pintasan yang bisa dipakai ulang tanpa memperlambat catat '
+            'cepat manual.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -90,7 +91,7 @@ class _QuickEntryTemplatesScreenState
             autocorrect: false,
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
-              labelText: 'Search templates',
+              labelText: 'Cari template',
             ),
             onChanged: (value) => setState(() => _query = value),
           ),
@@ -109,8 +110,8 @@ class _QuickEntryTemplatesScreenState
           ],
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
-            title: 'Saved templates',
-            actionLabel: '${visibleTemplates.length} shown',
+            title: 'Template tersimpan',
+            actionLabel: '${visibleTemplates.length} ditampilkan',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           if (visibleTemplates.isEmpty)
@@ -217,8 +218,8 @@ class _TemplateCard extends StatelessWidget {
                   if (value == 'delete') onDelete();
                 },
                 itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  PopupMenuItem(value: 'edit', child: Text('Ubah')),
+                  PopupMenuItem(value: 'delete', child: Text('Hapus')),
                 ],
               ),
             ],
@@ -240,7 +241,7 @@ class _TemplateCard extends StatelessWidget {
                   key: Key('template-detail-${template.id}'),
                   onPressed: onDetail,
                   icon: const Icon(Icons.info_outline),
-                  label: const Text('Details'),
+                  label: const Text('Detail'),
                 ),
               ),
               const SizedBox(width: AffluenaSpacing.space3),
@@ -249,7 +250,7 @@ class _TemplateCard extends StatelessWidget {
                   key: Key('execute-template-${template.id}'),
                   onPressed: onExecute,
                   icon: const Icon(Icons.play_arrow),
-                  label: const Text('Execute'),
+                  label: const Text('Jalankan'),
                 ),
               ),
             ],
@@ -304,11 +305,11 @@ class _EmptyTemplateState extends StatelessWidget {
         children: [
           Icon(Icons.bolt_outlined, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No templates yet', style: textTheme.titleMedium),
+          Text('Belum ada template', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Templates turn a repeat transaction — daily coffee, commute, '
-            'salary, a standing transfer — into a one-tap entry.',
+            'Template mengubah transaksi berulang — kopi harian, ongkos, '
+            'gaji, transfer rutin — jadi entri satu ketukan.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
@@ -316,7 +317,7 @@ class _EmptyTemplateState extends StatelessWidget {
             key: const Key('empty-create-template-button'),
             onPressed: onCreate,
             icon: const Icon(Icons.add),
-            label: const Text('Create your first template'),
+            label: const Text('Buat template pertamamu'),
           ),
         ],
       ),
@@ -338,10 +339,10 @@ class _NoSearchResults extends StatelessWidget {
         children: [
           Icon(Icons.search_off_outlined, color: colors.inkMuted),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No matching templates', style: textTheme.titleMedium),
+          Text('Tidak ada template yang cocok', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Try a different name, wallet, category, or tag.',
+            'Coba nama, dompet, kategori, atau tag yang lain.',
             style: textTheme.bodySmall,
           ),
         ],
@@ -357,12 +358,13 @@ class _TemplatesLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return DrillInScaffold(
-      title: 'Quick-entry templates',
+      title: 'Template catat cepat',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           Text(
-            'Manage reusable shortcuts without slowing down manual quick entry.',
+            'Kelola pintasan yang bisa dipakai ulang tanpa memperlambat catat '
+            'cepat manual.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
@@ -432,12 +434,12 @@ class _TemplatesError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Quick-entry templates',
+      title: 'Template catat cepat',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
-            'We could not load your quick-entry templates.',
+            'Kami tidak bisa memuat template catat cepat kamu.',
             onRetry: onRetry,
           ),
         ],
@@ -476,22 +478,22 @@ Future<void> _showTemplateDetail(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('${template.name} details', style: textTheme.titleLarge),
+              Text('Rincian ${template.name}', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space4),
-              Text('Wallet: $wallet'),
+              Text('Dompet: $wallet'),
               const SizedBox(height: AffluenaSpacing.space2),
               if (template.toWalletId != null) ...[
-                Text('Destination: ${state.walletName(template.toWalletId)}'),
+                Text('Tujuan: ${state.walletName(template.toWalletId)}'),
                 const SizedBox(height: AffluenaSpacing.space2),
               ],
-              Text('Category: $category'),
+              Text('Kategori: $category'),
               const SizedBox(height: AffluenaSpacing.space2),
-              Text('Tags: $tags'),
+              Text('Tag: $tags'),
               const SizedBox(height: AffluenaSpacing.space2),
-              Text('Amount: ${MoneyFormatter.idr(template.amountMinor)}'),
+              Text('Jumlah: ${MoneyFormatter.idr(template.amountMinor)}'),
               if (template.note.isNotEmpty) ...[
                 const SizedBox(height: AffluenaSpacing.space2),
-                Text('Note: ${template.note}'),
+                Text('Catatan: ${template.note}'),
               ],
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton.icon(
@@ -500,7 +502,7 @@ Future<void> _showTemplateDetail(
                   _showExecuteSheet(context, ref, template);
                 },
                 icon: const Icon(Icons.play_arrow),
-                label: const Text('Execute template'),
+                label: const Text('Jalankan template'),
               ),
             ],
           ),
@@ -602,7 +604,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        _isEditing ? 'Edit template' : 'Create template',
+                        _isEditing ? 'Ubah template' : 'Buat template',
                         style: textTheme.titleLarge,
                       ),
                       const SizedBox(height: AffluenaSpacing.space4),
@@ -612,14 +614,14 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.bolt_outlined),
-                          labelText: 'Template name',
+                          labelText: 'Nama template',
                         ),
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: AffluenaSpacing.space3),
                       MoneyInput(
                         key: const Key('template-amount-field'),
-                        label: 'Amount',
+                        label: 'Jumlah',
                         initialValue: _amountMinor,
                         enabled: !state.isSaving,
                         onChanged: (value) =>
@@ -663,8 +665,8 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                       const SizedBox(height: AffluenaSpacing.space3),
                       SelectorRow(
                         key: const Key('template-wallet-selector'),
-                        label: 'Wallet',
-                        value: selectedWallet?.name ?? 'Choose wallet',
+                        label: 'Dompet',
+                        value: selectedWallet?.name ?? 'Pilih dompet',
                         icon: Icons.account_balance_wallet_outlined,
                         enabled: state.wallets.isNotEmpty && !state.isSaving,
                         onTap: state.wallets.isEmpty
@@ -675,10 +677,9 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         const Divider(height: 1),
                         SelectorRow(
                           key: const Key('template-to-wallet-selector'),
-                          label: 'Destination wallet',
+                          label: 'Dompet tujuan',
                           value:
-                              selectedToWallet?.name ??
-                              'Choose destination wallet',
+                              selectedToWallet?.name ?? 'Pilih dompet tujuan',
                           icon: Icons.swap_horiz,
                           enabled: state.wallets.length > 1 && !state.isSaving,
                           onTap: state.wallets.length <= 1
@@ -691,8 +692,8 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         const Divider(height: 1),
                         SelectorRow(
                           key: const Key('template-category-selector'),
-                          label: 'Category',
-                          value: selectedCategory?.name ?? 'Choose category',
+                          label: 'Kategori',
+                          value: selectedCategory?.name ?? 'Pilih kategori',
                           icon: Icons.category_outlined,
                           enabled: categories.isNotEmpty && !state.isSaving,
                           onTap: categories.isEmpty
@@ -703,9 +704,9 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                       const Divider(height: 1),
                       SelectorRow(
                         key: const Key('template-tag-selector'),
-                        label: 'Tags',
+                        label: 'Tag',
                         value: selectedTags.isEmpty
-                            ? 'Optional'
+                            ? 'Opsional'
                             : selectedTags
                                   .map((tag) => tagLabel(tag.name))
                                   .join(', '),
@@ -735,7 +736,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         controller: _noteController,
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.notes_outlined),
-                          labelText: 'Default note',
+                          labelText: 'Catatan bawaan',
                         ),
                       ),
                       const SizedBox(height: AffluenaSpacing.space5),
@@ -751,7 +752,9 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
               FilledButton(
                 key: const Key('template-save-button'),
                 onPressed: canSave ? _save : null,
-                child: Text(state.isSaving ? 'Saving...' : 'Save template'),
+                child: Text(
+                  state.isSaving ? 'Menyimpan...' : 'Simpan template',
+                ),
               ),
             ],
           ),
@@ -777,7 +780,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
   Future<void> _selectWallet(QuickEntryTemplatesState state) async {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
-      title: 'Template wallet',
+      title: 'Dompet template',
       selectedValue: _walletId,
       options: [
         for (final wallet in state.wallets)
@@ -799,7 +802,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
   Future<void> _selectToWallet(QuickEntryTemplatesState state) async {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
-      title: 'Destination wallet',
+      title: 'Dompet tujuan',
       selectedValue: _toWalletId,
       options: [
         for (final wallet in state.wallets)
@@ -819,7 +822,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
   Future<void> _selectCategory(QuickEntryTemplatesState state) async {
     final selected = await showCategoryTreePicker(
       context: context,
-      title: 'Template category',
+      title: 'Kategori template',
       selectedId: _categoryId,
       categories: [
         for (final category in state.categoriesFor(_type))
@@ -932,13 +935,13 @@ class _ExecuteTemplateSheetState extends ConsumerState<_ExecuteTemplateSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Execute ${widget.template.name}',
+                'Jalankan ${widget.template.name}',
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
               DatePickerField(
                 key: const Key('template-execute-date-field'),
-                label: 'Execution date',
+                label: 'Tanggal pelaksanaan',
                 value: _executionDate,
                 icon: Icons.today_outlined,
                 lastDate: DateTime.now(),
@@ -952,7 +955,7 @@ class _ExecuteTemplateSheetState extends ConsumerState<_ExecuteTemplateSheet> {
                 enabled: !state.isSaving,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
-                  labelText: 'Override note',
+                  labelText: 'Ganti catatan',
                 ),
               ),
               if (state.actionError != null) ...[
@@ -964,7 +967,7 @@ class _ExecuteTemplateSheetState extends ConsumerState<_ExecuteTemplateSheet> {
                 key: const Key('template-execute-button'),
                 onPressed: state.isSaving ? null : _execute,
                 child: Text(
-                  state.isSaving ? 'Executing...' : 'Execute template',
+                  state.isSaving ? 'Menjalankan...' : 'Jalankan template',
                 ),
               ),
             ],
@@ -1001,16 +1004,16 @@ Future<void> _confirmDeleteTemplate(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Delete template?'),
-      content: Text('Delete ${template.name} from quick-entry templates?'),
+      title: const Text('Hapus template?'),
+      content: Text('Hapus ${template.name} dari template catat cepat?'),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: const Text('Batal'),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Delete template'),
+          child: const Text('Hapus template'),
         ),
       ],
     ),
@@ -1028,10 +1031,10 @@ String _transactionAtFromDate(DateTime date) {
 
 String _typeLabel(TransactionType type) {
   return switch (type) {
-    TransactionType.expense => 'Expense',
-    TransactionType.income => 'Income',
+    TransactionType.expense => 'Pengeluaran',
+    TransactionType.income => 'Pemasukan',
     TransactionType.transfer => 'Transfer',
-    TransactionType.adjustment => 'Adjustment',
+    TransactionType.adjustment => 'Penyesuaian',
   };
 }
 

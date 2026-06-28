@@ -66,16 +66,16 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Adjust balance', style: textTheme.titleLarge),
+            Text('Sesuaikan saldo', style: textTheme.titleLarge),
             const SizedBox(height: AffluenaSpacing.space1),
             Text(
-              'Current balance ${MoneyFormatter.idr(widget.wallet.balanceMinor)}',
+              'Saldo saat ini ${MoneyFormatter.idr(widget.wallet.balanceMinor)}',
               style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
             ),
             const SizedBox(height: AffluenaSpacing.space4),
             MoneyInput(
               key: const Key('wallet-adjust-amount-field'),
-              label: 'New balance',
+              label: 'Saldo baru',
               initialValue: widget.wallet.balanceMinor,
               enabled: !_isSaving,
               onChanged: (value) => setState(() {
@@ -87,8 +87,8 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
             if (delta != 0)
               Text(
                 delta > 0
-                    ? 'Increase by ${MoneyFormatter.idr(delta)} (recorded as a penyesuaian)'
-                    : 'Decrease by ${MoneyFormatter.idr(-delta)} (recorded as a penyesuaian)',
+                    ? 'Naik ${MoneyFormatter.idr(delta)} (dicatat sebagai penyesuaian)'
+                    : 'Turun ${MoneyFormatter.idr(-delta)} (dicatat sebagai penyesuaian)',
                 style: textTheme.bodySmall?.copyWith(
                   color: delta > 0 ? colors.success : colors.coral,
                 ),
@@ -96,7 +96,7 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
             const SizedBox(height: AffluenaSpacing.space3),
             DateTimePickerField(
               key: const Key('wallet-adjust-datetime-field'),
-              label: 'Date & time',
+              label: 'Tanggal & waktu',
               value: _dateTime,
               enabled: !_isSaving,
               onChanged: (value) => setState(() {
@@ -110,8 +110,8 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
               enabled: !_isSaving,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.notes_outlined),
-                labelText: 'Note',
-                helperText: 'Optional',
+                labelText: 'Catatan',
+                helperText: 'Opsional',
               ),
             ),
             if (_error != null) ...[
@@ -122,7 +122,7 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
             FilledButton(
               key: const Key('wallet-adjust-save-button'),
               onPressed: _isSaving || delta == 0 ? null : _save,
-              child: Text(_isSaving ? 'Saving...' : 'Save adjustment'),
+              child: Text(_isSaving ? 'Menyimpan...' : 'Simpan penyesuaian'),
             ),
           ],
         ),
@@ -145,7 +145,7 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
       // Adjustment uses a signed amount: positive raises, negative lowers.
       amountMinor: delta,
       transactionAt: _dateTime.toUtc().toIso8601String(),
-      note: note.isEmpty ? 'Balance adjustment' : note,
+      note: note.isEmpty ? 'Penyesuaian saldo' : note,
     );
 
     try {
@@ -157,7 +157,7 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _error = 'Balance could not be adjusted.';
+        _error = 'Saldo tidak dapat disesuaikan.';
       });
     }
   }

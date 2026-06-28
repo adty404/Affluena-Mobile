@@ -72,7 +72,7 @@ class SettingsProfileController extends AsyncNotifier<AuthUser> {
           .updateAccount(request);
       ref.read(authControllerProvider.notifier).replaceUser(user);
       state = AsyncData(user);
-      return const SettingsActionResult.success('Account updated.');
+      return const SettingsActionResult.success('Akun diperbarui.');
     } catch (error, stackTrace) {
       if (previous == null) {
         state = AsyncError(error, stackTrace);
@@ -100,7 +100,7 @@ class SettingsProfileController extends AsyncNotifier<AuthUser> {
           );
       ref.read(authControllerProvider.notifier).replaceUser(session.user);
       state = AsyncData(session.user);
-      return const SettingsActionResult.success('Password updated.');
+      return const SettingsActionResult.success('Kata sandi diperbarui.');
     } catch (error) {
       return SettingsActionResult.failure(settingsErrorMessage(error));
     }
@@ -123,7 +123,7 @@ class SettingsSessionsController
             .where((session) => session.id != sessionId)
             .toList(growable: false),
       );
-      return const SettingsActionResult.success('Session revoked.');
+      return const SettingsActionResult.success('Sesi dicabut.');
     } catch (error) {
       state = AsyncData(previous);
       return SettingsActionResult.failure(settingsErrorMessage(error));
@@ -157,7 +157,7 @@ class SecurityPreferencesController
     if (enabled && !current.isDeviceAuthSupported) {
       state = AsyncData(
         current.copyWith(
-          actionError: 'Device authentication is not available on this device.',
+          actionError: 'Autentikasi perangkat tidak tersedia di perangkat ini.',
         ),
       );
       return;
@@ -169,7 +169,7 @@ class SecurityPreferencesController
           .authenticate();
       if (!authenticated) {
         state = AsyncData(
-          current.copyWith(actionError: 'Device authentication was cancelled.'),
+          current.copyWith(actionError: 'Autentikasi perangkat dibatalkan.'),
         );
         return;
       }
@@ -184,15 +184,15 @@ class SecurityPreferencesController
           preferences: nextPreferences,
           isSaving: false,
           actionMessage: enabled
-              ? 'Device lock enabled.'
-              : 'Device lock disabled.',
+              ? 'Kunci perangkat diaktifkan.'
+              : 'Kunci perangkat dinonaktifkan.',
         ),
       );
     } catch (_) {
       state = AsyncData(
         current.copyWith(
           isSaving: false,
-          actionError: 'Device lock preference could not be saved.',
+          actionError: 'Preferensi kunci perangkat gagal disimpan.',
         ),
       );
     }
@@ -217,10 +217,10 @@ class SecurityPreferencesState {
   bool get canConfigureDeviceLock => isDeviceAuthSupported && !isSaving;
 
   String get deviceLockValue {
-    if (!isDeviceAuthSupported) return 'Unavailable on this device';
+    if (!isDeviceAuthSupported) return 'Tidak tersedia di perangkat ini';
     return preferences.deviceLockEnabled
-        ? 'On • device authentication'
-        : 'Off • device authentication';
+        ? 'Aktif • autentikasi perangkat'
+        : 'Nonaktif • autentikasi perangkat';
   }
 
   SecurityPreferencesState copyWith({
@@ -251,7 +251,7 @@ String settingsErrorMessage(Object error) {
       final message = data['message'] ?? data['error'];
       if (message is String && message.isNotEmpty) return message;
     }
-    return 'Unable to reach Affluena. Check your connection and try again.';
+    return 'Tidak bisa terhubung ke Affluena. Periksa koneksimu dan coba lagi.';
   }
-  return 'Something went wrong. Please try again.';
+  return 'Terjadi kesalahan. Silakan coba lagi.';
 }

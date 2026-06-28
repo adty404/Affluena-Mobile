@@ -81,7 +81,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     }
 
     return DrillInScaffold(
-      title: 'Insights',
+      title: 'Wawasan',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -141,16 +141,16 @@ class _InsightsSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Report rows',
+                label: 'Baris laporan',
                 value: state.report.rows.length.toString(),
                 helper: state.reportKind.label,
                 icon: Icons.analytics_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Exports',
+                label: 'Ekspor',
                 value: state.completedExportCount.toString(),
-                helper: 'Completed',
+                helper: 'Selesai',
                 icon: Icons.file_download_outlined,
               ),
             ],
@@ -159,16 +159,16 @@ class _InsightsSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Alerts',
+                label: 'Peringatan',
                 value: state.warningAlertCount.toString(),
-                helper: 'Needs review',
+                helper: 'Perlu ditinjau',
                 icon: Icons.notifications_active_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Rules',
+                label: 'Aturan',
                 value: state.enabledRuleCount.toString(),
-                helper: 'Enabled',
+                helper: 'Aktif',
                 icon: Icons.tune_outlined,
               ),
             ],
@@ -192,7 +192,9 @@ class _InsightTabs extends StatelessWidget {
       runSpacing: AffluenaSpacing.space2,
       children: [
         // CSV export is hidden for now; only the reports/insights tabs show.
-        for (final tab in InsightTab.values.where((t) => t != InsightTab.exports))
+        for (final tab in InsightTab.values.where(
+          (t) => t != InsightTab.exports,
+        ))
           ChoiceChip(
             key: Key('insights-tab-${tab.name}'),
             showCheckmark: false,
@@ -216,7 +218,7 @@ class _ReportsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Reports'),
+        const SectionHeader(title: 'Laporan'),
         const SizedBox(height: AffluenaSpacing.space3),
         Wrap(
           spacing: AffluenaSpacing.space2,
@@ -239,8 +241,9 @@ class _ReportsSection extends StatelessWidget {
         else if (state.report.metrics.isEmpty && state.report.rows.isEmpty)
           const _EmptyState(
             icon: Icons.analytics_outlined,
-            title: 'No report data yet',
-            body: 'Reports will appear after financial activity is recorded.',
+            title: 'Belum ada data laporan',
+            body:
+                'Laporan akan muncul setelah ada aktivitas keuangan tercatat.',
           )
         else ...[
           if (state.report.metrics.isNotEmpty) ...[
@@ -263,8 +266,8 @@ class _ReportsSection extends StatelessWidget {
             ],
           ],
           SectionHeader(
-            title: '${state.reportKind.label} rows',
-            actionLabel: '${state.report.rows.length} rows',
+            title: 'Baris ${state.reportKind.label}',
+            actionLabel: '${state.report.rows.length} baris',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           for (final row in state.report.rows) ...[
@@ -294,13 +297,13 @@ class _ExportsSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Transaction CSV',
+                'CSV transaksi',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               Text(
-                'Generate this month transaction export and share or save the '
-                'CSV file.',
+                'Buat ekspor transaksi bulan ini lalu bagikan atau simpan '
+                'berkas CSV-nya.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
@@ -313,14 +316,14 @@ class _ExportsSection extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.ios_share_outlined),
-                label: Text(state.isSaving ? 'Preparing' : 'Export CSV'),
+                label: Text(state.isSaving ? 'Menyiapkan' : 'Ekspor CSV'),
               ),
             ],
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space5),
         SectionHeader(
-          title: 'Export jobs',
+          title: 'Tugas ekspor',
           actionLabel: state.exportJobTotal == 0
               ? null
               : '${state.exportJobTotal} total',
@@ -329,8 +332,8 @@ class _ExportsSection extends StatelessWidget {
         if (state.exportJobs.isEmpty)
           const _EmptyState(
             icon: Icons.file_download_outlined,
-            title: 'No export jobs',
-            body: 'Generated CSV exports will be listed here.',
+            title: 'Belum ada tugas ekspor',
+            body: 'Ekspor CSV yang dibuat akan muncul di sini.',
           )
         else
           for (final job in state.exportJobs) ...[
@@ -352,16 +355,19 @@ class _AlertsSection extends StatelessWidget {
     if (alerts.isEmpty) {
       return const _EmptyState(
         icon: Icons.notifications_none_outlined,
-        title: 'No alerts',
+        title: 'Belum ada peringatan',
         body:
-            'Budget and due alerts will appear here when attention is needed.',
+            'Peringatan anggaran dan jatuh tempo akan muncul di sini saat perlu diperhatikan.',
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(title: 'Alerts', actionLabel: '${alerts.length} total'),
+        SectionHeader(
+          title: 'Peringatan',
+          actionLabel: '${alerts.length} total',
+        ),
         const SizedBox(height: AffluenaSpacing.space3),
         for (final alert in alerts) ...[
           _AlertCard(alert: alert),
@@ -383,15 +389,16 @@ class _ActivitySection extends StatelessWidget {
     if (activities.isEmpty) {
       return const _EmptyState(
         icon: Icons.history_outlined,
-        title: 'No activity',
-        body: 'Recent audit trail items will appear after account changes.',
+        title: 'Belum ada aktivitas',
+        body:
+            'Catatan jejak audit terbaru akan muncul setelah ada perubahan akun.',
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(title: 'Activity', actionLabel: '$total total'),
+        SectionHeader(title: 'Aktivitas', actionLabel: '$total total'),
         const SizedBox(height: AffluenaSpacing.space3),
         for (final activity in activities) ...[
           _ActivityCard(activity: activity),
@@ -413,15 +420,15 @@ class _RulesSection extends StatelessWidget {
     if (state.rules.isEmpty) {
       return const _EmptyState(
         icon: Icons.tune_outlined,
-        title: 'No notification rules',
-        body: 'Notification preferences will appear when defaults are seeded.',
+        title: 'Belum ada aturan notifikasi',
+        body: 'Preferensi notifikasi akan muncul saat nilai bawaan dibuat.',
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Notification rules'),
+        const SectionHeader(title: 'Aturan notifikasi'),
         const SizedBox(height: AffluenaSpacing.space3),
         for (final rule in state.rules) ...[
           _NotificationRuleCard(
@@ -473,7 +480,7 @@ class _ReportRowCard extends StatelessWidget {
           Text('${row.category} · ${row.wallet}', style: textTheme.bodySmall),
           const SizedBox(height: AffluenaSpacing.space2),
           Text(
-            'Previous ${MoneyFormatter.idr(row.previousAmountMinor)} · ${row.changePercent.toStringAsFixed(1)}%',
+            'Sebelumnya ${MoneyFormatter.idr(row.previousAmountMinor)} · ${row.changePercent.toStringAsFixed(1)}%',
             style: textTheme.bodySmall,
           ),
         ],
@@ -511,7 +518,7 @@ class _ExportJobCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AffluenaSpacing.space2),
-            Text('${job.rowCount} rows', style: textTheme.bodyLarge),
+            Text('${job.rowCount} baris', style: textTheme.bodyLarge),
             const SizedBox(height: AffluenaSpacing.space1),
             Text(
               AffluenaDateFormatter.shortDate(job.createdAt),
@@ -638,7 +645,7 @@ class _NotificationRuleCard extends StatelessWidget {
           DropdownButtonFormField<NotificationChannel>(
             initialValue: rule.channel,
             decoration: const InputDecoration(
-              labelText: 'Channel',
+              labelText: 'Saluran',
               prefixIcon: Icon(Icons.campaign_outlined),
             ),
             items: [
@@ -694,7 +701,7 @@ class _InsightsLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Insights',
+      title: 'Wawasan',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -806,7 +813,7 @@ class _InsightsError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Insights',
+      title: 'Wawasan',
       body: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space5),
         child: Column(
@@ -898,14 +905,14 @@ Future<void> _openActivityDetail(BuildContext context, ActivityItem activity) {
     subtitle:
         '${_humanize(activity.actionType)} · ${_humanize(activity.entityType)}',
     rows: [
-      _DetailRow('Action', _humanize(activity.actionType)),
-      _DetailRow('Entity', _humanize(activity.entityType)),
+      _DetailRow('Aksi', _humanize(activity.actionType)),
+      _DetailRow('Entitas', _humanize(activity.entityType)),
       _DetailRow(
-        'Recorded',
+        'Dicatat',
         AffluenaDateFormatter.shortDate(activity.createdAt),
       ),
       if (activity.entityId.isNotEmpty)
-        _DetailRow('Reference ID', activity.entityId, isTechnical: true),
+        _DetailRow('ID referensi', activity.entityId, isTechnical: true),
     ],
   );
 }
@@ -932,9 +939,9 @@ Future<void> _openAlertDetail(
     ),
     body: detail.description,
     rows: [
-      _DetailRow('Type', _humanize(detail.type)),
-      _DetailRow('Module', _humanize(detail.module)),
-      _DetailRow('Raised', AffluenaDateFormatter.shortDate(detail.createdAt)),
+      _DetailRow('Jenis', _humanize(detail.type)),
+      _DetailRow('Modul', _humanize(detail.module)),
+      _DetailRow('Dibuat', AffluenaDateFormatter.shortDate(detail.createdAt)),
     ],
   );
 }
@@ -984,19 +991,19 @@ class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
         case CsvShareOutcome.unavailable:
           setState(() {
             _isSharing = false;
-            _error = 'Sharing is not available on this device.';
+            _error = 'Berbagi tidak tersedia di perangkat ini.';
           });
         case CsvShareOutcome.empty:
           setState(() {
             _isSharing = false;
-            _error = 'This export no longer has any rows to share.';
+            _error = 'Ekspor ini sudah tidak punya baris untuk dibagikan.';
           });
       }
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _isSharing = false;
-        _error = 'The export could not be shared. Please try again.';
+        _error = 'Ekspor tidak dapat dibagikan. Coba lagi.';
       });
     }
   }
@@ -1024,7 +1031,7 @@ class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      '${job.format.toUpperCase()} export',
+                      'Ekspor ${job.format.toUpperCase()}',
                       style: textTheme.titleLarge,
                     ),
                   ),
@@ -1035,11 +1042,11 @@ class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
                 ],
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              _SheetDetailRow(row: _DetailRow('Rows', '${job.rowCount}')),
+              _SheetDetailRow(row: _DetailRow('Baris', '${job.rowCount}')),
               const SizedBox(height: AffluenaSpacing.space3),
               _SheetDetailRow(
                 row: _DetailRow(
-                  'Created',
+                  'Dibuat',
                   AffluenaDateFormatter.shortDate(job.createdAt),
                 ),
               ),
@@ -1047,7 +1054,7 @@ class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
                 const SizedBox(height: AffluenaSpacing.space3),
                 _SheetDetailRow(
                   row: _DetailRow(
-                    'From',
+                    'Dari',
                     AffluenaDateFormatter.shortDate(job.fromAt!),
                   ),
                 ),
@@ -1056,7 +1063,7 @@ class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
                 const SizedBox(height: AffluenaSpacing.space3),
                 _SheetDetailRow(
                   row: _DetailRow(
-                    'To',
+                    'Sampai',
                     AffluenaDateFormatter.shortDate(job.toAt!),
                   ),
                 ),
@@ -1075,13 +1082,13 @@ class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.ios_share_outlined),
-                  label: Text(_isSharing ? 'Preparing' : 'Download / share'),
+                  label: Text(_isSharing ? 'Menyiapkan' : 'Unduh / bagikan'),
                 )
               else
                 AffluenaBanner(
                   message:
-                      'This export failed to generate, so there is no file to '
-                      'download.',
+                      'Ekspor ini gagal dibuat, jadi tidak ada berkas yang bisa '
+                      'diunduh.',
                   tone: AffluenaBannerTone.warning,
                 ),
             ],

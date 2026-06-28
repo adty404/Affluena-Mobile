@@ -41,7 +41,7 @@ class GoalScreen extends ConsumerWidget {
     }
 
     return DrillInScaffold(
-      title: 'Goals',
+      title: 'Target tabungan',
       actions: [
         IconButton(
           onPressed: state.isSaving ? null : () => showGoalFormSheet(context),
@@ -61,7 +61,7 @@ class GoalScreen extends ConsumerWidget {
             const SizedBox(height: AffluenaSpacing.space4),
           ],
           SectionHeader(
-            title: 'Saving goals',
+            title: 'Target tabungan',
             actionLabel: state.goals.isEmpty
                 ? null
                 : '${state.goals.length} total',
@@ -101,25 +101,27 @@ class GoalScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(isCancel ? 'Cancel this goal?' : 'Mark goal achieved?'),
+        title: Text(
+          isCancel ? 'Batalkan target ini?' : 'Tandai target tercapai?',
+        ),
         content: Text(
           isCancel
-              ? 'Cancelling stops tracking progress for "${goal.name}". '
-                    'Collected funds stay in the goal wallet.'
-              : 'This marks "${goal.name}" as achieved. You can still view it '
-                    'in your list.',
+              ? 'Membatalkan menghentikan pelacakan progres untuk "${goal.name}". '
+                    'Dana yang terkumpul tetap di dompet target.'
+              : 'Ini menandai "${goal.name}" sebagai tercapai. Kamu masih bisa '
+                    'melihatnya di daftarmu.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep active'),
+            child: const Text('Tetap aktif'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: isCancel
                 ? FilledButton.styleFrom(backgroundColor: colors.coral)
                 : null,
-            child: Text(isCancel ? 'Cancel goal' : 'Mark achieved'),
+            child: Text(isCancel ? 'Batalkan target' : 'Tandai tercapai'),
           ),
         ],
       ),
@@ -144,16 +146,16 @@ class _GoalSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Saved',
+                label: 'Tersimpan',
                 value: MoneyFormatter.idr(state.totalSavedMinor),
-                helper: 'Across goals',
+                helper: 'Semua target',
                 icon: Icons.savings_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
                 label: 'Target',
                 value: MoneyFormatter.idr(state.totalTargetMinor),
-                helper: 'Planned',
+                helper: 'Direncanakan',
                 icon: Icons.flag_outlined,
               ),
             ],
@@ -162,16 +164,16 @@ class _GoalSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Active goals',
+                label: 'Target aktif',
                 value: state.activeCount.toString(),
-                helper: 'In progress',
+                helper: 'Sedang berjalan',
                 icon: Icons.track_changes_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Shared',
+                label: 'Dibagikan',
                 value: state.sharedCount.toString(),
-                helper: 'With members',
+                helper: 'Dengan anggota',
                 icon: Icons.group_outlined,
               ),
             ],
@@ -230,9 +232,7 @@ class _GoalCard extends StatelessWidget {
                           label: goal.status.label,
                         ),
                         StatusBadge(
-                          label:
-                              '${goal.members.length} '
-                              '${goal.members.length == 1 ? 'member' : 'members'}',
+                          label: '${goal.members.length} anggota',
                           tone: StatusTone.neutral,
                         ),
                       ],
@@ -263,7 +263,10 @@ class _GoalCard extends StatelessWidget {
             style: textTheme.headlineSmall,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
-          Text('${goal.progressPercent}% saved', style: textTheme.bodySmall),
+          Text(
+            '${goal.progressPercent}% tersimpan',
+            style: textTheme.bodySmall,
+          ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             'Target ${MoneyFormatter.idr(goal.targetAmountMinor)}',
@@ -272,8 +275,8 @@ class _GoalCard extends StatelessWidget {
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             goal.deadline == null
-                ? 'No deadline'
-                : 'Deadline ${AffluenaDateFormatter.shortDate(goal.deadline!)}',
+                ? 'Tanpa tenggat'
+                : 'Tenggat ${AffluenaDateFormatter.shortDate(goal.deadline!)}',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
@@ -290,14 +293,14 @@ class _GoalCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: goal.isActive ? onContribute : null,
                   icon: const Icon(Icons.add_card_outlined),
-                  label: const Text('Contribute'),
+                  label: const Text('Setor'),
                 ),
               ),
               const SizedBox(width: AffluenaSpacing.space2),
               OutlinedButton.icon(
                 onPressed: onInvite,
                 icon: const Icon(Icons.person_add_alt_1_outlined),
-                label: const Text('Invite'),
+                label: const Text('Undang'),
               ),
             ],
           ),
@@ -333,12 +336,18 @@ class _GoalOverflowMenu extends StatelessWidget {
         }
       },
       itemBuilder: (context) => [
-        const PopupMenuItem(value: 'edit', child: Text('Edit goal')),
+        const PopupMenuItem(value: 'edit', child: Text('Ubah target')),
         if (goal.isActive) ...[
-          const PopupMenuItem(value: 'achieved', child: Text('Mark achieved')),
+          const PopupMenuItem(
+            value: 'achieved',
+            child: Text('Tandai tercapai'),
+          ),
           PopupMenuItem(
             value: 'cancelled',
-            child: Text('Cancel goal', style: TextStyle(color: colors.coral)),
+            child: Text(
+              'Batalkan target',
+              style: TextStyle(color: colors.coral),
+            ),
           ),
         ],
       ],
@@ -363,18 +372,18 @@ class _GoalEmptyState extends StatelessWidget {
         children: [
           Icon(Icons.flag_outlined, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No goals yet', style: textTheme.titleMedium),
+          Text('Belum ada target', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Create a saving target and a goal wallet tracks the balance you '
-            'collect toward it.',
+            'Buat target tabungan, lalu dompet target akan melacak saldo yang '
+            'kamu kumpulkan untuk mencapainya.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
           FilledButton.icon(
             onPressed: onCreate,
             icon: const Icon(Icons.add),
-            label: const Text('Create goal'),
+            label: const Text('Buat target'),
           ),
         ],
       ),
@@ -388,7 +397,7 @@ class _GoalLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Goals',
+      title: 'Target tabungan',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -472,11 +481,14 @@ class _GoalError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Goals',
+      title: 'Target tabungan',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
-          AffluenaBanner.error('We could not load goals.', onRetry: onRetry),
+          AffluenaBanner.error(
+            'Kami tidak dapat memuat target.',
+            onRetry: onRetry,
+          ),
         ],
       ),
     );

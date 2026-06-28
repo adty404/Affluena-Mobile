@@ -11,8 +11,8 @@ final auditLogControllerProvider =
     NotifierProvider<AuditLogController, AuditLogState>(AuditLogController.new);
 
 enum AuditLogTab {
-  activity('Activity'),
-  system('System logs');
+  activity('Aktivitas'),
+  system('Log sistem');
 
   const AuditLogTab(this.label);
 
@@ -50,7 +50,7 @@ class AuditLogController extends Notifier<AuditLogState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Audit logs could not be loaded.',
+        loadError: 'Log audit tidak dapat dimuat.',
       );
     }
   }

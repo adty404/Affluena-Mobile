@@ -123,14 +123,14 @@ class WalletMemberRow extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: isPending ? null : onReject,
-                    child: const Text('Decline'),
+                    child: const Text('Tolak'),
                   ),
                 ),
                 const SizedBox(width: AffluenaSpacing.space3),
                 Expanded(
                   child: FilledButton(
                     onPressed: isPending ? null : onAccept,
-                    child: Text(isPending ? 'Working…' : 'Accept'),
+                    child: Text(isPending ? 'Memproses…' : 'Terima'),
                   ),
                 ),
               ],
@@ -158,14 +158,14 @@ class _MembersEmpty extends StatelessWidget {
           Icon(Icons.group_outlined, color: colors.forest, size: 32),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
-            'No one shares this wallet yet',
+            'Belum ada yang berbagi dompet ini',
             style: textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AffluenaSpacing.space2),
           Text(
-            'Invite someone by email to track balances and transactions '
-            'together.',
+            'Undang seseorang lewat email untuk memantau saldo dan transaksi '
+            'bersama.',
             style: textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),
@@ -173,7 +173,7 @@ class _MembersEmpty extends StatelessWidget {
           FilledButton.icon(
             onPressed: onInvite,
             icon: const Icon(Icons.person_add_alt_1_outlined),
-            label: const Text('Invite member'),
+            label: const Text('Undang anggota'),
           ),
         ],
       ),

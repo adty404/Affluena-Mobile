@@ -20,7 +20,7 @@ class _SplitTagChips extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Tags', style: Theme.of(context).textTheme.bodySmall),
+          Text('Tag', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: AffluenaSpacing.space2),
           Wrap(
             spacing: AffluenaSpacing.space2,
@@ -28,7 +28,7 @@ class _SplitTagChips extends StatelessWidget {
             children: [
               ChoiceChip(
                 key: const Key('split-tag-chip-none'),
-                label: const Text('Optional'),
+                label: const Text('Opsional'),
                 selected: selectedTagId == null,
                 onSelected: enabled ? (_) => onChanged(null) : null,
               ),
@@ -55,7 +55,7 @@ class _SplitBillIntro extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Text(
-      'Record one expense and create receivable debts in the same flow.',
+      'Catat satu pengeluaran dan buat catatan piutang dalam satu alur.',
       style: textTheme.bodySmall,
     );
   }
@@ -85,14 +85,14 @@ class _SplitSummary extends StatelessWidget {
             children: [
               Expanded(
                 child: _MetricTile(
-                  label: 'Total bill',
+                  label: 'Total tagihan',
                   value: MoneyFormatter.idr(totalAmount),
                 ),
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               Expanded(
                 child: _MetricTile(
-                  label: 'Your share',
+                  label: 'Bagianmu',
                   value: MoneyFormatter.idr(userShare < 0 ? 0 : userShare),
                 ),
               ),
@@ -103,14 +103,14 @@ class _SplitSummary extends StatelessWidget {
             children: [
               Expanded(
                 child: _MetricTile(
-                  label: 'Participant share',
+                  label: 'Bagian peserta',
                   value: MoneyFormatter.idr(participantTotal),
                 ),
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               Expanded(
                 child: _MetricTile(
-                  label: 'Participants',
+                  label: 'Peserta',
                   value: '$participantCount',
                 ),
               ),
@@ -175,7 +175,7 @@ class _ParticipantList extends StatelessWidget {
                   Icon(Icons.group_add_outlined, color: colors.inkMuted),
                   const SizedBox(height: AffluenaSpacing.space2),
                   Text(
-                    'Add the people splitting this bill with you.',
+                    'Tambahkan orang-orang yang membagi tagihan ini denganmu.',
                     style: textTheme.bodySmall?.copyWith(
                       color: colors.inkMuted,
                     ),
@@ -200,7 +200,7 @@ class _ParticipantList extends StatelessWidget {
             key: const Key('split-add-participant-button'),
             onPressed: onAdd,
             icon: const Icon(Icons.person_add_alt_1_outlined),
-            label: const Text('Add participant'),
+            label: const Text('Tambah peserta'),
           ),
         ],
       ),
@@ -260,7 +260,7 @@ class _ParticipantRow extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Remove participant',
+            tooltip: 'Hapus peserta',
             visualDensity: VisualDensity.compact,
             onPressed: onRemove,
             icon: Icon(Icons.delete_outline, color: colors.coral),

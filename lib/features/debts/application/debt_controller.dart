@@ -81,8 +81,8 @@ class DebtController extends Notifier<DebtState> {
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
-        loadError: reset ? 'Debts could not be loaded.' : state.loadError,
-        actionError: reset ? null : 'Could not load more debts.',
+        loadError: reset ? 'Utang gagal dimuat.' : state.loadError,
+        actionError: reset ? null : 'Utang lainnya gagal dimuat.',
       );
     }
   }
@@ -109,7 +109,7 @@ class DebtController extends Notifier<DebtState> {
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'Debt could not be created.',
+        actionError: 'Utang gagal dibuat.',
       );
     }
   }
@@ -124,7 +124,7 @@ class DebtController extends Notifier<DebtState> {
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'Debt could not be updated.',
+        actionError: 'Utang gagal diperbarui.',
       );
     }
   }
@@ -139,7 +139,7 @@ class DebtController extends Notifier<DebtState> {
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'Debt payment could not be recorded.',
+        actionError: 'Pembayaran utang gagal dicatat.',
       );
     }
   }
@@ -211,9 +211,9 @@ class DebtState {
       .where((debt) => debt.status == DebtStatus.paidOff)
       .fold(0, (total, debt) => total + debt.paidAmountMinor);
 
-  String walletName(String id) => walletNames[id] ?? 'Unknown wallet';
+  String walletName(String id) => walletNames[id] ?? 'Dompet tidak dikenal';
 
-  String categoryName(String id) => categoryNames[id] ?? 'Uncategorized';
+  String categoryName(String id) => categoryNames[id] ?? 'Tanpa kategori';
 
   List<Category> disbursementCategories(DebtType type) {
     return type == DebtType.payable ? incomeCategories : expenseCategories;

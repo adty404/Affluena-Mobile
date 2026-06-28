@@ -2,12 +2,12 @@ import '../../../core/api/api_json.dart';
 import '../../../core/api/pagination.dart';
 
 enum ReportKind {
-  overview('overview', 'Overview'),
-  income('income', 'Income'),
-  expense('expense', 'Expense'),
-  cashflow('cashflow', 'Cashflow'),
-  debt('debt', 'Debt'),
-  goal('goal', 'Goal');
+  overview('overview', 'Ringkasan'),
+  income('income', 'Pemasukan'),
+  expense('expense', 'Pengeluaran'),
+  cashflow('cashflow', 'Arus kas'),
+  debt('debt', 'Utang'),
+  goal('goal', 'Target tabungan');
 
   const ReportKind(this.apiValue, this.label);
 
@@ -33,10 +33,10 @@ enum ReportRowStatus {
 
   String get label {
     return switch (this) {
-      ReportRowStatus.healthy => 'Healthy',
-      ReportRowStatus.watch => 'Watch',
-      ReportRowStatus.critical => 'Critical',
-      ReportRowStatus.growth => 'Growth',
+      ReportRowStatus.healthy => 'Sehat',
+      ReportRowStatus.watch => 'Pantau',
+      ReportRowStatus.critical => 'Kritis',
+      ReportRowStatus.growth => 'Tumbuh',
     };
   }
 }
@@ -55,8 +55,8 @@ enum ExportJobStatus {
 
   String get label {
     return switch (this) {
-      ExportJobStatus.completed => 'Completed',
-      ExportJobStatus.failed => 'Failed',
+      ExportJobStatus.completed => 'Selesai',
+      ExportJobStatus.failed => 'Gagal',
     };
   }
 }
@@ -80,17 +80,17 @@ enum InsightSeverity {
   String get label {
     return switch (this) {
       InsightSeverity.info => 'Info',
-      InsightSeverity.success => 'Success',
-      InsightSeverity.warning => 'Warning',
-      InsightSeverity.danger => 'Danger',
+      InsightSeverity.success => 'Berhasil',
+      InsightSeverity.warning => 'Peringatan',
+      InsightSeverity.danger => 'Bahaya',
     };
   }
 }
 
 enum NotificationChannel {
   email('email', 'Email'),
-  inApp('in-app', 'In-app'),
-  both('both', 'Both');
+  inApp('in-app', 'Dalam aplikasi'),
+  both('both', 'Keduanya');
 
   const NotificationChannel(this.apiValue, this.label);
 

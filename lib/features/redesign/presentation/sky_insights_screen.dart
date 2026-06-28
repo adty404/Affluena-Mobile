@@ -42,7 +42,7 @@ class SkyInsightsView extends ConsumerWidget {
       padding: AffluenaInsets.screen,
       children: [
         Text(
-          'Insights',
+          'Wawasan',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,

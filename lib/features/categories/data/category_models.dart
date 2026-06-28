@@ -10,8 +10,8 @@ enum CategoryType {
   /// Human-readable label for UI surfaces. Never leak the raw lowercase enum
   /// value ('income'/'expense') as user-facing copy.
   String get label => switch (this) {
-    CategoryType.income => 'Income',
-    CategoryType.expense => 'Expense',
+    CategoryType.income => 'Pemasukan',
+    CategoryType.expense => 'Pengeluaran',
   };
 
   static CategoryType fromApiValue(String value) {

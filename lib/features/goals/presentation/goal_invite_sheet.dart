@@ -56,7 +56,7 @@ class _GoalInviteSheetState extends ConsumerState<_GoalInviteSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Invite member', style: textTheme.titleLarge),
+              Text('Undang anggota', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space1),
               Text(
                 widget.goal.name,
@@ -83,7 +83,7 @@ class _GoalInviteSheetState extends ConsumerState<_GoalInviteSheet> {
               FilledButton(
                 key: const Key('goal-invite-save-button'),
                 onPressed: _isSaving ? null : _save,
-                child: Text(_isSaving ? 'Sending...' : 'Send invite'),
+                child: Text(_isSaving ? 'Mengirim...' : 'Kirim undangan'),
               ),
             ],
           ),
@@ -100,7 +100,7 @@ class _GoalInviteSheetState extends ConsumerState<_GoalInviteSheet> {
   Future<void> _save() async {
     final email = _emailController.text.trim();
     if (!_isValidEmail(email)) {
-      setState(() => _error = 'Enter a valid email address.');
+      setState(() => _error = 'Masukkan alamat email yang valid.');
       return;
     }
 
@@ -120,7 +120,7 @@ class _GoalInviteSheetState extends ConsumerState<_GoalInviteSheet> {
     }
     setState(() {
       _isSaving = false;
-      _error = 'Invite could not be sent. Check the email and try again.';
+      _error = 'Undangan tidak dapat dikirim. Periksa email dan coba lagi.';
     });
   }
 

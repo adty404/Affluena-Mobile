@@ -32,7 +32,7 @@ Future<String?> showCategoryTreePicker({
   required List<CategoryTreeEntry> categories,
   String? selectedId,
   bool allowNone = false,
-  String noneLabel = 'No category',
+  String noneLabel = 'Tanpa kategori',
 }) {
   return showModalBottomSheet<String>(
     context: context,
@@ -119,7 +119,7 @@ class _CategoryTreePickerSheetState extends State<_CategoryTreePickerSheet> {
               textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.search),
-                hintText: 'Search categories',
+                hintText: 'Cari kategori',
               ),
               onChanged: (value) => setState(() => _query = value),
             ),
@@ -142,7 +142,7 @@ class _CategoryTreePickerSheetState extends State<_CategoryTreePickerSheet> {
                       ),
                       child: Center(
                         child: Text(
-                          'No categories found',
+                          'Kategori tidak ditemukan.',
                           style: textTheme.bodyMedium?.copyWith(
                             color: colors.inkMuted,
                           ),
@@ -312,7 +312,7 @@ class _CategoryTreeTile extends StatelessWidget {
                         color: colors.inkMuted,
                       ),
                       onPressed: onToggle,
-                      tooltip: node.collapsed ? 'Expand' : 'Collapse',
+                      tooltip: node.collapsed ? 'Buka' : 'Tutup',
                     ),
                 ],
               ),

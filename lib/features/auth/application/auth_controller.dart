@@ -95,7 +95,7 @@ class AuthController extends Notifier<AuthState> {
     try {
       await ref.read(authRepositoryProvider).requestPasswordReset(email.trim());
       state = const AuthState.unauthenticated(
-        message: 'Check your email for a reset code.',
+        message: 'Periksa emailmu untuk kode reset.',
         messageTone: AuthMessageTone.success,
       );
       return true;
@@ -120,7 +120,7 @@ class AuthController extends Notifier<AuthState> {
           .read(authRepositoryProvider)
           .resetPassword(token: token.trim(), newPassword: newPassword);
       state = const AuthState.unauthenticated(
-        message: 'Password updated. Log in with your new password.',
+        message: 'Kata sandi diperbarui. Masuk dengan kata sandi barumu.',
         messageTone: AuthMessageTone.success,
       );
       return true;
@@ -139,7 +139,7 @@ class AuthController extends Notifier<AuthState> {
       state = AuthState.authenticated(currentUser, isSubmitting: true);
     }
     await ref.read(secureTokenStoreProvider).clear();
-    state = const AuthState.unauthenticated(message: 'You have logged out.');
+    state = const AuthState.unauthenticated(message: 'Kamu telah keluar.');
   }
 
   void replaceUser(AuthUser user) {
@@ -187,9 +187,9 @@ class AuthController extends Notifier<AuthState> {
 
   String _restoreSessionMessage(Object error) {
     if (_isSessionExpired(error)) {
-      return 'Session expired. Please log in again.';
+      return 'Sesi berakhir. Silakan masuk lagi.';
     }
-    return 'We could not restore your session. Please log in again.';
+    return 'Kami tidak bisa memulihkan sesimu. Silakan masuk lagi.';
   }
 
   bool _isSessionExpired(Object error) {
@@ -208,8 +208,8 @@ class AuthController extends Notifier<AuthState> {
         final message = data['message'] ?? data['error'];
         if (message is String && message.isNotEmpty) return message;
       }
-      return 'Unable to reach Affluena. Check your connection and try again.';
+      return 'Tidak bisa terhubung ke Affluena. Periksa koneksimu dan coba lagi.';
     }
-    return 'Something went wrong. Please try again.';
+    return 'Terjadi kesalahan. Silakan coba lagi.';
   }
 }

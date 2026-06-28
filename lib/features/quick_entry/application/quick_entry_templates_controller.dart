@@ -89,7 +89,7 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Quick-entry templates could not be loaded.',
+        loadError: 'Template catat cepat gagal dimuat.',
       );
     }
   }
@@ -100,7 +100,7 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
   }) async {
     if (!_isValidTemplateRequest(request)) {
       state = state.copyWith(
-        actionError: 'Complete the required template fields.',
+        actionError: 'Lengkapi kolom template yang wajib diisi.',
         message: null,
       );
       return false;
@@ -123,8 +123,8 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
       state = state.copyWith(
         isSaving: false,
         actionError: template == null
-            ? 'Template could not be created.'
-            : 'Template could not be updated.',
+            ? 'Template gagal dibuat.'
+            : 'Template gagal diperbarui.',
       );
       return false;
     }
@@ -142,7 +142,7 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
       ref.invalidate(quickEntryLookupProvider);
       await load();
     } catch (_) {
-      state = state.copyWith(actionError: 'Template could not be deleted.');
+      state = state.copyWith(actionError: 'Template gagal dihapus.');
     }
   }
 
@@ -158,13 +158,13 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
       ref.invalidateFinancialData();
       state = state.copyWith(
         isSaving: false,
-        message: '${template.name} recorded.',
+        message: '${template.name} dicatat.',
       );
       return true;
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'Template could not be executed.',
+        actionError: 'Template gagal dijalankan.',
       );
       return false;
     }
@@ -217,20 +217,21 @@ class QuickEntryTemplatesState {
 
   Tag? tagById(String? id) => _findById(tags, id);
 
-  String walletName(String? id) => walletById(id)?.name ?? 'Unknown wallet';
+  String walletName(String? id) =>
+      walletById(id)?.name ?? 'Dompet tidak dikenal';
 
   String categoryName(String? id) {
-    if (id == null) return 'No category';
-    return categoryById(id)?.name ?? 'Unknown category';
+    if (id == null) return 'Tanpa kategori';
+    return categoryById(id)?.name ?? 'Kategori tidak dikenal';
   }
 
   String tagNames(List<String> ids) {
-    if (ids.isEmpty) return 'No tags';
+    if (ids.isEmpty) return 'Tanpa tag';
     final names = [
       for (final id in ids)
         if (tagById(id) case final tag?) tagLabel(tag.name),
     ];
-    return names.isEmpty ? 'Unknown tags' : names.join(', ');
+    return names.isEmpty ? 'Tag tidak dikenal' : names.join(', ');
   }
 
   QuickEntryTemplatesState copyWith({

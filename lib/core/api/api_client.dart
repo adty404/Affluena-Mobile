@@ -7,7 +7,7 @@ import 'api_error.dart';
 import 'api_json.dart';
 
 const _networkErrorMessage =
-    'Unable to reach Affluena. Check your connection and try again.';
+    'Tidak bisa terhubung ke Affluena. Periksa koneksimu dan coba lagi.';
 
 final dioProvider = Provider<Dio>((ref) {
   final tokenStore = ref.watch(secureTokenStoreProvider);

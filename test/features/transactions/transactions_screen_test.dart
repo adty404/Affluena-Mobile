@@ -47,17 +47,21 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Expense'));
+    await tester.tap(find.text('Pengeluaran'));
     await tester.pumpAndSettle();
 
     expect(repository.requestedTypes, contains(TransactionType.expense));
 
     await tester.scrollUntilVisible(
-      find.text('Load more'),
+      find.text('Muat lebih banyak'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.text('Load more'));
+    // The drill-in AppBar shortens the body, so nudge the button fully into
+    // view before tapping (it can otherwise settle just below the fold).
+    await tester.ensureVisible(find.text('Muat lebih banyak'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Muat lebih banyak'));
     await tester.pumpAndSettle();
 
     expect(repository.requestedOffsets, contains(5));
@@ -78,21 +82,23 @@ void main() {
     await tester.tap(find.text('Groceries at Indomaret'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Transaction detail'), findsOneWidget);
+    expect(find.text('Detail transaksi'), findsOneWidget);
     expect(find.text('GoPay'), findsWidgets);
     expect(find.text('Food & Dining'), findsWidgets);
     // The detail shows the full date AND time-of-day, not just the date.
-    expect(find.text('Date & time'), findsOneWidget);
+    expect(find.text('Tanggal & waktu'), findsOneWidget);
     expect(
-      find.text(AffluenaDateFormatter.dateTime(groceriesTransaction.transactionAt)),
+      find.text(
+        AffluenaDateFormatter.dateTime(groceriesTransaction.transactionAt),
+      ),
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Delete transaction'));
+    await tester.tap(find.text('Hapus transaksi'));
     await tester.pumpAndSettle();
 
     // Delete now routes through a coral confirmation dialog before mutating.
-    expect(find.text('Delete this transaction?'), findsOneWidget);
+    expect(find.text('Hapus transaksi ini?'), findsOneWidget);
     await tester.tap(find.byKey(const Key('transaction-delete-confirm')));
     await tester.pumpAndSettle();
 
@@ -123,7 +129,7 @@ void main() {
 
     await tester.tap(find.text('Groceries at Indomaret'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete transaction'));
+    await tester.tap(find.text('Hapus transaksi'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('transaction-delete-confirm')));
     await tester.pumpAndSettle();
@@ -137,7 +143,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Movie Night'), findsOneWidget);
-    expect(find.text('Load more'), findsNothing);
+    expect(find.text('Muat lebih banyak'), findsNothing);
   });
 
   testWidgets('delete failure preserves row and shows error', (tester) async {
@@ -153,7 +159,7 @@ void main() {
 
     await tester.tap(find.text('Groceries at Indomaret'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete transaction'));
+    await tester.tap(find.text('Hapus transaksi'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('transaction-delete-confirm')));
     await tester.pumpAndSettle();
@@ -161,6 +167,6 @@ void main() {
     expect(repository.deletedIds, [groceriesTransaction.id]);
     expect(find.text('Groceries at Indomaret'), findsOneWidget);
     // Failure surfaces as a coral error banner on the list.
-    expect(find.text('Transaction could not be deleted.'), findsWidgets);
+    expect(find.text('Transaksi tidak dapat dihapus.'), findsWidgets);
   });
 }

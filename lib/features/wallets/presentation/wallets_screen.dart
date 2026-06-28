@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../application/wallets_controller.dart';
@@ -40,22 +41,17 @@ class _WalletsContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Dompet',
+      actions: [
+        IconButton.filledTonal(
+          onPressed: () => _showWalletForm(context, ref),
+          icon: const Icon(Icons.add),
+        ),
+      ],
+      body: ListView(
         padding: AffluenaInsets.screen,
         children: [
-          Row(
-            children: [
-              Expanded(child: Text('Wallets', style: textTheme.headlineMedium)),
-              IconButton.filledTonal(
-                onPressed: () => _showWalletForm(context, ref),
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
           if (wallets.isEmpty) ...[
             const _EmptyWalletState(),
           ] else ...[
@@ -63,13 +59,13 @@ class _WalletsContent extends ConsumerWidget {
               child: Row(
                 children: [
                   MetricTile(
-                    label: 'Total balance',
+                    label: 'Total saldo',
                     value: MoneyFormatter.idr(_totalBalance(wallets)),
-                    helper: 'Across ${wallets.length} wallets',
+                    helper: 'Dari ${wallets.length} dompet',
                   ),
                   const SizedBox(width: AffluenaSpacing.space3),
                   MetricTile(
-                    label: 'Shared',
+                    label: 'Dibagikan',
                     value: _sharedWalletLabel(wallets),
                     helper: _sharedWalletHelper(wallets),
                     icon: Icons.group_outlined,
@@ -78,7 +74,7 @@ class _WalletsContent extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AffluenaSpacing.space6),
-            const SectionHeader(title: 'Your wallets'),
+            const SectionHeader(title: 'Dompet kamu'),
             const SizedBox(height: AffluenaSpacing.space3),
             GridView.builder(
               shrinkWrap: true,
@@ -206,10 +202,10 @@ class _EmptyWalletState extends StatelessWidget {
         children: [
           const Icon(Icons.account_balance_wallet_outlined),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No wallets yet', style: textTheme.titleMedium),
+          Text('Belum ada dompet', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Create a wallet before recording transactions.',
+            'Buat dompet dulu sebelum mencatat transaksi.',
             style: textTheme.bodySmall,
           ),
         ],
@@ -223,18 +219,15 @@ class _WalletsLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Dompet',
+      body: ListView(
         padding: AffluenaInsets.screen,
-        children: [
-          Text('Wallets', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
-          const AffluenaCard(
+        children: const [
+          AffluenaCard(
             child: SizedBox(
               height: 120,
-              child: Center(child: Text('Loading wallets')),
+              child: Center(child: Text('Memuat dompet')),
             ),
           ),
         ],
@@ -250,24 +243,21 @@ class _WalletsError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return SafeArea(
-      child: ListView(
+    return DrillInScaffold(
+      title: 'Dompet',
+      body: ListView(
         padding: AffluenaInsets.screen,
         children: [
-          Text('Wallets unavailable', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
           AffluenaCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('We could not load your wallets.'),
+                const Text('Kami tidak dapat memuat dompet kamu.'),
                 const SizedBox(height: AffluenaSpacing.space4),
                 FilledButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
+                  label: const Text('Coba lagi'),
                 ),
               ],
             ),
@@ -332,19 +322,19 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isEditing ? 'Edit wallet' : 'New wallet',
+              isEditing ? 'Ubah dompet' : 'Dompet baru',
               style: textTheme.titleLarge,
             ),
             const SizedBox(height: AffluenaSpacing.space4),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: const InputDecoration(labelText: 'Nama'),
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: AffluenaSpacing.space3),
             DropdownButtonFormField<WalletType>(
               initialValue: _type,
-              decoration: const InputDecoration(labelText: 'Type'),
+              decoration: const InputDecoration(labelText: 'Jenis'),
               items: [
                 for (final type in _editableWalletTypes)
                   DropdownMenuItem(
@@ -360,9 +350,7 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
               const SizedBox(height: AffluenaSpacing.space3),
               TextField(
                 controller: _balanceController,
-                decoration: const InputDecoration(
-                  labelText: 'Starting balance',
-                ),
+                decoration: const InputDecoration(labelText: 'Saldo awal'),
                 keyboardType: TextInputType.number,
               ),
             ],
@@ -372,7 +360,7 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
             if (isEditing) ...[
               const SizedBox(height: AffluenaSpacing.space4),
               Text(
-                'Current balance ${MoneyFormatter.idr(widget.wallet!.balanceMinor)}',
+                'Saldo saat ini ${MoneyFormatter.idr(widget.wallet!.balanceMinor)}',
                 style: textTheme.bodySmall,
               ),
               const SizedBox(height: AffluenaSpacing.space2),
@@ -382,7 +370,7 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
                   key: const Key('wallet-edit-adjust-balance'),
                   onPressed: _isSaving ? null : _adjustBalance,
                   icon: const Icon(Icons.tune_outlined, size: 18),
-                  label: const Text('Adjust balance (penyesuaian)'),
+                  label: const Text('Sesuaikan saldo (penyesuaian)'),
                 ),
               ),
             ],
@@ -398,7 +386,7 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
               width: double.infinity,
               child: FilledButton(
                 onPressed: _isSaving ? null : _save,
-                child: Text(_isSaving ? 'Saving...' : 'Save wallet'),
+                child: Text(_isSaving ? 'Menyimpan...' : 'Simpan dompet'),
               ),
             ),
           ],
@@ -421,7 +409,7 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Wallet name is required.');
+      setState(() => _error = 'Nama dompet wajib diisi.');
       return;
     }
 
@@ -455,7 +443,7 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _error = 'Wallet could not be saved.';
+        _error = 'Dompet tidak dapat disimpan.';
       });
     }
   }
@@ -481,7 +469,7 @@ int _totalBalance(List<Wallet> wallets) {
 
 String _sharedWalletLabel(List<Wallet> wallets) {
   final count = wallets.where(_isShared).length;
-  return count == 1 ? '1 wallet' : '$count wallets';
+  return count == 1 ? '1 dompet' : '$count dompet';
 }
 
 String _sharedWalletHelper(List<Wallet> wallets) {
@@ -489,8 +477,8 @@ String _sharedWalletHelper(List<Wallet> wallets) {
     0,
     (total, wallet) => total + wallet.members.length,
   );
-  if (members == 0) return 'Private only';
-  return members == 1 ? '1 member' : '$members members';
+  if (members == 0) return 'Hanya pribadi';
+  return members == 1 ? '1 anggota' : '$members anggota';
 }
 
 bool _isShared(Wallet wallet) {
@@ -499,10 +487,10 @@ bool _isShared(Wallet wallet) {
 }
 
 String _walletDescription(Wallet wallet) {
-  if (wallet.isGoal) return 'Read-only goal wallet';
+  if (wallet.isGoal) return 'Dompet target hanya-baca';
   if (wallet.description.isNotEmpty) return wallet.description;
-  if (_isShared(wallet)) return 'Shared wallet';
-  return 'Private wallet';
+  if (_isShared(wallet)) return 'Dompet bersama';
+  return 'Dompet pribadi';
 }
 
 String _walletKey(Wallet wallet) {

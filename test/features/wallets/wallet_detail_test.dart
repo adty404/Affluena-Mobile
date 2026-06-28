@@ -37,10 +37,10 @@ void main() {
 
     expect(find.text('BCA Primary'), findsOneWidget);
     expect(find.text('Rp 15.200.000'), findsOneWidget);
-    expect(find.text('Owner'), findsOneWidget);
+    expect(find.text('Pemilik'), findsOneWidget);
     expect(find.text('Rp 2.500.000'), findsOneWidget);
     expect(find.text('Rp 700.000'), findsOneWidget);
-    expect(find.text('3 transactions'), findsOneWidget);
+    expect(find.text('3 transaksi'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('partner@affluena.test'),
       240,
@@ -48,19 +48,19 @@ void main() {
     );
     expect(find.text('partner@affluena.test'), findsOneWidget);
 
-    await tester.tap(find.text('Invite member'));
+    await tester.tap(find.text('Undang anggota'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Email address'),
+      find.widgetWithText(TextField, 'Alamat email'),
       'friend@affluena.test',
     );
-    await tester.tap(find.text('Send invite'));
+    await tester.tap(find.text('Kirim undangan'));
     await tester.pumpAndSettle();
 
     expect(repository.inviteWalletIds, [sharedWalletId]);
     expect(repository.inviteRequests.single.email, 'friend@affluena.test');
     expect(find.text('friend@affluena.test'), findsOneWidget);
-    expect(find.text('Pending'), findsAtLeastNWidgets(1));
+    expect(find.text('Menunggu'), findsAtLeastNWidgets(1));
   });
 
   testWidgets('invite error keeps the sheet open with feedback', (
@@ -84,20 +84,20 @@ void main() {
       240,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.text('Invite member'));
+    await tester.tap(find.text('Undang anggota'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Email address'),
+      find.widgetWithText(TextField, 'Alamat email'),
       'bad-email',
     );
-    await tester.tap(find.text('Send invite'));
+    await tester.tap(find.text('Kirim undangan'));
     await tester.pumpAndSettle();
 
     expect(repository.inviteRequests.single.email, 'bad-email');
     // The sheet stays OPEN on failure (its title is still mounted) and shows
     // the coral error banner instead of dismissing.
-    expect(find.text('Invite member'), findsWidgets);
-    expect(find.text('Invite could not be sent.'), findsOneWidget);
+    expect(find.text('Undang anggota'), findsWidgets);
+    expect(find.text('Undangan tidak dapat dikirim.'), findsOneWidget);
   });
 
   testWidgets('detail load error is retryable', (tester) async {
@@ -122,8 +122,8 @@ void main() {
 
     // The drill-in AppBar shows the title; the error renders as a coral
     // AffluenaBanner with a localized retry action.
-    expect(find.text('Wallet'), findsOneWidget);
-    expect(find.text('We could not load this wallet.'), findsOneWidget);
+    expect(find.text('Dompet'), findsOneWidget);
+    expect(find.text('Kami tidak dapat memuat dompet ini.'), findsOneWidget);
     expect(find.text('Coba lagi'), findsOneWidget);
 
     await tester.tap(find.text('Coba lagi'));
@@ -149,21 +149,21 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('Delete wallet'),
+      find.text('Hapus dompet'),
       240,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -120));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete wallet'));
+    await tester.tap(find.text('Hapus dompet'));
     await tester.pumpAndSettle();
-    expect(find.text('Delete BCA Primary?'), findsOneWidget);
+    expect(find.text('Hapus BCA Primary?'), findsOneWidget);
 
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.text('Hapus'));
     await tester.pumpAndSettle();
 
     expect(repository.deletedIds, [sharedWalletId]);
-    expect(find.text('Wallets'), findsOneWidget);
+    expect(find.text('Dompet'), findsOneWidget);
     expect(find.text('Cash Wallet'), findsOneWidget);
     expect(find.text('BCA Primary'), findsNothing);
   });

@@ -111,8 +111,9 @@ Future<void> _pump(WidgetTester tester) async {
         goalControllerProvider.overrideWith(_StubGoalController.new),
         recentActivityProvider.overrideWith((ref) async => const [_txn]),
         dashboardCashflowTrendProvider.overrideWith((ref) async => _trend),
-        dashboardExpenseDistributionProvider
-            .overrideWith((ref) async => _distribution),
+        dashboardExpenseDistributionProvider.overrideWith(
+          (ref) async => _distribution,
+        ),
         dashboardForecastProvider.overrideWith((ref) async => _forecast),
       ],
       child: const MaterialApp(home: RedesignShell()),
@@ -134,8 +135,8 @@ void main() {
     expect(find.byType(FloatingActionButton), findsOneWidget);
     expect(find.text('Lainnya'), findsOneWidget);
 
-    // Switch to Insights -> a unique card title appears.
-    await tester.tap(find.text('Insights'));
+    // Switch to Wawasan -> a unique card title appears.
+    await tester.tap(find.text('Wawasan'));
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 10));
     }

@@ -38,13 +38,13 @@ class BudgetScreen extends ConsumerWidget {
     }
 
     return DrillInScaffold(
-      title: 'Budgets',
+      title: 'Anggaran',
       actions: [
         IconButton.filledTonal(
           key: const Key('add-budget-button'),
           tooltip: state.hasExpenseCategories
-              ? 'Add budget'
-              : 'Add an expense category first',
+              ? 'Tambah anggaran'
+              : 'Tambah kategori pengeluaran dulu',
           onPressed: state.isSaving
               ? null
               : state.hasExpenseCategories
@@ -76,7 +76,7 @@ class BudgetScreen extends ConsumerWidget {
           _BudgetAlerts(alerts: state.alerts),
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
-            title: 'Category budgets',
+            title: 'Anggaran kategori',
             actionLabel: state.total == 0 ? null : '${state.total} total',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
@@ -105,8 +105,8 @@ class BudgetScreen extends ConsumerWidget {
                 onPressed: state.isLoadingMore ? null : controller.loadMore,
                 child: Text(
                   state.isLoadingMore
-                      ? 'Loading...'
-                      : 'Load more (${state.budgets.length} of ${state.total})',
+                      ? 'Memuat...'
+                      : 'Muat lebih banyak (${state.budgets.length} dari ${state.total})',
                 ),
               ),
             ],
@@ -182,16 +182,17 @@ class _BudgetSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Limit',
+                label: 'Batas',
                 value: MoneyFormatter.idr(summary.totalLimitMinor),
-                helper: '${summary.safeCount} safe',
+                helper: '${summary.safeCount} aman',
                 icon: Icons.account_balance_wallet_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Spent',
+                label: 'Terpakai',
                 value: MoneyFormatter.idr(summary.totalSpentMinor),
-                helper: '${summary.warningCount + summary.exceededCount} risky',
+                helper:
+                    '${summary.warningCount + summary.exceededCount} berisiko',
                 icon: Icons.trending_up,
               ),
             ],
@@ -200,16 +201,16 @@ class _BudgetSummaryCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'Remaining',
+                label: 'Sisa',
                 value: MoneyFormatter.idr(summary.totalRemainingMinor),
-                helper: 'Available cap',
+                helper: 'Batas tersedia',
                 icon: Icons.savings_outlined,
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               MetricTile(
-                label: 'Daily',
+                label: 'Harian',
                 value: MoneyFormatter.idr(summary.dailyAllowanceMinor),
-                helper: 'Allowance',
+                helper: 'Jatah',
                 icon: Icons.today_outlined,
               ),
             ],
@@ -240,7 +241,7 @@ class _BudgetAlerts extends StatelessWidget {
             const SizedBox(width: AffluenaSpacing.space3),
             Expanded(
               child: Text(
-                'No budget alerts for this month.',
+                'Tidak ada peringatan anggaran bulan ini.',
                 style: textTheme.bodyLarge,
               ),
             ),
@@ -252,7 +253,7 @@ class _BudgetAlerts extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Alerts'),
+        const SectionHeader(title: 'Peringatan'),
         const SizedBox(height: AffluenaSpacing.space3),
         for (final alert in alerts.take(2)) ...[
           AffluenaBanner(
@@ -289,10 +290,10 @@ class _BudgetCard extends StatelessWidget {
     final colors = context.affluenaColors;
     final percent = (budget.usagePercent / 100).clamp(0.0, 1.0);
     final (statusColor, statusTone, statusLabel) = budget.usagePercent >= 100
-        ? (colors.coral, StatusTone.danger, 'Over budget')
+        ? (colors.coral, StatusTone.danger, 'Lewat batas')
         : budget.usagePercent >= 80
-        ? (colors.amber, StatusTone.warning, 'Near limit')
-        : (colors.success, StatusTone.success, 'On track');
+        ? (colors.amber, StatusTone.warning, 'Mendekati batas')
+        : (colors.success, StatusTone.success, 'Aman');
 
     return AffluenaCard(
       child: Column(
@@ -308,8 +309,8 @@ class _BudgetCard extends StatelessWidget {
                   if (value == 'delete') onDelete();
                 },
                 itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  PopupMenuItem(value: 'edit', child: Text('Ubah')),
+                  PopupMenuItem(value: 'delete', child: Text('Hapus')),
                 ],
               ),
             ],
@@ -326,17 +327,17 @@ class _BudgetCard extends StatelessWidget {
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
-            '${budget.usagePercent.round()}% used',
+            '${budget.usagePercent.round()}% terpakai',
             style: textTheme.bodyLarge?.copyWith(color: statusColor),
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            '${MoneyFormatter.idr(budget.spentMinor)} spent from ${MoneyFormatter.idr(budget.limitMinor)}',
+            '${MoneyFormatter.idr(budget.spentMinor)} terpakai dari ${MoneyFormatter.idr(budget.limitMinor)}',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space2),
           Text(
-            '${MoneyFormatter.idr(budget.remainingMinor)} remaining',
+            '${MoneyFormatter.idr(budget.remainingMinor)} tersisa',
             style: textTheme.bodyLarge,
           ),
           if (report?.recommendation.isNotEmpty == true) ...[
@@ -373,12 +374,12 @@ class _EmptyBudgetState extends StatelessWidget {
         children: [
           Icon(Icons.pie_chart_outline, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No budgets yet', style: textTheme.titleMedium),
+          Text('Belum ada anggaran', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             hasExpenseCategories
-                ? 'Set a monthly limit on an expense category to watch your spending.'
-                : 'Budgets cap an expense category each month. Add an expense category first, then set its limit here.',
+                ? 'Tetapkan batas bulanan pada kategori pengeluaran untuk memantau pengeluaranmu.'
+                : 'Anggaran membatasi kategori pengeluaran setiap bulan. Tambah kategori pengeluaran dulu, lalu tetapkan batasnya di sini.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
@@ -387,14 +388,14 @@ class _EmptyBudgetState extends StatelessWidget {
               key: const Key('budget-empty-create-button'),
               onPressed: onCreate,
               icon: const Icon(Icons.add),
-              label: const Text('Create budget'),
+              label: const Text('Buat anggaran'),
             )
           else
             FilledButton.icon(
               key: const Key('budget-empty-add-category-button'),
               onPressed: onAddCategory,
               icon: const Icon(Icons.account_tree_outlined),
-              label: const Text('Add expense category'),
+              label: const Text('Tambah kategori pengeluaran'),
             ),
         ],
       ),
@@ -408,7 +409,7 @@ class _BudgetLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Budgets',
+      title: 'Anggaran',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -488,12 +489,12 @@ class _BudgetError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Budgets',
+      title: 'Anggaran',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
-            'We could not load your budgets.',
+            'Kami tidak dapat memuat anggaranmu.',
             onRetry: onRetry,
           ),
         ],
@@ -550,7 +551,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final state = ref.watch(budgetControllerProvider);
-    final selectedLabel = _category?.name ?? 'Choose expense category';
+    final selectedLabel = _category?.name ?? 'Pilih kategori pengeluaran';
     final canSave =
         (_isEditing || _category != null) &&
         (_limitMinorValue ?? 0) > 0 &&
@@ -570,12 +571,12 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEditing ? 'Edit budget' : 'Create budget',
+                _isEditing ? 'Ubah anggaran' : 'Buat anggaran',
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
               SelectorRow(
-                label: 'Category',
+                label: 'Kategori',
                 value: selectedLabel,
                 icon: Icons.category_outlined,
                 enabled: !_isEditing && widget.state.categories.isNotEmpty,
@@ -587,8 +588,8 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
               const SizedBox(height: AffluenaSpacing.space3),
               MoneyInput(
                 key: const Key('budget-limit-field'),
-                label: 'Monthly limit',
-                hint: 'Spending cap for this category',
+                label: 'Batas bulanan',
+                hint: 'Batas pengeluaran untuk kategori ini',
                 initialValue: _limitMinorValue,
                 enabled: !state.isSaving,
                 onChanged: (value) => setState(() => _limitMinorValue = value),
@@ -601,7 +602,9 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
               FilledButton(
                 key: const Key('budget-save-button'),
                 onPressed: canSave ? _save : null,
-                child: Text(state.isSaving ? 'Saving...' : 'Save budget'),
+                child: Text(
+                  state.isSaving ? 'Menyimpan...' : 'Simpan anggaran',
+                ),
               ),
             ],
           ),
@@ -614,7 +617,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
     // Categories are a hierarchy: use the tree-aware picker, not a flat list.
     final selectedId = await showCategoryTreePicker(
       context: context,
-      title: 'Budget category',
+      title: 'Kategori anggaran',
       selectedId: _category?.id,
       categories: [
         for (final category in widget.state.categories)
@@ -662,17 +665,17 @@ Future<void> _confirmDelete(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Delete budget?'),
-      content: const Text('This removes the category budget for this month.'),
+      title: const Text('Hapus anggaran?'),
+      content: const Text('Ini menghapus anggaran kategori untuk bulan ini.'),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: const Text('Batal'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: colors.coral),
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Delete'),
+          child: const Text('Hapus'),
         ),
       ],
     ),

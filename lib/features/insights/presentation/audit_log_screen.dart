@@ -47,7 +47,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     }
 
     return DrillInScaffold(
-      title: 'Audit logs',
+      title: 'Log audit',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -91,7 +91,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
       await _showActivityDetailSheet(context, detail);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _detailError = 'Activity detail could not be loaded.');
+      setState(() => _detailError = 'Detail aktivitas tidak dapat dimuat.');
     }
   }
 
@@ -105,7 +105,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
       await _showSystemLogDetailSheet(context, detail);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _detailError = 'System log detail could not be loaded.');
+      setState(() => _detailError = 'Detail log sistem tidak dapat dimuat.');
     }
   }
 }
@@ -121,16 +121,16 @@ class _AuditSummaryCard extends StatelessWidget {
       child: Row(
         children: [
           MetricTile(
-            label: 'Activity',
+            label: 'Aktivitas',
             value: _activityCountLabel(state.activityTotal),
-            helper: 'User actions',
+            helper: 'Aksi pengguna',
             icon: Icons.history_outlined,
           ),
           const SizedBox(width: AffluenaSpacing.space3),
           MetricTile(
-            label: 'System',
+            label: 'Sistem',
             value: _systemLogCountLabel(state.systemLogTotal),
-            helper: 'API requests',
+            helper: 'Permintaan API',
             icon: Icons.http_outlined,
           ),
         ],
@@ -155,14 +155,14 @@ class _AuditLogTabs extends StatelessWidget {
           key: const Key('audit-log-tab-activity'),
           showCheckmark: false,
           selected: selected == AuditLogTab.activity,
-          label: const Text('Activity'),
+          label: const Text('Aktivitas'),
           onSelected: (_) => onChanged(AuditLogTab.activity),
         ),
         ChoiceChip(
           key: const Key('audit-log-tab-system'),
           showCheckmark: false,
           selected: selected == AuditLogTab.system,
-          label: const Text('System logs'),
+          label: const Text('Log sistem'),
           onSelected: (_) => onChanged(AuditLogTab.system),
         ),
       ],
@@ -186,15 +186,15 @@ class _ActivityLogSection extends StatelessWidget {
     if (activities.isEmpty) {
       return const _EmptyState(
         icon: Icons.history_outlined,
-        title: 'No activity',
-        body: 'Account activity will appear after you change financial data.',
+        title: 'Belum ada aktivitas',
+        body: 'Aktivitas akun akan muncul setelah kamu mengubah data keuangan.',
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(title: 'Activity', actionLabel: '$total total'),
+        SectionHeader(title: 'Aktivitas', actionLabel: '$total total'),
         const SizedBox(height: AffluenaSpacing.space3),
         for (final activity in activities) ...[
           _ActivityLogCard(activity: activity, onTap: () => onOpen(activity)),
@@ -216,8 +216,8 @@ class _SystemLogSection extends StatelessWidget {
     if (logs.isEmpty) {
       return const _EmptyState(
         icon: Icons.http_outlined,
-        title: 'No system logs',
-        body: 'Recent authenticated API requests will appear here.',
+        title: 'Belum ada log sistem',
+        body: 'Permintaan API terautentikasi terbaru akan muncul di sini.',
       );
     }
 
@@ -225,8 +225,8 @@ class _SystemLogSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'System logs',
-          actionLabel: '${logs.length} recent',
+          title: 'Log sistem',
+          actionLabel: '${logs.length} terbaru',
         ),
         const SizedBox(height: AffluenaSpacing.space3),
         for (final log in logs) ...[
@@ -364,7 +364,7 @@ class _AuditLogLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Audit logs',
+      title: 'Log audit',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -424,7 +424,7 @@ class _AuditLogError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Audit logs',
+      title: 'Log audit',
       body: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space5),
         child: Column(
@@ -435,7 +435,7 @@ class _AuditLogError extends StatelessWidget {
             FilledButton(
               key: const Key('audit-log-retry-button'),
               onPressed: onRetry,
-              child: const Text('Retry'),
+              child: const Text('Coba lagi'),
             ),
           ],
         ),
@@ -471,16 +471,16 @@ Future<void> _showActivityDetailSheet(
     subtitle:
         '${_humanize(activity.actionType)} · ${_humanize(activity.entityType)}',
     rows: [
-      _DetailRowData('Action', _humanize(activity.actionType)),
-      _DetailRowData('Entity', _humanize(activity.entityType)),
+      _DetailRowData('Aksi', _humanize(activity.actionType)),
+      _DetailRowData('Entitas', _humanize(activity.entityType)),
       _DetailRowData(
-        'Recorded',
+        'Dicatat',
         AffluenaDateFormatter.shortDate(activity.createdAt),
       ),
       // The audit API exposes only the raw entity UUID (no human-readable
       // name), so it is surfaced as a de-emphasised technical reference.
       if (activity.entityId.isNotEmpty)
-        _DetailRowData('Reference ID', activity.entityId, isTechnical: true),
+        _DetailRowData('ID referensi', activity.entityId, isTechnical: true),
     ],
   );
 }
@@ -491,7 +491,7 @@ Future<void> _showSystemLogDetailSheet(BuildContext context, SystemLog log) {
     title: '${log.method} ${log.path}',
     subtitle: '${log.statusCode} · ${log.latencyMs} ms',
     rows: [
-      _DetailRowData('Client IP', log.clientIp),
+      _DetailRowData('IP klien', log.clientIp),
       _DetailRowData('User agent', log.userAgent),
       if (log.requestPayload != null && log.requestPayload!.isNotEmpty)
         _DetailRowData(
@@ -505,7 +505,7 @@ Future<void> _showSystemLogDetailSheet(BuildContext context, SystemLog log) {
           log.responsePayload!,
           isTechnical: true,
         ),
-      _DetailRowData('Created', AffluenaDateFormatter.shortDate(log.createdAt)),
+      _DetailRowData('Dibuat', AffluenaDateFormatter.shortDate(log.createdAt)),
     ],
   );
 }
@@ -603,9 +603,9 @@ class _DetailRow extends StatelessWidget {
 }
 
 String _activityCountLabel(int count) {
-  return count == 1 ? '1 activity' : '$count activities';
+  return '$count aktivitas';
 }
 
 String _systemLogCountLabel(int count) {
-  return count == 1 ? '1 system request' : '$count system requests';
+  return '$count permintaan sistem';
 }

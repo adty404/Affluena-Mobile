@@ -73,11 +73,11 @@ class _CategoryTagManagementScreenState
         .toList(growable: false);
 
     return DrillInScaffold(
-      title: 'Categories',
+      title: 'Kategori',
       actions: [
         IconButton.filledTonal(
           key: const Key('add-category-button'),
-          tooltip: 'Add category',
+          tooltip: 'Tambah kategori',
           onPressed: state.isSaving
               ? null
               : () => _showCategoryForm(context, ref, state: state),
@@ -93,7 +93,7 @@ class _CategoryTagManagementScreenState
             autocorrect: false,
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
-              labelText: 'Search categories',
+              labelText: 'Cari kategori',
             ),
             onChanged: (value) => setState(() => _query = value),
           ),
@@ -103,18 +103,18 @@ class _CategoryTagManagementScreenState
             runSpacing: AffluenaSpacing.space2,
             children: [
               ChoiceChip(
-                label: const Text('All'),
+                label: const Text('Semua'),
                 selected: _typeFilter == null,
                 onSelected: (_) => setState(() => _typeFilter = null),
               ),
               ChoiceChip(
-                label: const Text('Expense'),
+                label: const Text('Pengeluaran'),
                 selected: _typeFilter == CategoryType.expense,
                 onSelected: (_) =>
                     setState(() => _typeFilter = CategoryType.expense),
               ),
               ChoiceChip(
-                label: const Text('Income'),
+                label: const Text('Pemasukan'),
                 selected: _typeFilter == CategoryType.income,
                 onSelected: (_) =>
                     setState(() => _typeFilter = CategoryType.income),
@@ -127,8 +127,8 @@ class _CategoryTagManagementScreenState
           ],
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
-            title: 'Categories',
-            actionLabel: '${visibleCategories.length} shown',
+            title: 'Kategori',
+            actionLabel: '${visibleCategories.length} ditampilkan',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           ..._buildCategoriesSection(
@@ -149,8 +149,8 @@ class _CategoryTagManagementScreenState
                   : controller.loadMoreCategories,
               child: Text(
                 state.isLoadingMoreCategories
-                    ? 'Loading...'
-                    : 'Load more (${state.categories.length} of ${state.categoryTotal})',
+                    ? 'Memuat...'
+                    : 'Muat lebih banyak (${state.categories.length} dari ${state.categoryTotal})',
               ),
             ),
           ],
@@ -175,13 +175,16 @@ class _CategoryTagManagementScreenState
       return [
         _EmptyManagementState(
           icon: Icons.account_tree_outlined,
-          title: isFiltering ? 'No categories match' : 'No categories yet',
+          title: isFiltering
+              ? 'Tidak ada kategori yang cocok'
+              : 'Belum ada kategori',
           message: isFiltering
-              ? 'Try a different search or filter to find a category.'
-              : 'Group your spending and income into a hierarchy. Categories '
-                    'nest up to 3 levels — a parent, its subcategories, and '
-                    'their subcategories. Create your first one to start.',
-          actionLabel: isFiltering ? null : 'Add category',
+              ? 'Coba kata kunci atau filter lain untuk menemukan kategori.'
+              : 'Kelompokkan pengeluaran dan pemasukan kamu ke dalam hierarki. '
+                    'Kategori bisa bertingkat hingga 3 level — induk, '
+                    'subkategorinya, dan subkategori dari subkategori itu. '
+                    'Buat yang pertama untuk memulai.',
+          actionLabel: isFiltering ? null : 'Tambah kategori',
           onAction: isFiltering
               ? null
               : () => _showCategoryForm(context, ref, state: state),

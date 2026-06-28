@@ -7,11 +7,11 @@ import '../data/wallet_models.dart';
 
 String walletTypeLabel(WalletType type) {
   return switch (type) {
-    WalletType.cash => 'Cash',
+    WalletType.cash => 'Tunai',
     WalletType.bank => 'Bank',
     WalletType.eWallet => 'E-wallet',
-    WalletType.investment => 'Investment',
-    WalletType.goal => 'Goal',
+    WalletType.investment => 'Investasi',
+    WalletType.goal => 'Target',
   };
 }
 
@@ -26,24 +26,29 @@ IconData walletIcon(WalletType type) {
 }
 
 String walletRoleLabel(String? role) {
-  if (role == null || role.isEmpty) return 'Private';
-  return role == 'owner' ? 'Owner' : _sentenceCase(role);
+  if (role == null || role.isEmpty) return 'Pribadi';
+  return switch (role) {
+    'owner' => 'Pemilik',
+    'member' => 'Anggota',
+    'viewer' => 'Hanya lihat',
+    _ => _sentenceCase(role),
+  };
 }
 
 String walletStatusLabel(WalletShareStatus? status) {
   return switch (status) {
-    WalletShareStatus.pending => 'Pending',
-    WalletShareStatus.joined => 'Joined',
-    WalletShareStatus.rejected => 'Rejected',
-    null => 'Private',
+    WalletShareStatus.pending => 'Menunggu',
+    WalletShareStatus.joined => 'Tergabung',
+    WalletShareStatus.rejected => 'Ditolak',
+    null => 'Pribadi',
   };
 }
 
 String memberStatusLabel(WalletShareStatus status) {
   return switch (status) {
-    WalletShareStatus.pending => 'Pending',
-    WalletShareStatus.joined => 'Joined',
-    WalletShareStatus.rejected => 'Rejected',
+    WalletShareStatus.pending => 'Menunggu',
+    WalletShareStatus.joined => 'Tergabung',
+    WalletShareStatus.rejected => 'Ditolak',
   };
 }
 
