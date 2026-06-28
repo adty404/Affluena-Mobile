@@ -36,7 +36,7 @@ void main() {
     // The Sky quick-add capture sheet.
     expect(find.text('Catat cepat'), findsOneWidget);
     expect(find.text('Pengeluaran'), findsOneWidget);
-    expect(find.text('Simpan'), findsOneWidget);
+    expect(find.byKey(const Key('sky-calc-confirm')), findsOneWidget);
   });
 
   testWidgets('feature screens follow the platform dark theme', (tester) async {
