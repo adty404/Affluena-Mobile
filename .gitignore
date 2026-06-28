@@ -48,3 +48,6 @@ app.*.map.json
 .fvm/
 # Flutter golden-test mismatch artifacts (auto-generated)
 test/**/failures/
+
+# Built APKs dropped at repo root for distribution
+*.apk
