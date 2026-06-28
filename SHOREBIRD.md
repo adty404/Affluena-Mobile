@@ -17,6 +17,12 @@ App: **Affluena** · `app_id: 1405299c-086b-4398-9361-064b147f99d8`
 So the normal loop is: make Dart changes → `scripts/shorebird_patch.sh` → done.
 You only cut a new release + reinstall when something native changes.
 
+> **Assets & patches:** OTA patches are Dart-code-only and can't carry **asset**
+> changes. The builds pass `--no-tree-shake-icons` (scripts + `shorebird.yml`) so
+> the full Material Icons font is always bundled — that way adding/removing icons
+> no longer changes an asset and stays patchable. Other asset changes (new
+> bundled fonts/images, `pubspec.yaml` asset list edits) still require a release.
+
 ## First-time / per-machine prerequisites
 
 1. Shorebird CLI installed (`~/.shorebird`) and logged in (`shorebird login`).
