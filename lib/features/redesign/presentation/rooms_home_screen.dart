@@ -79,28 +79,33 @@ class _RoomsContent extends StatelessWidget {
       padding: AffluenaInsets.screen,
       children: [
         Text(
-          'TOTAL',
+          'Total',
           style: TextStyle(
             fontSize: 11,
-            letterSpacing: 1.4,
-            fontWeight: FontWeight.w600,
-            color: context.sky.faint,
+            fontWeight: FontWeight.w500,
+            color: context.sky.muted,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           MoneyFormatter.idr(total),
           style: TextStyle(
-            fontSize: 27,
+            fontSize: 25,
             fontWeight: FontWeight.w700,
             color: context.sky.ink,
             fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          'Ketuk dompet untuk buka detailnya',
-          style: TextStyle(fontSize: 11.5, color: context.sky.faint),
+        Row(
+          children: [
+            Icon(Icons.info_outline, size: 13, color: context.sky.faint),
+            const SizedBox(width: 5),
+            Text(
+              'Tahan kamar untuk catat cepat',
+              style: TextStyle(fontSize: 11, color: context.sky.faint),
+            ),
+          ],
         ),
         const SizedBox(height: AffluenaSpacing.space5),
         for (final wallet in spending) ...[
@@ -177,13 +182,13 @@ class _GoalRoom extends StatelessWidget {
       trailing: Text(
         '${goal.progressPercent}%',
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.w700,
           color: context.sky.accent,
           fontFeatures: [FontFeature.tabularFigures()],
         ),
       ),
-      footer: SkyProgressBar(value: goal.progressPercent / 100),
+      footer: SkyProgressBar(value: goal.progressPercent / 100, height: 7),
       onTap: () => context.push(GoalScreen.path),
     );
   }
@@ -198,19 +203,19 @@ class _IconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 38,
-      height: 38,
+      width: 34,
+      height: 34,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: accent ? context.sky.accentSoft : context.sky.sheet,
-        borderRadius: BorderRadius.circular(AffluenaRadii.md),
+        borderRadius: BorderRadius.circular(11),
         border: Border.all(
           color: accent ? context.sky.accentSoftBorder : context.sky.line,
         ),
       ),
       child: Icon(
         icon,
-        size: 19,
+        size: 18,
         color: accent ? context.sky.accent : context.sky.muted,
       ),
     );
@@ -229,12 +234,12 @@ class _AvatarStack extends StatelessWidget {
 
     return SizedBox(
       width: 44,
-      height: 38,
+      height: 34,
       child: Stack(
         children: [
           Positioned(
             left: 0,
-            top: 5,
+            top: 3,
             child: SkyAvatar(
               initial: initial(members[0]),
               borderColor: context.sky.accentSoft,
@@ -242,7 +247,7 @@ class _AvatarStack extends StatelessWidget {
           ),
           Positioned(
             left: 15,
-            top: 5,
+            top: 3,
             child: SkyAvatar(
               initial: initial(members[1]),
               color: context.sky.avatarSecondary,

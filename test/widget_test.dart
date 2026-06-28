@@ -15,12 +15,12 @@ void main() {
     await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
 
     // The Spaces home (rooms) is the default tab.
-    expect(find.text('TOTAL'), findsOneWidget);
+    expect(find.text('Total'), findsOneWidget);
     // The Sky bottom nav tabs + center quick-add FAB.
-    expect(find.text('Beranda'), findsOneWidget);
-    expect(find.text('Aktivitas'), findsOneWidget);
-    expect(find.text('Wawasan'), findsOneWidget);
-    expect(find.text('Lainnya'), findsOneWidget);
+    expect(find.byKey(const Key('nav-beranda')), findsOneWidget);
+    expect(find.byKey(const Key('nav-aktivitas')), findsOneWidget);
+    expect(find.byKey(const Key('nav-wawasan')), findsOneWidget);
+    expect(find.byKey(const Key('nav-lainnya')), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsOneWidget);
   });
 
@@ -49,7 +49,7 @@ void main() {
 
     // The home shell uses a fixed Sky palette, but the feature surfaces reached
     // via "Lainnya" still honour the platform brightness.
-    await tester.tap(find.text('Lainnya'));
+    await tester.tap(find.byKey(const Key('nav-lainnya')));
     await tester.pumpAndSettle();
 
     final settingsContext = tester.element(find.byType(SettingsScreen));
