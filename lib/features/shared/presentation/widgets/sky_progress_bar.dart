@@ -1,0 +1,41 @@
+import 'package:flutter/material.dart';
+
+import '../../../../app/theme/sky_palette.dart';
+
+/// A thin rounded progress track — e.g. a savings goal's completion on a room
+/// card. [value] is clamped to 0..1.
+class SkyProgressBar extends StatelessWidget {
+  const SkyProgressBar({
+    required this.value,
+    this.height = 6,
+    this.trackColor = SkyPalette.ground,
+    this.fillColor = SkyPalette.accent,
+    super.key,
+  });
+
+  final double value;
+  final double height;
+  final Color trackColor;
+  final Color fillColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final clamped = value.clamp(0.0, 1.0);
+    final radius = BorderRadius.circular(height);
+    return ClipRRect(
+      borderRadius: radius,
+      child: Stack(
+        children: [
+          Container(height: height, width: double.infinity, color: trackColor),
+          FractionallySizedBox(
+            widthFactor: clamped,
+            child: Container(
+              height: height,
+              decoration: BoxDecoration(color: fillColor, borderRadius: radius),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
