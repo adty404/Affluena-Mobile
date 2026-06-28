@@ -1,6 +1,6 @@
 import 'package:affluena_mobile/app/theme/sky_palette.dart';
 import 'package:affluena_mobile/features/shared/presentation/widgets/sky_avatar.dart';
-import 'package:affluena_mobile/features/shared/presentation/widgets/sky_keypad.dart';
+import 'package:affluena_mobile/features/shared/presentation/widgets/sky_calc_keypad.dart';
 import 'package:affluena_mobile/features/shared/presentation/widgets/sky_progress_bar.dart';
 import 'package:affluena_mobile/features/shared/presentation/widgets/sky_room_card.dart';
 import 'package:affluena_mobile/features/shared/presentation/widgets/sky_segmented_toggle.dart';
@@ -78,23 +78,42 @@ void main() {
     expect(fraction.widthFactor, 1.0);
   });
 
-  testWidgets('SkyKeypad emits digit taps and backspace', (tester) async {
-    final keys = <String>[];
+  testWidgets('SkyCalcKeypad emits digit/operator/equals/backspace/confirm', (
+    tester,
+  ) async {
+    final digits = <String>[];
+    final ops = <String>[];
+    var equals = 0;
     var backspaces = 0;
+    var confirms = 0;
     await _pump(
       tester,
       SizedBox(
-        width: 280,
-        child: SkyKeypad(onKey: keys.add, onBackspace: () => backspaces++),
+        width: 320,
+        child: SkyCalcKeypad(
+          onDigit: digits.add,
+          onOperator: ops.add,
+          onClear: () {},
+          onBackspace: () => backspaces++,
+          onDecimal: () {},
+          onEquals: () => equals++,
+          onConfirm: () => confirms++,
+        ),
       ),
     );
 
     await tester.tap(find.text('7'));
     await tester.tap(find.text('000'));
-    await tester.tap(find.byKey(const Key('sky-keypad-backspace')));
+    await tester.tap(find.text('+'));
+    await tester.tap(find.text('='));
+    await tester.tap(find.byKey(const Key('sky-calc-backspace')));
+    await tester.tap(find.byKey(const Key('sky-calc-confirm')));
 
-    expect(keys, ['7', '000']);
+    expect(digits, ['7', '000']);
+    expect(ops, ['+']);
+    expect(equals, 1);
     expect(backspaces, 1);
+    expect(confirms, 1);
   });
 
   testWidgets('SkyRoomCard shows content and handles tap + long-press', (

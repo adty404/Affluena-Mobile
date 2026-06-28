@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
+import '../../../core/calc/money_calculator.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
-import '../../shared/presentation/widgets/sky_keypad.dart';
+import '../../shared/presentation/widgets/sky_calc_keypad.dart';
 import '../../shared/presentation/widgets/sky_segmented_toggle.dart';
 import '../../transactions/application/transaction_create_controller.dart';
 import '../../transactions/data/transaction_models.dart';
@@ -38,7 +39,7 @@ class _SkyQuickAddSheet extends ConsumerStatefulWidget {
 
 class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
   TransactionType _type = TransactionType.expense;
-  String _digits = '';
+  final _calc = MoneyCalculator();
   String? _walletId;
   String? _categoryId;
   String? _error;
@@ -47,31 +48,26 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
       ? CategoryType.income
       : CategoryType.expense;
 
-  int get _amountMinor => _digits.isEmpty ? 0 : int.parse(_digits);
-
   @override
   void initState() {
     super.initState();
     _walletId = widget.initialWallet?.id;
   }
 
-  void _onKey(String key) {
+  void _run(void Function() action) {
     setState(() {
       _error = null;
-      final next = _digits + key;
-      // Cap length and drop leading zeros.
-      final trimmed = next.replaceFirst(RegExp(r'^0+(?=\d)'), '');
-      if (trimmed.length <= 12) _digits = trimmed;
+      action();
     });
   }
 
-  void _onBackspace() {
-    if (_digits.isEmpty) return;
-    setState(() {
-      _error = null;
-      _digits = _digits.substring(0, _digits.length - 1);
-    });
-  }
+  void _onDigit(String d) =>
+      _run(() => d == '000' ? _calc.inputZeros() : _calc.inputDigit(d));
+  void _onOperator(String op) => _run(() => _calc.applyOperator(op));
+  void _onEquals() => _run(_calc.equals);
+  void _onDecimal() => _run(_calc.inputDecimal);
+  void _onClear() => _run(_calc.clear);
+  void _onBackspace() => _run(_calc.backspace);
 
   Future<void> _selectWallet(TransactionCreateState state) async {
     final selected = await showLookupSelectorSheet<String>(
@@ -118,7 +114,7 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
 
   String? _validate() {
     if (_walletId == null) return 'Pilih dompet dulu.';
-    if (_amountMinor <= 0) return 'Masukkan jumlah lebih dari nol.';
+    if (_calc.amountMinor <= 0) return 'Masukkan jumlah lebih dari nol.';
     if (_categoryId == null) return 'Pilih kategori dulu.';
     return null;
   }
@@ -133,7 +129,7 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
       type: _type,
       walletId: _walletId!,
       categoryId: _categoryId,
-      amountMinor: _amountMinor,
+      amountMinor: _calc.amountMinor,
       transactionAt: DateTime.now().toUtc().toIso8601String(),
     );
     final saved = await ref
@@ -154,6 +150,9 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(transactionCreateControllerProvider);
+    final preview = _calc.expressionPreview(
+      (value) => MoneyFormatter.idr(value.round()),
+    );
 
     return SafeArea(
       top: false,
@@ -215,15 +214,33 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
             ),
             const SizedBox(height: AffluenaSpacing.space5),
             Center(
-              child: Text(
-                MoneyFormatter.idr(_amountMinor),
-                style: TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w700,
-                  color: context.sky.ink,
-                  letterSpacing: -0.5,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (preview != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Text(
+                        preview,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.sky.faint,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                  Text(
+                    MoneyFormatter.idr(_calc.displayValue.round()),
+                    style: TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                      color: context.sky.ink,
+                      letterSpacing: -0.5,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: AffluenaSpacing.space4),
@@ -254,19 +271,15 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
               ),
             ],
             const SizedBox(height: AffluenaSpacing.space4),
-            SkyKeypad(onKey: _onKey, onBackspace: _onBackspace),
-            const SizedBox(height: AffluenaSpacing.space4),
-            FilledButton(
-              onPressed: state.isSaving ? null : _save,
-              style: FilledButton.styleFrom(
-                backgroundColor: context.sky.accent,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AffluenaRadii.control),
-                ),
-              ),
-              child: Text(state.isSaving ? 'Menyimpan…' : 'Simpan'),
+            SkyCalcKeypad(
+              onDigit: _onDigit,
+              onOperator: _onOperator,
+              onClear: _onClear,
+              onBackspace: _onBackspace,
+              onDecimal: _onDecimal,
+              onEquals: _onEquals,
+              onConfirm: _save,
+              isSaving: state.isSaving,
             ),
           ],
         ),

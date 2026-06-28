@@ -83,7 +83,7 @@ void main() {
     expect(find.text('Rp 0'), findsOneWidget);
 
     // Saving with no amount is blocked.
-    await tester.tap(find.text('Simpan'));
+    await tester.tap(find.byKey(const Key('sky-calc-confirm')));
     await tester.pumpAndSettle();
     expect(find.text('Masukkan jumlah lebih dari nol.'), findsOneWidget);
     expect(stub.lastRequest, isNull);
@@ -97,7 +97,7 @@ void main() {
     expect(find.text('Rp 50.000'), findsOneWidget);
 
     // Amount set but no category -> still blocked.
-    await tester.tap(find.text('Simpan'));
+    await tester.tap(find.byKey(const Key('sky-calc-confirm')));
     await tester.pumpAndSettle();
     expect(find.text('Pilih kategori dulu.'), findsOneWidget);
     expect(stub.lastRequest, isNull);
@@ -120,7 +120,7 @@ void main() {
     await tester.tap(find.text('Makan'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Simpan'));
+    await tester.tap(find.byKey(const Key('sky-calc-confirm')));
     await tester.pumpAndSettle();
 
     expect(stub.lastRequest, isNotNull);
