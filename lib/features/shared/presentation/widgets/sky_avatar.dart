@@ -7,14 +7,14 @@ import '../../../../app/theme/sky_palette.dart';
 class SkyAvatar extends StatelessWidget {
   const SkyAvatar({
     required this.initial,
-    this.color = SkyPalette.avatarPrimary,
+    this.color,
     this.size = 28,
     this.borderColor,
     super.key,
   });
 
   final String initial;
-  final Color color;
+  final Color? color;
   final double size;
 
   /// Optional ring, used when avatars overlap on a tinted surface.
@@ -22,12 +22,13 @@ class SkyAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fill = color ?? context.sky.avatarPrimary;
     return Container(
       width: size,
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: color,
+        color: fill,
         shape: BoxShape.circle,
         border: borderColor == null
             ? null

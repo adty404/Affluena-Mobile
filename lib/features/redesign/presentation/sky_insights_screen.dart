@@ -20,9 +20,9 @@ class SkyInsightsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: SkyPalette.ground,
-      body: SafeArea(child: SkyInsightsView()),
+    return Scaffold(
+      backgroundColor: context.sky.ground,
+      body: const SafeArea(child: SkyInsightsView()),
     );
   }
 }
@@ -41,22 +41,22 @@ class SkyInsightsView extends ConsumerWidget {
     return ListView(
       padding: AffluenaInsets.screen,
       children: [
-        const Text(
+        Text(
           'Insights',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: SkyPalette.ink,
+            color: context.sky.ink,
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space4),
         _SkyCard(
           title: 'Arus kas',
           child: trend.when(
-            loading: _loader,
-            error: (_, _) => _errorText,
+            loading: () => _loader(context),
+            error: (_, _) => _errorText(context),
             data: (response) => response.trend.isEmpty
-                ? _emptyText
+                ? _emptyText(context)
                 : SizedBox(
                     height: 160,
                     child: CashflowTrendChart(points: response.trend),
@@ -66,10 +66,10 @@ class SkyInsightsView extends ConsumerWidget {
         _SkyCard(
           title: 'Ke mana uang pergi',
           child: distribution.when(
-            loading: _loader,
-            error: (_, _) => _errorText,
+            loading: () => _loader(context),
+            error: (_, _) => _errorText(context),
             data: (response) => response.distribution.isEmpty
-                ? _emptyText
+                ? _emptyText(context)
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -82,8 +82,8 @@ class SkyInsightsView extends ConsumerWidget {
         _SkyCard(
           title: 'Perkiraan bulan ini',
           child: forecast.when(
-            loading: _loader,
-            error: (_, _) => _errorText,
+            loading: () => _loader(context),
+            error: (_, _) => _errorText(context),
             data: _ForecastBody.new,
           ),
         ),
@@ -91,19 +91,19 @@ class SkyInsightsView extends ConsumerWidget {
     );
   }
 
-  static Widget _loader() => const Padding(
-    padding: EdgeInsets.symmetric(vertical: AffluenaSpacing.space4),
-    child: Center(child: CircularProgressIndicator(color: SkyPalette.accent)),
+  static Widget _loader(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space4),
+    child: Center(child: CircularProgressIndicator(color: context.sky.accent)),
   );
 
-  static const Widget _errorText = Text(
+  static Widget _errorText(BuildContext context) => Text(
     'Tidak bisa memuat.',
-    style: TextStyle(fontSize: 13, color: SkyPalette.muted),
+    style: TextStyle(fontSize: 13, color: context.sky.muted),
   );
 
-  static const Widget _emptyText = Text(
+  static Widget _emptyText(BuildContext context) => Text(
     'Belum ada data.',
-    style: TextStyle(fontSize: 13, color: SkyPalette.faint),
+    style: TextStyle(fontSize: 13, color: context.sky.faint),
   );
 }
 
@@ -126,17 +126,17 @@ class _DistributionRow extends StatelessWidget {
                   item.categoryName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12.5, color: SkyPalette.ink),
+                  style: TextStyle(fontSize: 12.5, color: context.sky.ink),
                 ),
               ),
               const SizedBox(width: AffluenaSpacing.space2),
               Text(
                 MoneyFormatter.idr(item.amountMinor),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: SkyPalette.ink,
-                  fontFeatures: [FontFeature.tabularFigures()],
+                  color: context.sky.ink,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ],
@@ -157,24 +157,24 @@ class _ForecastBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final overBudget = forecast.status == ForecastStatus.overbudget;
-    final statusColor = overBudget ? SkyPalette.danger : SkyPalette.income;
+    final statusColor = overBudget ? context.sky.danger : context.sky.income;
     final statusLabel = overBudget ? 'Lewat budget' : 'Aman, di bawah budget';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Perkiraan pengeluaran',
-          style: TextStyle(fontSize: 11.5, color: SkyPalette.faint),
+          style: TextStyle(fontSize: 11.5, color: context.sky.faint),
         ),
         const SizedBox(height: 2),
         Text(
           MoneyFormatter.idr(forecast.forecastedExpenseMinor),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: SkyPalette.ink,
-            fontFeatures: [FontFeature.tabularFigures()],
+            color: context.sky.ink,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space2),
@@ -216,19 +216,19 @@ class _SkyCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AffluenaSpacing.space3),
       padding: const EdgeInsets.all(AffluenaSpacing.space4),
       decoration: BoxDecoration(
-        color: SkyPalette.surface,
+        color: context.sky.surface,
         borderRadius: BorderRadius.circular(AffluenaRadii.card),
-        border: Border.all(color: SkyPalette.line),
+        border: Border.all(color: context.sky.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: SkyPalette.ink,
+              color: context.sky.ink,
             ),
           ),
           const SizedBox(height: AffluenaSpacing.space3),
