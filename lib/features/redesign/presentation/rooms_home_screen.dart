@@ -8,14 +8,14 @@ import '../../../core/formatters/money_formatter.dart';
 import '../../goals/application/goal_controller.dart';
 import '../../goals/data/goal_models.dart';
 import '../../goals/presentation/goal_screen.dart';
-import '../../quick_entry/presentation/quick_entry_screen.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../../shared/presentation/widgets/sky_room_card.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
-import '../../wallets/presentation/wallet_detail_screen.dart';
 import '../../wallets/presentation/wallet_format.dart';
+import 'room_detail_screen.dart';
+import 'sky_quick_add_sheet.dart';
 
 /// Redesign Tahap 2 — the "Spaces" home: wallets rendered as rooms, savings
 /// goals as progress rooms, in the Sky & Denim language.
@@ -38,7 +38,7 @@ class RoomsHomeScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: SkyPalette.accent,
         foregroundColor: Colors.white,
-        onPressed: () => context.push(QuickEntryScreen.path),
+        onPressed: () => showSkyQuickAddSheet(context),
         child: const Icon(Icons.add),
       ),
       body: SafeArea(
@@ -147,7 +147,8 @@ class _WalletRoom extends StatelessWidget {
           ? const _RoomPill(label: 'LIHAT')
           : (shared ? const _RoomPill(label: 'BERSAMA') : null),
       trailing: _AmountTrailing(amount: MoneyFormatter.idr(wallet.balanceMinor)),
-      onTap: () => context.push(WalletDetailScreen.location(wallet.id)),
+      onTap: () => context.push(RoomDetailScreen.location(wallet.id)),
+      onLongPress: () => showSkyQuickAddSheet(context, wallet: wallet),
     );
   }
 }

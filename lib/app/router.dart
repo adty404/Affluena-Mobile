@@ -17,6 +17,7 @@ import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../features/recurring/presentation/recurring_screen.dart';
+import '../features/redesign/presentation/room_detail_screen.dart';
 import '../features/redesign/presentation/rooms_home_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/shared/presentation/app_shell.dart';
@@ -241,6 +242,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoomsHomeScreen.path,
         pageBuilder: _fadePage((_) => const RoomsHomeScreen()),
+      ),
+      GoRoute(
+        path: RoomDetailScreen.path,
+        pageBuilder: _slidePage(
+          (state) =>
+              RoomDetailScreen(walletId: state.pathParameters['walletId']!),
+        ),
       ),
     ],
   );
