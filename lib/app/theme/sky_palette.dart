@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// Sky & Denim — the redesign palette (Tahap 1 foundation).
+/// Sky & Denim — the app's palette.
 ///
-/// Introduced additively: the redesign primitives reference these tokens
-/// directly so the new surfaces can be built and reviewed without touching the
-/// live [AffluenaColors] / [AffluenaSemanticColors] theme that existing screens
-/// still use. A later stage migrates the rest of the app onto this palette.
+/// The redesign surfaces reference these tokens directly; the themed feature
+/// screens reach the same colours through [AffluenaColors] /
+/// [AffluenaSemanticColors], whose light tokens now resolve to this palette
+/// (dark mode uses a cool Sky-flavoured variant). The old warm-paper palette
+/// has been fully retired.
 abstract final class SkyPalette {
   static const ground = Color(0xFFEEF3F8);
   static const surface = Color(0xFFFFFFFF);
