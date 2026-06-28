@@ -17,8 +17,10 @@ import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../features/recurring/presentation/recurring_screen.dart';
+import '../features/redesign/presentation/activity_feed_screen.dart';
 import '../features/redesign/presentation/room_detail_screen.dart';
 import '../features/redesign/presentation/rooms_home_screen.dart';
+import '../features/redesign/presentation/sky_insights_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/shared/presentation/app_shell.dart';
 import '../features/trackers/presentation/tracker_screen.dart';
@@ -249,6 +251,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           (state) =>
               RoomDetailScreen(walletId: state.pathParameters['walletId']!),
         ),
+      ),
+      GoRoute(
+        path: ActivityFeedScreen.path,
+        pageBuilder: _slidePage((_) => const ActivityFeedScreen()),
+      ),
+      GoRoute(
+        path: SkyInsightsScreen.path,
+        pageBuilder: _slidePage((_) => const SkyInsightsScreen()),
       ),
     ],
   );
