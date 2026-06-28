@@ -5,7 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../settings/presentation/settings_screen.dart';
 import 'activity_feed_screen.dart';
-import 'rooms_home_screen.dart';
+import 'beranda_dashboard_screen.dart';
 import 'sky_insights_screen.dart';
 import 'sky_quick_add_sheet.dart';
 
@@ -28,7 +28,7 @@ class _RedesignShellState extends State<RedesignShell> {
   int _index = 0;
 
   static const _tabs = <Widget>[
-    RoomsHomeView(),
+    BerandaDashboardView(),
     ActivityFeedView(),
     SkyInsightsView(),
   ];

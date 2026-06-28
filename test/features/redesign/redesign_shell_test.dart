@@ -1,11 +1,14 @@
 import 'package:affluena_mobile/features/auth/application/auth_controller.dart';
 import 'package:affluena_mobile/features/auth/data/auth_models.dart';
+import 'package:affluena_mobile/features/budgets/application/budget_controller.dart';
 import 'package:affluena_mobile/features/dashboard/application/dashboard_home_controller.dart';
 import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart';
 import 'package:affluena_mobile/features/goals/application/goal_controller.dart';
 import 'package:affluena_mobile/features/goals/data/goal_models.dart';
+import 'package:affluena_mobile/features/recurring/application/recurring_controller.dart';
 import 'package:affluena_mobile/features/redesign/presentation/activity_feed_screen.dart';
 import 'package:affluena_mobile/features/redesign/presentation/redesign_shell.dart';
+import 'package:affluena_mobile/features/trackers/application/tracker_controller.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/wallets/application/wallets_controller.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
@@ -95,6 +98,23 @@ class _StubGoalController extends GoalController {
   GoalState build() => const GoalState(goals: [_goal]);
 }
 
+// Stub the dashboard's other section controllers so the widget test stays
+// hermetic (their real build() schedules a network load).
+class _StubBudgetController extends BudgetController {
+  @override
+  BudgetState build() => const BudgetState(month: '2026-06');
+}
+
+class _StubTrackerController extends TrackerController {
+  @override
+  TrackerState build() => const TrackerState();
+}
+
+class _StubRecurringController extends RecurringController {
+  @override
+  RecurringState build() => const RecurringState();
+}
+
 class _AuthedController extends AuthController {
   @override
   AuthState build() => AuthState.authenticated(_me);
@@ -109,6 +129,9 @@ Future<void> _pump(WidgetTester tester) async {
         authControllerProvider.overrideWith(_AuthedController.new),
         walletListProvider.overrideWith((ref) async => const [_gopay]),
         goalControllerProvider.overrideWith(_StubGoalController.new),
+        budgetControllerProvider.overrideWith(_StubBudgetController.new),
+        trackerControllerProvider.overrideWith(_StubTrackerController.new),
+        recurringControllerProvider.overrideWith(_StubRecurringController.new),
         recentActivityProvider.overrideWith((ref) async => const [_txn]),
         dashboardCashflowTrendProvider.overrideWith((ref) async => _trend),
         dashboardExpenseDistributionProvider.overrideWith(
@@ -130,8 +153,9 @@ void main() {
   ) async {
     await _pump(tester);
 
-    // Home tab is the rooms view.
-    expect(find.text('Total'), findsOneWidget);
+    // Home tab is the Beranda dashboard.
+    expect(find.text('Total saldo'), findsOneWidget);
+    expect(find.text('Dompet'), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsOneWidget);
     expect(find.byKey(const Key('nav-lainnya')), findsOneWidget);
 

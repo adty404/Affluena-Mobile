@@ -14,8 +14,8 @@ void main() {
 
     await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
 
-    // The Spaces home (rooms) is the default tab.
-    expect(find.text('Total'), findsOneWidget);
+    // The Beranda dashboard is the default tab.
+    expect(find.text('Total saldo'), findsOneWidget);
     // The Sky bottom nav tabs + center quick-add FAB.
     expect(find.byKey(const Key('nav-beranda')), findsOneWidget);
     expect(find.byKey(const Key('nav-aktivitas')), findsOneWidget);
