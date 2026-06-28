@@ -169,10 +169,8 @@ class TransactionsController extends Notifier<TransactionsState> {
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
-        loadError: reset
-            ? 'Transactions could not be loaded.'
-            : state.loadError,
-        actionError: reset ? null : 'Could not load more transactions.',
+        loadError: reset ? 'Transaksi gagal dimuat.' : state.loadError,
+        actionError: reset ? null : 'Transaksi lainnya gagal dimuat.',
       );
     }
   }
@@ -210,7 +208,7 @@ class TransactionsController extends Notifier<TransactionsState> {
       await load(reset: true);
       return true;
     } catch (_) {
-      state = state.copyWith(actionError: 'Transaction could not be created.');
+      state = state.copyWith(actionError: 'Transaksi gagal dibuat.');
       return false;
     }
   }
@@ -222,7 +220,7 @@ class TransactionsController extends Notifier<TransactionsState> {
     state = state.copyWith(actionError: null);
     final repository = ref.read(transactionRepositoryProvider);
     if (repository is! TransactionMutationRepository) {
-      state = state.copyWith(actionError: 'Transaction could not be updated.');
+      state = state.copyWith(actionError: 'Transaksi gagal diperbarui.');
       return false;
     }
 
@@ -232,7 +230,7 @@ class TransactionsController extends Notifier<TransactionsState> {
       await load(reset: true);
       return true;
     } catch (_) {
-      state = state.copyWith(actionError: 'Transaction could not be updated.');
+      state = state.copyWith(actionError: 'Transaksi gagal diperbarui.');
       return false;
     }
   }
@@ -247,7 +245,7 @@ class TransactionsController extends Notifier<TransactionsState> {
       await load(reset: true);
       return true;
     } catch (_) {
-      state = state.copyWith(actionError: 'Transaction could not be deleted.');
+      state = state.copyWith(actionError: 'Transaksi gagal dihapus.');
       return false;
     }
   }
@@ -320,7 +318,7 @@ class TransactionsState {
         .toList(growable: false);
   }
 
-  String walletName(String id) => walletNames[id] ?? 'Unknown wallet';
+  String walletName(String id) => walletNames[id] ?? 'Dompet tidak dikenal';
 
   String tagName(String id) => tagNames[id] ?? 'Tag';
 
@@ -328,12 +326,12 @@ class TransactionsState {
     if (transaction.categoryId == null) {
       return switch (transaction.type) {
         TransactionType.transfer => 'Transfer',
-        TransactionType.income => 'Income',
-        TransactionType.expense => 'Uncategorized',
-        TransactionType.adjustment => 'Adjustment',
+        TransactionType.income => 'Pemasukan',
+        TransactionType.expense => 'Tanpa kategori',
+        TransactionType.adjustment => 'Penyesuaian',
       };
     }
-    return categoryNames[transaction.categoryId] ?? 'Uncategorized';
+    return categoryNames[transaction.categoryId] ?? 'Tanpa kategori';
   }
 
   String filterDateLabel(DateTime date) => AffluenaDateFormatter.shortDate(

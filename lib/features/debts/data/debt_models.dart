@@ -31,10 +31,10 @@ enum DebtStatus {
 
   String get label {
     return switch (this) {
-      DebtStatus.open => 'Open',
-      DebtStatus.partial => 'Partial',
-      DebtStatus.paidOff => 'Paid off',
-      DebtStatus.cancelled => 'Cancelled',
+      DebtStatus.open => 'Terbuka',
+      DebtStatus.partial => 'Sebagian',
+      DebtStatus.paidOff => 'Lunas',
+      DebtStatus.cancelled => 'Dibatalkan',
     };
   }
 

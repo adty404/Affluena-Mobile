@@ -27,7 +27,7 @@ class AuthBootstrapScreen extends StatelessWidget {
               const SizedBox(height: AffluenaSpacing.space4),
               Text('Affluena', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space2),
-              Text('Preparing your workspace', style: textTheme.bodySmall),
+              Text('Menyiapkan ruang kerjamu', style: textTheme.bodySmall),
             ],
           ),
         ),
@@ -63,8 +63,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authControllerProvider);
 
     return _AuthShell(
-      title: 'Welcome back',
-      subtitle: 'Log in to keep your balances, wallets, and entries in sync.',
+      title: 'Selamat datang kembali',
+      subtitle: 'Masuk untuk menyinkronkan saldo, dompet, dan transaksimu.',
       message: authState.message,
       messageTone: authState.messageTone,
       children: [
@@ -95,11 +95,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 autofillHints: const [AutofillHints.password],
                 validator: (value) => AuthValidators.required(
                   value,
-                  message: 'Enter your password.',
+                  message: 'Masukkan kata sandimu.',
                 ),
                 onFieldSubmitted: (_) => _submit(authState),
                 decoration: const InputDecoration(
-                  labelText: 'Password',
+                  labelText: 'Kata sandi',
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
               ),
@@ -111,7 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           key: const Key('login-submit-button'),
           isSubmitting: authState.isSubmitting,
           icon: Icons.login,
-          label: 'Log in',
+          label: 'Masuk',
           onPressed: () => _submit(authState),
         ),
         const SizedBox(height: AffluenaSpacing.space3),
@@ -122,7 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: authState.isSubmitting
                     ? null
                     : () => context.go(RegisterScreen.path),
-                child: const Text('Create account'),
+                child: const Text('Daftar'),
               ),
             ),
             Expanded(
@@ -130,7 +130,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: authState.isSubmitting
                     ? null
                     : () => context.go(ForgotPasswordScreen.path),
-                child: const Text('Forgot password'),
+                child: const Text('Lupa kata sandi'),
               ),
             ),
           ],
@@ -183,8 +183,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.watch(authControllerProvider);
 
     return _AuthShell(
-      title: 'Create account',
-      subtitle: 'Start with a secure account, then connect your Affluena data.',
+      title: 'Daftar',
+      subtitle: 'Mulai dengan akun yang aman, lalu hubungkan data Affluena-mu.',
       message: authState.message,
       messageTone: authState.messageTone,
       children: [
@@ -215,8 +215,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 autofillHints: const [AutofillHints.newPassword],
                 validator: AuthValidators.password,
                 decoration: const InputDecoration(
-                  labelText: 'Password',
-                  helperText: 'At least 8 characters.',
+                  labelText: 'Kata sandi',
+                  helperText: 'Minimal 8 karakter.',
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
               ),
@@ -233,7 +233,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 onFieldSubmitted: (_) => _submit(authState),
                 decoration: const InputDecoration(
-                  labelText: 'Confirm password',
+                  labelText: 'Konfirmasi kata sandi',
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
               ),
@@ -245,7 +245,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           key: const Key('register-submit-button'),
           isSubmitting: authState.isSubmitting,
           icon: Icons.person_add_alt_1_outlined,
-          label: 'Register',
+          label: 'Daftar',
           onPressed: () => _submit(authState),
         ),
         const SizedBox(height: AffluenaSpacing.space3),
@@ -253,7 +253,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           onPressed: authState.isSubmitting
               ? null
               : () => context.go(LoginScreen.path),
-          child: const Text('I already have an account'),
+          child: const Text('Aku sudah punya akun'),
         ),
       ],
     );
@@ -300,10 +300,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final authState = ref.watch(authControllerProvider);
 
     return _AuthShell(
-      title: 'Reset access',
+      title: 'Atur ulang akses',
       subtitle:
-          'We will email a reset code to your Affluena account. Enter it on the '
-          'next screen to choose a new password.',
+          'Kami akan mengirim kode atur ulang ke akun Affluena-mu lewat email. '
+          'Masukkan kode itu di layar berikutnya untuk memilih kata sandi baru.',
       message: authState.message,
       messageTone: authState.messageTone,
       children: [
@@ -329,7 +329,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           key: const Key('forgot-submit-button'),
           isSubmitting: authState.isSubmitting,
           icon: Icons.mark_email_read_outlined,
-          label: 'Email me a code',
+          label: 'Kirimi aku kode',
           onPressed: () => _submit(authState),
         ),
         const SizedBox(height: AffluenaSpacing.space3),
@@ -337,7 +337,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           onPressed: authState.isSubmitting
               ? null
               : () => context.go(LoginScreen.path),
-          child: const Text('Back to login'),
+          child: const Text('Kembali ke masuk'),
         ),
       ],
     );
@@ -404,10 +404,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final email = widget.email?.trim();
 
     return _AuthShell(
-      title: 'New password',
+      title: 'Kata sandi baru',
       subtitle: email != null && email.isNotEmpty
-          ? 'Enter the code we emailed to $email, then choose a new password.'
-          : 'Enter the code from your email, then choose a new password.',
+          ? 'Masukkan kode yang kami kirim ke $email, lalu pilih kata sandi baru.'
+          : 'Masukkan kode dari email-mu, lalu pilih kata sandi baru.',
       message: authState.message,
       messageTone: authState.messageTone,
       children: [
@@ -425,12 +425,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 enableSuggestions: false,
                 validator: AuthValidators.resetCode,
                 decoration: InputDecoration(
-                  labelText: 'Reset code',
-                  helperText: 'The code from your email.',
+                  labelText: 'Kode atur ulang',
+                  helperText: 'Kode dari email-mu.',
                   prefixIcon: const Icon(Icons.confirmation_number_outlined),
                   suffixIcon: IconButton(
                     key: const Key('reset-code-paste-button'),
-                    tooltip: 'Paste code',
+                    tooltip: 'Tempel kode',
                     icon: const Icon(Icons.content_paste_outlined),
                     onPressed: _pasteCode,
                   ),
@@ -445,8 +445,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 autofillHints: const [AutofillHints.newPassword],
                 validator: AuthValidators.password,
                 decoration: const InputDecoration(
-                  labelText: 'New password',
-                  helperText: 'At least 8 characters.',
+                  labelText: 'Kata sandi baru',
+                  helperText: 'Minimal 8 karakter.',
                   prefixIcon: Icon(Icons.lock_reset_outlined),
                 ),
               ),
@@ -463,7 +463,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 ),
                 onFieldSubmitted: (_) => _submit(authState),
                 decoration: const InputDecoration(
-                  labelText: 'Confirm password',
+                  labelText: 'Konfirmasi kata sandi',
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
               ),
@@ -475,7 +475,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           key: const Key('reset-submit-button'),
           isSubmitting: authState.isSubmitting,
           icon: Icons.done_outline,
-          label: 'Update password',
+          label: 'Perbarui kata sandi',
           onPressed: () => _submit(authState),
         ),
         const SizedBox(height: AffluenaSpacing.space3),
@@ -484,7 +484,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           onPressed: authState.isSubmitting
               ? null
               : () => context.go(LoginScreen.path),
-          child: const Text('Back to login'),
+          child: const Text('Kembali ke masuk'),
         ),
       ],
     );
@@ -589,7 +589,7 @@ class _BrandHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Affluena', style: textTheme.titleMedium),
-            Text('Finance companion', style: textTheme.labelMedium),
+            Text('Teman keuanganmu', style: textTheme.labelMedium),
           ],
         ),
       ],
@@ -666,7 +666,7 @@ class _SubmitButton extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(icon),
-      label: Text(isSubmitting ? 'Please wait' : label),
+      label: Text(isSubmitting ? 'Mohon tunggu' : label),
     );
   }
 }

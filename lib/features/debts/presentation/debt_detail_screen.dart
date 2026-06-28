@@ -28,7 +28,7 @@ class DebtDetailScreen extends ConsumerWidget {
     final detail = ref.watch(debtDetailProvider(debtId));
 
     return DrillInScaffold(
-      title: detail.value?.counterpartyName ?? 'Debt detail',
+      title: detail.value?.counterpartyName ?? 'Detail utang',
       body: detail.when(
         skipLoadingOnReload: true,
         loading: () => const _DebtDetailSkeleton(),
@@ -77,7 +77,7 @@ class _DebtDetailContent extends StatelessWidget {
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               StatusBadge(
-                label: isPayable ? 'Payable' : 'Receivable',
+                label: isPayable ? 'Utang' : 'Piutang',
                 tone: isPayable ? StatusTone.danger : StatusTone.success,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
@@ -87,7 +87,7 @@ class _DebtDetailContent extends StatelessWidget {
               ),
               const SizedBox(height: AffluenaSpacing.space1),
               Text(
-                '${debt.paidPercent.round()}% settled of '
+                '${debt.paidPercent.round()}% lunas dari '
                 '${MoneyFormatter.idr(debt.principalAmountMinor)}',
                 style: textTheme.bodySmall,
               ),
@@ -111,16 +111,16 @@ class _DebtDetailContent extends StatelessWidget {
               Row(
                 children: [
                   MetricTile(
-                    label: 'Principal',
+                    label: 'Pokok',
                     value: MoneyFormatter.idr(debt.principalAmountMinor),
-                    helper: 'Original amount',
+                    helper: 'Jumlah awal',
                     icon: Icons.account_balance_outlined,
                   ),
                   const SizedBox(width: AffluenaSpacing.space3),
                   MetricTile(
-                    label: 'Paid',
+                    label: 'Terbayar',
                     value: MoneyFormatter.idr(debt.paidAmountMinor),
-                    helper: 'Settled so far',
+                    helper: 'Sudah dibayar',
                     icon: Icons.done_all,
                   ),
                 ],
@@ -128,22 +128,22 @@ class _DebtDetailContent extends StatelessWidget {
               const SizedBox(height: AffluenaSpacing.space3),
               _DetailRow(
                 icon: Icons.event_outlined,
-                title: 'Opened',
+                title: 'Dibuka',
                 value: AffluenaDateFormatter.shortDate(debt.openedAt),
               ),
               const Divider(height: 1),
               _DetailRow(
                 icon: Icons.schedule_outlined,
-                title: 'Due date',
+                title: 'Jatuh tempo',
                 value: debt.dueDate == null || debt.dueDate!.isEmpty
-                    ? 'No due date'
+                    ? 'Tanpa jatuh tempo'
                     : AffluenaDateFormatter.shortDate(debt.dueDate!),
               ),
               if (debt.note.isNotEmpty) ...[
                 const Divider(height: 1),
                 _DetailRow(
                   icon: Icons.notes_outlined,
-                  title: 'Note',
+                  title: 'Catatan',
                   value: debt.note,
                 ),
               ],
@@ -152,12 +152,10 @@ class _DebtDetailContent extends StatelessWidget {
         ),
         const SizedBox(height: AffluenaSpacing.space6),
         SectionHeader(
-          title: 'Payment history',
+          title: 'Riwayat pembayaran',
           actionLabel: debt.payments.isEmpty
               ? null
-              : debt.payments.length == 1
-              ? '1 payment'
-              : '${debt.payments.length} payments',
+              : '${debt.payments.length} pembayaran',
         ),
         const SizedBox(height: AffluenaSpacing.space3),
         if (debt.payments.isEmpty)
@@ -333,10 +331,10 @@ class _EmptyPayments extends StatelessWidget {
         children: [
           Icon(Icons.receipt_long_outlined, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text('No payments yet', style: textTheme.titleMedium),
+          Text('Belum ada pembayaran', style: textTheme.titleMedium),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Recorded payments will appear here as a timeline.',
+            'Pembayaran yang dicatat akan muncul di sini sebagai linimasa.',
             style: textTheme.bodySmall,
           ),
         ],
@@ -419,7 +417,7 @@ class _DebtDetailError extends StatelessWidget {
         padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
-            'We could not load this debt.',
+            'Kami tidak dapat memuat utang ini.',
             onRetry: onRetry,
           ),
         ],

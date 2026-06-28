@@ -54,7 +54,7 @@ class _WalletSharingContent extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return DrillInScaffold(
-      title: 'Sharing',
+      title: 'Berbagi',
       body: ListView(
         padding: _screenPadding,
         children: [
@@ -85,26 +85,26 @@ class _WalletSharingContent extends ConsumerWidget {
           ),
           const SizedBox(height: AffluenaSpacing.space6),
           SectionHeader(
-            title: 'Members',
-            actionLabel: 'Invite member',
+            title: 'Anggota',
+            actionLabel: 'Undang anggota',
             onAction: () => showWalletInviteSheet(context, ref, wallet.id),
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           WalletMembersSection(walletId: wallet.id, members: state.members),
           const SizedBox(height: AffluenaSpacing.space6),
-          const SectionHeader(title: 'Access'),
+          const SectionHeader(title: 'Akses'),
           const SizedBox(height: AffluenaSpacing.space3),
           AffluenaCard(
             child: Column(
               children: [
                 _AccessRow(
-                  title: 'Wallet',
+                  title: 'Dompet',
                   value: wallet.name,
                   icon: Icons.account_balance_wallet_outlined,
                 ),
                 const Divider(height: 1),
                 _AccessRow(
-                  title: 'Role',
+                  title: 'Peran',
                   value: walletRoleLabel(wallet.role),
                   icon: Icons.verified_user_outlined,
                 ),
@@ -129,7 +129,7 @@ class _WalletSharingLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Sharing',
+      title: 'Berbagi',
       body: ListView(
         padding: _screenPadding,
         children: [
@@ -182,12 +182,12 @@ class _WalletSharingError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Sharing',
+      title: 'Berbagi',
       body: ListView(
         padding: _screenPadding,
         children: [
           AffluenaBanner.error(
-            'We could not load wallet sharing.',
+            'Kami tidak dapat memuat berbagi dompet.',
             onRetry: onRetry,
           ),
         ],

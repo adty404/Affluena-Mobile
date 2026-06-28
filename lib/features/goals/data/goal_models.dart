@@ -8,9 +8,9 @@ enum GoalStatus {
   String get apiValue => name;
 
   String get label => switch (this) {
-    GoalStatus.active => 'Active',
-    GoalStatus.achieved => 'Achieved',
-    GoalStatus.cancelled => 'Cancelled',
+    GoalStatus.active => 'Aktif',
+    GoalStatus.achieved => 'Tercapai',
+    GoalStatus.cancelled => 'Dibatalkan',
   };
 
   static GoalStatus fromApiValue(String value) {
@@ -31,9 +31,9 @@ enum GoalMemberStatus {
   String get apiValue => name;
 
   String get label => switch (this) {
-    GoalMemberStatus.pending => 'Pending',
-    GoalMemberStatus.joined => 'Joined',
-    GoalMemberStatus.rejected => 'Rejected',
+    GoalMemberStatus.pending => 'Menunggu',
+    GoalMemberStatus.joined => 'Bergabung',
+    GoalMemberStatus.rejected => 'Ditolak',
   };
 
   static GoalMemberStatus fromApiValue(String value) {

@@ -56,7 +56,7 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
         securityState?.preferences.deviceLockEnabled == true &&
         securityState?.isDeviceAuthSupported == true;
     final wasJustEnabled =
-        securityState?.actionMessage == 'Device lock enabled.';
+        securityState?.actionMessage == 'Kunci perangkat diaktifkan.';
 
     _syncLockState(shouldProtect: shouldProtect, skipLock: wasJustEnabled);
 
@@ -119,17 +119,18 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
         _unlockedForSession = unlocked;
         _error = unlocked
             ? null
-            : 'Could not verify it was you. Tap Unlock to try again, or use '
-                  'your device passcode. Make sure a fingerprint/face or screen '
-                  'lock is set up in device settings.';
+            : 'Tidak bisa memverifikasi bahwa ini kamu. Ketuk Buka kunci untuk '
+                  'coba lagi, atau gunakan kode sandi perangkatmu. Pastikan '
+                  'sidik jari/wajah atau kunci layar sudah disiapkan di '
+                  'pengaturan perangkat.';
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _isAuthenticating = false;
         _error =
-            'Device authentication is unavailable. Set up a fingerprint, '
-            'face, or screen lock in your device settings, or log out.';
+            'Autentikasi perangkat tidak tersedia. Siapkan sidik jari, wajah, '
+            'atau kunci layar di pengaturan perangkatmu, atau keluar.';
       });
     }
   }
@@ -202,10 +203,10 @@ class _AppLockScreenState extends State<_AppLockScreen> {
                     ),
                   ),
                   const SizedBox(height: AffluenaSpacing.space5),
-                  Text('Affluena locked', style: textTheme.headlineMedium),
+                  Text('Affluena terkunci', style: textTheme.headlineMedium),
                   const SizedBox(height: AffluenaSpacing.space2),
                   Text(
-                    'Use your device authentication to continue your signed-in finance session.',
+                    'Gunakan autentikasi perangkatmu untuk melanjutkan sesi keuangan yang sedang masuk.',
                     style: textTheme.bodyMedium,
                   ),
                   if (error != null) ...[
@@ -242,14 +243,16 @@ class _AppLockScreenState extends State<_AppLockScreen> {
                           )
                         : const Icon(Icons.lock_open_outlined),
                     label: Text(
-                      isAuthenticating ? 'Authenticating' : 'Unlock Affluena',
+                      isAuthenticating
+                          ? 'Mengautentikasi'
+                          : 'Buka kunci Affluena',
                     ),
                   ),
                   const SizedBox(height: AffluenaSpacing.space2),
                   TextButton(
                     key: const Key('app-lock-logout-button'),
                     onPressed: isAuthenticating ? null : onLogout,
-                    child: const Text('Log out'),
+                    child: const Text('Keluar'),
                   ),
                 ],
               ),

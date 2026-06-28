@@ -8,8 +8,8 @@ class _SplitResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final debtLabel = result.debtIds.length == 1
-        ? '1 debt record created'
-        : '${result.debtIds.length} debt records created';
+        ? '1 catatan utang dibuat'
+        : '${result.debtIds.length} catatan utang dibuat';
 
     return AffluenaCard(
       backgroundColor: context.affluenaColors.forestSoft,
@@ -18,19 +18,19 @@ class _SplitResultCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Split bill created',
+            'Bagi tagihan dibuat',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AffluenaSpacing.space2),
-          const Text('Expense transaction recorded'),
+          const Text('Transaksi pengeluaran tercatat'),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(debtLabel),
           const SizedBox(height: AffluenaSpacing.space4),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () => context.go(TransactionsScreen.path),
-              child: const Text('View transactions'),
+              onPressed: () => context.push(TransactionsScreen.path),
+              child: const Text('Lihat transaksi'),
             ),
           ),
         ],
@@ -68,31 +68,28 @@ class _SplitConfirmSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Create split bill',
+              'Buat bagi tagihan',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AffluenaSpacing.space4),
             _ConfirmRow(
-              label: 'Total bill',
+              label: 'Total tagihan',
               value: MoneyFormatter.idr(totalAmount),
             ),
             _ConfirmRow(
-              label: 'Participant share',
+              label: 'Bagian peserta',
               value: MoneyFormatter.idr(participantTotal),
             ),
             _ConfirmRow(
-              label: 'Your share',
+              label: 'Bagianmu',
               value: MoneyFormatter.idr(userShare < 0 ? 0 : userShare),
             ),
-            _ConfirmRow(
-              label: 'Participants',
-              value: '$participantCount people',
-            ),
+            _ConfirmRow(label: 'Peserta', value: '$participantCount orang'),
             const SizedBox(height: AffluenaSpacing.space5),
             FilledButton(
               key: const Key('split-confirm-button'),
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Confirm split bill'),
+              child: const Text('Konfirmasi bagi tagihan'),
             ),
           ],
         ),
@@ -127,7 +124,7 @@ class _SplitBillLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Split bill',
+      title: 'Bagi tagihan',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -170,12 +167,12 @@ class _SplitBillLoadError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Split bill',
+      title: 'Bagi tagihan',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           AffluenaBanner.error(
-            'We could not load split bill data.',
+            'Kami tidak dapat memuat data bagi tagihan.',
             onRetry: onRetry,
           ),
         ],

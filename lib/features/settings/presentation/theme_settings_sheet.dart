@@ -22,7 +22,7 @@ class _ThemeSheet extends ConsumerWidget {
     final current = ref.watch(appThemeModeProvider);
 
     return SettingsSheetFrame(
-      title: 'Appearance',
+      title: 'Tampilan',
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

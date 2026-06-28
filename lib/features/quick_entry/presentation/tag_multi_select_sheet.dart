@@ -75,14 +75,12 @@ class _TagMultiSelectSheetState extends State<_TagMultiSelectSheet> {
           children: [
             Row(
               children: [
-                Expanded(
-                  child: Text('Select tags', style: textTheme.titleLarge),
-                ),
+                Expanded(child: Text('Pilih tag', style: textTheme.titleLarge)),
                 if (_selected.isNotEmpty)
                   TextButton(
                     key: const Key('tag-multi-select-clear'),
                     onPressed: () => setState(_selected.clear),
-                    child: const Text('Clear'),
+                    child: const Text('Bersihkan'),
                   ),
               ],
             ),
@@ -93,7 +91,7 @@ class _TagMultiSelectSheetState extends State<_TagMultiSelectSheet> {
               textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.search),
-                hintText: 'Search tags',
+                hintText: 'Cari tag',
               ),
               onChanged: (value) => setState(() => _query = value),
             ),
@@ -107,7 +105,7 @@ class _TagMultiSelectSheetState extends State<_TagMultiSelectSheet> {
                       ),
                       child: Center(
                         child: Text(
-                          'No tags found',
+                          'Tag tidak ditemukan',
                           style: textTheme.bodyMedium?.copyWith(
                             color: colors.inkMuted,
                           ),
@@ -151,8 +149,8 @@ class _TagMultiSelectSheetState extends State<_TagMultiSelectSheet> {
               ),
               child: Text(
                 _selected.isEmpty
-                    ? 'Use no tags'
-                    : 'Apply ${_selected.length} ${_selected.length == 1 ? 'tag' : 'tags'}',
+                    ? 'Pakai tanpa tag'
+                    : 'Pakai ${_selected.length} tag',
               ),
             ),
           ],

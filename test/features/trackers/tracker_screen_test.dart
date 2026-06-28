@@ -44,7 +44,7 @@ void main() {
     await tester.pumpWidget(trackerTestApp(repository));
     await tester.pumpTrackerState();
 
-    expect(find.text('Trackers'), findsOneWidget);
+    expect(find.text('Cicilan & Langganan'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Laptop'),
       300,
@@ -53,9 +53,9 @@ void main() {
     expect(find.text('Laptop'), findsOneWidget);
     expect(find.textContaining('wallet-main'), findsNothing);
 
-    await tester.ensureVisible(find.text('Pay installment'));
+    await tester.ensureVisible(find.text('Bayar cicilan'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Pay installment'));
+    await tester.tap(find.text('Bayar cicilan'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('tracker-payment-save-button')));
     await tester.pumpAndSettle();
@@ -78,9 +78,9 @@ void main() {
     );
     expect(find.text('Spotify'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Pay subscription'));
+    await tester.ensureVisible(find.text('Bayar langganan'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Pay subscription'));
+    await tester.tap(find.text('Bayar langganan'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('tracker-payment-save-button')));
     await tester.pumpAndSettle();

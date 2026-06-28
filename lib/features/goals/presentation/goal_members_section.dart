@@ -28,7 +28,7 @@ class GoalMembersSection extends StatelessWidget {
 
     if (members.isEmpty) {
       return Text(
-        'Just you so far. Invite people to save together.',
+        'Baru kamu sejauh ini. Undang orang lain untuk menabung bersama.',
         style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
       );
     }
@@ -89,7 +89,7 @@ class _MemberRow extends StatelessWidget {
                 const SizedBox(width: AffluenaSpacing.space2),
                 Expanded(
                   child: Text(
-                    isCurrentUser ? 'You' : member.identityLabel,
+                    isCurrentUser ? 'Kamu' : member.identityLabel,
                     style: textTheme.bodyMedium,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -111,7 +111,7 @@ class _MemberRow extends StatelessWidget {
                       onPressed: busy
                           ? null
                           : () => onRespond(member, GoalMemberStatus.joined),
-                      child: const Text('Accept'),
+                      child: const Text('Terima'),
                     ),
                   ),
                   const SizedBox(width: AffluenaSpacing.space2),
@@ -124,7 +124,7 @@ class _MemberRow extends StatelessWidget {
                         foregroundColor: colors.coral,
                         side: BorderSide(color: colors.coral),
                       ),
-                      child: const Text('Reject'),
+                      child: const Text('Tolak'),
                     ),
                   ),
                 ],

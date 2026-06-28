@@ -1,4 +1,5 @@
 import 'package:affluena_mobile/core/api/api_error.dart';
+import 'package:affluena_mobile/features/settings/presentation/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,13 +16,17 @@ void main() {
     );
     await _openSettings(tester);
 
+    // The Settings screen now renders inside a DrillInScaffold whose AppBar
+    // shows the localized title instead of a large in-body "Profile" headline.
+    expect(find.byType(SettingsScreen), findsOneWidget);
+    expect(find.text('Pengaturan'), findsOneWidget);
     expect(find.text('Demo User'), findsOneWidget);
     expect(find.text('demo@affluena.com'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('settings-sessions-row')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Signed-in sessions'), findsOneWidget);
+    expect(find.text('Sesi yang masuk'), findsOneWidget);
     // The session row now shows the parsed device label (deviceLabel) instead
     // of the raw user-agent string. The seeded UA "Chrome on macOS" resolves to
     // the browser-only label "Chrome".
@@ -57,7 +62,7 @@ void main() {
     expect(authRepository.updateAccountRequests, hasLength(1));
     expect(authRepository.updateAccountRequests.single.name, 'Ayu Finance');
     expect(find.text('Ayu Finance'), findsOneWidget);
-    expect(find.text('Account updated.'), findsOneWidget);
+    expect(find.text('Akun diperbarui.'), findsOneWidget);
   });
 
   testWidgets('validates password and surfaces API errors', (tester) async {
@@ -91,8 +96,8 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-password-save-button')));
     await tester.pumpAndSettle();
 
-    // The shared AuthValidators.password copy changed to this shorter phrasing.
-    expect(find.text('Use at least 8 characters.'), findsOneWidget);
+    // The shared AuthValidators.password copy is now localized to Indonesian.
+    expect(find.text('Gunakan minimal 8 karakter.'), findsOneWidget);
     expect(authRepository.changePasswordRequests, isEmpty);
 
     await tester.enterText(
@@ -165,11 +170,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(authRepository.revokedSessionIds, isEmpty);
-    expect(find.text('Revoke this session?'), findsOneWidget);
+    expect(find.text('Cabut sesi ini?'), findsOneWidget);
     // The seeded session is not the current device, so the confirm dialog warns
     // that the other device will be signed out.
     expect(
-      find.textContaining('That device will be signed out'),
+      find.textContaining('Perangkat itu akan dikeluarkan'),
       findsOneWidget,
     );
 
@@ -177,10 +182,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(authRepository.revokedSessionIds, [seededAuthSession.id]);
-    expect(find.text('Session revoked.'), findsOneWidget);
+    expect(find.text('Sesi dicabut.'), findsOneWidget);
     // The parsed device label is gone once the only session is revoked.
     expect(find.text('Chrome'), findsNothing);
-    expect(find.text('No other sessions'), findsOneWidget);
+    expect(find.text('Tidak ada sesi lain'), findsOneWidget);
   });
 
   testWidgets('session list error can retry', (tester) async {
@@ -239,8 +244,8 @@ void main() {
     );
     await _openSettings(tester);
 
-    expect(find.text('Device lock'), findsOneWidget);
-    expect(find.text('Off • device authentication'), findsOneWidget);
+    expect(find.text('Kunci perangkat'), findsOneWidget);
+    expect(find.text('Nonaktif • autentikasi perangkat'), findsOneWidget);
     expect(find.byKey(const Key('settings-device-lock-row')), findsOneWidget);
     expect(find.text('Unavailable in this build'), findsNothing);
 
@@ -251,8 +256,8 @@ void main() {
 
     expect(deviceAuth.authenticateCalls, 1);
     expect(securityRepository.savedPreferences.single.deviceLockEnabled, true);
-    expect(find.text('Device lock enabled.'), findsOneWidget);
-    expect(find.text('On • device authentication'), findsOneWidget);
+    expect(find.text('Kunci perangkat diaktifkan.'), findsOneWidget);
+    expect(find.text('Aktif • autentikasi perangkat'), findsOneWidget);
   });
 }
 

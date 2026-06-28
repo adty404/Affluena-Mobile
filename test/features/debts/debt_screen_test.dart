@@ -42,7 +42,7 @@ void main() {
     await tester.pumpWidget(debtTestApp());
     await tester.pumpDebtState();
 
-    expect(find.text('Debt & Tracker'), findsOneWidget);
+    expect(find.text('Utang'), findsWidgets);
     await tester.scrollUntilVisible(
       find.text('Alya'),
       300,
@@ -50,7 +50,7 @@ void main() {
     );
 
     expect(find.text('Alya'), findsOneWidget);
-    expect(find.text('Partial'), findsOneWidget);
+    expect(find.text('Sebagian'), findsOneWidget);
     expect(find.textContaining('wallet-main'), findsNothing);
     expect(find.textContaining('category-food'), findsNothing);
   });
@@ -63,20 +63,20 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
-    expect(find.text('Create debt'), findsOneWidget);
+    expect(find.text('Buat utang'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).first, 'Bima');
-    await tester.tap(find.text('Choose wallet'));
+    await tester.tap(find.text('Pilih dompet'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Main Wallet'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Choose category').first);
+    await tester.tap(find.text('Pilih kategori').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Salary'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Choose category').last);
+    await tester.tap(find.text('Pilih kategori').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Food & Dining'));
     await tester.pumpAndSettle();
@@ -115,14 +115,14 @@ void main() {
     await tester.pumpWidget(debtTestApp(debtRepository: repository));
     await tester.pumpDebtState();
     await tester.scrollUntilVisible(
-      find.text('Record payment'),
+      find.text('Catat pembayaran'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.ensureVisible(find.text('Record payment'));
+    await tester.ensureVisible(find.text('Catat pembayaran'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Record payment'));
+    await tester.tap(find.text('Catat pembayaran'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('debt-payment-amount-field')),

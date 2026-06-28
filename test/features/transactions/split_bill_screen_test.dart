@@ -39,7 +39,7 @@ void main() {
       );
       await tester.pumpSplitState();
 
-      expect(find.text('Split bill'), findsOneWidget);
+      expect(find.text('Bagi tagihan'), findsOneWidget);
       expect(find.text('GoPay'), findsWidgets);
       expect(find.text('Food & Dining'), findsWidgets);
       expect(find.text(gopayWallet.id), findsNothing);
@@ -101,12 +101,12 @@ void main() {
       expect(
         find.descendant(
           of: confirmSheet,
-          matching: find.text('Create split bill'),
+          matching: find.text('Buat bagi tagihan'),
         ),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: confirmSheet, matching: find.text('Your share')),
+        find.descendant(of: confirmSheet, matching: find.text('Bagianmu')),
         findsOneWidget,
       );
       expect(
@@ -116,7 +116,7 @@ void main() {
       expect(
         find.descendant(
           of: confirmSheet,
-          matching: find.text('Participant share'),
+          matching: find.text('Bagian peserta'),
         ),
         findsOneWidget,
       );
@@ -147,10 +147,10 @@ void main() {
       expect(request.splits.first.disbursementCategoryId, foodCategory.id);
       expect(request.splits.first.paymentCategoryId, salaryCategory.id);
 
-      expect(find.text('Split bill created'), findsOneWidget);
-      expect(find.text('Expense transaction recorded'), findsOneWidget);
-      expect(find.text('2 debt records created'), findsOneWidget);
-      expect(find.text('View transactions'), findsOneWidget);
+      expect(find.text('Bagi tagihan dibuat'), findsOneWidget);
+      expect(find.text('Transaksi pengeluaran tercatat'), findsOneWidget);
+      expect(find.text('2 catatan utang dibuat'), findsOneWidget);
+      expect(find.text('Lihat transaksi'), findsOneWidget);
     },
   );
 
@@ -176,11 +176,11 @@ void main() {
     await _addParticipant(tester, name: 'Rani', amount: '120000');
 
     await tester.scrollUntilVisible(
-      find.text('Participant share exceeds total bill.'),
+      find.text('Bagian peserta melebihi total tagihan.'),
       260,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Participant share exceeds total bill.'), findsOneWidget);
+    expect(find.text('Bagian peserta melebihi total tagihan.'), findsOneWidget);
 
     await _tapSubmit(tester, warnIfMissed: false);
     await tester.pumpAndSettle();
@@ -217,9 +217,9 @@ void main() {
     await tester.pumpSplitState();
 
     expect(repository.splitRequests, hasLength(1));
-    expect(find.text('Split bill could not be created.'), findsOneWidget);
+    expect(find.text('Bagi tagihan gagal dibuat.'), findsOneWidget);
     expect(find.text('Rani'), findsOneWidget);
-    expect(find.text('Split bill created'), findsNothing);
+    expect(find.text('Bagi tagihan dibuat'), findsNothing);
   });
 }
 

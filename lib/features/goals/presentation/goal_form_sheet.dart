@@ -71,7 +71,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _isEditing ? 'Edit goal' : 'Create goal',
+                _isEditing ? 'Ubah target' : 'Buat target',
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
@@ -82,14 +82,14 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                 textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.label_outline),
-                  labelText: 'Name',
+                  labelText: 'Nama',
                 ),
                 onChanged: (_) => _clearError(),
               ),
               const SizedBox(height: AffluenaSpacing.space3),
               MoneyInput(
                 key: const Key('goal-target-field'),
-                label: 'Target amount',
+                label: 'Jumlah target',
                 initialValue: _targetMinor,
                 enabled: !_isSaving,
                 onChanged: (value) => setState(() {
@@ -99,7 +99,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
-                label: 'Deadline',
+                label: 'Tenggat',
                 value: _deadline,
                 enabled: !_isSaving,
                 firstDate: DateTime.now(),
@@ -116,7 +116,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
               FilledButton(
                 key: const Key('goal-save-button'),
                 onPressed: _isSaving ? null : _save,
-                child: Text(_isSaving ? 'Saving...' : 'Save goal'),
+                child: Text(_isSaving ? 'Menyimpan...' : 'Simpan target'),
               ),
             ],
           ),
@@ -136,15 +136,15 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
     final deadline = _deadline;
 
     if (name.isEmpty) {
-      setState(() => _error = 'Give the goal a name.');
+      setState(() => _error = 'Beri nama untuk target ini.');
       return;
     }
     if (target <= 0) {
-      setState(() => _error = 'Set a target amount greater than zero.');
+      setState(() => _error = 'Tetapkan jumlah target lebih dari nol.');
       return;
     }
     if (deadline == null) {
-      setState(() => _error = 'Pick a deadline for this goal.');
+      setState(() => _error = 'Pilih tenggat untuk target ini.');
       return;
     }
 
@@ -172,8 +172,8 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
     setState(() {
       _isSaving = false;
       _error = _isEditing
-          ? 'Goal could not be updated. Try again.'
-          : 'Goal could not be created. Try again.';
+          ? 'Target tidak dapat diperbarui. Coba lagi.'
+          : 'Target tidak dapat dibuat. Coba lagi.';
     });
   }
 

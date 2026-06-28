@@ -12,9 +12,9 @@ enum InstallmentStatus {
   };
 
   String get label => switch (this) {
-    InstallmentStatus.active => 'Active',
-    InstallmentStatus.paidOff => 'Paid off',
-    InstallmentStatus.cancelled => 'Cancelled',
+    InstallmentStatus.active => 'Aktif',
+    InstallmentStatus.paidOff => 'Lunas',
+    InstallmentStatus.cancelled => 'Dibatalkan',
   };
 
   static InstallmentStatus fromApiValue(String value) {
@@ -35,9 +35,9 @@ enum SubscriptionStatus {
   String get apiValue => name;
 
   String get label => switch (this) {
-    SubscriptionStatus.active => 'Active',
-    SubscriptionStatus.paused => 'Paused',
-    SubscriptionStatus.cancelled => 'Cancelled',
+    SubscriptionStatus.active => 'Aktif',
+    SubscriptionStatus.paused => 'Dijeda',
+    SubscriptionStatus.cancelled => 'Dibatalkan',
   };
 
   static SubscriptionStatus fromApiValue(String value) {
@@ -57,8 +57,8 @@ enum BillingCycle {
   String get apiValue => name;
 
   String get label => switch (this) {
-    BillingCycle.weekly => 'Weekly',
-    BillingCycle.monthly => 'Monthly',
+    BillingCycle.weekly => 'Mingguan',
+    BillingCycle.monthly => 'Bulanan',
   };
 
   static BillingCycle fromApiValue(String value) {

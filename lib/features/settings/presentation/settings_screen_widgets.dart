@@ -28,7 +28,7 @@ class SettingsProfileCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
     final displayName = user?.name.isNotEmpty == true ? user!.name : 'Affluena';
-    final email = user?.email ?? 'Signed in';
+    final email = user?.email ?? 'Sudah masuk';
     final initial = displayName.trim().isEmpty
         ? 'A'
         : displayName.trim().characters.first.toUpperCase();
@@ -315,7 +315,7 @@ class SettingsDeviceLockRow extends StatelessWidget {
     return switch (securityPreferences) {
       AsyncData(:final value) => SettingsSwitchRow(
         icon: Icons.fingerprint,
-        title: 'Device lock',
+        title: 'Kunci perangkat',
         value: value.deviceLockValue,
         switchValue: value.preferences.deviceLockEnabled,
         isBusy: value.isSaving,
@@ -323,14 +323,14 @@ class SettingsDeviceLockRow extends StatelessWidget {
       ),
       AsyncError() => const SettingsRow(
         icon: Icons.fingerprint,
-        title: 'Device lock',
-        value: 'Could not load device authentication',
+        title: 'Kunci perangkat',
+        value: 'Tidak dapat memuat autentikasi perangkat',
         onTap: null,
       ),
       _ => const SettingsSwitchRow(
         icon: Icons.fingerprint,
-        title: 'Device lock',
-        value: 'Checking device authentication',
+        title: 'Kunci perangkat',
+        value: 'Memeriksa autentikasi perangkat',
         switchValue: false,
         isBusy: true,
         onChanged: null,

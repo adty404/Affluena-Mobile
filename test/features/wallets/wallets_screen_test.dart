@@ -30,7 +30,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Europe Trip Fund'), findsOneWidget);
-    expect(find.textContaining('Read-only goal wallet'), findsOneWidget);
+    expect(find.textContaining('Dompet target hanya-baca'), findsOneWidget);
     expect(find.byKey(const Key('edit-wallet-goal-wallet')), findsNothing);
   });
 
@@ -38,9 +38,9 @@ void main() {
     await tester.pumpWidget(walletsTestApp(TestWalletRepository(wallets: [])));
     await tester.pumpAndSettle();
 
-    expect(find.text('No wallets yet'), findsOneWidget);
+    expect(find.text('Belum ada dompet'), findsOneWidget);
     expect(
-      find.text('Create a wallet before recording transactions.'),
+      find.text('Buat dompet dulu sebelum mencatat transaksi.'),
       findsOneWidget,
     );
   });

@@ -10,6 +10,7 @@ import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/date_time_picker_field.dart';
+import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
@@ -151,7 +152,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
   Future<void> _selectWallet(QuickEntryLookup lookup) async {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
-      title: 'Select wallet',
+      title: 'Pilih dompet',
       selectedValue: _selectedWalletId,
       options: [
         for (final wallet in lookup.wallets)
@@ -169,7 +170,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
   Future<void> _selectToWallet(QuickEntryLookup lookup) async {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
-      title: 'Select destination',
+      title: 'Pilih tujuan',
       selectedValue: _selectedToWalletId,
       options: [
         for (final wallet in lookup.wallets)
@@ -189,7 +190,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
     final categories = lookup.categoriesFor(_type);
     final selected = await showCategoryTreePicker(
       context: context,
-      title: 'Select category',
+      title: 'Pilih kategori',
       selectedId: _selectedCategoryId,
       categories: [
         for (final category in categories)
@@ -258,13 +259,13 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _message = 'Transaction saved.';
+        _message = 'Transaksi tersimpan.';
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _error = 'Transaction could not be saved.';
+        _error = 'Transaksi tidak bisa disimpan.';
       });
     }
   }
@@ -290,13 +291,13 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _message = '${template.name} recorded.';
+        _message = '${template.name} tercatat.';
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _error = 'Template could not be executed.';
+        _error = 'Template tidak bisa dijalankan.';
       });
     }
   }
@@ -372,7 +373,7 @@ class _QuickEntryContent extends StatelessWidget {
       for (final id in selectedTagIds) lookup.tagById(id),
     ].whereType<Tag>().toList(growable: false);
     final tagSummary = selectedTags.isEmpty
-        ? 'Optional — tap to add'
+        ? 'Opsional — ketuk untuk menambah'
         : selectedTags.map((t) => tagLabel(t.name)).join('  ');
     final categories = lookup.categoriesFor(type);
     // Templates are scoped to the active tab so an expense template never shows
@@ -382,201 +383,206 @@ class _QuickEntryContent extends StatelessWidget {
         .toList(growable: false);
     final setupGuidance = _lookupGuidanceMessage(lookup, type);
 
-    return SafeArea(
-      child: ListView(
-        padding: AffluenaInsets.screen,
-        children: [
-          Text('Quick entry', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space2),
-          Text(
-            'Record daily money movement without turning it into paperwork.',
-            style: textTheme.bodySmall,
-          ),
-          const SizedBox(height: AffluenaSpacing.space6),
-          SegmentedButton<TransactionType>(
-            segments: const [
-              ButtonSegment(
-                value: TransactionType.expense,
-                label: Text('Expense'),
+    return DrillInScaffold(
+      title: 'Catat cepat',
+      body: SafeArea(
+        child: ListView(
+          padding: AffluenaInsets.screen,
+          children: [
+            Text(
+              'Catat pergerakan uang harian tanpa ribet.',
+              style: textTheme.bodySmall,
+            ),
+            const SizedBox(height: AffluenaSpacing.space6),
+            SegmentedButton<TransactionType>(
+              segments: const [
+                ButtonSegment(
+                  value: TransactionType.expense,
+                  label: Text('Pengeluaran'),
+                ),
+                ButtonSegment(
+                  value: TransactionType.income,
+                  label: Text('Pemasukan'),
+                ),
+                ButtonSegment(
+                  value: TransactionType.transfer,
+                  label: Text('Transfer'),
+                ),
+              ],
+              selected: {type},
+              onSelectionChanged: (selection) => onTypeChanged(selection.first),
+            ),
+            const SizedBox(height: AffluenaSpacing.space5),
+            if (setupGuidance != null) ...[
+              AffluenaCard(
+                backgroundColor: colors.surfaceTintSoft,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, color: colors.forest, size: 20),
+                    const SizedBox(width: AffluenaSpacing.space3),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Selesaikan persiapan dulu',
+                            style: textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: AffluenaSpacing.space1),
+                          Text(setupGuidance, style: textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              ButtonSegment(
-                value: TransactionType.income,
-                label: Text('Income'),
-              ),
-              ButtonSegment(
-                value: TransactionType.transfer,
-                label: Text('Transfer'),
-              ),
+              const SizedBox(height: AffluenaSpacing.space3),
             ],
-            selected: {type},
-            onSelectionChanged: (selection) => onTypeChanged(selection.first),
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
-          if (setupGuidance != null) ...[
             AffluenaCard(
-              backgroundColor: colors.surfaceTintSoft,
-              child: Row(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, color: colors.forest, size: 20),
-                  const SizedBox(width: AffluenaSpacing.space3),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Finish setup first', style: textTheme.titleSmall),
-                        const SizedBox(height: AffluenaSpacing.space1),
-                        Text(setupGuidance, style: textTheme.bodySmall),
-                      ],
+                  MoneyInput(
+                    key: const Key('quick-entry-amount-field'),
+                    label: 'Jumlah',
+                    initialValue: amountMinor,
+                    enabled: !isSaving,
+                    onChanged: onAmountChanged,
+                  ),
+                  const SizedBox(height: AffluenaSpacing.space2),
+                  Text(
+                    MoneyFormatter.idr(amountMinor),
+                    style: textTheme.displaySmall,
+                  ),
+                  const SizedBox(height: AffluenaSpacing.space4),
+                  const Divider(height: 1),
+                  SelectorRow(
+                    key: const Key('quick-entry-wallet-row'),
+                    label: 'Dompet',
+                    value:
+                        selectedWallet?.name ??
+                        'Tambah dompet dulu sebelum mencatat transaksi.',
+                    icon: Icons.account_balance_wallet_outlined,
+                    enabled: lookup.wallets.isNotEmpty,
+                    onTap: lookup.wallets.isEmpty
+                        ? null
+                        : () => onSelectWallet(lookup),
+                  ),
+                  const Divider(height: 1),
+                  if (type == TransactionType.transfer) ...[
+                    SelectorRow(
+                      key: const Key('quick-entry-to-wallet-row'),
+                      label: 'Ke dompet',
+                      value: selectedToWallet?.name ?? 'Pilih dompet tujuan',
+                      icon: Icons.swap_horiz_rounded,
+                      enabled: lookup.wallets.length > 1,
+                      onTap: lookup.wallets.length <= 1
+                          ? null
+                          : () => onSelectToWallet(lookup),
                     ),
+                    const Divider(height: 1),
+                  ] else ...[
+                    SelectorRow(
+                      key: const Key('quick-entry-category-row'),
+                      label: 'Kategori',
+                      value:
+                          selectedCategory?.name ??
+                          _categoryMissingMessage(type),
+                      icon: Icons.restaurant_outlined,
+                      enabled: categories.isNotEmpty,
+                      onTap: categories.isEmpty
+                          ? null
+                          : () => onSelectCategory(lookup),
+                    ),
+                    const Divider(height: 1),
+                  ],
+                  SelectorRow(
+                    key: const Key('quick-entry-tags-row'),
+                    label: 'Tag',
+                    value: tagSummary,
+                    icon: Icons.sell_outlined,
+                    enabled: lookup.tags.isNotEmpty,
+                    onTap: lookup.tags.isEmpty
+                        ? null
+                        : () => onSelectTags(lookup),
+                  ),
+                  const Divider(height: 1),
+                  DateTimePickerField(
+                    key: const Key('quick-entry-datetime-field'),
+                    label: 'Tanggal & waktu',
+                    value: dateTime,
+                    enabled: !isSaving,
+                    onChanged: onDateTimeChanged,
+                  ),
+                  const SizedBox(height: AffluenaSpacing.space4),
+                  TextField(
+                    key: const Key('quick-entry-note-field'),
+                    controller: noteController,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.notes_outlined),
+                      labelText: 'Catatan',
+                      helperText: 'Opsional',
+                    ),
+                    onChanged: (_) => onChanged(),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: AffluenaSpacing.space3),
-          ],
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            if (error != null) ...[
+              const SizedBox(height: AffluenaSpacing.space4),
+              AffluenaBanner.error(
+                error!,
+                onRetry: isSaving ? null : onRetrySave,
+              ),
+            ] else if (message != null) ...[
+              const SizedBox(height: AffluenaSpacing.space4),
+              AffluenaBanner.success(message!, onDismiss: onDismissMessage),
+            ],
+            const SizedBox(height: AffluenaSpacing.space6),
+            Row(
               children: [
-                MoneyInput(
-                  key: const Key('quick-entry-amount-field'),
-                  label: 'Amount',
-                  initialValue: amountMinor,
-                  enabled: !isSaving,
-                  onChanged: onAmountChanged,
-                ),
-                const SizedBox(height: AffluenaSpacing.space2),
-                Text(
-                  MoneyFormatter.idr(amountMinor),
-                  style: textTheme.displaySmall,
-                ),
-                const SizedBox(height: AffluenaSpacing.space4),
-                const Divider(height: 1),
-                SelectorRow(
-                  key: const Key('quick-entry-wallet-row'),
-                  label: 'Wallet',
-                  value:
-                      selectedWallet?.name ??
-                      'Add a wallet before recording transactions.',
-                  icon: Icons.account_balance_wallet_outlined,
-                  enabled: lookup.wallets.isNotEmpty,
-                  onTap: lookup.wallets.isEmpty
-                      ? null
-                      : () => onSelectWallet(lookup),
-                ),
-                const Divider(height: 1),
-                if (type == TransactionType.transfer) ...[
-                  SelectorRow(
-                    key: const Key('quick-entry-to-wallet-row'),
-                    label: 'To wallet',
-                    value:
-                        selectedToWallet?.name ?? 'Choose destination wallet',
-                    icon: Icons.swap_horiz_rounded,
-                    enabled: lookup.wallets.length > 1,
-                    onTap: lookup.wallets.length <= 1
-                        ? null
-                        : () => onSelectToWallet(lookup),
+                Expanded(
+                  child: Text(
+                    'Template ${_typeLabel(type)} tersimpan',
+                    style: textTheme.titleMedium,
                   ),
-                  const Divider(height: 1),
-                ] else ...[
-                  SelectorRow(
-                    key: const Key('quick-entry-category-row'),
-                    label: 'Category',
-                    value:
-                        selectedCategory?.name ?? _categoryMissingMessage(type),
-                    icon: Icons.restaurant_outlined,
-                    enabled: categories.isNotEmpty,
-                    onTap: categories.isEmpty
-                        ? null
-                        : () => onSelectCategory(lookup),
-                  ),
-                  const Divider(height: 1),
-                ],
-                SelectorRow(
-                  key: const Key('quick-entry-tags-row'),
-                  label: 'Tags',
-                  value: tagSummary,
-                  icon: Icons.sell_outlined,
-                  enabled: lookup.tags.isNotEmpty,
-                  onTap: lookup.tags.isEmpty
-                      ? null
-                      : () => onSelectTags(lookup),
                 ),
-                const Divider(height: 1),
-                DateTimePickerField(
-                  key: const Key('quick-entry-datetime-field'),
-                  label: 'Date & time',
-                  value: dateTime,
-                  enabled: !isSaving,
-                  onChanged: onDateTimeChanged,
-                ),
-                const SizedBox(height: AffluenaSpacing.space4),
-                TextField(
-                  key: const Key('quick-entry-note-field'),
-                  controller: noteController,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.notes_outlined),
-                    labelText: 'Note',
-                    helperText: 'Optional',
-                  ),
-                  onChanged: (_) => onChanged(),
+                TextButton(
+                  onPressed: () => context.push(QuickEntryTemplatesScreen.path),
+                  child: const Text('Kelola'),
                 ),
               ],
             ),
-          ),
-          if (error != null) ...[
-            const SizedBox(height: AffluenaSpacing.space4),
-            AffluenaBanner.error(
-              error!,
-              onRetry: isSaving ? null : onRetrySave,
+            const SizedBox(height: AffluenaSpacing.space3),
+            typeTemplates.isEmpty
+                ? _SavedTemplatesEmpty(
+                    type: type,
+                    onCreate: () =>
+                        context.push(QuickEntryTemplatesScreen.path),
+                  )
+                : Wrap(
+                    spacing: AffluenaSpacing.space3,
+                    runSpacing: AffluenaSpacing.space3,
+                    children: [
+                      for (final template in typeTemplates)
+                        _TemplateChip(
+                          label: template.name,
+                          amount: MoneyFormatter.idr(template.amountMinor),
+                          onTap: isSaving
+                              ? null
+                              : () => onExecuteTemplate(template),
+                        ),
+                    ],
+                  ),
+            const SizedBox(height: AffluenaSpacing.space6),
+            FilledButton(
+              key: const Key('quick-entry-save-button'),
+              onPressed: canSave ? onSave : null,
+              child: Text(isSaving ? 'Menyimpan...' : 'Simpan transaksi'),
             ),
-          ] else if (message != null) ...[
-            const SizedBox(height: AffluenaSpacing.space4),
-            AffluenaBanner.success(message!, onDismiss: onDismissMessage),
           ],
-          const SizedBox(height: AffluenaSpacing.space6),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Saved ${_typeLabel(type)} templates',
-                  style: textTheme.titleMedium,
-                ),
-              ),
-              TextButton(
-                onPressed: () => context.push(QuickEntryTemplatesScreen.path),
-                child: const Text('Manage'),
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          typeTemplates.isEmpty
-              ? _SavedTemplatesEmpty(
-                  type: type,
-                  onCreate: () => context.push(QuickEntryTemplatesScreen.path),
-                )
-              : Wrap(
-                  spacing: AffluenaSpacing.space3,
-                  runSpacing: AffluenaSpacing.space3,
-                  children: [
-                    for (final template in typeTemplates)
-                      _TemplateChip(
-                        label: template.name,
-                        amount: MoneyFormatter.idr(template.amountMinor),
-                        onTap: isSaving
-                            ? null
-                            : () => onExecuteTemplate(template),
-                      ),
-                  ],
-                ),
-          const SizedBox(height: AffluenaSpacing.space6),
-          FilledButton(
-            key: const Key('quick-entry-save-button'),
-            onPressed: canSave ? onSave : null,
-            child: Text(isSaving ? 'Saving...' : 'Save transaction'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -589,55 +595,56 @@ class _QuickEntryLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return SafeArea(
-      child: ListView(
-        padding: AffluenaInsets.screen,
-        children: [
-          Text('Quick entry', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space2),
-          Text(
-            'Record daily money movement without turning it into paperwork.',
-            style: textTheme.bodySmall,
-          ),
-          const SizedBox(height: AffluenaSpacing.space6),
-          const AffluenaSkeleton(height: 40, radius: AffluenaRadii.pill),
-          const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return DrillInScaffold(
+      title: 'Catat cepat',
+      body: SafeArea(
+        child: ListView(
+          padding: AffluenaInsets.screen,
+          children: [
+            Text(
+              'Catat pergerakan uang harian tanpa ribet.',
+              style: textTheme.bodySmall,
+            ),
+            const SizedBox(height: AffluenaSpacing.space6),
+            const AffluenaSkeleton(height: 40, radius: AffluenaRadii.pill),
+            const SizedBox(height: AffluenaSpacing.space5),
+            AffluenaCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  AffluenaSkeleton(height: 56, radius: AffluenaRadii.control),
+                  SizedBox(height: AffluenaSpacing.space3),
+                  AffluenaSkeleton.line(width: 160, height: 28),
+                  SizedBox(height: AffluenaSpacing.space4),
+                  AffluenaSkeleton(height: 52),
+                  SizedBox(height: AffluenaSpacing.space3),
+                  AffluenaSkeleton(height: 52),
+                  SizedBox(height: AffluenaSpacing.space3),
+                  AffluenaSkeleton(height: 52),
+                ],
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space6),
+            const AffluenaSkeleton.line(width: 140, height: 16),
+            const SizedBox(height: AffluenaSpacing.space3),
+            Wrap(
+              spacing: AffluenaSpacing.space3,
+              runSpacing: AffluenaSpacing.space3,
               children: const [
-                AffluenaSkeleton(height: 56, radius: AffluenaRadii.control),
-                SizedBox(height: AffluenaSpacing.space3),
-                AffluenaSkeleton.line(width: 160, height: 28),
-                SizedBox(height: AffluenaSpacing.space4),
-                AffluenaSkeleton(height: 52),
-                SizedBox(height: AffluenaSpacing.space3),
-                AffluenaSkeleton(height: 52),
-                SizedBox(height: AffluenaSpacing.space3),
-                AffluenaSkeleton(height: 52),
+                AffluenaSkeleton(
+                  width: 120,
+                  height: 64,
+                  radius: AffluenaRadii.card,
+                ),
+                AffluenaSkeleton(
+                  width: 120,
+                  height: 64,
+                  radius: AffluenaRadii.card,
+                ),
               ],
             ),
-          ),
-          const SizedBox(height: AffluenaSpacing.space6),
-          const AffluenaSkeleton.line(width: 140, height: 16),
-          const SizedBox(height: AffluenaSpacing.space3),
-          Wrap(
-            spacing: AffluenaSpacing.space3,
-            runSpacing: AffluenaSpacing.space3,
-            children: const [
-              AffluenaSkeleton(
-                width: 120,
-                height: 64,
-                radius: AffluenaRadii.card,
-              ),
-              AffluenaSkeleton(
-                width: 120,
-                height: 64,
-                radius: AffluenaRadii.card,
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -650,19 +657,18 @@ class _QuickEntryError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return SafeArea(
-      child: ListView(
-        padding: AffluenaInsets.screen,
-        children: [
-          Text('Quick entry', style: textTheme.headlineMedium),
-          const SizedBox(height: AffluenaSpacing.space5),
-          AffluenaBanner.error(
-            'We could not load wallets, categories, and tags.',
-            onRetry: onRetry,
-          ),
-        ],
+    return DrillInScaffold(
+      title: 'Catat cepat',
+      body: SafeArea(
+        child: ListView(
+          padding: AffluenaInsets.screen,
+          children: [
+            AffluenaBanner.error(
+              'Kami tidak bisa memuat dompet, kategori, dan tag.',
+              onRetry: onRetry,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -688,13 +694,13 @@ class _SavedTemplatesEmpty extends StatelessWidget {
           Icon(Icons.bolt_outlined, color: colors.forest),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
-            'No ${_typeLabel(type)} templates yet',
+            'Belum ada template ${_typeLabel(type)}',
             style: textTheme.titleMedium,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
-            'Save a recurring ${_typeLabel(type)} entry once — then record it '
-            'here in a single tap.',
+            'Simpan entri ${_typeLabel(type)} berulang sekali — lalu catat di '
+            'sini cukup dengan satu ketukan.',
             style: textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
@@ -702,7 +708,7 @@ class _SavedTemplatesEmpty extends StatelessWidget {
             key: const Key('quick-entry-create-template-button'),
             onPressed: onCreate,
             icon: const Icon(Icons.add),
-            label: const Text('Create a template'),
+            label: const Text('Buat template'),
           ),
         ],
       ),
@@ -745,10 +751,12 @@ class _TemplateChip extends StatelessWidget {
 
 String _categoryMissingMessage(TransactionType type) {
   return switch (type) {
-    TransactionType.income => 'Add an income category before saving.',
-    TransactionType.expense => 'Add an expense category before saving.',
-    TransactionType.transfer => 'Choose destination wallet',
-    TransactionType.adjustment => 'Add a category before saving.',
+    TransactionType.income =>
+      'Tambah kategori pemasukan dulu sebelum menyimpan.',
+    TransactionType.expense =>
+      'Tambah kategori pengeluaran dulu sebelum menyimpan.',
+    TransactionType.transfer => 'Pilih dompet tujuan',
+    TransactionType.adjustment => 'Tambah kategori dulu sebelum menyimpan.',
   };
 }
 
@@ -760,26 +768,29 @@ String? _lookupGuidanceMessage(QuickEntryLookup lookup, TransactionType type) {
       type == TransactionType.transfer && lookup.wallets.length < 2;
 
   if (needsWallet && needsCategory) {
-    final category = type == TransactionType.income ? 'income' : 'expense';
-    return 'Add at least one wallet and an $category category before saving.';
+    final category = type == TransactionType.income
+        ? 'pemasukan'
+        : 'pengeluaran';
+    return 'Tambah minimal satu dompet dan satu kategori $category dulu '
+        'sebelum menyimpan.';
   }
   if (needsWallet) {
-    return 'Add at least one wallet before saving.';
+    return 'Tambah minimal satu dompet dulu sebelum menyimpan.';
   }
   if (needsCategory) {
     return _categoryMissingMessage(type);
   }
   if (needsSecondWallet) {
-    return 'Add another wallet before recording transfers.';
+    return 'Tambah dompet lain dulu sebelum mencatat transfer.';
   }
   return null;
 }
 
 String _typeLabel(TransactionType type) {
   return switch (type) {
-    TransactionType.income => 'income',
-    TransactionType.expense => 'expense',
+    TransactionType.income => 'pemasukan',
+    TransactionType.expense => 'pengeluaran',
     TransactionType.transfer => 'transfer',
-    TransactionType.adjustment => 'adjustment',
+    TransactionType.adjustment => 'penyesuaian',
   };
 }

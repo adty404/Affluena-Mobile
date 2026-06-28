@@ -53,7 +53,7 @@ class CategoryTagManagementController
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Categories and tags could not be loaded.',
+        loadError: 'Kategori dan tag gagal dimuat.',
       );
     }
   }
@@ -81,7 +81,7 @@ class CategoryTagManagementController
     } catch (_) {
       state = state.copyWith(
         isLoadingMoreCategories: false,
-        actionError: 'More categories could not be loaded.',
+        actionError: 'Kategori lainnya gagal dimuat.',
       );
     }
   }
@@ -107,7 +107,7 @@ class CategoryTagManagementController
     } catch (_) {
       state = state.copyWith(
         isLoadingMoreTags: false,
-        actionError: 'More tags could not be loaded.',
+        actionError: 'Tag lainnya gagal dimuat.',
       );
     }
   }
@@ -120,7 +120,7 @@ class CategoryTagManagementController
   }) async {
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) {
-      state = state.copyWith(actionError: 'Category name is required.');
+      state = state.copyWith(actionError: 'Nama kategori wajib diisi.');
       return false;
     }
 
@@ -159,11 +159,9 @@ class CategoryTagManagementController
         ? apiError.message.toLowerCase()
         : '';
     if (message.contains('depth') || message.contains('3 level')) {
-      return 'Categories can only nest 3 levels deep. Pick a higher-level parent.';
+      return 'Kategori hanya bisa bertingkat 3 level. Pilih induk di level lebih atas.';
     }
-    return isCreate
-        ? 'Category could not be created.'
-        : 'Category could not be updated.';
+    return isCreate ? 'Kategori gagal dibuat.' : 'Kategori gagal diperbarui.';
   }
 
   Future<void> deleteCategory(Category category) async {
@@ -172,14 +170,14 @@ class CategoryTagManagementController
       await ref.read(categoryRepositoryProvider).deleteCategory(category.id);
       await load();
     } catch (_) {
-      state = state.copyWith(actionError: 'Category could not be deleted.');
+      state = state.copyWith(actionError: 'Kategori gagal dihapus.');
     }
   }
 
   Future<bool> saveTag({Tag? tag, required String name}) async {
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) {
-      state = state.copyWith(actionError: 'Tag name is required.');
+      state = state.copyWith(actionError: 'Nama tag wajib diisi.');
       return false;
     }
 
@@ -199,8 +197,8 @@ class CategoryTagManagementController
       state = state.copyWith(
         isSaving: false,
         actionError: tag == null
-            ? 'Tag could not be created.'
-            : 'Tag could not be updated.',
+            ? 'Tag gagal dibuat.'
+            : 'Tag gagal diperbarui.',
       );
       return false;
     }
@@ -212,7 +210,7 @@ class CategoryTagManagementController
       await ref.read(tagRepositoryProvider).deleteTag(tag.id);
       await load();
     } catch (_) {
-      state = state.copyWith(actionError: 'Tag could not be deleted.');
+      state = state.copyWith(actionError: 'Tag gagal dihapus.');
     }
   }
 }
@@ -250,11 +248,11 @@ class CategoryTagManagementState {
   bool get hasMoreTags => tags.length < tagTotal;
 
   String categoryName(String? id) {
-    if (id == null) return 'No parent';
+    if (id == null) return 'Tanpa induk';
     for (final category in categories) {
       if (category.id == id) return category.name;
     }
-    return 'Unknown category';
+    return 'Kategori tidak dikenal';
   }
 
   Category? categoryById(String id) {

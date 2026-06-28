@@ -29,10 +29,10 @@ void main() {
 
     // The first-run gate routes to the onboarding screen, never to login.
     expect(find.byType(OnboardingScreen), findsOneWidget);
-    expect(find.text('Track money in seconds'), findsOneWidget);
+    expect(find.text('Catat uang dalam hitungan detik'), findsOneWidget);
     expect(find.byKey(const Key('onboarding-primary-button')), findsOneWidget);
-    expect(find.text('Next'), findsOneWidget);
-    expect(find.text('Welcome back'), findsNothing);
+    expect(find.text('Lanjut'), findsOneWidget);
+    expect(find.text('Selamat datang kembali'), findsNothing);
   });
 
   testWidgets('completing onboarding persists and routes to login', (
@@ -45,18 +45,18 @@ void main() {
 
     expect(find.byType(OnboardingScreen), findsOneWidget);
 
-    // Page through every slide via the primary CTA ("Next") until it becomes
-    // the final "Get started" action.
-    while (find.text('Get started').evaluate().isEmpty) {
+    // Page through every slide via the primary CTA ("Lanjut") until it becomes
+    // the final "Mulai" action.
+    while (find.text('Mulai').evaluate().isEmpty) {
       await tester.tap(find.byKey(const Key('onboarding-primary-button')));
       await tester.pumpAndSettle(const Duration(milliseconds: 400));
     }
 
-    expect(find.text('Get started'), findsOneWidget);
+    expect(find.text('Mulai'), findsOneWidget);
     await tester.tap(find.byKey(const Key('onboarding-primary-button')));
     await tester.pumpAndSettle(const Duration(milliseconds: 400));
 
-    // Pressing "Get started" marks onboarding complete and persists the flag.
+    // Pressing "Mulai" marks onboarding complete and persists the flag.
     expect(preferences.setCompletedCalls, 1);
 
     // With the gate cleared, the next navigation is no longer forced back to
@@ -67,7 +67,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(OnboardingScreen), findsNothing);
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Selamat datang kembali'), findsOneWidget);
     expect(find.byKey(const Key('login-email-field')), findsOneWidget);
   });
 }

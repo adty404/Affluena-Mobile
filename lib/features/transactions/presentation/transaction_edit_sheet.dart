@@ -82,8 +82,8 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
         transaction.type == TransactionType.expense;
     final walletOptions = _walletOptions(widget.state, _walletId, _toWalletId);
     final categoryLabel = _categoryId == null
-        ? 'Select category'
-        : (widget.state.categoryNames[_categoryId] ?? 'Uncategorized');
+        ? 'Pilih kategori'
+        : (widget.state.categoryNames[_categoryId] ?? 'Tanpa kategori');
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -98,7 +98,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Edit transaction', style: textTheme.titleLarge),
+              Text('Ubah transaksi', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space4),
               _TransactionEditFields(
                 initialAmountMinor: widget.transaction.amountMinor.abs(),
@@ -150,7 +150,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
     // Categories are a hierarchy: use the tree-aware picker, not a flat list.
     final selectedId = await showCategoryTreePicker(
       context: context,
-      title: 'Category',
+      title: 'Kategori',
       selectedId: _categoryId,
       categories: [
         for (final category in widget.state.categories)
@@ -212,29 +212,29 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
     }
     setState(() {
       _isSaving = false;
-      _error = 'Transaction could not be updated.';
+      _error = 'Transaksi tidak dapat diperbarui.';
     });
   }
 
   String? _validationError(Transaction transaction, int amountMinor) {
-    if (_walletId == null) return 'Wallet is required.';
+    if (_walletId == null) return 'Dompet wajib diisi.';
     if (transaction.type == TransactionType.adjustment) {
       // amountMinor is the magnitude (always non-negative from MoneyInput); a
       // zero adjustment would be a no-op in either direction.
-      if (amountMinor == 0) return 'Amount must be greater than 0.';
+      if (amountMinor == 0) return 'Jumlah harus lebih dari 0.';
     } else if (amountMinor <= 0) {
-      return 'Amount must be greater than 0.';
+      return 'Jumlah harus lebih dari 0.';
     }
     if (transaction.type == TransactionType.transfer) {
-      if (_toWalletId == null) return 'Destination wallet is required.';
+      if (_toWalletId == null) return 'Dompet tujuan wajib diisi.';
       if (_toWalletId == _walletId) {
-        return 'Destination wallet must be different from source wallet.';
+        return 'Dompet tujuan harus berbeda dari dompet asal.';
       }
     }
     if ((transaction.type == TransactionType.income ||
             transaction.type == TransactionType.expense) &&
         _categoryId == null) {
-      return 'Category is required.';
+      return 'Kategori wajib diisi.';
     }
     return null;
   }

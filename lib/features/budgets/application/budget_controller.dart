@@ -71,7 +71,7 @@ class BudgetController extends Notifier<BudgetState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Budgets could not be loaded.',
+        loadError: 'Anggaran gagal dimuat.',
       );
     }
   }
@@ -101,7 +101,7 @@ class BudgetController extends Notifier<BudgetState> {
     } catch (_) {
       state = state.copyWith(
         isLoadingMore: false,
-        actionError: 'More budgets could not be loaded.',
+        actionError: 'Anggaran lainnya gagal dimuat.',
       );
     }
   }
@@ -147,8 +147,8 @@ class BudgetController extends Notifier<BudgetState> {
       state = state.copyWith(
         isSaving: false,
         actionError: id == null
-            ? 'Budget could not be created.'
-            : 'Budget could not be updated.',
+            ? 'Anggaran gagal dibuat.'
+            : 'Anggaran gagal diperbarui.',
       );
     }
   }
@@ -166,7 +166,7 @@ class BudgetController extends Notifier<BudgetState> {
       await load();
       ref.invalidateFinancialData();
     } catch (_) {
-      state = state.copyWith(actionError: 'Budget could not be deleted.');
+      state = state.copyWith(actionError: 'Anggaran gagal dihapus.');
     }
   }
 }
@@ -209,7 +209,8 @@ class BudgetState {
   /// category.
   bool get hasExpenseCategories => categories.isNotEmpty;
 
-  String categoryName(String id) => categoryNames[id] ?? 'Unknown category';
+  String categoryName(String id) =>
+      categoryNames[id] ?? 'Kategori tidak dikenal';
 
   BudgetReportItem? reportFor(BudgetSummary budget) {
     for (final item in report) {

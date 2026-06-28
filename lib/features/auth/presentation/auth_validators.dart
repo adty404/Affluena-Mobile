@@ -8,9 +8,9 @@ abstract final class AuthValidators {
   /// Returns an error message for an invalid email, or null when valid.
   static String? email(String? value) {
     final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) return 'Enter your email address.';
+    if (trimmed.isEmpty) return 'Masukkan alamat email-mu.';
     if (!_emailPattern.hasMatch(trimmed)) {
-      return 'Enter a valid email address.';
+      return 'Masukkan alamat email yang valid.';
     }
     return null;
   }
@@ -18,16 +18,16 @@ abstract final class AuthValidators {
   /// Returns an error message for a weak/empty password, or null when valid.
   static String? password(String? value) {
     final text = value ?? '';
-    if (text.isEmpty) return 'Enter a password.';
-    if (text.length < 8) return 'Use at least 8 characters.';
+    if (text.isEmpty) return 'Masukkan kata sandi.';
+    if (text.length < 8) return 'Gunakan minimal 8 karakter.';
     return null;
   }
 
   /// Returns an error when [confirmation] does not match [password].
   static String? confirmPassword(String? password, String? confirmation) {
     final confirm = confirmation ?? '';
-    if (confirm.isEmpty) return 'Re-enter your password.';
-    if (confirm != (password ?? '')) return 'Passwords do not match.';
+    if (confirm.isEmpty) return 'Masukkan ulang kata sandimu.';
+    if (confirm != (password ?? '')) return 'Kata sandi tidak cocok.';
     return null;
   }
 
@@ -36,7 +36,7 @@ abstract final class AuthValidators {
   /// We deliberately call this "the code from your email" in copy, not "token".
   static String? resetCode(String? value) {
     final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) return 'Enter the code from your email.';
+    if (trimmed.isEmpty) return 'Masukkan kode dari email-mu.';
     return null;
   }
 

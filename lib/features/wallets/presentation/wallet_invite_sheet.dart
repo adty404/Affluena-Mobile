@@ -68,17 +68,17 @@ class _WalletInviteSheetState extends ConsumerState<_WalletInviteSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Invite member', style: textTheme.titleLarge),
+              Text('Undang anggota', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space2),
               Text(
-                'Send an invitation by email. They can accept or decline from '
-                'their own account.',
+                'Kirim undangan lewat email. Mereka bisa menerima atau menolak '
+                'dari akun mereka sendiri.',
                 style: textTheme.bodySmall,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email address'),
+                decoration: const InputDecoration(labelText: 'Alamat email'),
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.done,
                 enabled: !_isSaving,
@@ -88,13 +88,13 @@ class _WalletInviteSheetState extends ConsumerState<_WalletInviteSheet> {
                 onSubmitted: (_) => _invite(),
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              Text('What they can do', style: textTheme.labelMedium),
+              Text('Yang boleh mereka lakukan', style: textTheme.labelMedium),
               const SizedBox(height: AffluenaSpacing.space2),
               SegmentedButton<WalletInviteRole>(
                 segments: const [
                   ButtonSegment(
                     value: WalletInviteRole.viewer,
-                    label: Text('Boleh lihat'),
+                    label: Text('Hanya lihat'),
                     icon: Icon(Icons.visibility_outlined),
                   ),
                   ButtonSegment(
@@ -117,7 +117,7 @@ class _WalletInviteSheetState extends ConsumerState<_WalletInviteSheet> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: _isSaving ? null : _invite,
-                  child: Text(_isSaving ? 'Sending…' : 'Send invite'),
+                  child: Text(_isSaving ? 'Mengirim…' : 'Kirim undangan'),
                 ),
               ),
             ],
@@ -130,7 +130,7 @@ class _WalletInviteSheetState extends ConsumerState<_WalletInviteSheet> {
   Future<void> _invite() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      setState(() => _error = 'Email is required.');
+      setState(() => _error = 'Email wajib diisi.');
       return;
     }
 
@@ -163,6 +163,6 @@ class _WalletInviteSheetState extends ConsumerState<_WalletInviteSheet> {
       final inner = error.error;
       if (inner is ApiException) return inner.message;
     }
-    return 'Invite could not be sent.';
+    return 'Undangan tidak dapat dikirim.';
   }
 }

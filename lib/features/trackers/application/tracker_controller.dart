@@ -79,7 +79,7 @@ class TrackerController extends Notifier<TrackerState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Trackers could not be loaded.',
+        loadError: 'Cicilan & Langganan gagal dimuat.',
       );
     }
   }
@@ -114,7 +114,7 @@ class TrackerController extends Notifier<TrackerState> {
       () => ref
           .read(trackerRepositoryProvider)
           .payInstallment(installment.id, request),
-      errorMessage: 'Installment payment could not be recorded.',
+      errorMessage: 'Pembayaran cicilan gagal dicatat.',
     );
   }
 
@@ -141,7 +141,7 @@ class TrackerController extends Notifier<TrackerState> {
     await _save(
       () =>
           ref.read(trackerRepositoryProvider).deleteInstallment(installment.id),
-      errorMessage: 'Installment could not be deleted.',
+      errorMessage: 'Cicilan gagal dihapus.',
     );
   }
 
@@ -170,7 +170,7 @@ class TrackerController extends Notifier<TrackerState> {
       () => ref
           .read(trackerRepositoryProvider)
           .paySubscription(subscription.id, request),
-      errorMessage: 'Subscription payment could not be recorded.',
+      errorMessage: 'Pembayaran langganan gagal dicatat.',
     );
   }
 
@@ -179,7 +179,7 @@ class TrackerController extends Notifier<TrackerState> {
       () => ref
           .read(trackerRepositoryProvider)
           .deleteSubscription(subscription.id),
-      errorMessage: 'Subscription could not be deleted.',
+      errorMessage: 'Langganan gagal dihapus.',
     );
   }
 
@@ -205,7 +205,7 @@ class TrackerController extends Notifier<TrackerState> {
 
   Future<void> _save(
     Future<Object?> Function() action, {
-    String errorMessage = 'Tracker could not be saved.',
+    String errorMessage = 'Cicilan & Langganan gagal disimpan.',
   }) async {
     state = state.copyWith(isSaving: true, actionError: null);
     try {
@@ -276,9 +276,9 @@ class TrackerState {
       subscriptions.where(_subscriptionDueSoon).length +
       installments.where(_installmentDueSoon).length;
 
-  String walletName(String id) => walletNames[id] ?? 'Unknown wallet';
+  String walletName(String id) => walletNames[id] ?? 'Dompet tidak dikenal';
 
-  String categoryName(String id) => categoryNames[id] ?? 'Uncategorized';
+  String categoryName(String id) => categoryNames[id] ?? 'Tanpa kategori';
 
   TrackerState copyWith({
     TrackerTab? tab,

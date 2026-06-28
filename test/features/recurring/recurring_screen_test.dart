@@ -53,7 +53,7 @@ void main() {
     await tester.pumpWidget(recurringTestApp(repository));
     await tester.pumpRecurringState();
 
-    expect(find.text('Recurring'), findsOneWidget);
+    expect(find.text('Aturan berulang'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Monthly rent'),
       300,
@@ -62,9 +62,9 @@ void main() {
     expect(find.text('Monthly rent'), findsOneWidget);
     expect(find.textContaining('wallet-main'), findsNothing);
 
-    await tester.ensureVisible(find.text('Run now'));
+    await tester.ensureVisible(find.text('Jalankan'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Run now'));
+    await tester.tap(find.text('Jalankan'));
     await tester.pumpAndSettle();
 
     expect(repository.runRequests, ['rule-1']);
@@ -78,17 +78,17 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
-    expect(find.text('Create recurring'), findsOneWidget);
+    expect(find.text('Buat aturan berulang'), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const Key('recurring-name-field')),
       'Gym',
     );
-    await tester.tap(find.text('Choose wallet'));
+    await tester.tap(find.text('Pilih dompet'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Main Wallet'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Choose category'));
+    await tester.tap(find.text('Pilih kategori'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Rent'));
     await tester.pumpAndSettle();

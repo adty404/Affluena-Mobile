@@ -48,7 +48,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
   @override
   Widget build(BuildContext context) {
     return SettingsSheetFrame(
-      title: 'Account',
+      title: 'Akun',
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,7 +58,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
             controller: _nameController,
             textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
-              labelText: 'Name',
+              labelText: 'Nama',
               prefixIcon: Icon(Icons.person_outline),
             ),
           ),
@@ -69,7 +69,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
             keyboardType: TextInputType.url,
             textInputAction: TextInputAction.done,
             decoration: const InputDecoration(
-              labelText: 'Avatar URL',
+              labelText: 'URL avatar',
               prefixIcon: Icon(Icons.image_outlined),
             ),
           ),
@@ -87,7 +87,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.done_outline),
-            label: Text(_isSaving ? 'Saving' : 'Save account'),
+            label: Text(_isSaving ? 'Menyimpan...' : 'Simpan akun'),
           ),
         ],
       ),
@@ -97,7 +97,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Name is required.');
+      setState(() => _error = 'Nama wajib diisi.');
       return;
     }
     setState(() {

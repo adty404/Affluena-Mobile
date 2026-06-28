@@ -55,15 +55,15 @@ class AppThemeModeController extends Notifier<ThemeMode> {
 
 extension ThemeModeLabel on ThemeMode {
   String get label => switch (this) {
-    ThemeMode.system => 'System',
-    ThemeMode.light => 'Light',
-    ThemeMode.dark => 'Dark',
+    ThemeMode.system => 'Sistem',
+    ThemeMode.light => 'Terang',
+    ThemeMode.dark => 'Gelap',
   };
 
   String get description => switch (this) {
-    ThemeMode.system => 'Match your device setting',
-    ThemeMode.light => 'Always light',
-    ThemeMode.dark => 'Always dark',
+    ThemeMode.system => 'Ikuti pengaturan perangkat',
+    ThemeMode.light => 'Selalu terang',
+    ThemeMode.dark => 'Selalu gelap',
   };
 
   IconData get icon => switch (this) {

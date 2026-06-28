@@ -42,17 +42,17 @@ void main() {
     await tester.pumpWidget(goalTestApp(repository));
     await tester.pumpGoalState();
 
-    expect(find.text('Goals'), findsOneWidget);
+    expect(find.text('Target tabungan'), findsWidgets);
     await tester.scrollUntilVisible(
       find.text('Emergency fund'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('25% saved'), findsOneWidget);
+    expect(find.text('25% tersimpan'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Invite'));
+    await tester.ensureVisible(find.text('Undang'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Invite'));
+    await tester.tap(find.text('Undang'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('goal-invite-email-field')),
@@ -75,7 +75,7 @@ void main() {
     // CTA); open the create sheet from the header IconButton.
     await tester.tap(find.widgetWithIcon(IconButton, Icons.add));
     await tester.pumpAndSettle();
-    expect(find.text('Create goal'), findsWidgets);
+    expect(find.text('Buat target'), findsWidgets);
 
     await tester.enterText(find.byKey(const Key('goal-name-field')), 'Holiday');
     // The amount is now a MoneyInput: typed digits become minor units and are
@@ -89,7 +89,7 @@ void main() {
 
     // The deadline is now a tappable DatePickerField backed by the native date
     // picker instead of a hand-typed RFC3339 field.
-    await tester.tap(find.text('Deadline'));
+    await tester.tap(find.text('Tenggat'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
@@ -112,16 +112,16 @@ void main() {
     await tester.pumpGoalState();
 
     await tester.scrollUntilVisible(
-      find.text('Accept'),
+      find.text('Terima'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     // The pending invite is actionable from the member row, not an overflow
     // menu: tapping Accept joins the goal.
-    expect(find.text('Reject'), findsOneWidget);
-    await tester.ensureVisible(find.text('Accept'));
+    expect(find.text('Tolak'), findsOneWidget);
+    await tester.ensureVisible(find.text('Terima'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Accept'));
+    await tester.tap(find.text('Terima'));
     await tester.pumpGoalState();
 
     expect(repository.responseRequests.single.status, GoalMemberStatus.joined);
@@ -132,17 +132,17 @@ void main() {
 
     // Once joined the row drops its accept/reject controls and shows the
     // "Joined" status badge instead.
-    expect(find.text('Accept'), findsNothing);
-    expect(find.text('Reject'), findsNothing);
-    expect(find.text('Joined'), findsOneWidget);
+    expect(find.text('Terima'), findsNothing);
+    expect(find.text('Tolak'), findsNothing);
+    expect(find.text('Bergabung'), findsOneWidget);
 
     // The overflow menu still exposes the goal-management actions.
     await tester.ensureVisible(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
-    expect(find.text('Edit goal'), findsOneWidget);
-    expect(find.text('Mark achieved'), findsOneWidget);
+    expect(find.text('Ubah target'), findsOneWidget);
+    expect(find.text('Tandai tercapai'), findsOneWidget);
   });
 }
 

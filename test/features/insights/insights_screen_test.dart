@@ -37,7 +37,7 @@ void main() {
     await tester.pumpWidget(insightsTestApp(repository));
     await tester.pumpInsightsState();
 
-    expect(find.text('Insights'), findsOneWidget);
+    expect(find.text('Wawasan'), findsOneWidget);
     expect(find.text('Overview balance'), findsOneWidget);
     expect(find.text('Rp 4.000.000'), findsOneWidget);
     expect(find.text('79%'), findsOneWidget);
@@ -58,9 +58,9 @@ void main() {
     // The detail sheet now surfaces humanized Type/Module/Raised metadata and
     // the description, not the raw actionPath ("/budgets").
     expect(find.text('Food spending reached 100%.'), findsWidgets);
-    expect(find.text('Type'), findsOneWidget);
-    expect(find.text('Module'), findsOneWidget);
-    expect(find.text('Raised'), findsOneWidget);
+    expect(find.text('Jenis'), findsOneWidget);
+    expect(find.text('Modul'), findsOneWidget);
+    expect(find.text('Dibuat'), findsOneWidget);
     expect(find.text('Budget'), findsWidgets);
     expect(find.text('/budgets'), findsNothing);
 
@@ -73,7 +73,7 @@ void main() {
     await tester.pumpAndSettle();
     // The activity detail sheet de-emphasizes the raw entity id as a
     // "Reference ID (debug)" technical row.
-    expect(find.text('Reference ID (debug)'), findsOneWidget);
+    expect(find.text('ID referensi (debug)'), findsOneWidget);
     expect(find.text('transaction-1'), findsOneWidget);
   });
 
@@ -118,7 +118,7 @@ void main() {
     expect(state.rules.single.enabled, false);
     expect(state.report.metrics.first.label, 'Rules refreshed balance');
     expect(state.alerts.single.title, 'Budget alerts paused');
-    expect(state.actionMessage, 'Notification rule updated.');
+    expect(state.actionMessage, 'Aturan notifikasi diperbarui.');
   });
 
   test(
@@ -148,11 +148,11 @@ void main() {
       expect(state.rules.single.enabled, false);
       expect(
         state.actionError,
-        'Notification rule updated, but insights could not be refreshed.',
+        'Aturan notifikasi diperbarui, tetapi wawasan tidak dapat disegarkan.',
       );
       expect(
         state.actionError,
-        isNot('Notification rule could not be updated.'),
+        isNot('Aturan notifikasi tidak dapat diperbarui.'),
       );
     },
   );

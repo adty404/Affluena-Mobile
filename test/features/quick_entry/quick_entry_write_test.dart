@@ -61,7 +61,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(transactionRepository.createRequests, hasLength(1));
-    expect(find.text('Transaction could not be saved.'), findsOneWidget);
+    expect(find.text('Transaksi tidak bisa disimpan.'), findsOneWidget);
     expect(find.text('GoPay'), findsOneWidget);
     expect(find.text('Food & Dining'), findsOneWidget);
     expect(find.text('Rp 35.000'), findsOneWidget);
@@ -85,7 +85,7 @@ void main() {
     await tester.tap(find.text('Transfer'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Choose destination wallet'), findsOneWidget);
+    expect(find.text('Pilih dompet tujuan'), findsOneWidget);
     await _scrollToSave(tester);
     expect(_saveButton(tester).onPressed, isNull);
 
@@ -135,10 +135,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Finish setup first'), findsOneWidget);
+    expect(find.text('Selesaikan persiapan dulu'), findsOneWidget);
     expect(
       find.text(
-        'Add at least one wallet and an expense category before saving.',
+        'Tambah minimal satu dompet dan satu kategori pengeluaran dulu '
+        'sebelum menyimpan.',
       ),
       findsOneWidget,
     );
@@ -172,7 +173,7 @@ void main() {
 
     expect(quickEntryRepository.executedTemplateIds, [dailyCoffeeTemplate.id]);
     expect(transactionRepository.createRequests, isEmpty);
-    expect(find.text('Daily Coffee recorded.'), findsOneWidget);
+    expect(find.text('Daily Coffee tercatat.'), findsOneWidget);
   });
 }
 
