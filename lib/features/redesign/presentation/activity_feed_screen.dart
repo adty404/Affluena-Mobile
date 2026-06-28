@@ -30,9 +30,9 @@ class ActivityFeedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: SkyPalette.ground,
-      body: SafeArea(child: ActivityFeedView()),
+    return Scaffold(
+      backgroundColor: context.sky.ground,
+      body: const SafeArea(child: ActivityFeedView()),
     );
   }
 }
@@ -53,30 +53,32 @@ class ActivityFeedView extends ConsumerWidget {
     return ListView(
       padding: AffluenaInsets.screen,
       children: [
-        const Text(
+        Text(
           'Aktivitas',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: SkyPalette.ink,
+            color: context.sky.ink,
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space4),
         txAsync.when(
-          loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: AffluenaSpacing.space6),
+          loading: () => Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AffluenaSpacing.space6,
+            ),
             child: Center(
-              child: CircularProgressIndicator(color: SkyPalette.accent),
+              child: CircularProgressIndicator(color: context.sky.accent),
             ),
           ),
-          error: (_, _) => const Text(
+          error: (_, _) => Text(
             'Tidak bisa memuat aktivitas.',
-            style: TextStyle(fontSize: 13, color: SkyPalette.muted),
+            style: TextStyle(fontSize: 13, color: context.sky.muted),
           ),
           data: (txns) => txns.isEmpty
-              ? const Text(
+              ? Text(
                   'Belum ada transaksi.',
-                  style: TextStyle(fontSize: 13, color: SkyPalette.faint),
+                  style: TextStyle(fontSize: 13, color: context.sky.faint),
                 )
               : _Feed(txns: txns, walletNames: walletNames, meId: meId),
         ),
@@ -112,10 +114,10 @@ class _Feed extends StatelessWidget {
             ),
             child: Text(
               AffluenaDateFormatter.dayHeader(day),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: SkyPalette.faint,
+                color: context.sky.faint,
               ),
             ),
           ),
@@ -172,9 +174,9 @@ class _ActivityRow extends StatelessWidget {
         vertical: AffluenaSpacing.space3,
       ),
       decoration: BoxDecoration(
-        color: SkyPalette.surface,
+        color: context.sky.surface,
         borderRadius: BorderRadius.circular(AffluenaRadii.lg),
-        border: Border.all(color: SkyPalette.line),
+        border: Border.all(color: context.sky.line),
       ),
       child: Row(
         children: [
@@ -183,16 +185,18 @@ class _ActivityRow extends StatelessWidget {
             height: 34,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isIncome ? SkyPalette.accentSoft : SkyPalette.sheet,
+              color: isIncome ? context.sky.accentSoft : context.sky.sheet,
               borderRadius: BorderRadius.circular(AffluenaRadii.md),
               border: Border.all(
-                color: isIncome ? SkyPalette.accentSoftBorder : SkyPalette.line,
+                color: isIncome
+                    ? context.sky.accentSoftBorder
+                    : context.sky.line,
               ),
             ),
             child: Icon(
               isIncome ? Icons.south_west : Icons.north_east,
               size: 17,
-              color: isIncome ? SkyPalette.accent : SkyPalette.muted,
+              color: isIncome ? context.sky.accent : context.sky.muted,
             ),
           ),
           const SizedBox(width: AffluenaSpacing.space3),
@@ -204,10 +208,10 @@ class _ActivityRow extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: SkyPalette.ink,
+                    color: context.sky.ink,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -215,7 +219,7 @@ class _ActivityRow extends StatelessWidget {
                   meta,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: SkyPalette.faint),
+                  style: TextStyle(fontSize: 11, color: context.sky.faint),
                 ),
               ],
             ),
@@ -226,7 +230,7 @@ class _ActivityRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: isIncome ? SkyPalette.income : SkyPalette.ink,
+              color: isIncome ? context.sky.income : context.sky.ink,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),

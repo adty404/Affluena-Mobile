@@ -31,9 +31,9 @@ class RoomsHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: SkyPalette.ground,
+      backgroundColor: context.sky.ground,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: SkyPalette.accent,
+        backgroundColor: context.sky.accent,
         foregroundColor: Colors.white,
         onPressed: () => showSkyQuickAddSheet(context),
         child: const Icon(Icons.add),
@@ -54,9 +54,8 @@ class RoomsHomeView extends ConsumerWidget {
     final goals = ref.watch(goalControllerProvider).goals;
 
     return walletsAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: SkyPalette.accent),
-      ),
+      loading: () =>
+          Center(child: CircularProgressIndicator(color: context.sky.accent)),
       error: (error, _) =>
           _RoomsError(onRetry: () => ref.invalidate(walletListProvider)),
       data: (wallets) => _RoomsContent(wallets: wallets, goals: goals),
@@ -79,29 +78,29 @@ class _RoomsContent extends StatelessWidget {
     return ListView(
       padding: AffluenaInsets.screen,
       children: [
-        const Text(
+        Text(
           'TOTAL',
           style: TextStyle(
             fontSize: 11,
             letterSpacing: 1.4,
             fontWeight: FontWeight.w600,
-            color: SkyPalette.faint,
+            color: context.sky.faint,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           MoneyFormatter.idr(total),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 27,
             fontWeight: FontWeight.w700,
-            color: SkyPalette.ink,
+            color: context.sky.ink,
             fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'Ketuk dompet untuk buka detailnya',
-          style: TextStyle(fontSize: 11.5, color: SkyPalette.faint),
+          style: TextStyle(fontSize: 11.5, color: context.sky.faint),
         ),
         const SizedBox(height: AffluenaSpacing.space5),
         for (final wallet in spending) ...[
@@ -110,12 +109,12 @@ class _RoomsContent extends StatelessWidget {
         ],
         if (savings.isNotEmpty) ...[
           const SizedBox(height: AffluenaSpacing.space3),
-          const Text(
+          Text(
             'Tabungan',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: SkyPalette.muted,
+              color: context.sky.muted,
             ),
           ),
           const SizedBox(height: AffluenaSpacing.space2),
@@ -177,10 +176,10 @@ class _GoalRoom extends StatelessWidget {
           '${MoneyFormatter.idr(goal.collectedAmountMinor)} / ${MoneyFormatter.idr(goal.targetAmountMinor)}',
       trailing: Text(
         '${goal.progressPercent}%',
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w700,
-          color: SkyPalette.accent,
+          color: context.sky.accent,
           fontFeatures: [FontFeature.tabularFigures()],
         ),
       ),
@@ -203,16 +202,16 @@ class _IconTile extends StatelessWidget {
       height: 38,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: accent ? SkyPalette.accentSoft : SkyPalette.sheet,
+        color: accent ? context.sky.accentSoft : context.sky.sheet,
         borderRadius: BorderRadius.circular(AffluenaRadii.md),
         border: Border.all(
-          color: accent ? SkyPalette.accentSoftBorder : SkyPalette.line,
+          color: accent ? context.sky.accentSoftBorder : context.sky.line,
         ),
       ),
       child: Icon(
         icon,
         size: 19,
-        color: accent ? SkyPalette.accent : SkyPalette.muted,
+        color: accent ? context.sky.accent : context.sky.muted,
       ),
     );
   }
@@ -238,7 +237,7 @@ class _AvatarStack extends StatelessWidget {
             top: 5,
             child: SkyAvatar(
               initial: initial(members[0]),
-              borderColor: SkyPalette.accentSoft,
+              borderColor: context.sky.accentSoft,
             ),
           ),
           Positioned(
@@ -246,8 +245,8 @@ class _AvatarStack extends StatelessWidget {
             top: 5,
             child: SkyAvatar(
               initial: initial(members[1]),
-              color: SkyPalette.avatarSecondary,
-              borderColor: SkyPalette.accentSoft,
+              color: context.sky.avatarSecondary,
+              borderColor: context.sky.accentSoft,
             ),
           ),
         ],
@@ -266,17 +265,17 @@ class _RoomPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: SkyPalette.surface,
+        color: context.sky.surface,
         borderRadius: BorderRadius.circular(AffluenaRadii.pill),
-        border: Border.all(color: SkyPalette.accentSoftBorder),
+        border: Border.all(color: context.sky.accentSoftBorder),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 8.5,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.4,
-          color: SkyPalette.accentInk,
+          color: context.sky.accentInk,
         ),
       ),
     );
@@ -295,15 +294,15 @@ class _AmountTrailing extends StatelessWidget {
       children: [
         Text(
           amount,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13.5,
             fontWeight: FontWeight.w600,
-            color: SkyPalette.ink,
+            color: context.sky.ink,
             fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(width: 2),
-        const Icon(Icons.chevron_right, size: 16, color: SkyPalette.faint),
+        Icon(Icons.chevron_right, size: 16, color: context.sky.faint),
       ],
     );
   }
@@ -322,14 +321,14 @@ class _RoomsError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Tidak bisa memuat dompet.',
-              style: TextStyle(fontSize: 14, color: SkyPalette.muted),
+              style: TextStyle(fontSize: 14, color: context.sky.muted),
             ),
             const SizedBox(height: AffluenaSpacing.space3),
             TextButton(
               onPressed: onRetry,
-              style: TextButton.styleFrom(foregroundColor: SkyPalette.accent),
+              style: TextButton.styleFrom(foregroundColor: context.sky.accent),
               child: const Text('Coba lagi'),
             ),
           ],

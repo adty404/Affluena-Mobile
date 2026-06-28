@@ -24,4 +24,21 @@ void main() {
       matchesGoldenFile('goldens/home_beranda.png'),
     );
   });
+
+  testWidgets('home shell golden (dark)', (tester) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
+    await tester.pumpAndSettle();
+
+    // The redesign surfaces resolve colours via `context.sky`, so dark mode
+    // renders the cool Sky-flavoured dark palette rather than staying light.
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/home_beranda_dark.png'),
+    );
+  });
 }

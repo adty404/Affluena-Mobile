@@ -54,10 +54,10 @@ class SkyRoomCard extends StatelessWidget {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
-                        color: SkyPalette.ink,
+                        color: context.sky.ink,
                       ),
                     ),
                   ),
@@ -73,7 +73,7 @@ class SkyRoomCard extends StatelessWidget {
                   subtitle!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: SkyPalette.faint),
+                  style: TextStyle(fontSize: 11, color: context.sky.faint),
                 ),
               ],
             ],
@@ -87,7 +87,7 @@ class SkyRoomCard extends StatelessWidget {
     );
 
     return Material(
-      color: shared ? SkyPalette.accentSoft : SkyPalette.surface,
+      color: shared ? context.sky.accentSoft : context.sky.surface,
       borderRadius: radius,
       child: InkWell(
         borderRadius: radius,
@@ -101,7 +101,7 @@ class SkyRoomCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: radius,
             border: Border.all(
-              color: shared ? SkyPalette.accentSoftBorder : SkyPalette.line,
+              color: shared ? context.sky.accentSoftBorder : context.sky.line,
             ),
           ),
           child: footer == null

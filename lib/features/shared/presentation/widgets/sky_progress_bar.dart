@@ -8,30 +8,32 @@ class SkyProgressBar extends StatelessWidget {
   const SkyProgressBar({
     required this.value,
     this.height = 6,
-    this.trackColor = SkyPalette.ground,
-    this.fillColor = SkyPalette.accent,
+    this.trackColor,
+    this.fillColor,
     super.key,
   });
 
   final double value;
   final double height;
-  final Color trackColor;
-  final Color fillColor;
+  final Color? trackColor;
+  final Color? fillColor;
 
   @override
   Widget build(BuildContext context) {
+    final track = trackColor ?? context.sky.ground;
+    final fill = fillColor ?? context.sky.accent;
     final clamped = value.clamp(0.0, 1.0);
     final radius = BorderRadius.circular(height);
     return ClipRRect(
       borderRadius: radius,
       child: Stack(
         children: [
-          Container(height: height, width: double.infinity, color: trackColor),
+          Container(height: height, width: double.infinity, color: track),
           FractionallySizedBox(
             widthFactor: clamped,
             child: Container(
               height: height,
-              decoration: BoxDecoration(color: fillColor, borderRadius: radius),
+              decoration: BoxDecoration(color: fill, borderRadius: radius),
             ),
           ),
         ],
