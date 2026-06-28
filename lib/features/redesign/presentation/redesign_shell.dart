@@ -37,6 +37,9 @@ class _RedesignShellState extends State<RedesignShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.sky.ground,
+      // Let the body run under the floating nav so the pill truly hovers over
+      // the content (the lists add bottom padding to clear it).
+      extendBody: true,
       body: SafeArea(
         bottom: false,
         child: IndexedStack(index: _index, children: _tabs),
@@ -113,7 +116,7 @@ class _SkyBottomNav extends StatelessWidget {
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -168,18 +171,18 @@ class _NavItem extends StatelessWidget {
     final iconColor = active ? context.sky.accent : context.sky.faint;
     return InkResponse(
       onTap: onTap,
-      radius: 28,
+      radius: 32,
       containedInkWell: true,
       customBorder: const CircleBorder(),
       child: Container(
-        width: 42,
-        height: 42,
+        width: 52,
+        height: 52,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: active ? context.sky.accentSoft : Colors.transparent,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 22, color: iconColor),
+        child: Icon(icon, size: 26, color: iconColor),
       ),
     );
   }
