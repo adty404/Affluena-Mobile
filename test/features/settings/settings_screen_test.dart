@@ -257,6 +257,8 @@ void main() {
 }
 
 Future<void> _openSettings(WidgetTester tester) async {
-  await tester.tap(find.text('More'));
+  // The redesign shell exposes Settings via the "Lainnya" bottom-nav item,
+  // which pushes the Settings route.
+  await tester.tap(find.text('Lainnya'));
   await tester.pumpAndSettle();
 }

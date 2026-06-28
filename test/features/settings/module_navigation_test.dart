@@ -6,10 +6,8 @@ import 'package:affluena_mobile/features/budgets/presentation/budget_screen.dart
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_repository.dart';
 import 'package:affluena_mobile/features/categories/presentation/category_tag_management_screen.dart';
-import 'package:affluena_mobile/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:affluena_mobile/features/debts/data/debt_repository.dart';
 import 'package:affluena_mobile/features/debts/presentation/debt_screen.dart';
-import 'package:affluena_mobile/features/goals/data/goal_repository.dart';
 import 'package:affluena_mobile/features/goals/presentation/goal_screen.dart';
 import 'package:affluena_mobile/features/insights/application/insights_controller.dart';
 import 'package:affluena_mobile/features/insights/data/insights_repository.dart';
@@ -19,6 +17,7 @@ import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_sc
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import 'package:affluena_mobile/features/recurring/data/recurring_repository.dart';
 import 'package:affluena_mobile/features/recurring/presentation/recurring_screen.dart';
+import 'package:affluena_mobile/features/redesign/presentation/redesign_shell.dart';
 import 'package:affluena_mobile/features/settings/presentation/settings_screen.dart';
 import 'package:affluena_mobile/features/trackers/data/tracker_repository.dart';
 import 'package:affluena_mobile/features/trackers/presentation/tracker_screen.dart';
@@ -130,6 +129,7 @@ Widget _navigationApp({required bool authenticated}) {
     authRepository: FakeAuthRepository(),
     walletRepository: const _NavigationWalletRepository(),
     categoryRepository: const _NavigationCategoryRepository(),
+    goalRepository: goal_fakes.TestGoalRepository(),
     extraOverrides: [
       budgetRepositoryProvider.overrideWithValue(
         budget_fakes.TestBudgetRepository(),
@@ -141,7 +141,6 @@ Widget _navigationApp({required bool authenticated}) {
       recurringRepositoryProvider.overrideWithValue(
         recurring_fakes.TestRecurringRepository(),
       ),
-      goalRepositoryProvider.overrideWithValue(goal_fakes.TestGoalRepository()),
       insightsRepositoryProvider.overrideWithValue(
         insight_fakes.TestInsightsRepository(),
       ),
@@ -294,7 +293,7 @@ final _directNavigationScenarios = [
 ];
 
 final _rawIdSmokeLocations = [
-  DashboardScreen.path,
+  RedesignShell.path,
   WalletsScreen.path,
   WalletDetailScreen.location('wallet-main'),
   WalletSharingScreen.location('wallet-main'),
