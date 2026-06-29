@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../app/theme/sky_palette.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../application/auth_controller.dart';
 import 'auth_validators.dart';
@@ -63,8 +64,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authControllerProvider);
 
     return _AuthShell(
-      title: 'Selamat datang kembali',
-      subtitle: 'Masuk untuk menyinkronkan saldo, dompet, dan transaksimu.',
+      title: 'Masuk',
+      subtitle: 'Lanjutkan mengatur keuangan berdua.',
       message: authState.message,
       messageTone: authState.messageTone,
       children: [
@@ -74,66 +75,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                key: const Key('login-email-field'),
+              _SkyField(
+                fieldKey: const Key('login-email-field'),
                 controller: _emailController,
+                label: 'Email',
+                icon: Icons.mail_outline,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
                 validator: AuthValidators.email,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.mail_outline),
-                ),
               ),
-              const SizedBox(height: AffluenaSpacing.space3),
-              TextFormField(
-                key: const Key('login-password-field'),
+              const SizedBox(height: AffluenaSpacing.space4),
+              _SkyField(
+                fieldKey: const Key('login-password-field'),
                 controller: _passwordController,
-                obscureText: true,
+                label: 'Password',
+                icon: Icons.lock_outline,
+                obscure: true,
                 textInputAction: TextInputAction.done,
                 autofillHints: const [AutofillHints.password],
                 validator: (value) => AuthValidators.required(
                   value,
                   message: 'Masukkan kata sandimu.',
                 ),
-                onFieldSubmitted: (_) => _submit(authState),
-                decoration: const InputDecoration(
-                  labelText: 'Kata sandi',
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
+                onSubmitted: (_) => _submit(authState),
               ),
             ],
           ),
         ),
-        const SizedBox(height: AffluenaSpacing.space4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: authState.isSubmitting
+                ? null
+                : () => context.go(ForgotPasswordScreen.path),
+            child: const Text('Lupa password?'),
+          ),
+        ),
+        const SizedBox(height: AffluenaSpacing.space2),
         _SubmitButton(
           key: const Key('login-submit-button'),
           isSubmitting: authState.isSubmitting,
-          icon: Icons.login,
           label: 'Masuk',
           onPressed: () => _submit(authState),
         ),
-        const SizedBox(height: AffluenaSpacing.space3),
-        Row(
-          children: [
-            Expanded(
-              child: TextButton(
-                onPressed: authState.isSubmitting
-                    ? null
-                    : () => context.go(RegisterScreen.path),
-                child: const Text('Daftar'),
-              ),
-            ),
-            Expanded(
-              child: TextButton(
-                onPressed: authState.isSubmitting
-                    ? null
-                    : () => context.go(ForgotPasswordScreen.path),
-                child: const Text('Lupa kata sandi'),
-              ),
-            ),
-          ],
+        const SizedBox(height: AffluenaSpacing.space2),
+        _AuthLink(
+          lead: 'Belum punya akun?',
+          action: 'Daftar',
+          onTap: authState.isSubmitting
+              ? null
+              : () => context.go(RegisterScreen.path),
         ),
       ],
     );
@@ -166,15 +158,14 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   AutovalidateMode _autovalidate = AutovalidateMode.disabled;
+  bool _agreed = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmController.dispose();
     super.dispose();
   }
 
@@ -183,8 +174,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.watch(authControllerProvider);
 
     return _AuthShell(
-      title: 'Daftar',
-      subtitle: 'Mulai dengan akun yang aman, lalu hubungkan data Affluena-mu.',
+      title: 'Buat akun',
+      subtitle: 'Mulai kelola uang bersama dalam sebentar.',
       message: authState.message,
       messageTone: authState.messageTone,
       children: [
@@ -194,66 +185,51 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                key: const Key('register-email-field'),
+              _SkyField(
+                fieldKey: const Key('register-email-field'),
                 controller: _emailController,
+                label: 'Email',
+                icon: Icons.mail_outline,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
                 validator: AuthValidators.email,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.mail_outline),
-                ),
               ),
-              const SizedBox(height: AffluenaSpacing.space3),
-              TextFormField(
-                key: const Key('register-password-field'),
+              const SizedBox(height: AffluenaSpacing.space4),
+              _SkyField(
+                fieldKey: const Key('register-password-field'),
                 controller: _passwordController,
-                obscureText: true,
-                textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.newPassword],
-                validator: AuthValidators.password,
-                decoration: const InputDecoration(
-                  labelText: 'Kata sandi',
-                  helperText: 'Minimal 8 karakter.',
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
-              ),
-              const SizedBox(height: AffluenaSpacing.space3),
-              TextFormField(
-                key: const Key('register-confirm-password-field'),
-                controller: _confirmController,
-                obscureText: true,
+                label: 'Password',
+                icon: Icons.lock_outline,
+                obscure: true,
                 textInputAction: TextInputAction.done,
                 autofillHints: const [AutofillHints.newPassword],
-                validator: (value) => AuthValidators.confirmPassword(
-                  _passwordController.text,
-                  value,
-                ),
-                onFieldSubmitted: (_) => _submit(authState),
-                decoration: const InputDecoration(
-                  labelText: 'Konfirmasi kata sandi',
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
+                validator: AuthValidators.password,
+                helperText: 'Minimal 8 karakter.',
+                onSubmitted: (_) => _submit(authState),
               ),
             ],
           ),
+        ),
+        const SizedBox(height: AffluenaSpacing.space3),
+        _TermsCheckbox(
+          value: _agreed,
+          onChanged: (value) => setState(() => _agreed = value),
         ),
         const SizedBox(height: AffluenaSpacing.space4),
         _SubmitButton(
           key: const Key('register-submit-button'),
           isSubmitting: authState.isSubmitting,
-          icon: Icons.person_add_alt_1_outlined,
           label: 'Daftar',
-          onPressed: () => _submit(authState),
+          onPressed: _agreed ? () => _submit(authState) : null,
         ),
-        const SizedBox(height: AffluenaSpacing.space3),
-        TextButton(
-          onPressed: authState.isSubmitting
+        const SizedBox(height: AffluenaSpacing.space2),
+        _AuthLink(
+          lead: 'Sudah punya akun?',
+          action: 'Masuk',
+          onTap: authState.isSubmitting
               ? null
               : () => context.go(LoginScreen.path),
-          child: const Text('Aku sudah punya akun'),
         ),
       ],
     );
@@ -328,7 +304,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         _SubmitButton(
           key: const Key('forgot-submit-button'),
           isSubmitting: authState.isSubmitting,
-          icon: Icons.mark_email_read_outlined,
           label: 'Kirimi aku kode',
           onPressed: () => _submit(authState),
         ),
@@ -474,7 +449,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         _SubmitButton(
           key: const Key('reset-submit-button'),
           isSubmitting: authState.isSubmitting,
-          icon: Icons.done_outline,
           label: 'Perbarui kata sandi',
           onPressed: () => _submit(authState),
         ),
@@ -644,29 +618,212 @@ class _AuthMessage extends StatelessWidget {
 class _SubmitButton extends StatelessWidget {
   const _SubmitButton({
     required this.isSubmitting,
-    required this.icon,
     required this.label,
     required this.onPressed,
     super.key,
   });
 
   final bool isSubmitting;
-  final IconData icon;
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton.icon(
-      onPressed: isSubmitting ? null : onPressed,
-      icon: isSubmitting
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
+    return FilledButton(
+      onPressed: (isSubmitting || onPressed == null) ? null : onPressed,
+      child: isSubmitting
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: AffluenaSpacing.space2),
+                Text('Mohon tunggu'),
+              ],
             )
-          : Icon(icon),
-      label: Text(isSubmitting ? 'Mohon tunggu' : label),
+          : Text(label),
+    );
+  }
+}
+
+/// A Sky & Denim text field for the auth screens: an external label over a
+/// rounded, filled input with a leading icon and (for passwords) an eye toggle.
+class _SkyField extends StatefulWidget {
+  const _SkyField({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    this.fieldKey,
+    this.keyboardType,
+    this.textInputAction,
+    this.autofillHints,
+    this.validator,
+    this.obscure = false,
+    this.helperText,
+    this.onSubmitted,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final Key? fieldKey;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final List<String>? autofillHints;
+  final String? Function(String?)? validator;
+  final bool obscure;
+  final String? helperText;
+  final void Function(String)? onSubmitted;
+
+  @override
+  State<_SkyField> createState() => _SkyFieldState();
+}
+
+class _SkyFieldState extends State<_SkyField> {
+  late bool _obscured = widget.obscure;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AffluenaRadii.control);
+    OutlineInputBorder border(Color color, [double width = 1]) =>
+        OutlineInputBorder(
+          borderRadius: radius,
+          borderSide: BorderSide(color: color, width: width),
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 6),
+          child: Text(
+            widget.label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: context.sky.muted,
+            ),
+          ),
+        ),
+        TextFormField(
+          key: widget.fieldKey,
+          controller: widget.controller,
+          keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          autofillHints: widget.autofillHints,
+          validator: widget.validator,
+          obscureText: _obscured,
+          onFieldSubmitted: widget.onSubmitted,
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: context.sky.surface,
+            helperText: widget.helperText,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AffluenaSpacing.space4,
+              vertical: 14,
+            ),
+            prefixIcon: Icon(widget.icon, size: 18, color: context.sky.faint),
+            suffixIcon: widget.obscure
+                ? IconButton(
+                    icon: Icon(
+                      _obscured
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      size: 18,
+                      color: context.sky.faint,
+                    ),
+                    onPressed: () => setState(() => _obscured = !_obscured),
+                  )
+                : null,
+            border: border(context.sky.line),
+            enabledBorder: border(context.sky.line),
+            focusedBorder: border(context.sky.accent, 1.6),
+            errorBorder: border(context.sky.danger),
+            focusedErrorBorder: border(context.sky.danger, 1.6),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A centered "lead + action" footer link, e.g. "Belum punya akun? Daftar".
+class _AuthLink extends StatelessWidget {
+  const _AuthLink({required this.lead, required this.action, this.onTap});
+
+  final String lead;
+  final String action;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: TextButton(
+        onPressed: onTap,
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '$lead ',
+                style: TextStyle(color: context.sky.muted),
+              ),
+              TextSpan(
+                text: action,
+                style: TextStyle(
+                  color: context.sky.accent,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          style: const TextStyle(fontSize: 13),
+        ),
+      ),
+    );
+  }
+}
+
+/// The "Saya setuju…" terms acceptance row on the register screen.
+class _TermsCheckbox extends StatelessWidget {
+  const _TermsCheckbox({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(AffluenaRadii.md),
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Checkbox(
+                value: value,
+                onChanged: (next) => onChanged(next ?? false),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+            const SizedBox(width: AffluenaSpacing.space3),
+            Expanded(
+              child: Text(
+                'Saya setuju dengan Syarat & Kebijakan Privasi.',
+                style: TextStyle(fontSize: 12.5, color: context.sky.muted),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
