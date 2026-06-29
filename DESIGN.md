@@ -5,11 +5,11 @@
 > self-contained file (open it in any browser). This `DESIGN.md` is the *written*
 > spec; the HTML is the *visual* reference. Keep the two in sync.
 >
-> **Build status:** the app now tracks the guide closely — shipped: the Sky &
-> Denim palette, dark mode, the icon-only floating pill nav, the bundled **Inter**
-> type, the **6-section Beranda dashboard** (§1), and the per-item **detail
-> screens** (§8, opened from the dashboard cards). Remaining: the quick-add
-> templates-in-sheet refinement.
+> **Build status:** the app now matches the guide — shipped: the Sky & Denim
+> palette, dark mode, the icon-only floating pill nav, the bundled **Inter** type,
+> the **6-section Beranda dashboard** (§1), the per-item **detail screens** (§8,
+> opened from the dashboard cards), and the **quick-add "Catat cepat" sheet with
+> a `PAKAI TEMPLATE` one-tap row** (§1).
 
 ## 1. Atmosphere & Identity
 
