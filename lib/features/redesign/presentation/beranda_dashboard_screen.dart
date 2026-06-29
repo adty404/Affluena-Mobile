@@ -14,7 +14,7 @@ import '../../goals/data/goal_models.dart';
 import '../../goals/presentation/goal_detail_screen.dart';
 import '../../goals/presentation/goal_screen.dart';
 import '../../partner/application/partner_controller.dart';
-import '../../partner/presentation/partner_screen.dart';
+import '../../partner/presentation/shared_with_me_screen.dart';
 import '../../recurring/application/recurring_controller.dart';
 import '../../recurring/data/recurring_models.dart';
 import '../../recurring/presentation/recurring_detail_screen.dart';
@@ -55,9 +55,12 @@ class BerandaDashboardView extends ConsumerWidget {
     final trackerState = ref.watch(trackerControllerProvider);
     final recurringState = ref.watch(recurringControllerProvider);
 
-    final viewableOwnerIds = ref
-        .watch(partnerControllerProvider)
-        .viewableOwnerIds;
+    final partnerState = ref.watch(partnerControllerProvider);
+    final viewableOwnerIds = partnerState.viewableOwnerIds;
+    final sharerName = <String, String>{
+      for (final link in partnerState.links)
+        if (link.isIncoming && link.isJoined) link.userId: link.displayName,
+    };
     bool isPartnerWallet(Wallet w) =>
         w.role == 'viewer' && viewableOwnerIds.contains(w.userId);
 
@@ -104,7 +107,7 @@ class BerandaDashboardView extends ConsumerWidget {
         if (partnerWallets.isNotEmpty)
           _Section(
             title: 'Dibagikan untukku',
-            onSeeAll: () => context.push(PartnerScreen.path),
+            onSeeAll: () => context.push(SharedWithMeScreen.path),
             isLoading: false,
             hasError: false,
             onRetry: () {},
@@ -112,7 +115,7 @@ class BerandaDashboardView extends ConsumerWidget {
             onEmptyTap: () {},
             cards: [
               for (final wallet in partnerWallets.take(_previewCount))
-                _partnerWalletCard(context, wallet),
+                _partnerWalletCard(context, wallet, sharerName[wallet.userId]),
             ],
           ),
 
@@ -218,14 +221,20 @@ class BerandaDashboardView extends ConsumerWidget {
     );
   }
 
-  /// A partner's wallet — read-only (no long-press quick-add), shown in the
-  /// "Pasangan" section.
-  Widget _partnerWalletCard(BuildContext context, Wallet wallet) {
+  /// A wallet shared TO me — read-only (no long-press quick-add), shown in the
+  /// "Dibagikan untukku" section. The subtitle names who shared it.
+  Widget _partnerWalletCard(
+    BuildContext context,
+    Wallet wallet,
+    String? ownerName,
+  ) {
     return _DashCard(
       leading: _IconTile(icon: walletIcon(wallet.type)),
       badge: const _Badge(label: 'LIHAT'),
       title: wallet.name,
-      subtitle: walletTypeLabel(wallet.type),
+      subtitle: ownerName != null
+          ? 'dari $ownerName'
+          : walletTypeLabel(wallet.type),
       value: MoneyFormatter.idr(wallet.balanceMinor),
       onTap: () => context.push(RoomDetailScreen.location(wallet.id)),
     );
