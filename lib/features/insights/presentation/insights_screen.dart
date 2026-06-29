@@ -6,6 +6,7 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
@@ -195,12 +196,11 @@ class _InsightTabs extends StatelessWidget {
         for (final tab in InsightTab.values.where(
           (t) => t != InsightTab.exports,
         ))
-          ChoiceChip(
+          AffluenaChoiceChip(
             key: Key('insights-tab-${tab.name}'),
-            showCheckmark: false,
             selected: selected == tab,
-            label: Text(tab.label),
-            onSelected: (_) => onChanged(tab),
+            label: tab.label,
+            onSelected: () => onChanged(tab),
           ),
       ],
     );
@@ -225,13 +225,12 @@ class _ReportsSection extends StatelessWidget {
           runSpacing: AffluenaSpacing.space2,
           children: [
             for (final kind in ReportKind.values)
-              ChoiceChip(
-                showCheckmark: false,
+              AffluenaChoiceChip(
                 selected: state.reportKind == kind,
-                label: Text(kind.label),
+                label: kind.label,
                 onSelected: state.isReportLoading
                     ? null
-                    : (_) => controller.setReportKind(kind),
+                    : () => controller.setReportKind(kind),
               ),
           ],
         ),

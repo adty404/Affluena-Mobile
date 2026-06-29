@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
@@ -103,21 +104,21 @@ class _CategoryTagManagementScreenState
             spacing: AffluenaSpacing.space2,
             runSpacing: AffluenaSpacing.space2,
             children: [
-              ChoiceChip(
-                label: const Text('Semua'),
+              AffluenaChoiceChip(
+                label: 'Semua',
                 selected: _typeFilter == null,
-                onSelected: (_) => setState(() => _typeFilter = null),
+                onSelected: () => setState(() => _typeFilter = null),
               ),
-              ChoiceChip(
-                label: const Text('Pengeluaran'),
+              AffluenaChoiceChip(
+                label: 'Pengeluaran',
                 selected: _typeFilter == CategoryType.expense,
-                onSelected: (_) =>
+                onSelected: () =>
                     setState(() => _typeFilter = CategoryType.expense),
               ),
-              ChoiceChip(
-                label: const Text('Pemasukan'),
+              AffluenaChoiceChip(
+                label: 'Pemasukan',
                 selected: _typeFilter == CategoryType.income,
-                onSelected: (_) =>
+                onSelected: () =>
                     setState(() => _typeFilter = CategoryType.income),
               ),
             ],
