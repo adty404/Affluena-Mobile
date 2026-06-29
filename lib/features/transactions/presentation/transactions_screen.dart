@@ -9,6 +9,7 @@ import '../../insights/application/audit_log_controller.dart';
 import '../../insights/data/insight_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
@@ -154,7 +155,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       padding: const EdgeInsets.only(
                         right: AffluenaSpacing.space2,
                       ),
-                      child: _TypeFilterChip(
+                      child: AffluenaChoiceChip(
                         label: label,
                         selected: state.typeFilter == type,
                         onSelected: () => controller.setTypeFilter(type),
@@ -454,47 +455,6 @@ class _TransactionTileSkeleton extends StatelessWidget {
           const SizedBox(width: AffluenaSpacing.space3),
           const AffluenaSkeleton.line(width: 72, height: 14),
         ],
-      ),
-    );
-  }
-}
-
-class _TypeFilterChip extends StatelessWidget {
-  const _TypeFilterChip({
-    required this.label,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-    return Material(
-      color: selected ? colors.forest : colors.surfaceTintSoft,
-      shape: StadiumBorder(
-        side: BorderSide(color: selected ? colors.forest : colors.borderSubtle),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onSelected,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AffluenaSpacing.space4,
-            vertical: AffluenaSpacing.space2,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : colors.inkMuted,
-            ),
-          ),
-        ),
       ),
     );
   }

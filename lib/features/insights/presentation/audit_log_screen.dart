@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
@@ -151,19 +152,17 @@ class _AuditLogTabs extends StatelessWidget {
       spacing: AffluenaSpacing.space2,
       runSpacing: AffluenaSpacing.space2,
       children: [
-        ChoiceChip(
+        AffluenaChoiceChip(
           key: const Key('audit-log-tab-activity'),
-          showCheckmark: false,
           selected: selected == AuditLogTab.activity,
-          label: const Text('Aktivitas'),
-          onSelected: (_) => onChanged(AuditLogTab.activity),
+          label: 'Aktivitas',
+          onSelected: () => onChanged(AuditLogTab.activity),
         ),
-        ChoiceChip(
+        AffluenaChoiceChip(
           key: const Key('audit-log-tab-system'),
-          showCheckmark: false,
           selected: selected == AuditLogTab.system,
-          label: const Text('Log sistem'),
-          onSelected: (_) => onChanged(AuditLogTab.system),
+          label: 'Log sistem',
+          onSelected: () => onChanged(AuditLogTab.system),
         ),
       ],
     );
