@@ -39,6 +39,29 @@ void main() {
     expect(find.byKey(const Key('sky-calc-confirm')), findsOneWidget);
   });
 
+  testWidgets('quick-add sheet lists templates and records one on tap', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    // The "PAKAI TEMPLATE" row with the seeded template chip.
+    expect(find.text('PAKAI TEMPLATE'), findsOneWidget);
+    expect(find.text('Daily Coffee'), findsOneWidget);
+
+    // One tap records it (via the fake repo) and closes the sheet.
+    await tester.tap(find.text('Daily Coffee'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 5)); // flush the success SnackBar
+    await tester.pumpAndSettle();
+    expect(find.text('Catat cepat'), findsNothing);
+  });
+
   testWidgets('feature screens follow the platform dark theme', (tester) async {
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);

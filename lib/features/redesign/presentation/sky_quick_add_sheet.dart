@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/calc/money_calculator.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
+import '../../quick_entry/application/quick_entry_templates_controller.dart';
+import '../../quick_entry/data/quick_entry_models.dart';
+import '../../quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/sky_calc_keypad.dart';
@@ -147,9 +151,48 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
     });
   }
 
+  /// One-tap: record a quick-entry template as-is (its own wallet, category and
+  /// amount) and close the sheet, mirroring the chips on the full quick-entry
+  /// screen. No picker needed — the template carries everything.
+  Future<void> _useTemplate(QuickEntryTemplate template) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final executed = await ref
+        .read(quickEntryTemplatesControllerProvider.notifier)
+        .executeTemplate(
+          template,
+          ExecuteQuickEntryRequest(
+            transactionAt: DateTime.now().toUtc().toIso8601String(),
+          ),
+        );
+    if (!mounted) return;
+    if (executed) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${template.name} dicatat.')),
+      );
+      Navigator.of(context).pop(true);
+      return;
+    }
+    setState(() {
+      _error =
+          ref.read(quickEntryTemplatesControllerProvider).actionError ??
+          'Template gagal dijalankan.';
+    });
+  }
+
+  /// Close the sheet and open the manage-templates screen.
+  void _manageTemplates() {
+    final router = GoRouter.of(context);
+    Navigator.of(context).pop();
+    router.push(QuickEntryTemplatesScreen.path);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(transactionCreateControllerProvider);
+    final templatesState = ref.watch(quickEntryTemplatesControllerProvider);
+    final templates = templatesState.templates
+        .where((template) => template.type == _type)
+        .toList(growable: false);
     final preview = _calc.expressionPreview(
       (value) => MoneyFormatter.idr(value.round()),
     );
@@ -190,6 +233,43 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: context.sky.ink,
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space4),
+            Padding(
+              padding: const EdgeInsets.only(left: 2, bottom: 6),
+              child: Text(
+                'PAKAI TEMPLATE',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                  color: context.sky.faint,
+                ),
+              ),
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const ClampingScrollPhysics(),
+              child: Row(
+                children: [
+                  for (final template in templates) ...[
+                    _TemplateChip(
+                      name: template.name,
+                      amount: MoneyFormatter.idr(template.amountMinor),
+                      onTap: templatesState.isSaving
+                          ? null
+                          : () => _useTemplate(template),
+                    ),
+                    const SizedBox(width: AffluenaSpacing.space2),
+                  ],
+                  _TemplateChip(
+                    name: 'Kelola',
+                    amount: 'Atur',
+                    muted: true,
+                    onTap: _manageTemplates,
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: AffluenaSpacing.space4),
@@ -330,6 +410,74 @@ class _PickerChip extends StatelessWidget {
                 ),
               ),
               Icon(Icons.expand_more, size: 16, color: context.sky.faint),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A one-tap preset chip in the "PAKAI TEMPLATE" row: template name over its
+/// amount. The trailing "Kelola" chip uses [muted] for its sub-label.
+class _TemplateChip extends StatelessWidget {
+  const _TemplateChip({
+    required this.name,
+    required this.amount,
+    this.onTap,
+    this.muted = false,
+  });
+
+  final String name;
+  final String amount;
+  final VoidCallback? onTap;
+  final bool muted;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AffluenaRadii.control);
+    return Material(
+      color: context.sky.surface,
+      borderRadius: radius,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AffluenaSpacing.space3,
+            vertical: AffluenaSpacing.space2,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(color: context.sky.line),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: context.sky.ink,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                amount,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w500,
+                  color: muted ? context.sky.faint : context.sky.muted,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
             ],
           ),
         ),
