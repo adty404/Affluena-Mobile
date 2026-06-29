@@ -75,12 +75,17 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
             ),
           ),
           const SizedBox(height: AffluenaSpacing.space4),
-          _InviteCard(
-            controller: _emailController,
-            busy: state.isSaving,
-            error: state.actionError,
-            onSubmit: _invite,
-          ),
+          // Only one partner at a time: once you have an active partner, the
+          // invite field is replaced by a hint to revoke first.
+          if (state.hasActivePartner)
+            const _LimitNote()
+          else
+            _InviteCard(
+              controller: _emailController,
+              busy: state.isSaving,
+              error: state.actionError,
+              onSubmit: _invite,
+            ),
           if (state.incomingPending.isNotEmpty) ...[
             const SizedBox(height: AffluenaSpacing.space6),
             _SectionTitle('Undangan masuk'),
@@ -143,6 +148,34 @@ class _SectionTitle extends StatelessWidget {
         fontSize: 15,
         fontWeight: FontWeight.w700,
         color: context.sky.ink,
+      ),
+    );
+  }
+}
+
+class _LimitNote extends StatelessWidget {
+  const _LimitNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkyDetailCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, size: 18, color: context.sky.muted),
+          const SizedBox(width: AffluenaSpacing.space3),
+          Expanded(
+            child: Text(
+              'Kamu sudah punya satu pasangan. Putuskan dulu di bawah kalau '
+              'mau menggantinya dengan orang lain.',
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.45,
+                color: context.sky.muted,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
