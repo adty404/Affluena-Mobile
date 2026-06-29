@@ -13,6 +13,7 @@ import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../../shared/presentation/widgets/sky_room_card.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
+import '../../wallets/presentation/wallet_appearance.dart';
 import '../../wallets/presentation/wallet_format.dart';
 import 'room_detail_screen.dart';
 import 'sky_quick_add_sheet.dart';
@@ -153,7 +154,7 @@ class _WalletRoom extends StatelessWidget {
       shared: shared,
       leading: useAvatars
           ? _AvatarStack(members: wallet.members)
-          : _IconTile(icon: walletIcon(wallet.type)),
+          : _IconTile(icon: resolveWalletIcon(wallet)),
       title: wallet.name,
       subtitle: walletTypeLabel(wallet.type),
       badge: wallet.isViewer

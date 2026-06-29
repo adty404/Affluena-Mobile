@@ -17,6 +17,7 @@ import '../data/wallet_models.dart';
 import '../data/wallet_repository.dart';
 import 'wallet_adjust_sheet.dart';
 import 'wallet_analytics_section.dart';
+import 'wallet_appearance.dart';
 import 'wallet_display.dart';
 import 'wallet_invite_sheet.dart';
 import 'wallet_members_section.dart';
@@ -362,15 +363,22 @@ class _WalletIconMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.affluenaColors;
+    final hasColor = wallet.color.isNotEmpty;
+    final accent = hasColor
+        ? resolveWalletColor(wallet.color, colors.forest)
+        : colors.forest;
+    final accentSoft = hasColor
+        ? accent.withValues(alpha: 0.14)
+        : colors.forestSoft;
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.forestSoft,
+        color: accentSoft,
         borderRadius: BorderRadius.circular(AffluenaRadii.lg),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space4),
-        child: Icon(walletIcon(wallet.type), color: colors.forest),
+        child: Icon(resolveWalletIcon(wallet), color: accent),
       ),
     );
   }

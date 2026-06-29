@@ -28,6 +28,7 @@ import '../../trackers/presentation/subscription_detail_screen.dart';
 import '../../trackers/presentation/tracker_screen.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
+import '../../wallets/presentation/wallet_appearance.dart';
 import '../../wallets/presentation/wallet_format.dart';
 import '../../wallets/presentation/wallets_screen.dart';
 import 'room_detail_screen.dart';
@@ -209,7 +210,7 @@ class BerandaDashboardView extends ConsumerWidget {
     return _DashCard(
       leading: useAvatars
           ? _AvatarStack(members: wallet.members)
-          : _IconTile(icon: walletIcon(wallet.type)),
+          : _IconTile(icon: resolveWalletIcon(wallet)),
       badge: wallet.isViewer
           ? const _Badge(label: 'LIHAT')
           : (shared ? const _Badge(label: 'BERSAMA') : null),
@@ -229,7 +230,7 @@ class BerandaDashboardView extends ConsumerWidget {
     String? ownerName,
   ) {
     return _DashCard(
-      leading: _IconTile(icon: walletIcon(wallet.type)),
+      leading: _IconTile(icon: resolveWalletIcon(wallet)),
       badge: const _Badge(label: 'LIHAT'),
       title: wallet.name,
       subtitle: ownerName != null
