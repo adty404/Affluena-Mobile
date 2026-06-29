@@ -57,13 +57,13 @@ class _ThrowingPartnerRepository implements PartnerRepository {
   Future<void> revoke(String id) async {}
 }
 
-const _budiJoined = PartnerLink(
-  id: '1',
+PartnerLink _ownedJoined(int i) => PartnerLink(
+  id: 'l$i',
   direction: 'owned',
   status: 'joined',
-  userId: 'u2',
-  email: 'budi@example.com',
-  name: 'Budi',
+  userId: 'u$i',
+  email: 'viewer$i@example.com',
+  name: 'Pengamat $i',
 );
 
 Future<void> _pump(WidgetTester tester, PartnerRepository repo) async {
@@ -82,28 +82,32 @@ Future<void> _pump(WidgetTester tester, PartnerRepository repo) async {
 }
 
 void main() {
-  testWidgets('shows the invite field when there is no partner yet', (
+  testWidgets('shows the invite field and a viewer below the limit', (
     tester,
   ) async {
-    await _pump(tester, _FakePartnerRepository(const []));
+    await _pump(tester, _FakePartnerRepository([_ownedJoined(1)]));
 
-    expect(find.widgetWithText(FilledButton, 'Undang'), findsOneWidget);
-    expect(find.textContaining('Putuskan dulu'), findsNothing);
-  });
-
-  testWidgets('hides the invite field once a partner is linked', (
-    tester,
-  ) async {
-    await _pump(tester, _FakePartnerRepository(const [_budiJoined]));
-
-    expect(find.text('Budi'), findsOneWidget); // owned row display name
+    expect(find.text('Berbagi Dompet'), findsOneWidget); // app bar title
+    expect(find.text('Pengamat 1'), findsOneWidget); // owned row
     expect(find.text('Terhubung'), findsOneWidget); // status pill
-    // One-partner rule: cannot invite anyone else while linked.
-    expect(find.widgetWithText(FilledButton, 'Undang'), findsNothing);
-    expect(find.textContaining('Putuskan dulu'), findsOneWidget);
+    expect(find.textContaining('Pengamat saya'), findsOneWidget); // section
+    // Below the 5-person cap: can still invite, no limit note.
+    expect(find.widgetWithText(FilledButton, 'Undang'), findsOneWidget);
+    expect(find.textContaining('batas maksimal'), findsNothing);
   });
 
-  testWidgets('invites by email when there is no partner yet', (tester) async {
+  testWidgets('hides the invite field at the 5-viewer limit', (tester) async {
+    final repo = _FakePartnerRepository([
+      for (var i = 1; i <= 5; i++) _ownedJoined(i),
+    ]);
+
+    await _pump(tester, repo);
+
+    expect(find.widgetWithText(FilledButton, 'Undang'), findsNothing);
+    expect(find.textContaining('batas maksimal'), findsOneWidget); // limit note
+  });
+
+  testWidgets('invites by email when below the limit', (tester) async {
     final repo = _FakePartnerRepository(const []);
 
     await _pump(tester, repo);
@@ -117,7 +121,7 @@ void main() {
     expect(repo.invitedEmail, 'new@example.com');
   });
 
-  test('invite maps a 409 response to the partner-limit message', () async {
+  test('invite maps a 409 response to the share-limit message', () async {
     final container = ProviderContainer(
       overrides: [
         partnerRepositoryProvider.overrideWithValue(
@@ -137,7 +141,7 @@ void main() {
     expect(ok, isFalse);
     expect(
       container.read(partnerControllerProvider).actionError,
-      contains('Putuskan dulu'),
+      contains('maksimal'),
     );
   });
 }
