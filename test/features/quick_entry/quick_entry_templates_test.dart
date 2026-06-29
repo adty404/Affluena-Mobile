@@ -44,10 +44,15 @@ void main() {
     await tester.tap(find.byKey(const Key('template-detail-template-coffee')));
     await tester.pumpAndSettle();
 
+    // Detail sheet now uses SkyDetailRow (label + value as separate Texts);
+    // the values also still show on the list card behind the modal.
     expect(find.text('Rincian Daily Coffee'), findsOneWidget);
-    expect(find.text('Dompet: GoPay'), findsOneWidget);
-    expect(find.text('Kategori: Food & Dining'), findsOneWidget);
-    expect(find.text('Tag: #MonthlyBill'), findsOneWidget);
+    expect(find.text('Dompet'), findsOneWidget);
+    expect(find.text('Kategori'), findsOneWidget);
+    expect(find.text('Tag'), findsOneWidget);
+    expect(find.text('GoPay'), findsWidgets);
+    expect(find.text('Food & Dining'), findsWidgets);
+    expect(find.text('#MonthlyBill'), findsWidgets);
   });
 
   testWidgets(

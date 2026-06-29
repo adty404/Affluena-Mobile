@@ -68,6 +68,7 @@ Future<bool> skyConfirm(
   required String title,
   required String message,
   String confirmLabel = 'Lanjut',
+  String cancelLabel = 'Batal',
 }) async {
   final ok = await showDialog<bool>(
     context: context,
@@ -77,7 +78,7 @@ Future<bool> skyConfirm(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Batal'),
+          child: Text(cancelLabel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
