@@ -15,6 +15,8 @@ import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
+import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/tracker_controller.dart';
@@ -477,14 +479,11 @@ class _TrackerCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AffluenaSpacing.space3),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AffluenaRadii.pill),
-            child: LinearProgressIndicator(
-              value: progress.clamp(0, 1),
-              minHeight: 10,
-              color: progressColor,
-              backgroundColor: colors.surfaceTintSoft,
-            ),
+          SkyProgressBar(
+            value: progress,
+            height: 10,
+            fillColor: progressColor,
+            trackColor: colors.surfaceTintSoft,
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(amount, style: textTheme.headlineSmall),
@@ -1153,26 +1152,14 @@ Future<void> _confirm(
   required String actionLabel,
   required Future<void> Function() onConfirm,
 }) async {
-  final colors = context.affluenaColors;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(body),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Pertahankan'),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: colors.coral),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(actionLabel),
-        ),
-      ],
-    ),
+  final confirmed = await skyConfirm(
+    context,
+    title: title,
+    message: body,
+    confirmLabel: actionLabel,
+    cancelLabel: 'Pertahankan',
   );
-  if (confirmed == true) {
+  if (confirmed) {
     await onConfirm();
   }
 }
