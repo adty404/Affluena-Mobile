@@ -19,6 +19,8 @@ import 'package:affluena_mobile/features/dashboard/data/dashboard_repository.dar
 import 'package:affluena_mobile/features/goals/data/goal_models.dart';
 import 'package:affluena_mobile/features/goals/data/goal_repository.dart';
 import 'package:affluena_mobile/features/onboarding/application/onboarding_controller.dart';
+import 'package:affluena_mobile/features/partner/data/partner_models.dart';
+import 'package:affluena_mobile/features/partner/data/partner_repository.dart';
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_models.dart';
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository.dart';
 import 'package:affluena_mobile/features/recurring/data/recurring_models.dart';
@@ -84,6 +86,9 @@ Widget authTestApp({
       ),
       recurringRepositoryProvider.overrideWithValue(
         recurringRepository ?? const FakeRecurringRepository(),
+      ),
+      partnerRepositoryProvider.overrideWithValue(
+        const FakePartnerRepository(),
       ),
       tagRepositoryProvider.overrideWithValue(const FakeTagRepository()),
       quickEntryRepositoryProvider.overrideWithValue(
@@ -760,6 +765,18 @@ class FakeRecurringRepository implements RecurringRepository {
       rules: const [],
       pagination: Pagination(total: 0, limit: limit ?? 0, offset: offset ?? 0),
     );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class FakePartnerRepository implements PartnerRepository {
+  const FakePartnerRepository();
+
+  @override
+  Future<PartnerListResponse> list() async {
+    return const PartnerListResponse(partners: []);
   }
 
   @override

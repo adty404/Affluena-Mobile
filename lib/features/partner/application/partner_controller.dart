@@ -1,0 +1,111 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../data/partner_models.dart';
+import '../data/partner_repository.dart';
+
+final partnerControllerProvider =
+    NotifierProvider<PartnerController, PartnerState>(PartnerController.new);
+
+const Object _unchanged = Object();
+
+class PartnerState {
+  const PartnerState({
+    this.links = const [],
+    this.isLoading = false,
+    this.isSaving = false,
+    this.loadError,
+    this.actionError,
+  });
+
+  final List<PartnerLink> links;
+  final bool isLoading;
+  final bool isSaving;
+  final String? loadError;
+  final String? actionError;
+
+  /// Links I created — partners who can view my wallets.
+  List<PartnerLink> get owned =>
+      links.where((l) => l.isOwned).toList(growable: false);
+
+  /// Incoming invites still awaiting my response.
+  List<PartnerLink> get incomingPending =>
+      links.where((l) => l.isIncoming && l.isPending).toList(growable: false);
+
+  /// Owner ids whose wallets I can currently view (accepted incoming links).
+  Set<String> get viewableOwnerIds => links
+      .where((l) => l.isIncoming && l.isJoined)
+      .map((l) => l.userId)
+      .toSet();
+
+  PartnerState copyWith({
+    List<PartnerLink>? links,
+    bool? isLoading,
+    bool? isSaving,
+    Object? loadError = _unchanged,
+    Object? actionError = _unchanged,
+  }) {
+    return PartnerState(
+      links: links ?? this.links,
+      isLoading: isLoading ?? this.isLoading,
+      isSaving: isSaving ?? this.isSaving,
+      loadError: identical(loadError, _unchanged)
+          ? this.loadError
+          : loadError as String?,
+      actionError: identical(actionError, _unchanged)
+          ? this.actionError
+          : actionError as String?,
+    );
+  }
+}
+
+class PartnerController extends Notifier<PartnerState> {
+  @override
+  PartnerState build() {
+    Future<void>.microtask(load);
+    return const PartnerState();
+  }
+
+  Future<void> load() async {
+    state = state.copyWith(isLoading: true, loadError: null, actionError: null);
+    try {
+      final response = await ref.read(partnerRepositoryProvider).list();
+      state = state.copyWith(isLoading: false, links: response.partners);
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        loadError: 'Pasangan gagal dimuat.',
+      );
+    }
+  }
+
+  Future<bool> invite(String email) => _mutate(
+    () => ref
+        .read(partnerRepositoryProvider)
+        .invite(PartnerInviteRequest(email: email.trim())),
+  );
+
+  Future<bool> respond(String id, String status) => _mutate(
+    () => ref
+        .read(partnerRepositoryProvider)
+        .respond(id, PartnerRespondRequest(status: status)),
+  );
+
+  Future<bool> revoke(String id) =>
+      _mutate(() => ref.read(partnerRepositoryProvider).revoke(id));
+
+  Future<bool> _mutate(Future<void> Function() action) async {
+    state = state.copyWith(isSaving: true, actionError: null);
+    try {
+      await action();
+      state = state.copyWith(isSaving: false);
+      await load();
+      return true;
+    } catch (_) {
+      state = state.copyWith(
+        isSaving: false,
+        actionError: 'Tindakan itu gagal diselesaikan.',
+      );
+      return false;
+    }
+  }
+}
