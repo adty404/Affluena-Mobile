@@ -190,8 +190,15 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
   Widget build(BuildContext context) {
     final state = ref.watch(transactionCreateControllerProvider);
     final templatesState = ref.watch(quickEntryTemplatesControllerProvider);
+    // Opened from a wallet long-press → only that wallet's templates. Opened
+    // from the FAB (no wallet) → templates from every wallet.
+    final scopedWallet = widget.initialWallet;
     final templates = templatesState.templates
-        .where((template) => template.type == _type)
+        .where(
+          (template) =>
+              template.type == _type &&
+              (scopedWallet == null || template.walletId == scopedWallet.id),
+        )
         .toList(growable: false);
     final preview = _calc.expressionPreview(
       (value) => MoneyFormatter.idr(value.round()),
@@ -228,7 +235,9 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
               ),
             ),
             Text(
-              'Catat cepat',
+              scopedWallet == null
+                  ? 'Catat cepat'
+                  : 'Catat cepat · ${scopedWallet.name}',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
