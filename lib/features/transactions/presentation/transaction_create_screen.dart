@@ -7,6 +7,7 @@ import '../../../core/formatters/tag_formatter.dart';
 import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_chip_bar.dart';
 import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
@@ -397,10 +398,8 @@ class _TypeChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AffluenaSpacing.space2,
-      runSpacing: AffluenaSpacing.space2,
-      children: [
+    return AffluenaChipBar(
+      chips: [
         for (final type in TransactionType.values)
           AffluenaChoiceChip(
             key: Key('transaction-create-type-${type.apiValue}'),
@@ -428,10 +427,8 @@ class _TagChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AffluenaSpacing.space2,
-      runSpacing: AffluenaSpacing.space2,
-      children: [
+    return AffluenaChipBar(
+      chips: [
         AffluenaChoiceChip(
           key: const Key('transaction-create-tag-none'),
           label: 'Tanpa tag',

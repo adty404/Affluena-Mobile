@@ -9,6 +9,7 @@ import '../../insights/application/audit_log_controller.dart';
 import '../../insights/data/insight_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_chip_bar.dart';
 import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
@@ -139,30 +140,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       Row(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final (label, type)
-                      in const <(String, TransactionType?)>[
-                        ('Semua', null),
-                        ('Pemasukan', TransactionType.income),
-                        ('Pengeluaran', TransactionType.expense),
-                        ('Transfer', TransactionType.transfer),
-                        ('Penyesuaian', TransactionType.adjustment),
-                      ])
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        right: AffluenaSpacing.space2,
-                      ),
-                      child: AffluenaChoiceChip(
-                        label: label,
-                        selected: state.typeFilter == type,
-                        onSelected: () => controller.setTypeFilter(type),
-                      ),
-                    ),
-                ],
-              ),
+            child: AffluenaChipBar(
+              chips: [
+                for (final (label, type) in const <(String, TransactionType?)>[
+                  ('Semua', null),
+                  ('Pemasukan', TransactionType.income),
+                  ('Pengeluaran', TransactionType.expense),
+                  ('Transfer', TransactionType.transfer),
+                  ('Penyesuaian', TransactionType.adjustment),
+                ])
+                  AffluenaChoiceChip(
+                    label: label,
+                    selected: state.typeFilter == type,
+                    onSelected: () => controller.setTypeFilter(type),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: AffluenaSpacing.space2),
