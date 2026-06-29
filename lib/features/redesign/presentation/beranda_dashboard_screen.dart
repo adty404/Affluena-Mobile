@@ -13,6 +13,8 @@ import '../../goals/application/goal_controller.dart';
 import '../../goals/data/goal_models.dart';
 import '../../goals/presentation/goal_detail_screen.dart';
 import '../../goals/presentation/goal_screen.dart';
+import '../../partner/application/partner_controller.dart';
+import '../../partner/presentation/partner_screen.dart';
 import '../../recurring/application/recurring_controller.dart';
 import '../../recurring/data/recurring_models.dart';
 import '../../recurring/presentation/recurring_detail_screen.dart';
@@ -53,8 +55,19 @@ class BerandaDashboardView extends ConsumerWidget {
     final trackerState = ref.watch(trackerControllerProvider);
     final recurringState = ref.watch(recurringControllerProvider);
 
+    final viewableOwnerIds = ref
+        .watch(partnerControllerProvider)
+        .viewableOwnerIds;
+    bool isPartnerWallet(Wallet w) =>
+        w.role == 'viewer' && viewableOwnerIds.contains(w.userId);
+
     final wallets = walletsAsync.asData?.value ?? const <Wallet>[];
-    final spending = wallets.where((w) => !w.isGoal).toList(growable: false);
+    final partnerWallets = wallets
+        .where(isPartnerWallet)
+        .toList(growable: false);
+    final spending = wallets
+        .where((w) => !w.isGoal && !isPartnerWallet(w))
+        .toList(growable: false);
     final total = spending.fold<int>(0, (sum, w) => sum + w.balanceMinor);
 
     final savings = goalState.goals
@@ -87,6 +100,21 @@ class BerandaDashboardView extends ConsumerWidget {
               _walletCard(context, wallet),
           ],
         ),
+
+        if (partnerWallets.isNotEmpty)
+          _Section(
+            title: 'Pasangan',
+            onSeeAll: () => context.push(PartnerScreen.path),
+            isLoading: false,
+            hasError: false,
+            onRetry: () {},
+            emptyLabel: '',
+            onEmptyTap: () {},
+            cards: [
+              for (final wallet in partnerWallets.take(_previewCount))
+                _partnerWalletCard(context, wallet),
+            ],
+          ),
 
         _Section(
           title: 'Anggaran',
@@ -187,6 +215,19 @@ class BerandaDashboardView extends ConsumerWidget {
       value: MoneyFormatter.idr(wallet.balanceMinor),
       onTap: () => context.push(RoomDetailScreen.location(wallet.id)),
       onLongPress: () => showSkyQuickAddSheet(context, wallet: wallet),
+    );
+  }
+
+  /// A partner's wallet — read-only (no long-press quick-add), shown in the
+  /// "Pasangan" section.
+  Widget _partnerWalletCard(BuildContext context, Wallet wallet) {
+    return _DashCard(
+      leading: _IconTile(icon: walletIcon(wallet.type)),
+      badge: const _Badge(label: 'LIHAT'),
+      title: wallet.name,
+      subtitle: walletTypeLabel(wallet.type),
+      value: MoneyFormatter.idr(wallet.balanceMinor),
+      onTap: () => context.push(RoomDetailScreen.location(wallet.id)),
     );
   }
 

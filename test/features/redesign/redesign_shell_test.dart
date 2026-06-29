@@ -5,6 +5,7 @@ import 'package:affluena_mobile/features/dashboard/application/dashboard_home_co
 import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart';
 import 'package:affluena_mobile/features/goals/application/goal_controller.dart';
 import 'package:affluena_mobile/features/goals/data/goal_models.dart';
+import 'package:affluena_mobile/features/partner/application/partner_controller.dart';
 import 'package:affluena_mobile/features/recurring/application/recurring_controller.dart';
 import 'package:affluena_mobile/features/redesign/presentation/activity_feed_screen.dart';
 import 'package:affluena_mobile/features/redesign/presentation/redesign_shell.dart';
@@ -115,6 +116,11 @@ class _StubRecurringController extends RecurringController {
   RecurringState build() => const RecurringState();
 }
 
+class _StubPartnerController extends PartnerController {
+  @override
+  PartnerState build() => const PartnerState();
+}
+
 class _AuthedController extends AuthController {
   @override
   AuthState build() => AuthState.authenticated(_me);
@@ -132,6 +138,7 @@ Future<void> _pump(WidgetTester tester) async {
         budgetControllerProvider.overrideWith(_StubBudgetController.new),
         trackerControllerProvider.overrideWith(_StubTrackerController.new),
         recurringControllerProvider.overrideWith(_StubRecurringController.new),
+        partnerControllerProvider.overrideWith(_StubPartnerController.new),
         recentActivityProvider.overrideWith((ref) async => const [_txn]),
         dashboardCashflowTrendProvider.overrideWith((ref) async => _trend),
         dashboardExpenseDistributionProvider.overrideWith(
