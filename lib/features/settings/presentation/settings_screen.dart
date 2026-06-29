@@ -13,6 +13,7 @@ import '../../insights/application/insights_controller.dart';
 import '../../insights/presentation/audit_log_screen.dart';
 import '../../insights/presentation/insights_screen.dart';
 import '../../onboarding/presentation/onboarding_screen.dart';
+import '../../partner/presentation/partner_screen.dart';
 import '../../quick_entry/presentation/quick_entry_screen.dart';
 import '../../quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../../recurring/presentation/recurring_screen.dart';
@@ -154,6 +155,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     title: 'Dompet',
                     value: 'Kelola dompet dan saldo',
                     onTap: () => context.push(WalletsScreen.path),
+                  ),
+                  const Divider(height: 1),
+                  SettingsRow(
+                    key: const Key('settings-partner-row'),
+                    icon: Icons.favorite_outline,
+                    title: 'Pasangan',
+                    value: 'Bagikan semua dompet ke pasanganmu',
+                    onTap: () => context.push(PartnerScreen.path),
                   ),
                   const Divider(height: 1),
                   SettingsRow(

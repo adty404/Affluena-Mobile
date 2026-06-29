@@ -15,6 +15,7 @@ import '../features/insights/presentation/audit_log_screen.dart';
 import '../features/insights/presentation/insights_screen.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
+import '../features/partner/presentation/partner_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_screen.dart';
 import '../features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../features/recurring/presentation/recurring_detail_screen.dart';
@@ -167,6 +168,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: SettingsScreen.path,
         pageBuilder: _fadePage((_) => const SettingsScreen()),
+      ),
+      GoRoute(
+        path: PartnerScreen.path,
+        pageBuilder: _slidePage((_) => const PartnerScreen()),
       ),
       GoRoute(
         path: BudgetScreen.path,
