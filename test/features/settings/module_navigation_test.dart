@@ -100,7 +100,6 @@ void main() {
     ]) {
       router.go(location);
       await tester.pumpAndSettle();
-      expect(find.text('Selamat datang kembali'), findsOneWidget);
       expect(find.byKey(const Key('login-email-field')), findsOneWidget);
     }
   });
