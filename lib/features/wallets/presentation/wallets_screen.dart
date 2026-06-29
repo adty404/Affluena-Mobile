@@ -131,7 +131,7 @@ class _WalletCard extends StatelessWidget {
                 DecoratedBox(
                   decoration: BoxDecoration(
                     color: colors.forestSoft,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AffluenaRadii.lg),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(AffluenaSpacing.space3),

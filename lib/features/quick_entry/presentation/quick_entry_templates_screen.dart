@@ -14,6 +14,7 @@ import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../wallets/presentation/wallet_format.dart';
@@ -467,7 +468,7 @@ Future<void> _showTemplateDetail(
       final tags = state.tagNames(template.tagIds);
 
       return SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
             AffluenaSpacing.space5,
             AffluenaSpacing.space2,
@@ -480,21 +481,34 @@ Future<void> _showTemplateDetail(
             children: [
               Text('Rincian ${template.name}', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space4),
-              Text('Dompet: $wallet'),
-              const SizedBox(height: AffluenaSpacing.space2),
-              if (template.toWalletId != null) ...[
-                Text('Tujuan: ${state.walletName(template.toWalletId)}'),
-                const SizedBox(height: AffluenaSpacing.space2),
-              ],
-              Text('Kategori: $category'),
-              const SizedBox(height: AffluenaSpacing.space2),
-              Text('Tag: $tags'),
-              const SizedBox(height: AffluenaSpacing.space2),
-              Text('Jumlah: ${MoneyFormatter.idr(template.amountMinor)}'),
-              if (template.note.isNotEmpty) ...[
-                const SizedBox(height: AffluenaSpacing.space2),
-                Text('Catatan: ${template.note}'),
-              ],
+              SkyDetailCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SkyDetailRow(label: 'Dompet', value: wallet),
+                    if (template.toWalletId != null) ...[
+                      const SizedBox(height: AffluenaSpacing.space3),
+                      SkyDetailRow(
+                        label: 'Tujuan',
+                        value: state.walletName(template.toWalletId),
+                      ),
+                    ],
+                    const SizedBox(height: AffluenaSpacing.space3),
+                    SkyDetailRow(label: 'Kategori', value: category),
+                    const SizedBox(height: AffluenaSpacing.space3),
+                    SkyDetailRow(label: 'Tag', value: tags),
+                    const SizedBox(height: AffluenaSpacing.space3),
+                    SkyDetailRow(
+                      label: 'Jumlah',
+                      value: MoneyFormatter.idr(template.amountMinor),
+                    ),
+                    if (template.note.isNotEmpty) ...[
+                      const SizedBox(height: AffluenaSpacing.space3),
+                      SkyDetailRow(label: 'Catatan', value: template.note),
+                    ],
+                  ],
+                ),
+              ),
               const SizedBox(height: AffluenaSpacing.space5),
               FilledButton.icon(
                 onPressed: () {
@@ -1001,24 +1015,13 @@ Future<void> _confirmDeleteTemplate(
   QuickEntryTemplatesController controller,
   QuickEntryTemplate template,
 ) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Hapus template?'),
-      content: Text('Hapus ${template.name} dari template catat cepat?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Hapus template'),
-        ),
-      ],
-    ),
+  final confirmed = await skyConfirm(
+    context,
+    title: 'Hapus template?',
+    message: 'Hapus ${template.name} dari template catat cepat?',
+    confirmLabel: 'Hapus template',
   );
-  if (confirmed == true) {
+  if (confirmed) {
     await controller.deleteTemplate(template);
   }
 }

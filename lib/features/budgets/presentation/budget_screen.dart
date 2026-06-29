@@ -15,6 +15,8 @@ import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
+import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/budget_controller.dart';
 import '../data/budget_models.dart';
@@ -316,14 +318,11 @@ class _BudgetCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AffluenaSpacing.space2),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: percent,
-              minHeight: 10,
-              color: statusColor,
-              backgroundColor: colors.surfaceTintSoft,
-            ),
+          SkyProgressBar(
+            value: percent,
+            height: 10,
+            fillColor: statusColor,
+            trackColor: colors.surfaceTintSoft,
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
@@ -661,26 +660,13 @@ Future<void> _confirmDelete(
   BudgetController controller,
   BudgetSummary budget,
 ) async {
-  final colors = context.affluenaColors;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Hapus anggaran?'),
-      content: const Text('Ini menghapus anggaran kategori untuk bulan ini.'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: colors.coral),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Hapus'),
-        ),
-      ],
-    ),
+  final confirmed = await skyConfirm(
+    context,
+    title: 'Hapus anggaran?',
+    message: 'Ini menghapus anggaran kategori untuk bulan ini.',
+    confirmLabel: 'Hapus',
   );
-  if (confirmed == true) {
+  if (confirmed) {
     await controller.deleteBudget(budget);
   }
 }
