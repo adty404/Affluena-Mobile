@@ -63,7 +63,7 @@ PartnerLink _ownedJoined(int i) => PartnerLink(
   status: 'joined',
   userId: 'u$i',
   email: 'viewer$i@example.com',
-  name: 'Pengamat $i',
+  name: 'Teman $i',
 );
 
 Future<void> _pump(WidgetTester tester, PartnerRepository repo) async {
@@ -88,9 +88,9 @@ void main() {
     await _pump(tester, _FakePartnerRepository([_ownedJoined(1)]));
 
     expect(find.text('Berbagi Dompet'), findsOneWidget); // app bar title
-    expect(find.text('Pengamat 1'), findsOneWidget); // owned row
+    expect(find.text('Teman 1'), findsOneWidget); // owned row
     expect(find.text('Terhubung'), findsOneWidget); // status pill
-    expect(find.textContaining('Pengamat saya'), findsOneWidget); // section
+    expect(find.textContaining('Pemantau saya'), findsOneWidget); // section
     // Below the 5-person cap: can still invite, no limit note.
     expect(find.widgetWithText(FilledButton, 'Undang'), findsOneWidget);
     expect(find.textContaining('batas maksimal'), findsNothing);

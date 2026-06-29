@@ -14,7 +14,6 @@ import '../../insights/presentation/audit_log_screen.dart';
 import '../../insights/presentation/insights_screen.dart';
 import '../../onboarding/presentation/onboarding_screen.dart';
 import '../../partner/presentation/partner_screen.dart';
-import '../../quick_entry/presentation/quick_entry_screen.dart';
 import '../../quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../../recurring/presentation/recurring_screen.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
@@ -45,10 +44,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final profile = ref.watch(settingsProfileProvider);
-    final securityPreferences = ref.watch(securityPreferencesProvider);
     final themeMode = ref.watch(appThemeModeProvider);
     final user = profile.asData?.value ?? authState.user;
-    final securityState = securityPreferences.asData?.value;
 
     return DrillInScaffold(
       title: 'Pengaturan',
@@ -70,14 +67,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 _feedback!,
                 onDismiss: () => setState(() => _feedback = null),
               ),
-            ],
-            if (securityState?.actionError != null) ...[
-              const SizedBox(height: AffluenaSpacing.space3),
-              AffluenaBanner.error(securityState!.actionError!),
-            ],
-            if (securityState?.actionMessage != null) ...[
-              const SizedBox(height: AffluenaSpacing.space3),
-              AffluenaBanner.success(securityState!.actionMessage!),
             ],
             const SizedBox(height: AffluenaSpacing.space6),
             const SectionHeader(title: 'Keamanan'),
@@ -107,14 +96,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     title: 'Sesi',
                     value: 'Kelola perangkat yang masuk',
                     onTap: _openSessions,
-                  ),
-                  const Divider(height: 1),
-                  SettingsDeviceLockRow(
-                    key: const Key('settings-device-lock-row'),
-                    securityPreferences: securityPreferences,
-                    onChanged: (enabled) => ref
-                        .read(securityPreferencesProvider.notifier)
-                        .setDeviceLockEnabled(enabled),
                   ),
                 ],
               ),
@@ -171,14 +152,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     title: 'Transaksi',
                     value: 'Riwayat lengkap dengan filter & pencarian',
                     onTap: () => context.push(TransactionsScreen.path),
-                  ),
-                  const Divider(height: 1),
-                  SettingsRow(
-                    key: const Key('settings-quick-entry-row'),
-                    icon: Icons.edit_note_outlined,
-                    title: 'Catat cepat',
-                    value: 'Form catat transaksi lengkap',
-                    onTap: () => context.push(QuickEntryScreen.path),
                   ),
                   const Divider(height: 1),
                   SettingsRow(

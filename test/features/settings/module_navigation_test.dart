@@ -215,11 +215,6 @@ final _settingsNavigationScenarios = [
     expected: 'Transaksi',
   ),
   _NavigationScenario(
-    entry: 'Catat cepat',
-    location: QuickEntryScreen.path,
-    expected: 'Catat cepat',
-  ),
-  _NavigationScenario(
     entry: 'Template catat cepat',
     location: QuickEntryTemplatesScreen.path,
     expected: 'Template catat cepat',

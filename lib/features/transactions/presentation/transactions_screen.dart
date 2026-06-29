@@ -138,40 +138,30 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       Row(
         children: [
           Expanded(
-            child: Wrap(
-              spacing: AffluenaSpacing.space2,
-              runSpacing: AffluenaSpacing.space2,
-              children: [
-                _TypeFilterChip(
-                  label: 'Semua',
-                  selected: state.typeFilter == null,
-                  onSelected: () => controller.setTypeFilter(null),
-                ),
-                _TypeFilterChip(
-                  label: 'Pemasukan',
-                  selected: state.typeFilter == TransactionType.income,
-                  onSelected: () =>
-                      controller.setTypeFilter(TransactionType.income),
-                ),
-                _TypeFilterChip(
-                  label: 'Pengeluaran',
-                  selected: state.typeFilter == TransactionType.expense,
-                  onSelected: () =>
-                      controller.setTypeFilter(TransactionType.expense),
-                ),
-                _TypeFilterChip(
-                  label: 'Transfer',
-                  selected: state.typeFilter == TransactionType.transfer,
-                  onSelected: () =>
-                      controller.setTypeFilter(TransactionType.transfer),
-                ),
-                _TypeFilterChip(
-                  label: 'Penyesuaian',
-                  selected: state.typeFilter == TransactionType.adjustment,
-                  onSelected: () =>
-                      controller.setTypeFilter(TransactionType.adjustment),
-                ),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final (label, type)
+                      in const <(String, TransactionType?)>[
+                        ('Semua', null),
+                        ('Pemasukan', TransactionType.income),
+                        ('Pengeluaran', TransactionType.expense),
+                        ('Transfer', TransactionType.transfer),
+                        ('Penyesuaian', TransactionType.adjustment),
+                      ])
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        right: AffluenaSpacing.space2,
+                      ),
+                      child: _TypeFilterChip(
+                        label: label,
+                        selected: state.typeFilter == type,
+                        onSelected: () => controller.setTypeFilter(type),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
           const SizedBox(width: AffluenaSpacing.space2),
@@ -482,11 +472,30 @@ class _TypeFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) => onSelected(),
-      avatar: selected ? const Icon(Icons.check, size: 16) : null,
+    final colors = context.affluenaColors;
+    return Material(
+      color: selected ? colors.forest : colors.surfaceTintSoft,
+      shape: StadiumBorder(
+        side: BorderSide(color: selected ? colors.forest : colors.borderSubtle),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onSelected,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AffluenaSpacing.space4,
+            vertical: AffluenaSpacing.space2,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : colors.inkMuted,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

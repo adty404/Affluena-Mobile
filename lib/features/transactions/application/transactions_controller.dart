@@ -154,6 +154,10 @@ class TransactionsController extends Notifier<TransactionsState> {
         wallets: walletResponse.wallets
             .where((w) => w.canWrite)
             .toList(growable: false),
+        viewerWalletIds: {
+          for (final wallet in walletResponse.wallets)
+            if (wallet.isViewer) wallet.id,
+        },
         categories: categoryResponse.categories,
         tags: tagResponse.tags,
         walletNames: {
@@ -268,6 +272,7 @@ class TransactionsState {
     this.transactions = const [],
     this.total = 0,
     this.wallets = const [],
+    this.viewerWalletIds = const {},
     this.categories = const [],
     this.tags = const [],
     this.walletNames = const {},
@@ -284,6 +289,10 @@ class TransactionsState {
   final List<Transaction> transactions;
   final int total;
   final List<Wallet> wallets;
+
+  /// Wallets shared TO me (role 'viewer'). Their transactions are hidden from
+  /// the main history so it shows only my own wallets' activity.
+  final Set<String> viewerWalletIds;
   final List<Category> categories;
   final List<Tag> tags;
   final Map<String, String> walletNames;
@@ -304,9 +313,13 @@ class TransactionsState {
   /// are applied during [TransactionsController.load]; the query refines the
   /// already-loaded page by note, wallet, or category name.
   List<Transaction> get visibleTransactions {
+    Iterable<Transaction> base = transactions;
+    if (viewerWalletIds.isNotEmpty) {
+      base = base.where((t) => !viewerWalletIds.contains(t.walletId));
+    }
     final query = searchQuery.trim().toLowerCase();
-    if (query.isEmpty) return transactions;
-    return transactions
+    if (query.isEmpty) return base.toList(growable: false);
+    return base
         .where((transaction) {
           final note = transaction.note.toLowerCase();
           final wallet = walletName(transaction.walletId).toLowerCase();
@@ -344,6 +357,7 @@ class TransactionsState {
     List<Transaction>? transactions,
     int? total,
     List<Wallet>? wallets,
+    Set<String>? viewerWalletIds,
     List<Category>? categories,
     List<Tag>? tags,
     Map<String, String>? walletNames,
@@ -360,6 +374,7 @@ class TransactionsState {
       transactions: transactions ?? this.transactions,
       total: total ?? this.total,
       wallets: wallets ?? this.wallets,
+      viewerWalletIds: viewerWalletIds ?? this.viewerWalletIds,
       categories: categories ?? this.categories,
       tags: tags ?? this.tags,
       walletNames: walletNames ?? this.walletNames,
