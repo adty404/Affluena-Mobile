@@ -63,9 +63,17 @@ class BudgetDetailScreen extends ConsumerWidget {
     final over = current.usagePercent >= 100;
     final overMinor = current.spentMinor - current.limitMinor;
     final accent = over ? context.sky.danger : context.sky.accent;
-    final monthLabel = AffluenaDateFormatter.monthLabel(
-      DateTime.parse('${current.month}-01'),
-    );
+    // budget.month arrives as a full ISO timestamp (the API serializes a DATE
+    // column to RFC3339), or as 'YYYY-MM' in tests. Take the calendar-month
+    // prefix and build a local date — never parse the raw string with '-01'
+    // appended, which throws on a timestamp and blanks the whole screen.
+    final monthIso = current.month.length >= 7
+        ? current.month.substring(0, 7)
+        : current.month;
+    final monthDate = DateTime.tryParse('$monthIso-01');
+    final monthLabel = monthDate != null
+        ? AffluenaDateFormatter.monthLabel(monthDate)
+        : '';
     final transactions = ref.watch(
       categoryTransactionsProvider(current.categoryId),
     );
@@ -80,7 +88,9 @@ class BudgetDetailScreen extends ConsumerWidget {
         padding: AffluenaInsets.screen,
         children: [
           SkyDetailHero(
-            label: 'Terpakai · $monthLabel',
+            label: monthLabel.isEmpty
+                ? 'Terpakai bulan ini'
+                : 'Terpakai · $monthLabel',
             amount: MoneyFormatter.idr(current.spentMinor),
             sub: 'dari ${MoneyFormatter.idr(current.limitMinor)}',
             amountColor: over ? context.sky.danger : null,

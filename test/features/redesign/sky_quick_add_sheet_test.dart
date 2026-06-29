@@ -79,7 +79,8 @@ void main() {
   ) async {
     final stub = await _openSheet(tester);
 
-    expect(find.text('Catat cepat'), findsOneWidget);
+    // Opened scoped to a wallet, so the title reads "Catat cepat · <wallet>".
+    expect(find.textContaining('Catat cepat'), findsOneWidget);
     expect(find.text('Rp 0'), findsOneWidget);
 
     // Saving with no amount is blocked.

@@ -22,7 +22,9 @@ const _budget = BudgetSummary(
   id: 'b1',
   userId: 'u1',
   categoryId: 'cat-food',
-  month: '2026-06',
+  // The API serializes the DATE column to a full RFC3339 timestamp; the detail
+  // screen must handle that (not just 'YYYY-MM') or it blanks out.
+  month: '2026-06-01T00:00:00Z',
   limitMinor: 1500000,
   createdAt: '2026-06-01T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
