@@ -6,8 +6,6 @@ import '../../../core/storage/secure_token_store.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/data/auth_models.dart';
 import '../../auth/data/auth_repository.dart';
-import '../data/security_preferences_repository.dart';
-import 'device_auth_service.dart';
 
 final settingsProfileProvider =
     AsyncNotifierProvider<SettingsProfileController, AuthUser>(
@@ -18,12 +16,6 @@ final settingsSessionsProvider =
     AsyncNotifierProvider<SettingsSessionsController, List<AuthSessionRecord>>(
       SettingsSessionsController.new,
     );
-
-final securityPreferencesProvider =
-    AsyncNotifierProvider<
-      SecurityPreferencesController,
-      SecurityPreferencesState
-    >(SecurityPreferencesController.new);
 
 /// The token suffix of the access token stored on *this* device, used to flag
 /// the active session in the sessions list. Null when no token is stored.
@@ -128,116 +120,6 @@ class SettingsSessionsController
       state = AsyncData(previous);
       return SettingsActionResult.failure(settingsErrorMessage(error));
     }
-  }
-}
-
-class SecurityPreferencesController
-    extends AsyncNotifier<SecurityPreferencesState> {
-  @override
-  Future<SecurityPreferencesState> build() async {
-    final repository = ref.watch(securityPreferencesRepositoryProvider);
-    final preferences = await repository.load();
-    final isSupported = await ref
-        .watch(deviceAuthServiceProvider)
-        .isSupported();
-    return SecurityPreferencesState(
-      preferences: preferences,
-      isDeviceAuthSupported: isSupported,
-    );
-  }
-
-  Future<void> setDeviceLockEnabled(bool enabled) async {
-    final current = state.asData?.value;
-    if (current == null || current.isSaving) return;
-
-    state = AsyncData(
-      current.copyWith(isSaving: true, actionError: null, actionMessage: null),
-    );
-
-    if (enabled && !current.isDeviceAuthSupported) {
-      state = AsyncData(
-        current.copyWith(
-          actionError: 'Autentikasi perangkat tidak tersedia di perangkat ini.',
-        ),
-      );
-      return;
-    }
-
-    if (enabled) {
-      final authenticated = await ref
-          .read(deviceAuthServiceProvider)
-          .authenticate();
-      if (!authenticated) {
-        state = AsyncData(
-          current.copyWith(actionError: 'Autentikasi perangkat dibatalkan.'),
-        );
-        return;
-      }
-    }
-
-    try {
-      final nextPreferences = await ref
-          .read(securityPreferencesRepositoryProvider)
-          .save(current.preferences.copyWith(deviceLockEnabled: enabled));
-      state = AsyncData(
-        current.copyWith(
-          preferences: nextPreferences,
-          isSaving: false,
-          actionMessage: enabled
-              ? 'Kunci perangkat diaktifkan.'
-              : 'Kunci perangkat dinonaktifkan.',
-        ),
-      );
-    } catch (_) {
-      state = AsyncData(
-        current.copyWith(
-          isSaving: false,
-          actionError: 'Preferensi kunci perangkat gagal disimpan.',
-        ),
-      );
-    }
-  }
-}
-
-class SecurityPreferencesState {
-  const SecurityPreferencesState({
-    required this.preferences,
-    required this.isDeviceAuthSupported,
-    this.isSaving = false,
-    this.actionMessage,
-    this.actionError,
-  });
-
-  final SecurityPreferences preferences;
-  final bool isDeviceAuthSupported;
-  final bool isSaving;
-  final String? actionMessage;
-  final String? actionError;
-
-  bool get canConfigureDeviceLock => isDeviceAuthSupported && !isSaving;
-
-  String get deviceLockValue {
-    if (!isDeviceAuthSupported) return 'Tidak tersedia di perangkat ini';
-    return preferences.deviceLockEnabled
-        ? 'Aktif • autentikasi perangkat'
-        : 'Nonaktif • autentikasi perangkat';
-  }
-
-  SecurityPreferencesState copyWith({
-    SecurityPreferences? preferences,
-    bool? isDeviceAuthSupported,
-    bool? isSaving,
-    String? actionMessage,
-    String? actionError,
-  }) {
-    return SecurityPreferencesState(
-      preferences: preferences ?? this.preferences,
-      isDeviceAuthSupported:
-          isDeviceAuthSupported ?? this.isDeviceAuthSupported,
-      isSaving: isSaving ?? false,
-      actionMessage: actionMessage,
-      actionError: actionError,
-    );
   }
 }
 
