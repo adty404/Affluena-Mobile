@@ -6,6 +6,7 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_chip_bar.dart';
 import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
@@ -188,10 +189,8 @@ class _InsightTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AffluenaSpacing.space2,
-      runSpacing: AffluenaSpacing.space2,
-      children: [
+    return AffluenaChipBar(
+      chips: [
         // CSV export is hidden for now; only the reports/insights tabs show.
         for (final tab in InsightTab.values.where(
           (t) => t != InsightTab.exports,
@@ -220,10 +219,8 @@ class _ReportsSection extends StatelessWidget {
       children: [
         const SectionHeader(title: 'Laporan'),
         const SizedBox(height: AffluenaSpacing.space3),
-        Wrap(
-          spacing: AffluenaSpacing.space2,
-          runSpacing: AffluenaSpacing.space2,
-          children: [
+        AffluenaChipBar(
+          chips: [
             for (final kind in ReportKind.values)
               AffluenaChoiceChip(
                 selected: state.reportKind == kind,

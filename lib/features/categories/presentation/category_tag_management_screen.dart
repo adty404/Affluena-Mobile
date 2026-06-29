@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_chip_bar.dart';
 import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
@@ -100,10 +101,8 @@ class _CategoryTagManagementScreenState
             onChanged: (value) => setState(() => _query = value),
           ),
           const SizedBox(height: AffluenaSpacing.space3),
-          Wrap(
-            spacing: AffluenaSpacing.space2,
-            runSpacing: AffluenaSpacing.space2,
-            children: [
+          AffluenaChipBar(
+            chips: [
               AffluenaChoiceChip(
                 label: 'Semua',
                 selected: _typeFilter == null,
