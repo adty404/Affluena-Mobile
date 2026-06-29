@@ -11,6 +11,9 @@ import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../application/tracker_controller.dart';
 import '../data/tracker_models.dart';
 
+/// One month in the installment schedule. [kind]: 0 paid, 1 next-due, 2 upcoming.
+typedef _ScheduleEntry = ({int number, DateTime due, int kind});
+
 /// Per-installment detail (Cicilan) in the Sky & Denim language — opened from a
 /// Beranda dashboard card. Reads the installment from the already-loaded
 /// [trackerControllerProvider]; "Bayar cicilan" reuses [TrackerController.payInstallment].
@@ -47,6 +50,7 @@ class InstallmentDetailScreen extends ConsumerWidget {
     final paid = current.tenorMonths - current.remainingMonths;
     final remainingMinor = current.remainingMonths * current.monthlyAmountMinor;
     final (statusLabel, statusColor) = _status(context, current.status);
+    final schedule = _buildSchedule(current);
 
     return DrillInScaffold(
       title: current.name,
@@ -72,29 +76,8 @@ class InstallmentDetailScreen extends ConsumerWidget {
               SkyStatusPill(label: statusLabel, color: statusColor),
             ],
           ),
-          const SizedBox(height: AffluenaSpacing.space5),
-          SkyDetailCard(
-            child: Column(
-              children: [
-                SkyDetailRow(
-                  label: 'Jatuh tempo tiap',
-                  value: 'Tanggal ${current.dueDay}',
-                ),
-                const SizedBox(height: AffluenaSpacing.space3),
-                SkyDetailRow(
-                  label: 'Sisa cicilan',
-                  value: '${current.remainingMonths} bulan',
-                ),
-                const SizedBox(height: AffluenaSpacing.space3),
-                SkyDetailRow(
-                  label: 'Mulai',
-                  value: AffluenaDateFormatter.shortDate(current.startDate),
-                ),
-              ],
-            ),
-          ),
           if (current.canPay) ...[
-            const SizedBox(height: AffluenaSpacing.space6),
+            const SizedBox(height: AffluenaSpacing.space5),
             FilledButton.icon(
               onPressed: () async {
                 final ok = await skyConfirm(
@@ -114,9 +97,63 @@ class InstallmentDetailScreen extends ConsumerWidget {
               label: const Text('Bayar cicilan'),
             ),
           ],
+          const SizedBox(height: AffluenaSpacing.space6),
+          Row(
+            children: [
+              Text(
+                'Jadwal',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: context.sky.ink,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${current.tenorMonths} bulan',
+                style: TextStyle(fontSize: 12, color: context.sky.faint),
+              ),
+            ],
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+          SkyDetailCard(
+            child: Column(
+              children: [
+                for (var i = 0; i < schedule.length; i++) ...[
+                  if (i > 0)
+                    Divider(
+                      height: AffluenaSpacing.space4,
+                      color: context.sky.line,
+                    ),
+                  _ScheduleRow(
+                    entry: schedule[i],
+                    amount: current.monthlyAmountMinor,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  List<_ScheduleEntry> _buildSchedule(Installment item) {
+    final base = DateTime.tryParse(item.startDate) ?? DateTime.now();
+    final paid = item.tenorMonths - item.remainingMonths;
+    final entries = <_ScheduleEntry>[];
+    for (var i = 0; i < item.tenorMonths; i++) {
+      final year = base.year + ((base.month - 1 + i) ~/ 12);
+      final month = ((base.month - 1 + i) % 12) + 1;
+      final lastDay = DateTime(year, month + 1, 0).day;
+      final day = item.dueDay.clamp(1, lastDay);
+      final due = DateTime(year, month, day);
+      final kind = i < paid
+          ? 0
+          : (i == paid && item.status == InstallmentStatus.active ? 1 : 2);
+      entries.add((number: i + 1, due: due, kind: kind));
+    }
+    return entries;
   }
 
   (String, Color) _status(BuildContext context, InstallmentStatus status) {
@@ -125,5 +162,61 @@ class InstallmentDetailScreen extends ConsumerWidget {
       InstallmentStatus.paidOff => (status.label, context.sky.income),
       InstallmentStatus.cancelled => (status.label, context.sky.faint),
     };
+  }
+}
+
+class _ScheduleRow extends StatelessWidget {
+  const _ScheduleRow({required this.entry, required this.amount});
+
+  final _ScheduleEntry entry;
+  final int amount;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (entry.kind) {
+      0 => ('Lunas', context.sky.income),
+      1 => ('Berikutnya', context.sky.accent),
+      _ => ('', context.sky.faint),
+    };
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Bayar ke-${entry.number}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: context.sky.ink,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                AffluenaDateFormatter.shortDate(entry.due.toIso8601String()),
+                style: TextStyle(fontSize: 11, color: context.sky.faint),
+              ),
+            ],
+          ),
+        ),
+        if (label.isNotEmpty) ...[
+          const SizedBox(width: AffluenaSpacing.space2),
+          SkyStatusPill(label: label, color: color),
+        ],
+        const SizedBox(width: AffluenaSpacing.space2),
+        Text(
+          MoneyFormatter.idr(amount),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: context.sky.ink,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
   }
 }

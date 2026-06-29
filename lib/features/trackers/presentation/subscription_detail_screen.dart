@@ -13,6 +13,8 @@ import '../data/tracker_models.dart';
 /// Per-subscription detail (Langganan) in the Sky & Denim language — opened from
 /// a Beranda dashboard card. Reads the subscription from the already-loaded
 /// [trackerControllerProvider]; pay / pause reuse the existing controller actions.
+/// (The API has no payment-history endpoint, so the schedule shows the next few
+/// *upcoming* bills computed from the billing cycle.)
 class SubscriptionDetailScreen extends ConsumerWidget {
   const SubscriptionDetailScreen({required this.id, super.key});
 
@@ -45,6 +47,9 @@ class SubscriptionDetailScreen extends ConsumerWidget {
     final current = item;
     final controller = ref.read(trackerControllerProvider.notifier);
     final (statusLabel, statusColor) = _status(context, current.status);
+    final upcoming = current.status == SubscriptionStatus.active
+        ? _upcomingBills(current)
+        : const <DateTime>[];
 
     return DrillInScaffold(
       title: current.name,
@@ -105,9 +110,59 @@ class SubscriptionDetailScreen extends ConsumerWidget {
               label: const Text('Lanjutkan langganan'),
             ),
           ],
+          if (upcoming.isNotEmpty) ...[
+            const SizedBox(height: AffluenaSpacing.space6),
+            Text(
+              'Tagihan berikutnya',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: context.sky.ink,
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+            SkyDetailCard(
+              child: Column(
+                children: [
+                  for (var i = 0; i < upcoming.length; i++) ...[
+                    if (i > 0)
+                      Divider(
+                        height: AffluenaSpacing.space4,
+                        color: context.sky.line,
+                      ),
+                    SkyDetailRow(
+                      label: AffluenaDateFormatter.shortDate(
+                        upcoming[i].toIso8601String(),
+                      ),
+                      value: MoneyFormatter.idr(current.amountMinor),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  List<DateTime> _upcomingBills(Subscription item, {int count = 4}) {
+    final base = DateTime.tryParse(item.nextDueDate);
+    if (base == null) return const [];
+    final bills = <DateTime>[];
+    var due = DateTime(base.year, base.month, base.day);
+    for (var i = 0; i < count; i++) {
+      bills.add(due);
+      if (item.billingCycle == BillingCycle.weekly) {
+        due = due.add(const Duration(days: 7));
+      } else {
+        final year = due.month == 12 ? due.year + 1 : due.year;
+        final month = due.month == 12 ? 1 : due.month + 1;
+        final lastDay = DateTime(year, month + 1, 0).day;
+        due = DateTime(year, month, base.day.clamp(1, lastDay));
+      }
+    }
+    return bills;
   }
 
   (String, Color) _status(BuildContext context, SubscriptionStatus status) {
