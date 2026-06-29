@@ -7,6 +7,7 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
@@ -65,17 +66,15 @@ class _SplitBillListScreenState extends ConsumerState<SplitBillListScreen> {
           Wrap(
             spacing: AffluenaSpacing.space2,
             children: [
-              ChoiceChip(
-                showCheckmark: false,
+              AffluenaChoiceChip(
                 selected: _status == 'ongoing',
-                label: const Text('Berjalan'),
-                onSelected: (_) => setState(() => _status = 'ongoing'),
+                label: 'Berjalan',
+                onSelected: () => setState(() => _status = 'ongoing'),
               ),
-              ChoiceChip(
-                showCheckmark: false,
+              AffluenaChoiceChip(
                 selected: _status == null,
-                label: const Text('Semua'),
-                onSelected: (_) => setState(() => _status = null),
+                label: 'Semua',
+                onSelected: () => setState(() => _status = null),
               ),
             ],
           ),

@@ -6,6 +6,7 @@ import '../../../core/formatters/money_formatter.dart';
 import '../../../core/formatters/tag_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
@@ -647,12 +648,12 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         runSpacing: AffluenaSpacing.space2,
                         children: [
                           for (final type in _templateTypes)
-                            ChoiceChip(
-                              label: Text(_typeLabel(type)),
+                            AffluenaChoiceChip(
+                              label: _typeLabel(type),
                               selected: _type == type,
                               onSelected: state.isSaving
                                   ? null
-                                  : (_) => setState(() {
+                                  : () => setState(() {
                                       _type = type;
                                       if (_type == TransactionType.transfer) {
                                         _categoryId = null;

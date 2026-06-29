@@ -26,18 +26,18 @@ class _SplitTagChips extends StatelessWidget {
             spacing: AffluenaSpacing.space2,
             runSpacing: AffluenaSpacing.space2,
             children: [
-              ChoiceChip(
+              AffluenaChoiceChip(
                 key: const Key('split-tag-chip-none'),
-                label: const Text('Opsional'),
+                label: 'Opsional',
                 selected: selectedTagId == null,
-                onSelected: enabled ? (_) => onChanged(null) : null,
+                onSelected: enabled ? () => onChanged(null) : null,
               ),
               for (final tag in tags)
-                ChoiceChip(
+                AffluenaChoiceChip(
                   key: Key('split-tag-chip-${tag.id}'),
-                  label: Text(tagLabel(tag.name)),
+                  label: tagLabel(tag.name),
                   selected: selectedTagId == tag.id,
-                  onSelected: enabled ? (_) => onChanged(tag.id) : null,
+                  onSelected: enabled ? () => onChanged(tag.id) : null,
                 ),
             ],
           ),
