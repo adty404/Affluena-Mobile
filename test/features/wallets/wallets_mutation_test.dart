@@ -36,6 +36,30 @@ void main() {
     expect(find.text('Travel Cash'), findsOneWidget);
   });
 
+  testWidgets('create wallet sends the chosen color and icon', (tester) async {
+    final repository = TestWalletRepository(wallets: [cashWallet]);
+
+    await tester.pumpWidget(walletsTestApp(repository));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Nama'),
+      'Tabungan',
+    );
+    await tester.tap(find.byKey(const Key('wallet-color-#2E8B57')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wallet-icon-savings')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Simpan dompet'));
+    await tester.pumpAndSettle();
+
+    expect(repository.createRequests, hasLength(1));
+    expect(repository.createRequests.single.color, '#2E8B57');
+    expect(repository.createRequests.single.icon, 'savings');
+  });
+
   testWidgets('create wallet error keeps form open with feedback', (
     tester,
   ) async {

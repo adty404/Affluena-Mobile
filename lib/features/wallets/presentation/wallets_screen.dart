@@ -12,6 +12,7 @@ import '../application/wallets_controller.dart';
 import '../data/wallet_models.dart';
 import '../data/wallet_repository.dart';
 import 'wallet_adjust_sheet.dart';
+import 'wallet_appearance.dart';
 import 'wallet_detail_screen.dart';
 import 'wallet_format.dart';
 
@@ -117,6 +118,15 @@ class _WalletCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
+    // Use the wallet's chosen color when set, otherwise the theme accent so
+    // wallets without a color render exactly as before.
+    final hasColor = wallet.color.isNotEmpty;
+    final accent = hasColor
+        ? resolveWalletColor(wallet.color, colors.forest)
+        : colors.forest;
+    final accentSoft = hasColor
+        ? accent.withValues(alpha: 0.14)
+        : colors.forestSoft;
 
     return InkWell(
       borderRadius: BorderRadius.circular(AffluenaRadii.card),
@@ -130,12 +140,12 @@ class _WalletCard extends StatelessWidget {
               children: [
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: colors.forestSoft,
+                    color: accentSoft,
                     borderRadius: BorderRadius.circular(AffluenaRadii.lg),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(AffluenaSpacing.space3),
-                    child: Icon(walletIcon(wallet.type), color: colors.forest),
+                    child: Icon(resolveWalletIcon(wallet), color: accent),
                   ),
                 ),
                 const Spacer(),
@@ -281,6 +291,10 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _balanceController;
   late WalletType _type;
+  // Chosen appearance. Null = use the default (theme color / per-type icon).
+  // When editing, seeded from the wallet so an unrelated edit preserves them.
+  String? _color;
+  String? _icon;
   String? _error;
   bool _isSaving = false;
 
@@ -295,6 +309,8 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
     _type = wallet?.type == WalletType.goal
         ? WalletType.cash
         : wallet?.type ?? WalletType.cash;
+    _color = (wallet != null && wallet.color.isNotEmpty) ? wallet.color : null;
+    _icon = (wallet != null && wallet.icon.isNotEmpty) ? wallet.icon : null;
   }
 
   @override
@@ -346,6 +362,14 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
                   ? null
                   : (value) => setState(() => _type = value ?? _type),
             ),
+            const SizedBox(height: AffluenaSpacing.space4),
+            _PickerLabel('Warna'),
+            const SizedBox(height: AffluenaSpacing.space2),
+            _buildColorPicker(),
+            const SizedBox(height: AffluenaSpacing.space4),
+            _PickerLabel('Ikon'),
+            const SizedBox(height: AffluenaSpacing.space2),
+            _buildIconPicker(),
             if (!isEditing) ...[
               const SizedBox(height: AffluenaSpacing.space3),
               TextField(
@@ -395,6 +419,87 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
     );
   }
 
+  Widget _buildColorPicker() {
+    final colors = context.affluenaColors;
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: kWalletColorPalette.length,
+        separatorBuilder: (_, _) =>
+            const SizedBox(width: AffluenaSpacing.space3),
+        itemBuilder: (context, index) {
+          final hex = kWalletColorPalette[index];
+          final color = resolveWalletColor(hex, colors.forest);
+          final selected = _color == hex;
+          return GestureDetector(
+            key: Key('wallet-color-$hex'),
+            onTap: _isSaving ? null : () => setState(() => _color = hex),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? colors.ink : Colors.transparent,
+                  width: 2.5,
+                ),
+              ),
+              child: selected
+                  ? const Icon(Icons.check, color: Colors.white, size: 20)
+                  : null,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildIconPicker() {
+    final colors = context.affluenaColors;
+    final accent = _color != null
+        ? resolveWalletColor(_color!, colors.forest)
+        : colors.forest;
+    final ids = kWalletIconCatalog.keys.toList(growable: false);
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: ids.length,
+        separatorBuilder: (_, _) =>
+            const SizedBox(width: AffluenaSpacing.space3),
+        itemBuilder: (context, index) {
+          final id = ids[index];
+          final selected = _icon == id;
+          return GestureDetector(
+            key: Key('wallet-icon-$id'),
+            onTap: _isSaving ? null : () => setState(() => _icon = id),
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: selected
+                    ? accent.withValues(alpha: 0.16)
+                    : colors.surfaceElevated,
+                borderRadius: BorderRadius.circular(AffluenaRadii.md),
+                border: Border.all(
+                  color: selected ? accent : colors.borderSubtle,
+                  width: selected ? 2 : 1,
+                ),
+              ),
+              child: Icon(
+                kWalletIconCatalog[id],
+                color: selected ? accent : colors.inkMuted,
+                size: 22,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> _adjustBalance() async {
     final wallet = widget.wallet;
     if (wallet == null) return;
@@ -426,7 +531,8 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
       balanceMinor: widget.wallet == null
           ? _parseAmount(_balanceController.text)
           : null,
-      color: widget.wallet?.color,
+      color: _color,
+      icon: _icon,
       description: widget.wallet?.description,
     );
 
@@ -509,3 +615,19 @@ const _editableWalletTypes = [
   WalletType.eWallet,
   WalletType.investment,
 ];
+
+class _PickerLabel extends StatelessWidget {
+  const _PickerLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        color: context.affluenaColors.inkMuted,
+      ),
+    );
+  }
+}

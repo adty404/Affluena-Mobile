@@ -97,6 +97,7 @@ class Wallet {
     required this.currencyCode,
     required this.balanceMinor,
     required this.color,
+    this.icon = '',
     required this.description,
     required this.createdAt,
     required this.updatedAt,
@@ -118,6 +119,7 @@ class Wallet {
       currencyCode: ApiJson.readString(json, 'currency_code'),
       balanceMinor: ApiJson.readInt(json, 'balance_minor'),
       color: ApiJson.optionalString(json, 'color'),
+      icon: ApiJson.optionalString(json, 'icon'),
       description: ApiJson.optionalString(json, 'description'),
       goalId: ApiJson.nullableString(json, 'goal_id'),
       role: ApiJson.nullableString(json, 'role'),
@@ -140,6 +142,7 @@ class Wallet {
   final String currencyCode;
   final int balanceMinor;
   final String color;
+  final String icon;
   final String description;
   final String? goalId;
   final String? role;
@@ -227,6 +230,7 @@ class WalletRequest {
     required this.currencyCode,
     this.balanceMinor,
     this.color,
+    this.icon,
     this.description,
   });
 
@@ -235,6 +239,7 @@ class WalletRequest {
   final String currencyCode;
   final int? balanceMinor;
   final String? color;
+  final String? icon;
   final String? description;
 
   JsonMap toCreateJson() => {
@@ -243,6 +248,7 @@ class WalletRequest {
     'currency_code': currencyCode,
     'balance_minor': balanceMinor ?? 0,
     if (color != null) 'color': color,
+    if (icon != null) 'icon': icon,
     if (description != null) 'description': description,
   };
 
@@ -251,6 +257,7 @@ class WalletRequest {
     'type': type.apiValue,
     'currency_code': currencyCode,
     if (color != null) 'color': color,
+    if (icon != null) 'icon': icon,
     if (description != null) 'description': description,
   };
 }
