@@ -3,12 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
+import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
+import '../../transactions/data/transaction_models.dart';
+import '../../transactions/data/transaction_repository.dart';
 import '../application/budget_controller.dart';
 import '../data/budget_models.dart';
+
+/// Transactions in a budget's category (most recent first), for the detail
+/// screen's "Transaksi" list.
+final categoryTransactionsProvider =
+    FutureProvider.family<List<Transaction>, String>((ref, categoryId) async {
+      final response = await ref
+          .watch(transactionRepositoryProvider)
+          .listTransactions(
+            categoryId: categoryId,
+            limit: 50,
+            sort: 'transaction_at_desc',
+          );
+      return response.transactions;
+    });
 
 /// Per-budget detail (Anggaran) in the Sky & Denim language — opened from a
 /// Beranda dashboard card. Reads the budget from the already-loaded
@@ -42,24 +59,28 @@ class BudgetDetailScreen extends ConsumerWidget {
       );
     }
 
-    final over = budget.usagePercent >= 100;
+    final current = budget;
+    final over = current.usagePercent >= 100;
     final accent = over ? context.sky.danger : context.sky.accent;
+    final transactions = ref.watch(
+      categoryTransactionsProvider(current.categoryId),
+    );
 
     return DrillInScaffold(
-      title: state.categoryName(budget.categoryId),
+      title: state.categoryName(current.categoryId),
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           SkyDetailHero(
             label: 'Terpakai bulan ini',
-            amount: MoneyFormatter.idr(budget.spentMinor),
+            amount: MoneyFormatter.idr(current.spentMinor),
             sub:
-                'dari ${MoneyFormatter.idr(budget.limitMinor)} · sisa ${MoneyFormatter.idr(budget.remainingMinor)}',
+                'dari ${MoneyFormatter.idr(current.limitMinor)} · sisa ${MoneyFormatter.idr(current.remainingMinor)}',
             amountColor: over ? context.sky.danger : null,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
           SkyProgressBar(
-            value: budget.usagePercent / 100,
+            value: current.usagePercent / 100,
             height: 8,
             fillColor: accent,
           ),
@@ -67,7 +88,7 @@ class BudgetDetailScreen extends ConsumerWidget {
           Row(
             children: [
               Text(
-                'Terpakai ${budget.usagePercent.round()}%',
+                'Terpakai ${current.usagePercent.round()}%',
                 style: TextStyle(fontSize: 13, color: context.sky.muted),
               ),
               const Spacer(),
@@ -77,8 +98,158 @@ class BudgetDetailScreen extends ConsumerWidget {
               ),
             ],
           ),
+          const SizedBox(height: AffluenaSpacing.space6),
+          Text(
+            'Transaksi',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: context.sky.ink,
+            ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+          transactions.when(
+            loading: () => const _TxnSkeleton(),
+            error: (_, _) => Text(
+              'Tidak bisa memuat transaksi.',
+              style: TextStyle(fontSize: 12.5, color: context.sky.muted),
+            ),
+            data: (items) => items.isEmpty
+                ? Text(
+                    'Belum ada transaksi di kategori ini.',
+                    style: TextStyle(fontSize: 12.5, color: context.sky.muted),
+                  )
+                : _CategoryTxnList(items: items),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _CategoryTxnList extends StatelessWidget {
+  const _CategoryTxnList({required this.items});
+
+  final List<Transaction> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    DateTime? currentDay;
+    for (final tx in items) {
+      final day = AffluenaDateFormatter.localDay(tx.transactionAt);
+      if (currentDay == null || day != currentDay) {
+        currentDay = day;
+        if (rows.isNotEmpty) {
+          rows.add(const SizedBox(height: AffluenaSpacing.space3));
+        }
+        rows.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
+            child: Text(
+              AffluenaDateFormatter.dayHeader(day),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: context.sky.faint,
+              ),
+            ),
+          ),
+        );
+      }
+      rows.add(_TxnRow(tx: tx));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: rows,
+    );
+  }
+}
+
+class _TxnRow extends StatelessWidget {
+  const _TxnRow({required this.tx});
+
+  final Transaction tx;
+
+  @override
+  Widget build(BuildContext context) {
+    final income = tx.type == TransactionType.income;
+    final amount = '${income ? '+' : '−'}${MoneyFormatter.idr(tx.amountMinor)}';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space2),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: context.sky.sheet,
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: context.sky.line),
+            ),
+            child: Icon(
+              income ? Icons.south_west : Icons.north_east,
+              size: 15,
+              color: income ? context.sky.income : context.sky.muted,
+            ),
+          ),
+          const SizedBox(width: AffluenaSpacing.space3),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tx.note.isEmpty ? 'Transaksi' : tx.note,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: context.sky.ink,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  AffluenaDateFormatter.time(tx.transactionAt),
+                  style: TextStyle(fontSize: 11, color: context.sky.faint),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AffluenaSpacing.space2),
+          Text(
+            amount,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: income ? context.sky.income : context.sky.ink,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TxnSkeleton extends StatelessWidget {
+  const _TxnSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < 3; i++)
+          Container(
+            height: 44,
+            margin: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
+            decoration: BoxDecoration(
+              color: context.sky.sheet,
+              borderRadius: BorderRadius.circular(AffluenaRadii.md),
+            ),
+          ),
+      ],
     );
   }
 }
