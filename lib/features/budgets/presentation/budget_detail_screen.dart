@@ -61,10 +61,18 @@ class BudgetDetailScreen extends ConsumerWidget {
 
     final current = budget;
     final over = current.usagePercent >= 100;
+    final overMinor = current.spentMinor - current.limitMinor;
     final accent = over ? context.sky.danger : context.sky.accent;
+    final monthLabel = AffluenaDateFormatter.monthLabel(
+      DateTime.parse('${current.month}-01'),
+    );
     final transactions = ref.watch(
       categoryTransactionsProvider(current.categoryId),
     );
+    final txnCount = transactions.asData?.value.length;
+    final txnHeader = (txnCount != null && txnCount > 0)
+        ? 'Transaksi · $txnCount'
+        : 'Transaksi';
 
     return DrillInScaffold(
       title: state.categoryName(current.categoryId),
@@ -72,35 +80,59 @@ class BudgetDetailScreen extends ConsumerWidget {
         padding: AffluenaInsets.screen,
         children: [
           SkyDetailHero(
-            label: 'Terpakai bulan ini',
+            label: 'Terpakai · $monthLabel',
             amount: MoneyFormatter.idr(current.spentMinor),
-            sub:
-                'dari ${MoneyFormatter.idr(current.limitMinor)} · sisa ${MoneyFormatter.idr(current.remainingMinor)}',
+            sub: 'dari ${MoneyFormatter.idr(current.limitMinor)}',
             amountColor: over ? context.sky.danger : null,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
-          SkyProgressBar(
-            value: current.usagePercent / 100,
-            height: 8,
-            fillColor: accent,
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          Row(
-            children: [
-              Text(
-                'Terpakai ${current.usagePercent.round()}%',
-                style: TextStyle(fontSize: 13, color: context.sky.muted),
-              ),
-              const Spacer(),
-              SkyStatusPill(
-                label: over ? 'Lewat batas' : 'Aman',
-                color: over ? context.sky.danger : context.sky.income,
-              ),
-            ],
+          SkyDetailCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Terpakai ${current.usagePercent.round()}%',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: context.sky.ink,
+                      ),
+                    ),
+                    const Spacer(),
+                    SkyStatusPill(
+                      label: over ? 'Lewat batas' : 'Aman',
+                      color: over ? context.sky.danger : context.sky.income,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AffluenaSpacing.space3),
+                SkyProgressBar(
+                  value: current.usagePercent / 100,
+                  height: 8,
+                  fillColor: accent,
+                ),
+                const SizedBox(height: AffluenaSpacing.space4),
+                Divider(height: 1, color: context.sky.line),
+                const SizedBox(height: AffluenaSpacing.space4),
+                over
+                    ? SkyDetailRow(
+                        label: 'Lewat batas',
+                        value: MoneyFormatter.idr(overMinor),
+                        valueColor: context.sky.danger,
+                      )
+                    : SkyDetailRow(
+                        label: 'Sisa',
+                        value: MoneyFormatter.idr(current.remainingMinor),
+                        valueColor: context.sky.income,
+                      ),
+              ],
+            ),
           ),
           const SizedBox(height: AffluenaSpacing.space6),
           Text(
-            'Transaksi',
+            txnHeader,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
