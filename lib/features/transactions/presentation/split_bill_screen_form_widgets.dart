@@ -22,10 +22,8 @@ class _SplitTagChips extends StatelessWidget {
         children: [
           Text('Tag', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: AffluenaSpacing.space2),
-          Wrap(
-            spacing: AffluenaSpacing.space2,
-            runSpacing: AffluenaSpacing.space2,
-            children: [
+          AffluenaChipBar(
+            chips: [
               AffluenaChoiceChip(
                 key: const Key('split-tag-chip-none'),
                 label: 'Opsional',
