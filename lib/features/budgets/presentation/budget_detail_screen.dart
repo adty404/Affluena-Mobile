@@ -217,22 +217,28 @@ class _TxnRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final income = tx.type == TransactionType.income;
     final amount = '${income ? '+' : '−'}${MoneyFormatter.idr(tx.amountMinor)}';
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space2),
+    return Container(
+      margin: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.sky.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.sky.line),
+      ),
       child: Row(
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: 34,
+            height: 34,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: context.sky.sheet,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(11),
               border: Border.all(color: context.sky.line),
             ),
             child: Icon(
               income ? Icons.south_west : Icons.north_east,
-              size: 15,
+              size: 18,
               color: income ? context.sky.income : context.sky.muted,
             ),
           ),

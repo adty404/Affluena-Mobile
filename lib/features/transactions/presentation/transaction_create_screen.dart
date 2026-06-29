@@ -7,6 +7,7 @@ import '../../../core/formatters/tag_formatter.dart';
 import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/date_time_picker_field.dart';
@@ -401,12 +402,11 @@ class _TypeChips extends StatelessWidget {
       runSpacing: AffluenaSpacing.space2,
       children: [
         for (final type in TransactionType.values)
-          ChoiceChip(
+          AffluenaChoiceChip(
             key: Key('transaction-create-type-${type.apiValue}'),
-            label: Text(_typeLabel(type)),
+            label: _typeLabel(type),
             selected: selected == type,
-            avatar: selected == type ? const Icon(Icons.check, size: 16) : null,
-            onSelected: enabled ? (_) => onChanged(type) : null,
+            onSelected: enabled ? () => onChanged(type) : null,
           ),
       ],
     );
@@ -432,18 +432,18 @@ class _TagChips extends StatelessWidget {
       spacing: AffluenaSpacing.space2,
       runSpacing: AffluenaSpacing.space2,
       children: [
-        ChoiceChip(
+        AffluenaChoiceChip(
           key: const Key('transaction-create-tag-none'),
-          label: const Text('Tanpa tag'),
+          label: 'Tanpa tag',
           selected: selectedTagId == null,
-          onSelected: enabled ? (_) => onChanged(null) : null,
+          onSelected: enabled ? () => onChanged(null) : null,
         ),
         for (final tag in tags)
-          ChoiceChip(
+          AffluenaChoiceChip(
             key: Key('transaction-create-tag-${tag.id}'),
-            label: Text(tagLabel(tag.name)),
+            label: tagLabel(tag.name),
             selected: selectedTagId == tag.id,
-            onSelected: enabled ? (_) => onChanged(tag.id) : null,
+            onSelected: enabled ? () => onChanged(tag.id) : null,
           ),
       ],
     );
