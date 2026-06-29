@@ -29,9 +29,15 @@ class PartnerState {
   List<PartnerLink> get owned =>
       links.where((l) => l.isOwned).toList(growable: false);
 
-  /// I already have an active outgoing partner (pending or joined), so I cannot
-  /// invite anyone else until I revoke it. Only one partner may view my wallets.
-  bool get hasActivePartner => owned.any((l) => l.isPending || l.isJoined);
+  /// Maximum number of people I can share my wallets with at once.
+  static const maxShares = 5;
+
+  /// People I'm actively sharing with (pending or joined invites).
+  int get activeShareCount =>
+      owned.where((l) => l.isPending || l.isJoined).length;
+
+  /// I can still invite more viewers (below the limit).
+  bool get canInvite => activeShareCount < maxShares;
 
   /// Incoming invites still awaiting my response.
   List<PartnerLink> get incomingPending =>
@@ -79,7 +85,7 @@ class PartnerController extends Notifier<PartnerState> {
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        loadError: 'Pasangan gagal dimuat.',
+        loadError: 'Daftar berbagi gagal dimuat.',
       );
     }
   }
@@ -97,7 +103,8 @@ class PartnerController extends Notifier<PartnerState> {
       case 404:
         return 'Email itu belum terdaftar di Affluena.';
       case 409:
-        return 'Kamu sudah punya pasangan. Putuskan dulu untuk mengganti.';
+        return 'Kamu sudah berbagi dengan 5 orang (maksimal). '
+            'Hapus salah satu dulu untuk menambah.';
       case 400:
         return 'Tidak bisa mengundang dirimu sendiri.';
     }

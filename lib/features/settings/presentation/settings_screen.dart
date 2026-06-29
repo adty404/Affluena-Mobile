@@ -159,9 +159,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const Divider(height: 1),
                   SettingsRow(
                     key: const Key('settings-partner-row'),
-                    icon: Icons.favorite_outline,
-                    title: 'Pasangan',
-                    value: 'Bagikan semua dompet ke pasanganmu',
+                    icon: Icons.visibility_outlined,
+                    title: 'Berbagi Dompet',
+                    value: 'Undang orang untuk melihat dompetmu',
                     onTap: () => context.push(PartnerScreen.path),
                   ),
                   const Divider(height: 1),
