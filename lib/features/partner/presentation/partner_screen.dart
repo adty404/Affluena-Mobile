@@ -46,10 +46,10 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
   Future<void> _revoke(PartnerLink link) async {
     final ok = await skyConfirm(
       context,
-      title: 'Putuskan pasangan',
+      title: 'Hapus pengamat',
       message:
           '${link.displayName} tidak akan bisa lagi melihat dompetmu. Lanjutkan?',
-      confirmLabel: 'Putuskan',
+      confirmLabel: 'Hapus',
     );
     if (ok && mounted) {
       await ref.read(partnerControllerProvider.notifier).revoke(link.id);
@@ -61,13 +61,14 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
     final state = ref.watch(partnerControllerProvider);
 
     return DrillInScaffold(
-      title: 'Pasangan',
+      title: 'Berbagi Dompet',
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
           Text(
-            'Hubungkan pasanganmu agar dia otomatis bisa melihat semua dompetmu '
-            '(hanya lihat, termasuk dompet baru). Satu arah.',
+            'Undang maksimal ${PartnerState.maxShares} orang untuk melihat '
+            'semua riwayat dompetmu (hanya lihat, termasuk dompet baru). '
+            'Mereka tidak bisa mengubah apa pun.',
             style: TextStyle(
               fontSize: 13,
               height: 1.5,
@@ -75,17 +76,17 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
             ),
           ),
           const SizedBox(height: AffluenaSpacing.space4),
-          // Only one partner at a time: once you have an active partner, the
-          // invite field is replaced by a hint to revoke first.
-          if (state.hasActivePartner)
-            const _LimitNote()
-          else
+          // Up to maxShares viewers: hide the invite field once the limit is
+          // reached, replacing it with a hint to remove someone first.
+          if (state.canInvite)
             _InviteCard(
               controller: _emailController,
               busy: state.isSaving,
               error: state.actionError,
               onSubmit: _invite,
-            ),
+            )
+          else
+            const _LimitNote(),
           if (state.incomingPending.isNotEmpty) ...[
             const SizedBox(height: AffluenaSpacing.space6),
             _SectionTitle('Undangan masuk'),
@@ -106,7 +107,9 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
               ),
           ],
           const SizedBox(height: AffluenaSpacing.space6),
-          _SectionTitle('Pasangan saya'),
+          _SectionTitle(
+            'Pengamat saya (${state.activeShareCount}/${PartnerState.maxShares})',
+          ),
           const SizedBox(height: AffluenaSpacing.space3),
           if (state.isLoading && state.links.isEmpty)
             Center(
@@ -117,7 +120,7 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
             )
           else if (state.owned.isEmpty)
             Text(
-              'Belum ada pasangan yang kamu undang.',
+              'Belum ada yang kamu undang. Tambahkan lewat email di atas.',
               style: TextStyle(fontSize: 12.5, color: context.sky.muted),
             )
           else
@@ -166,8 +169,8 @@ class _LimitNote extends StatelessWidget {
           const SizedBox(width: AffluenaSpacing.space3),
           Expanded(
             child: Text(
-              'Kamu sudah punya satu pasangan. Putuskan dulu di bawah kalau '
-              'mau menggantinya dengan orang lain.',
+              'Kamu sudah berbagi dengan 5 orang (batas maksimal). Hapus '
+              'salah satu di bawah untuk menambah yang lain.',
               style: TextStyle(
                 fontSize: 12.5,
                 height: 1.45,
@@ -304,7 +307,7 @@ class _OwnedRow extends StatelessWidget {
           TextButton(
             onPressed: busy ? null : onRevoke,
             style: TextButton.styleFrom(foregroundColor: context.sky.danger),
-            child: const Text('Putuskan'),
+            child: const Text('Hapus'),
           ),
         ],
       ),

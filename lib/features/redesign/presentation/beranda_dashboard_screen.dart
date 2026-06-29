@@ -103,7 +103,7 @@ class BerandaDashboardView extends ConsumerWidget {
 
         if (partnerWallets.isNotEmpty)
           _Section(
-            title: 'Pasangan',
+            title: 'Dibagikan untukku',
             onSeeAll: () => context.push(PartnerScreen.path),
             isLoading: false,
             hasError: false,
