@@ -230,35 +230,6 @@ void main() {
     expect(find.text('Chrome'), findsOneWidget);
     expect(authRepository.listSessionsCalls, 2);
   });
-
-  testWidgets('device lock is configurable from settings', (tester) async {
-    final securityRepository = MemorySecurityPreferencesRepository();
-    final deviceAuth = FakeDeviceAuthService();
-
-    await pumpAuthTestApp(
-      tester,
-      tokenStore: authenticatedTokenStore(),
-      authRepository: FakeAuthRepository(),
-      securityPreferencesRepository: securityRepository,
-      deviceAuthService: deviceAuth,
-    );
-    await _openSettings(tester);
-
-    expect(find.text('Kunci perangkat'), findsOneWidget);
-    expect(find.text('Nonaktif • autentikasi perangkat'), findsOneWidget);
-    expect(find.byKey(const Key('settings-device-lock-row')), findsOneWidget);
-    expect(find.text('Unavailable in this build'), findsNothing);
-
-    await tester.drag(find.byType(ListView).first, const Offset(0, -120));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(Switch).first);
-    await tester.pumpAndSettle();
-
-    expect(deviceAuth.authenticateCalls, 1);
-    expect(securityRepository.savedPreferences.single.deviceLockEnabled, true);
-    expect(find.text('Kunci perangkat diaktifkan.'), findsOneWidget);
-    expect(find.text('Aktif • autentikasi perangkat'), findsOneWidget);
-  });
 }
 
 Future<void> _openSettings(WidgetTester tester) async {

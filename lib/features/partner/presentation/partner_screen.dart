@@ -46,7 +46,7 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
   Future<void> _revoke(PartnerLink link) async {
     final ok = await skyConfirm(
       context,
-      title: 'Hapus pengamat',
+      title: 'Hapus pemantau',
       message:
           '${link.displayName} tidak akan bisa lagi melihat dompetmu. Lanjutkan?',
       confirmLabel: 'Hapus',
@@ -108,7 +108,7 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
           ],
           const SizedBox(height: AffluenaSpacing.space6),
           _SectionTitle(
-            'Pengamat saya (${state.activeShareCount}/${PartnerState.maxShares})',
+            'Pemantau saya (${state.activeShareCount}/${PartnerState.maxShares})',
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           if (state.isLoading && state.links.isEmpty)

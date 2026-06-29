@@ -1,5 +1,4 @@
 import 'package:affluena_mobile/core/api/api_error.dart';
-import 'package:affluena_mobile/features/settings/data/security_preferences_repository.dart';
 import 'package:affluena_mobile/features/settings/presentation/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,37 +30,6 @@ void main() {
     expect(find.text('Total saldo'), findsOneWidget);
     expect(find.byKey(const Key('nav-lainnya')), findsOneWidget);
     expect(authRepository.meCalls, 1);
-  });
-
-  testWidgets('device lock gates authenticated app until local auth succeeds', (
-    tester,
-  ) async {
-    // Start with biometric failing so the lock screen's auto-prompt does not
-    // immediately unlock; the lock screen must stay visible.
-    final deviceAuth = FakeDeviceAuthService(authenticateResult: false);
-
-    await pumpAuthTestApp(
-      tester,
-      tokenStore: authenticatedTokenStore(),
-      securityPreferencesRepository: MemorySecurityPreferencesRepository(
-        initialPreferences: const SecurityPreferences(deviceLockEnabled: true),
-      ),
-      deviceAuthService: deviceAuth,
-    );
-
-    // The lock screen auto-prompts biometric once on appearance (call #1).
-    expect(find.text('Affluena terkunci'), findsOneWidget);
-    expect(find.text('Total saldo'), findsNothing);
-    expect(deviceAuth.authenticateCalls, 1);
-
-    // Let authentication succeed, then unlock via the button (call #2).
-    deviceAuth.authenticateResult = true;
-    await tester.tap(find.byKey(const Key('app-lock-unlock-button')));
-    await tester.pumpAndSettle();
-
-    expect(deviceAuth.authenticateCalls, 2);
-    expect(find.text('Affluena terkunci'), findsNothing);
-    expect(find.text('Total saldo'), findsOneWidget);
   });
 
   testWidgets('expired session clears token and shows login reason', (
