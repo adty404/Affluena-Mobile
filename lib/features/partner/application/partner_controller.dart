@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/api/api_error.dart';
 import '../data/partner_models.dart';
 import '../data/partner_repository.dart';
 
@@ -26,6 +28,10 @@ class PartnerState {
   /// Links I created — partners who can view my wallets.
   List<PartnerLink> get owned =>
       links.where((l) => l.isOwned).toList(growable: false);
+
+  /// I already have an active outgoing partner (pending or joined), so I cannot
+  /// invite anyone else until I revoke it. Only one partner may view my wallets.
+  bool get hasActivePartner => owned.any((l) => l.isPending || l.isJoined);
 
   /// Incoming invites still awaiting my response.
   List<PartnerLink> get incomingPending =>
@@ -82,7 +88,29 @@ class PartnerController extends Notifier<PartnerState> {
     () => ref
         .read(partnerRepositoryProvider)
         .invite(PartnerInviteRequest(email: email.trim())),
+    onError: _inviteErrorMessage,
   );
+
+  String _inviteErrorMessage(Object error) {
+    final api = _asApiException(error);
+    switch (api?.statusCode) {
+      case 404:
+        return 'Email itu belum terdaftar di Affluena.';
+      case 409:
+        return 'Kamu sudah punya pasangan. Putuskan dulu untuk mengganti.';
+      case 400:
+        return 'Tidak bisa mengundang dirimu sendiri.';
+    }
+    return api?.message ?? 'Undangan gagal dikirim.';
+  }
+
+  ApiException? _asApiException(Object error) {
+    if (error is ApiException) return error;
+    if (error is DioException && error.error is ApiException) {
+      return error.error as ApiException;
+    }
+    return null;
+  }
 
   Future<bool> respond(String id, String status) => _mutate(
     () => ref
@@ -93,17 +121,20 @@ class PartnerController extends Notifier<PartnerState> {
   Future<bool> revoke(String id) =>
       _mutate(() => ref.read(partnerRepositoryProvider).revoke(id));
 
-  Future<bool> _mutate(Future<void> Function() action) async {
+  Future<bool> _mutate(
+    Future<void> Function() action, {
+    String Function(Object error)? onError,
+  }) async {
     state = state.copyWith(isSaving: true, actionError: null);
     try {
       await action();
       state = state.copyWith(isSaving: false);
       await load();
       return true;
-    } catch (_) {
+    } catch (error) {
       state = state.copyWith(
         isSaving: false,
-        actionError: 'Tindakan itu gagal diselesaikan.',
+        actionError: onError?.call(error) ?? 'Tindakan itu gagal diselesaikan.',
       );
       return false;
     }
