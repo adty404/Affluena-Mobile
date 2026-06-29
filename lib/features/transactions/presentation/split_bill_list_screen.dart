@@ -7,6 +7,7 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_chip_bar.dart';
 import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
@@ -63,9 +64,8 @@ class _SplitBillListScreenState extends ConsumerState<SplitBillListScreen> {
           AffluenaSpacing.space8 + 64,
         ),
         children: [
-          Wrap(
-            spacing: AffluenaSpacing.space2,
-            children: [
+          AffluenaChipBar(
+            chips: [
               AffluenaChoiceChip(
                 selected: _status == 'ongoing',
                 label: 'Berjalan',
