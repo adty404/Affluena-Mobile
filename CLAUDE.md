@@ -1,0 +1,75 @@
+# Affluena-MOBILE — orientation for a fresh session
+
+Personal-finance **Flutter app** (Riverpod + Dio + go_router), pinned to **Flutter 3.44.2** via
+`fvm` (`.fvmrc`), Dart `^3.12.2`. Talks to the Affluena-API backend.
+
+Depth lives in **`DESIGN.md`** (design system), **`SHOREBIRD.md`** (release/OTA), `README.md`, and
+the pixel-level **`design/affluena-design-guide.html`** (open in a browser — visual source of truth).
+
+## ⚠️ Read before you change anything (prod danger)
+
+- **Merging to `master` auto-ships an OTA patch to every installed app.** `.github/workflows/shorebird.yml`
+  runs on push to `master` touching `lib/**`, `assets/**`, `pubspec.yaml`, `pubspec.lock`, or
+  `shorebird.yaml`, and **auto-publishes a Shorebird patch** that installed apps download on next
+  launch (`auto_update` is on). A merged Dart change = a production OTA. Confirm before merging.
+- **Patch vs Release** (`SHOREBIRD.md`): Dart/UI/logic changes ship as an **OTA patch**
+  (`scripts/shorebird_patch.sh`, no reinstall). **Native** changes (new plugin, Android/Gradle,
+  Flutter bump) or a version bump need a **release** (`scripts/shorebird_release.sh` → reinstall the
+  APK once) — they are NOT patchable. Builds pass `--no-tree-shake-icons` so the full Material Icons
+  font is always bundled (adding/removing icons stays OTA-patchable); other asset changes need a release.
+
+## Run / test / build (Flutter SDK is NOT pre-installed in a cloud sandbox — install fvm + 3.44.2 first)
+
+```bash
+fvm install 3.44.2 && fvm flutter pub get      # one-time setup
+fvm flutter analyze                             # lint/type gate (CI runs this)
+fvm flutter test --exclude-tags golden          # unit/widget tests (CI runs this)
+fvm flutter test                                # includes goldens — macOS only, must use fvm's 3.44.2
+bash scripts/build_apk.sh                        # sideload APK (bakes the API URL via --dart-define)
+```
+
+- **API base URL is a compile-time constant**: `AppConfig.apiBaseUrl` =
+  `String.fromEnvironment('AFFLUENA_API_BASE_URL', default 'http://localhost:8080/api/v1')`
+  (`lib/core/config/app_config.dart`). Cannot change at runtime — pass
+  `--dart-define=AFFLUENA_API_BASE_URL=…` at build/run, or the app falls back to localhost and shows
+  *"Tidak bisa terhubung ke Affluena."*
+- **Goldens are macOS-only** and rendered with a placeholder font (drift detector, not a pixel
+  match). Regenerate with `fvm flutter test --update-goldens`.
+
+## Architecture
+
+- `lib/main.dart` → `lib/app/affluena_app.dart` (MaterialApp.router) → `lib/app/router.dart` (go_router).
+- `lib/core/` → `api` (Dio client + interceptors, single-flight refresh), `config`, `formatters`
+  (`MoneyFormatter`, `AffluenaDateFormatter`), `storage` (secure token store), `calc`.
+- `lib/features/<x>/` → one folder per feature, each layered:
+  - `data/` → models + a `Repository` (a `Provider` over `dioProvider`)
+  - `application/` → a `NotifierProvider`/`AsyncNotifier` controller (auto-loads via `Future.microtask(load)`, `_mutate` helper)
+  - `presentation/` → screens/widgets
+  Features: auth, wallets, transactions, budgets, categories, tags, goals, debts, trackers,
+  recurring, quick_entry, dashboard, insights, settings, onboarding, **partner** (the "Berbagi
+  Dompet" sharing feature), **redesign** (the Beranda dashboard + bottom-nav shell), shared.
+
+## Design system — "Sky & Denim" (see DESIGN.md + design/affluena-design-guide.html)
+
+- **Two token accessors, same theme** (`lib/app/theme/`): the older `context.affluenaColors.*`
+  (forest/ink/inkMuted/coral/…) used by list/form screens, and the newer `context.sky.*`
+  (accent/ink/muted/surface/line/…) used by detail screens. Both are real; match the surrounding file.
+- Spacing/radii via `AffluenaSpacing`, `AffluenaRadii`, `AffluenaInsets` (never magic numbers).
+- **Reuse the shared widgets** in `lib/features/shared/presentation/widgets/` — `DrillInScaffold`
+  (back chrome), `AffluenaCard`, `SectionHeader`, `MetricTile`, `StatusBadge`, `AffluenaBanner`,
+  `sky_detail.dart` (`SkyDetailHero/Card/Row/StatusPill/Placeholder` + `skyConfirm`),
+  `SkyProgressBar`, `SkySegmentedToggle`. **Chip rows use `AffluenaChipBar` (single-line, scrollable)
+  wrapping `AffluenaChoiceChip`** — never a ragged `Wrap` of Material `ChoiceChip`s.
+
+## Conventions & gotchas
+
+- **Money = integer minor units**; format with `MoneyFormatter` (Rp grouping). Locale is `id_ID`
+  (initialized in `main`); date widgets use `AffluenaDateFormatter`.
+- **API dates are full RFC3339 timestamps even for `DATE` columns** — a budget's `month` arrives as
+  `"2026-06-01T00:00:00Z"`, not `"2026-06"`. Parse defensively (take the `YYYY-MM` prefix); assuming a
+  short date throws and blanks the screen.
+- **Tests are hermetic**: full-app tests use `authTestApp`/`pumpAuthTestApp` (overrides every repo
+  with fakes). `redesign_shell_test` uses its own `ProviderScope` and stubs controllers directly.
+- **Sharing feature naming**: UI "Berbagi Dompet"; people you invite are "Pemantau" (max 5, one-way,
+  read-only); the wallets others share to you show under Beranda's "Dibagikan untukku" section /
+  `SharedWithMeScreen`. Endpoints are `/api/v1/partners` (historical) — see the API repo's contract.
