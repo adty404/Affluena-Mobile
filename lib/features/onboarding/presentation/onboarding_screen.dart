@@ -3,33 +3,44 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../app/theme/sky_palette.dart';
 import '../../redesign/presentation/redesign_shell.dart';
+import '../../shared/presentation/widgets/sky_avatar.dart';
 import '../application/onboarding_controller.dart';
 
 class _Slide {
-  const _Slide({required this.icon, required this.title, required this.body});
+  const _Slide({
+    required this.icon,
+    required this.title,
+    required this.body,
+    this.couple = false,
+  });
   final IconData icon;
   final String title;
   final String body;
+
+  /// The first slide shows the shared-wallet hero (floating balance + avatars).
+  final bool couple;
 }
 
 const _slides = <_Slide>[
   _Slide(
-    icon: Icons.bolt_outlined,
-    title: 'Catat uang dalam hitungan detik',
+    icon: Icons.account_balance_wallet_outlined,
+    title: 'Atur uang berdua, tenang.',
     body:
-        'Catat pemasukan dan pengeluaran dengan cepat, kelola akun tunai, '
-        'bank, dan e-wallet, serta pakai ulang catat cepat sekali ketuk.',
+        'Catat pengeluaran, bagi dompet, dan capai tujuan bareng pasangan '
+        'tanpa ribet.',
+    couple: true,
   ),
   _Slide(
-    icon: Icons.insights_outlined,
-    title: 'Rencanakan anggaran, capai target',
+    icon: Icons.savings_outlined,
+    title: 'Anggaran & target bersama',
     body:
-        'Atur batas kategori bulanan, pantau cicilan dan langganan, serta '
-        'kembangkan tabunganmu menuju setiap target.',
+        'Pantau anggaran, cicilan, dan langganan, lalu kembangkan tabungan '
+        'menuju tiap target.',
   ),
   _Slide(
-    icon: Icons.verified_user_outlined,
+    icon: Icons.lock_outline,
     title: 'Privat dan selalu sinkron',
     body:
         'Kunci aplikasi biometrik, jejak aktivitas lengkap, dan datamu '
@@ -90,29 +101,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: context.sky.ground,
       body: SafeArea(
         child: Column(
           children: [
-            // Skip (hidden on the last slide where the primary CTA takes over).
-            SizedBox(
-              height: 48,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: AnimatedOpacity(
-                  opacity: _isLast ? 0 : 1,
-                  duration: const Duration(milliseconds: 200),
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      right: AffluenaSpacing.space3,
-                    ),
-                    child: TextButton(
-                      onPressed: _isLast ? null : _finish,
-                      child: const Text('Lewati'),
-                    ),
-                  ),
-                ),
-              ),
-            ),
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -127,7 +119,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 AffluenaSpacing.space5,
                 AffluenaSpacing.space5,
                 AffluenaSpacing.space5,
-                AffluenaSpacing.space6,
+                AffluenaSpacing.space2,
               ),
               child: FilledButton(
                 key: const Key('onboarding-primary-button'),
@@ -135,6 +127,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 child: Text(_isLast ? 'Mulai' : 'Lanjut'),
               ),
             ),
+            if (!widget.replay)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AffluenaSpacing.space4),
+                child: TextButton(
+                  onPressed: _finish,
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Sudah punya akun? ',
+                          style: TextStyle(color: context.sky.muted),
+                        ),
+                        TextSpan(
+                          text: 'Masuk',
+                          style: TextStyle(
+                            color: context.sky.accent,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -148,36 +165,141 @@ class _SlideView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = context.affluenaColors;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AffluenaSpacing.space6),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.forestSoft,
-              shape: BoxShape.circle,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AffluenaSpacing.space8),
-              child: Icon(slide.icon, color: colors.forest, size: 56),
-            ),
-          ),
+          _HeroArt(icon: slide.icon, couple: slide.couple),
           const SizedBox(height: AffluenaSpacing.space8),
           Text(
             slide.title,
             textAlign: TextAlign.center,
-            style: textTheme.headlineMedium,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+              color: context.sky.ink,
+            ),
           ),
-          const SizedBox(height: AffluenaSpacing.space4),
+          const SizedBox(height: AffluenaSpacing.space3),
           Text(
             slide.body,
             textAlign: TextAlign.center,
-            style: textTheme.bodyLarge?.copyWith(color: colors.inkMuted),
+            style: TextStyle(
+              fontSize: 13.5,
+              height: 1.5,
+              color: context.sky.muted,
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The Sky & Denim onboarding illustration: a soft ring holding a domain icon.
+/// The first ("couple") slide overlays a floating shared-balance card and the
+/// two partner avatars, matching the design guide.
+class _HeroArt extends StatelessWidget {
+  const _HeroArt({required this.icon, required this.couple});
+
+  final IconData icon;
+  final bool couple;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 220,
+      height: 200,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 160,
+            height: 160,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [context.sky.accentSoft, context.sky.accentSoftBorder],
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 56, color: context.sky.accent),
+          ),
+          if (couple) ...[
+            Positioned(
+              right: 28,
+              top: 26,
+              child: SizedBox(
+                width: 44,
+                height: 34,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      top: 3,
+                      child: SkyAvatar(
+                        initial: 'A',
+                        borderColor: context.sky.ground,
+                      ),
+                    ),
+                    Positioned(
+                      left: 15,
+                      top: 3,
+                      child: SkyAvatar(
+                        initial: 'S',
+                        color: context.sky.avatarSecondary,
+                        borderColor: context.sky.ground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 14,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  color: context.sky.surface,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: context.sky.line),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x231E2A38),
+                      blurRadius: 22,
+                      offset: Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Total bersama',
+                      style: TextStyle(fontSize: 10, color: context.sky.muted),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Rp 8.450.000',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                        color: context.sky.ink,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -191,7 +313,6 @@ class _Dots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -205,7 +326,7 @@ class _Dots extends StatelessWidget {
             height: 8,
             width: i == index ? 22 : 8,
             decoration: BoxDecoration(
-              color: i == index ? colors.forest : colors.borderSubtle,
+              color: i == index ? context.sky.accent : context.sky.line,
               borderRadius: BorderRadius.circular(AffluenaRadii.pill),
             ),
           ),
