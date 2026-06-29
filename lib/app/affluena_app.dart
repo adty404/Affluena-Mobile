@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/settings/presentation/app_lock_gate.dart';
 import 'router.dart';
 import 'theme/affluena_theme.dart';
 import 'theme/theme_mode_controller.dart';
@@ -18,9 +17,6 @@ class AffluenaApp extends ConsumerWidget {
       darkTheme: AffluenaTheme.dark,
       themeMode: ref.watch(appThemeModeProvider),
       routerConfig: ref.watch(appRouterProvider),
-      builder: (context, child) {
-        return AppLockGate(child: child ?? const SizedBox.shrink());
-      },
     );
   }
 }

@@ -25,8 +25,6 @@ import 'package:affluena_mobile/features/quick_entry/data/quick_entry_models.dar
 import 'package:affluena_mobile/features/quick_entry/data/quick_entry_repository.dart';
 import 'package:affluena_mobile/features/recurring/data/recurring_models.dart';
 import 'package:affluena_mobile/features/recurring/data/recurring_repository.dart';
-import 'package:affluena_mobile/features/settings/application/device_auth_service.dart';
-import 'package:affluena_mobile/features/settings/data/security_preferences_repository.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
 import 'package:affluena_mobile/features/trackers/data/tracker_models.dart';
@@ -45,8 +43,6 @@ import 'package:intl/date_symbol_data_local.dart';
 Widget authTestApp({
   required MemoryTokenStore tokenStore,
   required FakeAuthRepository authRepository,
-  SecurityPreferencesRepository? securityPreferencesRepository,
-  DeviceAuthService? deviceAuthService,
   WalletRepository? walletRepository,
   CategoryRepository? categoryRepository,
   GoalRepository? goalRepository,
@@ -94,12 +90,6 @@ Widget authTestApp({
       quickEntryRepositoryProvider.overrideWithValue(
         const FakeQuickEntryRepository(),
       ),
-      securityPreferencesRepositoryProvider.overrideWithValue(
-        securityPreferencesRepository ?? MemorySecurityPreferencesRepository(),
-      ),
-      deviceAuthServiceProvider.overrideWithValue(
-        deviceAuthService ?? FakeDeviceAuthService(),
-      ),
       // These suites exercise auth/nav/dashboard/settings, not the first-run
       // onboarding gate, so boot straight past it into the normal flow.
       onboardingControllerProvider.overrideWith(
@@ -122,8 +112,6 @@ Future<void> pumpAuthTestApp(
   WidgetTester tester, {
   MemoryTokenStore? tokenStore,
   FakeAuthRepository? authRepository,
-  SecurityPreferencesRepository? securityPreferencesRepository,
-  DeviceAuthService? deviceAuthService,
   WalletRepository? walletRepository,
   CategoryRepository? categoryRepository,
   GoalRepository? goalRepository,
@@ -139,8 +127,6 @@ Future<void> pumpAuthTestApp(
     authTestApp(
       tokenStore: tokenStore ?? MemoryTokenStore(),
       authRepository: authRepository ?? FakeAuthRepository(),
-      securityPreferencesRepository: securityPreferencesRepository,
-      deviceAuthService: deviceAuthService,
       walletRepository: walletRepository,
       categoryRepository: categoryRepository,
       goalRepository: goalRepository,
@@ -222,50 +208,6 @@ class MemoryTokenStorageBackend implements TokenStorageBackend {
   @override
   Future<void> write({required String key, required String value}) async {
     values[key] = value;
-  }
-}
-
-class MemorySecurityPreferencesRepository
-    implements SecurityPreferencesRepository {
-  MemorySecurityPreferencesRepository({
-    SecurityPreferences initialPreferences = SecurityPreferences.disabled,
-  }) : preferences = initialPreferences;
-
-  SecurityPreferences preferences;
-  final savedPreferences = <SecurityPreferences>[];
-
-  @override
-  Future<SecurityPreferences> load() async {
-    return preferences;
-  }
-
-  @override
-  Future<SecurityPreferences> save(SecurityPreferences nextPreferences) async {
-    preferences = nextPreferences;
-    savedPreferences.add(nextPreferences);
-    return nextPreferences;
-  }
-}
-
-class FakeDeviceAuthService implements DeviceAuthService {
-  FakeDeviceAuthService({
-    this.supported = true,
-    this.authenticateResult = true,
-  });
-
-  bool supported;
-  bool authenticateResult;
-  int authenticateCalls = 0;
-
-  @override
-  Future<bool> isSupported() async {
-    return supported;
-  }
-
-  @override
-  Future<bool> authenticate() async {
-    authenticateCalls += 1;
-    return authenticateResult;
   }
 }
 
