@@ -267,7 +267,7 @@ class _HeroArt extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: context.sky.surface,
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(AffluenaRadii.md),
                   border: Border.all(color: context.sky.line),
                   boxShadow: const [
                     BoxShadow(

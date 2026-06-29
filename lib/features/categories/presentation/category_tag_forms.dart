@@ -235,26 +235,13 @@ Future<void> _confirmDeleteCategory(
   CategoryTagManagementController controller,
   Category category,
 ) async {
-  final colors = context.affluenaColors;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Hapus kategori?'),
-      content: Text('Hapus ${category.name} dari hierarki kategori kamu?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: colors.coral),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Hapus kategori'),
-        ),
-      ],
-    ),
+  final confirmed = await skyConfirm(
+    context,
+    title: 'Hapus kategori?',
+    message: 'Hapus ${category.name} dari hierarki kategori kamu?',
+    confirmLabel: 'Hapus kategori',
   );
-  if (confirmed == true) {
+  if (confirmed) {
     await controller.deleteCategory(category);
   }
 }
