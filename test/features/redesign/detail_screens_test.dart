@@ -1,3 +1,4 @@
+import 'package:affluena_mobile/features/auth/application/auth_controller.dart';
 import 'package:affluena_mobile/features/budgets/application/budget_controller.dart';
 import 'package:affluena_mobile/features/budgets/data/budget_models.dart';
 import 'package:affluena_mobile/features/budgets/presentation/budget_detail_screen.dart';
@@ -11,6 +12,7 @@ import 'package:affluena_mobile/features/trackers/application/tracker_controller
 import 'package:affluena_mobile/features/trackers/data/tracker_models.dart';
 import 'package:affluena_mobile/features/trackers/presentation/installment_detail_screen.dart';
 import 'package:affluena_mobile/features/trackers/presentation/subscription_detail_screen.dart';
+import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -122,6 +124,11 @@ class _StubRecurring extends RecurringController {
   RecurringState build() => const RecurringState(rules: [_rule]);
 }
 
+class _StubAuth extends AuthController {
+  @override
+  AuthState build() => const AuthState.unauthenticated();
+}
+
 Future<void> _pump(
   WidgetTester tester,
   Widget screen,
@@ -146,6 +153,9 @@ void main() {
   testWidgets('budget detail renders the spend + status', (tester) async {
     await _pump(tester, const BudgetDetailScreen(id: 'b1'), [
       budgetControllerProvider.overrideWith(_StubBudget.new),
+      categoryTransactionsProvider.overrideWith(
+        (ref, id) async => const <Transaction>[],
+      ),
     ]);
     expect(find.text('Makan & Minum'), findsOneWidget);
     expect(find.text('Terpakai 72%'), findsOneWidget);
@@ -155,6 +165,7 @@ void main() {
   testWidgets('goal detail renders progress + Setor action', (tester) async {
     await _pump(tester, const GoalDetailScreen(id: 'g1'), [
       goalControllerProvider.overrideWith(_StubGoal.new),
+      authControllerProvider.overrideWith(_StubAuth.new),
     ]);
     expect(find.text('Liburan Bali'), findsOneWidget);
     expect(find.text('Tercapai 62%'), findsOneWidget);
