@@ -116,7 +116,7 @@ class _SkyBottomNav extends StatelessWidget {
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -171,18 +171,18 @@ class _NavItem extends StatelessWidget {
     final iconColor = active ? context.sky.accent : context.sky.faint;
     return InkResponse(
       onTap: onTap,
-      radius: 32,
+      radius: 38,
       containedInkWell: true,
       customBorder: const CircleBorder(),
       child: Container(
-        width: 52,
-        height: 52,
+        width: 64,
+        height: 64,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: active ? context.sky.accentSoft : Colors.transparent,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 26, color: iconColor),
+        child: Icon(icon, size: 30, color: iconColor),
       ),
     );
   }
