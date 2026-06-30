@@ -44,10 +44,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Nama'),
-      'Tabungan',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Nama'), 'Tabungan');
     await tester.tap(find.byKey(const Key('wallet-color-#2E8B57')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wallet-icon-savings')));

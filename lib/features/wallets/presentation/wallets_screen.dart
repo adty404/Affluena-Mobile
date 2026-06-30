@@ -625,9 +625,9 @@ class _PickerLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-        color: context.affluenaColors.inkMuted,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.labelMedium?.copyWith(color: context.affluenaColors.inkMuted),
     );
   }
 }
