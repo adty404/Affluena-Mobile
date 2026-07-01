@@ -207,10 +207,24 @@ class BerandaDashboardView extends ConsumerWidget {
         (wallet.role != null && wallet.role != 'owner');
     final useAvatars = shared && wallet.members.length >= 2;
 
+    final colorHex = wallet.color;
+    final color = parseWalletColor(colorHex);
+    final hasColor = color != null;
+
     return _DashCard(
+      backgroundColor: hasColor ? color : null,
+      borderColor: hasColor ? color : null,
+      titleColor: hasColor ? Colors.white : null,
+      subtitleColor: hasColor ? Colors.white70 : null,
+      valueColor: hasColor ? Colors.white : null,
       leading: useAvatars
           ? _AvatarStack(members: wallet.members)
-          : _IconTile(icon: resolveWalletIcon(wallet)),
+          : _IconTile(
+              icon: resolveWalletIcon(wallet),
+              customColor: hasColor ? Colors.white : null,
+              customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : null,
+              customBorder: hasColor ? Colors.transparent : null,
+            ),
       badge: wallet.isViewer
           ? const _Badge(label: 'LIHAT')
           : (shared ? const _Badge(label: 'BERSAMA') : null),
@@ -229,8 +243,22 @@ class BerandaDashboardView extends ConsumerWidget {
     Wallet wallet,
     String? ownerName,
   ) {
+    final colorHex = wallet.color;
+    final color = parseWalletColor(colorHex);
+    final hasColor = color != null;
+
     return _DashCard(
-      leading: _IconTile(icon: resolveWalletIcon(wallet)),
+      backgroundColor: hasColor ? color : null,
+      borderColor: hasColor ? color : null,
+      titleColor: hasColor ? Colors.white : null,
+      subtitleColor: hasColor ? Colors.white70 : null,
+      valueColor: hasColor ? Colors.white : null,
+      leading: _IconTile(
+        icon: resolveWalletIcon(wallet),
+        customColor: hasColor ? Colors.white : null,
+        customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : null,
+        customBorder: hasColor ? Colors.transparent : null,
+      ),
       badge: const _Badge(label: 'LIHAT'),
       title: wallet.name,
       subtitle: ownerName != null
@@ -492,6 +520,10 @@ class _DashCard extends StatelessWidget {
     this.progress,
     this.progressColor,
     this.onLongPress,
+    this.backgroundColor,
+    this.borderColor,
+    this.titleColor,
+    this.subtitleColor,
   });
 
   final Widget leading;
@@ -504,11 +536,15 @@ class _DashCard extends StatelessWidget {
   final double? progress;
   final Color? progressColor;
   final VoidCallback? onLongPress;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color? titleColor;
+  final Color? subtitleColor;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: context.sky.surface,
+      color: backgroundColor ?? context.sky.surface,
       borderRadius: BorderRadius.circular(AffluenaRadii.control),
       child: InkWell(
         onTap: onTap,
@@ -516,7 +552,7 @@ class _DashCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AffluenaRadii.control),
         child: Ink(
           decoration: BoxDecoration(
-            border: Border.all(color: context.sky.line),
+            border: Border.all(color: borderColor ?? context.sky.line),
             borderRadius: BorderRadius.circular(AffluenaRadii.control),
           ),
           padding: const EdgeInsets.all(14),
@@ -537,7 +573,7 @@ class _DashCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w700,
-                  color: context.sky.ink,
+                  color: titleColor ?? context.sky.ink,
                 ),
               ),
               if (subtitle != null) ...[
@@ -546,7 +582,10 @@ class _DashCard extends StatelessWidget {
                   subtitle!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11.5, color: context.sky.muted),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: subtitleColor ?? context.sky.muted,
+                  ),
                 ),
               ],
               if (progress != null) ...[
@@ -567,7 +606,7 @@ class _DashCard extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.2,
-                    color: valueColor ?? context.sky.ink,
+                    color: valueColor ?? titleColor ?? context.sky.ink,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -583,10 +622,19 @@ class _DashCard extends StatelessWidget {
 // --- shared bits -------------------------------------------------------------
 
 class _IconTile extends StatelessWidget {
-  const _IconTile({required this.icon, this.accent = false});
+  const _IconTile({
+    required this.icon,
+    this.accent = false,
+    this.customColor,
+    this.customBg,
+    this.customBorder,
+  });
 
   final IconData icon;
   final bool accent;
+  final Color? customColor;
+  final Color? customBg;
+  final Color? customBorder;
 
   @override
   Widget build(BuildContext context) {
@@ -595,16 +643,19 @@ class _IconTile extends StatelessWidget {
       height: 34,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: accent ? context.sky.accentSoft : context.sky.sheet,
+        color:
+            customBg ?? (accent ? context.sky.accentSoft : context.sky.sheet),
         borderRadius: BorderRadius.circular(11),
         border: Border.all(
-          color: accent ? context.sky.accentSoftBorder : context.sky.line,
+          color:
+              customBorder ??
+              (accent ? context.sky.accentSoftBorder : context.sky.line),
         ),
       ),
       child: Icon(
         icon,
         size: 18,
-        color: accent ? context.sky.accent : context.sky.muted,
+        color: customColor ?? (accent ? context.sky.accent : context.sky.muted),
       ),
     );
   }
