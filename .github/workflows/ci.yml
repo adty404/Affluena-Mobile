@@ -39,3 +39,39 @@ jobs:
       # `golden` and excluded here. Run them locally with `flutter test`.
       - name: Test
         run: flutter test --exclude-tags golden
+
+  notify:
+    name: Notify Telegram
+    needs:
+      - analyze-test
+    if: always() && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      ANALYZE_TEST_RESULT: ${{ needs.analyze-test.result }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    steps:
+      - name: Send Telegram notification
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets are not configured; skipping notification."
+            exit 0
+          fi
+
+          status="SUCCESS"
+          title="Affluena Mobile CI selesai"
+          if [ "$ANALYZE_TEST_RESULT" != "success" ]; then
+            status="FAILED"
+            title="Affluena Mobile CI gagal"
+          fi
+
+          short_sha="${GITHUB_SHA::7}"
+          message="$(printf '[%s] %s\nRepository: %s\nBranch: %s\nCommit: %s\nAnalyze & Test: %s\nRun: %s\n' \
+            "$status" "$title" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$short_sha" "$ANALYZE_TEST_RESULT" "$RUN_URL")"
+
+          curl -fsS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${message}"

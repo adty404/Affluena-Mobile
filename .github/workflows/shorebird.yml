@@ -82,3 +82,39 @@ jobs:
           name: affluena-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: warn
+
+  notify:
+    name: Notify Telegram
+    needs:
+      - shorebird
+    if: always() && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      SHOREBIRD_RESULT: ${{ needs.shorebird.result }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    steps:
+      - name: Send Telegram notification
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets are not configured; skipping notification."
+            exit 0
+          fi
+
+          status="SUCCESS"
+          title="Affluena Mobile Shorebird selesai"
+          if [ "$SHOREBIRD_RESULT" != "success" ]; then
+            status="FAILED"
+            title="Affluena Mobile Shorebird gagal"
+          fi
+
+          short_sha="${GITHUB_SHA::7}"
+          message="$(printf '[%s] %s\nRepository: %s\nBranch: %s\nCommit: %s\nShorebird: %s\nRun: %s\n' \
+            "$status" "$title" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$short_sha" "$SHOREBIRD_RESULT" "$RUN_URL")"
+
+          curl -fsS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${message}"
