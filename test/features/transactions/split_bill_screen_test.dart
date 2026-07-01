@@ -138,8 +138,9 @@ void main() {
       // transactionAt is the picked local date+time normalized to UTC; parse it
       // back to local so the date assertion is timezone-stable.
       final localPicked = DateTime.parse(request.transactionAt!).toLocal();
-      expect(localPicked.year, 2026);
-      expect(localPicked.month, 6);
+      final now = DateTime.now();
+      expect(localPicked.year, now.year);
+      expect(localPicked.month, now.month);
       expect(localPicked.day, 22);
       expect(request.splits, hasLength(2));
       expect(request.splits.first.counterpartyName, 'Rani');
