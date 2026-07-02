@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
+import '../../shared/presentation/widgets/empty_state.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
@@ -55,7 +57,13 @@ class _WalletsContent extends ConsumerWidget {
         padding: AffluenaInsets.screen,
         children: [
           if (wallets.isEmpty) ...[
-            const _EmptyWalletState(),
+            EmptyState(
+              icon: Icons.account_balance_wallet_outlined,
+              title: 'Belum ada dompet',
+              subtitle: 'Buat dompet dulu sebelum mencatat transaksi.',
+              actionLabel: 'Buat dompet',
+              onAction: () => _showWalletForm(context, ref),
+            ),
           ] else ...[
             AffluenaCard(
               child: Row(
@@ -197,34 +205,6 @@ class _WalletCard extends StatelessWidget {
   }
 }
 
-class _EmptyWalletState extends StatelessWidget {
-  const _EmptyWalletState();
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = context.affluenaColors;
-
-    return AffluenaCard(
-      backgroundColor: colors.forestSoft,
-      borderColor: colors.forestSoft,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.account_balance_wallet_outlined),
-          const SizedBox(height: AffluenaSpacing.space3),
-          Text('Belum ada dompet', style: textTheme.titleMedium),
-          const SizedBox(height: AffluenaSpacing.space1),
-          Text(
-            'Buat dompet dulu sebelum mencatat transaksi.',
-            style: textTheme.bodySmall,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _WalletsLoading extends StatelessWidget {
   const _WalletsLoading();
 
@@ -332,91 +312,92 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
           AffluenaSpacing.space5,
           MediaQuery.viewInsetsOf(context).bottom + AffluenaSpacing.space5,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isEditing ? 'Ubah dompet' : 'Dompet baru',
-              style: textTheme.titleLarge,
-            ),
-            const SizedBox(height: AffluenaSpacing.space4),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Nama'),
-              // The next control is a dropdown that never receives keyboard
-              // focus, so "next" would strand the focus; close instead.
-              textInputAction: TextInputAction.done,
-            ),
-            const SizedBox(height: AffluenaSpacing.space3),
-            DropdownButtonFormField<WalletType>(
-              initialValue: _type,
-              decoration: const InputDecoration(labelText: 'Jenis'),
-              items: [
-                for (final type in _editableWalletTypes)
-                  DropdownMenuItem(
-                    value: type,
-                    child: Text(walletTypeLabel(type)),
-                  ),
-              ],
-              onChanged: _isSaving
-                  ? null
-                  : (value) => setState(() => _type = value ?? _type),
-            ),
-            const SizedBox(height: AffluenaSpacing.space4),
-            _PickerLabel('Warna'),
-            const SizedBox(height: AffluenaSpacing.space2),
-            _buildColorPicker(),
-            const SizedBox(height: AffluenaSpacing.space4),
-            _PickerLabel('Ikon'),
-            const SizedBox(height: AffluenaSpacing.space2),
-            _buildIconPicker(),
-            if (!isEditing) ...[
-              const SizedBox(height: AffluenaSpacing.space3),
-              MoneyInput(
-                label: 'Saldo awal',
-                initialValue: _initialBalanceMinor,
-                enabled: !_isSaving,
-                onChanged: (value) =>
-                    setState(() => _initialBalanceMinor = value ?? 0),
-              ),
-            ],
-            // When editing, the balance is never silently overwritten: the user
-            // adjusts it through an `adjustment` (penyesuaian) transaction so the
-            // change stays in the audit trail.
-            if (isEditing) ...[
-              const SizedBox(height: AffluenaSpacing.space4),
+        // Scrollable so the form (and its inline error banner) never
+        // overflows on small phones or with the keyboard open.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                'Saldo saat ini ${MoneyFormatter.idr(widget.wallet!.balanceMinor)}',
-                style: textTheme.bodySmall,
+                isEditing ? 'Ubah dompet' : 'Dompet baru',
+                style: textTheme.titleLarge,
               ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nama'),
+                // The next control is a dropdown that never receives keyboard
+                // focus, so "next" would strand the focus; close instead.
+                textInputAction: TextInputAction.done,
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
+              DropdownButtonFormField<WalletType>(
+                initialValue: _type,
+                decoration: const InputDecoration(labelText: 'Jenis'),
+                items: [
+                  for (final type in _editableWalletTypes)
+                    DropdownMenuItem(
+                      value: type,
+                      child: Text(walletTypeLabel(type)),
+                    ),
+                ],
+                onChanged: _isSaving
+                    ? null
+                    : (value) => setState(() => _type = value ?? _type),
+              ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              _PickerLabel('Warna'),
               const SizedBox(height: AffluenaSpacing.space2),
+              _buildColorPicker(),
+              const SizedBox(height: AffluenaSpacing.space4),
+              _PickerLabel('Ikon'),
+              const SizedBox(height: AffluenaSpacing.space2),
+              _buildIconPicker(),
+              if (!isEditing) ...[
+                const SizedBox(height: AffluenaSpacing.space3),
+                MoneyInput(
+                  label: 'Saldo awal',
+                  initialValue: _initialBalanceMinor,
+                  enabled: !_isSaving,
+                  onChanged: (value) =>
+                      setState(() => _initialBalanceMinor = value ?? 0),
+                ),
+              ],
+              // When editing, the balance is never silently overwritten: the user
+              // adjusts it through an `adjustment` (penyesuaian) transaction so the
+              // change stays in the audit trail.
+              if (isEditing) ...[
+                const SizedBox(height: AffluenaSpacing.space4),
+                Text(
+                  'Saldo saat ini ${MoneyFormatter.idr(widget.wallet!.balanceMinor)}',
+                  style: textTheme.bodySmall,
+                ),
+                const SizedBox(height: AffluenaSpacing.space2),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const Key('wallet-edit-adjust-balance'),
+                    onPressed: _isSaving ? null : _adjustBalance,
+                    icon: const Icon(Icons.tune_outlined, size: 18),
+                    label: const Text('Sesuaikan saldo (penyesuaian)'),
+                  ),
+                ),
+              ],
+              if (_error != null) ...[
+                const SizedBox(height: AffluenaSpacing.space3),
+                AffluenaBanner.error(_error!),
+              ],
+              const SizedBox(height: AffluenaSpacing.space5),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
-                  key: const Key('wallet-edit-adjust-balance'),
-                  onPressed: _isSaving ? null : _adjustBalance,
-                  icon: const Icon(Icons.tune_outlined, size: 18),
-                  label: const Text('Sesuaikan saldo (penyesuaian)'),
+                child: FilledButton(
+                  onPressed: _isSaving ? null : _save,
+                  child: Text(_isSaving ? 'Menyimpan...' : 'Simpan dompet'),
                 ),
               ),
             ],
-            if (_error != null) ...[
-              const SizedBox(height: AffluenaSpacing.space3),
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            const SizedBox(height: AffluenaSpacing.space5),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _isSaving ? null : _save,
-                child: Text(_isSaving ? 'Menyimpan...' : 'Simpan dompet'),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

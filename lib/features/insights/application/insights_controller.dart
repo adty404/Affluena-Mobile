@@ -180,6 +180,25 @@ class InsightsController extends Notifier<InsightsState> {
     return ref.read(csvShareServiceProvider).share(result);
   }
 
+  /// Retries a FAILED export by re-running it with the same date range — the
+  /// backend records a fresh job the moment the export runs, so this is a
+  /// pure client-side re-create. The job list is refreshed either way so the
+  /// new attempt (and its status) shows up immediately.
+  Future<CsvShareOutcome> retryExportJob(ExportJob job) async {
+    final repository = ref.read(insightsRepositoryProvider);
+    try {
+      final result = await repository.exportCsv(
+        ExportCsvRequest(from: job.fromAt, to: job.toAt),
+      );
+      if (result.bytes.isEmpty) {
+        return CsvShareOutcome.empty;
+      }
+      return await ref.read(csvShareServiceProvider).share(result);
+    } finally {
+      await _refreshExportJobs(repository);
+    }
+  }
+
   Future<void> updateRule(
     NotificationRule rule,
     NotificationRuleUpdate update,

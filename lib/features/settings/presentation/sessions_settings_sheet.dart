@@ -215,8 +215,20 @@ class _SessionRow extends StatelessWidget {
           ),
           TextButton(
             key: Key('settings-revoke-session-${session.id.substring(0, 8)}'),
-            onPressed: onRevoke,
-            child: Text(isRevoking ? 'Mencabut...' : 'Cabut'),
+            onPressed: isRevoking ? null : onRevoke,
+            child: isRevoking
+                ? const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: AffluenaSpacing.space2),
+                      Text('Mencabut...'),
+                    ],
+                  )
+                : const Text('Cabut'),
           ),
         ],
       ),
