@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../shared/presentation/widgets/error_state.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../wallets/application/wallets_controller.dart';
@@ -288,19 +289,13 @@ class _MonthGrid extends ConsumerWidget {
     final dataAsync = ref.watch(calendarMonthProvider(monthKey));
 
     if (dataAsync.hasError && dataAsync.asData == null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Gagal memuat kalender.',
-              style: TextStyle(fontSize: 13, color: context.sky.muted),
-            ),
-            TextButton(
-              onPressed: () => ref.invalidate(calendarMonthProvider(monthKey)),
-              child: const Text('Coba lagi'),
-            ),
-          ],
+      return _RefreshableMonthPage(
+        monthKey: monthKey,
+        child: Center(
+          child: ErrorState(
+            message: 'Gagal memuat kalender. Coba lagi, ya.',
+            onRetry: () => ref.invalidate(calendarMonthProvider(monthKey)),
+          ),
         ),
       );
     }
@@ -340,15 +335,50 @@ class _MonthGrid extends ConsumerWidget {
       rows.add(Expanded(child: Row(children: cells)));
     }
 
-    return Padding(
-      // Clear the floating nav pill at the bottom.
-      padding: const EdgeInsets.fromLTRB(
-        AffluenaSpacing.space4,
-        0,
-        AffluenaSpacing.space4,
-        96,
+    return _RefreshableMonthPage(
+      monthKey: monthKey,
+      child: Padding(
+        // Clear the floating nav pill at the bottom.
+        padding: const EdgeInsets.fromLTRB(
+          AffluenaSpacing.space4,
+          0,
+          AffluenaSpacing.space4,
+          96,
+        ),
+        child: Column(children: rows),
       ),
-      child: Column(children: rows),
+    );
+  }
+}
+
+/// Gives one month page real pull-to-refresh. The grid itself is not
+/// scrollable (it fills the page with Expanded rows), so the page is wrapped
+/// in an always-scrollable viewport sized exactly to the available height:
+/// vertical drags feed the RefreshIndicator while horizontal month swipes
+/// still reach the enclosing PageView.
+class _RefreshableMonthPage extends ConsumerWidget {
+  const _RefreshableMonthPage({required this.monthKey, required this.child});
+
+  final String monthKey;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(calendarMonthProvider(monthKey));
+        try {
+          await ref.read(calendarMonthProvider(monthKey).future);
+        } catch (_) {
+          // The page renders its own error + retry.
+        }
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(height: constraints.maxHeight, child: child),
+        ),
+      ),
     );
   }
 }

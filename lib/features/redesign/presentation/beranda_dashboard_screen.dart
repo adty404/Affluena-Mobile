@@ -20,6 +20,8 @@ import '../../recurring/application/recurring_controller.dart';
 import '../../recurring/data/recurring_models.dart';
 import '../../recurring/presentation/recurring_detail_screen.dart';
 import '../../recurring/presentation/recurring_screen.dart';
+import '../../shared/presentation/widgets/empty_state.dart';
+import '../../shared/presentation/widgets/error_state.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../../trackers/application/tracker_controller.dart';
@@ -82,122 +84,153 @@ class BerandaDashboardView extends ConsumerWidget {
     final subscriptions = trackerState.subscriptions;
     final recurring = recurringState.rules;
 
-    return ListView(
-      // Extra bottom padding so the last row clears the floating nav pill.
-      padding: AffluenaInsets.screen.copyWith(bottom: 120),
-      children: [
-        _Hero(
-          total: total,
-          loading: walletsAsync.isLoading && spending.isEmpty,
-        ),
-        const SizedBox(height: AffluenaSpacing.space6),
+    return RefreshIndicator(
+      onRefresh: () => _refresh(ref),
+      child: ListView(
+        // Always scrollable so pull-to-refresh works even on a short page.
+        physics: const AlwaysScrollableScrollPhysics(),
+        // Extra bottom padding so the last row clears the floating nav pill.
+        padding: AffluenaInsets.screen.copyWith(bottom: 120),
+        children: [
+          _Hero(
+            total: total,
+            loading: walletsAsync.isLoading && spending.isEmpty,
+          ),
+          const SizedBox(height: AffluenaSpacing.space6),
 
-        _Section(
-          title: 'Dompet',
-          onSeeAll: () => context.push(WalletsScreen.path),
-          isLoading: walletsAsync.isLoading && spending.isEmpty,
-          hasError: walletsAsync.hasError && spending.isEmpty,
-          onRetry: () => ref.invalidate(walletListProvider),
-          emptyLabel: 'Belum ada dompet',
-          onEmptyTap: () => context.push(WalletsScreen.path),
-          cards: [
-            for (final wallet in spending.take(_previewCount))
-              _walletCard(context, wallet),
-          ],
-        ),
-
-        if (partnerWallets.isNotEmpty)
           _Section(
-            title: 'Dibagikan untukku',
-            onSeeAll: () => context.push(SharedWithMeScreen.path),
-            isLoading: false,
-            hasError: false,
-            onRetry: () {},
-            emptyLabel: '',
-            onEmptyTap: () {},
+            title: 'Dompet',
+            onSeeAll: () => context.push(WalletsScreen.path),
+            isLoading: walletsAsync.isLoading && spending.isEmpty,
+            hasError: walletsAsync.hasError && spending.isEmpty,
+            onRetry: () => ref.invalidate(walletListProvider),
+            emptyLabel: 'Belum ada dompet',
+            onEmptyTap: () => context.push(WalletsScreen.path),
             cards: [
-              for (final wallet in partnerWallets.take(_previewCount))
-                _partnerWalletCard(context, wallet, sharerName[wallet.userId]),
+              for (final wallet in spending.take(_previewCount))
+                _walletCard(context, wallet),
             ],
           ),
 
-        _Section(
-          title: 'Anggaran',
-          onSeeAll: () => context.push(BudgetScreen.path),
-          isLoading: budgetState.isLoading && budgetState.budgets.isEmpty,
-          hasError:
-              budgetState.loadError != null && budgetState.budgets.isEmpty,
-          onRetry: () => ref.invalidate(budgetControllerProvider),
-          emptyLabel: 'Belum ada anggaran',
-          onEmptyTap: () => context.push(BudgetScreen.path),
-          cards: [
-            for (final budget in budgetState.budgets.take(_previewCount))
-              _budgetCard(
-                context,
-                name: budgetState.categoryName(budget.categoryId),
-                budget: budget,
-              ),
-          ],
-        ),
+          if (partnerWallets.isNotEmpty)
+            _Section(
+              title: 'Dibagikan untukku',
+              onSeeAll: () => context.push(SharedWithMeScreen.path),
+              isLoading: false,
+              hasError: false,
+              onRetry: () {},
+              emptyLabel: '',
+              onEmptyTap: () {},
+              cards: [
+                for (final wallet in partnerWallets.take(_previewCount))
+                  _partnerWalletCard(
+                    context,
+                    wallet,
+                    sharerName[wallet.userId],
+                  ),
+              ],
+            ),
 
-        _Section(
-          title: 'Tabungan',
-          onSeeAll: () => context.push(GoalScreen.path),
-          isLoading: goalState.isLoading && savings.isEmpty,
-          hasError: goalState.loadError != null && savings.isEmpty,
-          onRetry: () => ref.invalidate(goalControllerProvider),
-          emptyLabel: 'Belum ada tabungan',
-          onEmptyTap: () => context.push(GoalScreen.path),
-          cards: [
-            for (final goal in savings.take(_previewCount))
-              _goalCard(context, goal),
-          ],
-        ),
+          _Section(
+            title: 'Anggaran',
+            onSeeAll: () => context.push(BudgetScreen.path),
+            isLoading: budgetState.isLoading && budgetState.budgets.isEmpty,
+            hasError:
+                budgetState.loadError != null && budgetState.budgets.isEmpty,
+            onRetry: () => ref.invalidate(budgetControllerProvider),
+            emptyLabel: 'Belum ada anggaran',
+            onEmptyTap: () => context.push(BudgetScreen.path),
+            cards: [
+              for (final budget in budgetState.budgets.take(_previewCount))
+                _budgetCard(
+                  context,
+                  name: budgetState.categoryName(budget.categoryId),
+                  budget: budget,
+                ),
+            ],
+          ),
 
-        _Section(
-          title: 'Cicilan',
-          onSeeAll: () => context.push(TrackerScreen.path),
-          isLoading: trackerState.isLoading && installments.isEmpty,
-          hasError: trackerState.loadError != null && installments.isEmpty,
-          onRetry: () => ref.invalidate(trackerControllerProvider),
-          emptyLabel: 'Belum ada cicilan',
-          onEmptyTap: () => context.push(TrackerScreen.path),
-          cards: [
-            for (final item in installments.take(_previewCount))
-              _installmentCard(context, item),
-          ],
-        ),
+          _Section(
+            title: 'Tabungan',
+            onSeeAll: () => context.push(GoalScreen.path),
+            isLoading: goalState.isLoading && savings.isEmpty,
+            hasError: goalState.loadError != null && savings.isEmpty,
+            onRetry: () => ref.invalidate(goalControllerProvider),
+            emptyLabel: 'Belum ada tabungan',
+            onEmptyTap: () => context.push(GoalScreen.path),
+            cards: [
+              for (final goal in savings.take(_previewCount))
+                _goalCard(context, goal),
+            ],
+          ),
 
-        _Section(
-          title: 'Langganan',
-          onSeeAll: () => context.push(TrackerScreen.path),
-          isLoading: trackerState.isLoading && subscriptions.isEmpty,
-          hasError: trackerState.loadError != null && subscriptions.isEmpty,
-          onRetry: () => ref.invalidate(trackerControllerProvider),
-          emptyLabel: 'Belum ada langganan',
-          onEmptyTap: () => context.push(TrackerScreen.path),
-          cards: [
-            for (final item in subscriptions.take(_previewCount))
-              _subscriptionCard(context, item),
-          ],
-        ),
+          _Section(
+            title: 'Cicilan',
+            onSeeAll: () => context.push(TrackerScreen.path),
+            isLoading: trackerState.isLoading && installments.isEmpty,
+            hasError: trackerState.loadError != null && installments.isEmpty,
+            onRetry: () => ref.invalidate(trackerControllerProvider),
+            emptyLabel: 'Belum ada cicilan',
+            onEmptyTap: () => context.push(TrackerScreen.path),
+            cards: [
+              for (final item in installments.take(_previewCount))
+                _installmentCard(context, item),
+            ],
+          ),
 
-        _Section(
-          title: 'Berulang',
-          onSeeAll: () => context.push(RecurringScreen.path),
-          isLoading: recurringState.isLoading && recurring.isEmpty,
-          hasError: recurringState.loadError != null && recurring.isEmpty,
-          onRetry: () => ref.invalidate(recurringControllerProvider),
-          emptyLabel: 'Belum ada transaksi berulang',
-          onEmptyTap: () => context.push(RecurringScreen.path),
-          isLast: true,
-          cards: [
-            for (final rule in recurring.take(_previewCount))
-              _recurringCard(context, rule),
-          ],
-        ),
-      ],
+          _Section(
+            title: 'Langganan',
+            onSeeAll: () => context.push(TrackerScreen.path),
+            isLoading: trackerState.isLoading && subscriptions.isEmpty,
+            hasError: trackerState.loadError != null && subscriptions.isEmpty,
+            onRetry: () => ref.invalidate(trackerControllerProvider),
+            emptyLabel: 'Belum ada langganan',
+            onEmptyTap: () => context.push(TrackerScreen.path),
+            cards: [
+              for (final item in subscriptions.take(_previewCount))
+                _subscriptionCard(context, item),
+            ],
+          ),
+
+          _Section(
+            title: 'Berulang',
+            onSeeAll: () => context.push(RecurringScreen.path),
+            isLoading: recurringState.isLoading && recurring.isEmpty,
+            hasError: recurringState.loadError != null && recurring.isEmpty,
+            onRetry: () => ref.invalidate(recurringControllerProvider),
+            emptyLabel: 'Belum ada transaksi berulang',
+            onEmptyTap: () => context.push(RecurringScreen.path),
+            isLast: true,
+            cards: [
+              for (final rule in recurring.take(_previewCount))
+                _recurringCard(context, rule),
+            ],
+          ),
+        ],
+      ),
     );
+  }
+
+  /// Pull-to-refresh: reload every dashboard section in parallel. Each
+  /// controller stores its own load error, so a failed section falls back to
+  /// its inline retry tile instead of failing the whole refresh.
+  Future<void> _refresh(WidgetRef ref) async {
+    final wallets = () async {
+      ref.invalidate(walletListProvider);
+      try {
+        await ref.read(walletListProvider.future);
+      } catch (_) {
+        // The Dompet section renders its own error + retry.
+      }
+    }();
+    await Future.wait([
+      wallets,
+      ref.read(budgetControllerProvider.notifier).load(),
+      ref.read(goalControllerProvider.notifier).load(),
+      ref.read(trackerControllerProvider.notifier).load(),
+      ref.read(recurringControllerProvider.notifier).load(),
+      ref.read(partnerControllerProvider.notifier).load(),
+    ]);
   }
 
   // --- card builders -------------------------------------------------------
@@ -470,11 +503,13 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final Widget content;
     if (hasError) {
-      content = _SectionError(onRetry: onRetry);
+      content = ErrorState.compact(onRetry: onRetry);
     } else if (isLoading) {
       content = _CardGrid(children: const [_SkeletonCard(), _SkeletonCard()]);
     } else if (cards.isEmpty) {
-      content = _EmptyTile(label: emptyLabel, onTap: onEmptyTap);
+      // Keeps the existing behaviour: tapping the tile opens the domain
+      // screen where the first item can be created.
+      content = EmptyState.compact(title: emptyLabel, onTap: onEmptyTap);
     } else {
       content = _CardGrid(children: cards);
     }
@@ -766,93 +801,6 @@ class _Badge extends StatelessWidget {
           letterSpacing: 0.4,
           color: context.sky.accentInk,
         ),
-      ),
-    );
-  }
-}
-
-class _EmptyTile extends StatelessWidget {
-  const _EmptyTile({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: context.sky.sheet,
-      borderRadius: BorderRadius.circular(AffluenaRadii.control),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AffluenaRadii.control),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: context.sky.line),
-            borderRadius: BorderRadius.circular(AffluenaRadii.control),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: AffluenaSpacing.space4,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.add_circle_outline,
-                size: 18,
-                color: context.sky.faint,
-              ),
-              const SizedBox(width: AffluenaSpacing.space2),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(fontSize: 12.5, color: context.sky.muted),
-                ),
-              ),
-              Icon(Icons.chevron_right, size: 16, color: context.sky.faint),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionError extends StatelessWidget {
-  const _SectionError({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.sky.sheet,
-        border: Border.all(color: context.sky.line),
-        borderRadius: BorderRadius.circular(AffluenaRadii.control),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: AffluenaSpacing.space3,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'Gagal memuat.',
-              style: TextStyle(fontSize: 12.5, color: context.sky.muted),
-            ),
-          ),
-          TextButton(
-            onPressed: onRetry,
-            style: TextButton.styleFrom(
-              foregroundColor: context.sky.accent,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: const Size(0, 32),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const Text('Coba lagi'),
-          ),
-        ],
       ),
     );
   }

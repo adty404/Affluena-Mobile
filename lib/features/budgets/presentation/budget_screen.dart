@@ -55,65 +55,74 @@ class BudgetScreen extends ConsumerWidget {
           icon: const Icon(Icons.add),
         ),
       ],
-      body: ListView(
-        padding: AffluenaInsets.screen,
-        children: [
-          _MonthControl(
-            month: state.month,
-            onChanged: controller.setMonth,
-            isLoading: state.isLoading,
-          ),
-          const SizedBox(height: AffluenaSpacing.space5),
-          if (state.reportSummary != null) ...[
-            _BudgetSummaryCard(summary: state.reportSummary!),
-            const SizedBox(height: AffluenaSpacing.space5),
-          ],
-          if (state.actionError != null) ...[
-            AffluenaBanner.error(
-              state.actionError!,
-              onRetry: () => controller.load(),
+      body: RefreshIndicator(
+        onRefresh: () => controller.load(),
+        child: ListView(
+          // Always scrollable so pull-to-refresh works even on a short list.
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: AffluenaInsets.screen,
+          children: [
+            _MonthControl(
+              month: state.month,
+              onChanged: controller.setMonth,
+              isLoading: state.isLoading,
             ),
-            const SizedBox(height: AffluenaSpacing.space4),
-          ],
-          _BudgetAlerts(alerts: state.alerts),
-          const SizedBox(height: AffluenaSpacing.space6),
-          SectionHeader(
-            title: 'Anggaran kategori',
-            actionLabel: state.total == 0 ? null : '${state.total} total',
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          if (state.budgets.isEmpty)
-            _EmptyBudgetState(
-              hasExpenseCategories: state.hasExpenseCategories,
-              onCreate: () => _showBudgetForm(context, ref, state: state),
-              onAddCategory: () => _goToCategories(context),
-            )
-          else ...[
-            for (final budget in state.budgets) ...[
-              _BudgetCard(
-                budget: budget,
-                report: state.reportFor(budget),
-                categoryName: state.categoryName(budget.categoryId),
-                onEdit: () =>
-                    _showBudgetForm(context, ref, state: state, budget: budget),
-                onDelete: () => _confirmDelete(context, controller, budget),
-              ),
-              const SizedBox(height: AffluenaSpacing.space3),
+            const SizedBox(height: AffluenaSpacing.space5),
+            if (state.reportSummary != null) ...[
+              _BudgetSummaryCard(summary: state.reportSummary!),
+              const SizedBox(height: AffluenaSpacing.space5),
             ],
-            if (state.hasMore) ...[
-              const SizedBox(height: AffluenaSpacing.space2),
-              OutlinedButton(
-                key: const Key('budget-load-more-button'),
-                onPressed: state.isLoadingMore ? null : controller.loadMore,
-                child: Text(
-                  state.isLoadingMore
-                      ? 'Memuat...'
-                      : 'Muat lebih banyak (${state.budgets.length} dari ${state.total})',
+            if (state.actionError != null) ...[
+              AffluenaBanner.error(
+                state.actionError!,
+                onRetry: () => controller.load(),
+              ),
+              const SizedBox(height: AffluenaSpacing.space4),
+            ],
+            _BudgetAlerts(alerts: state.alerts),
+            const SizedBox(height: AffluenaSpacing.space6),
+            SectionHeader(
+              title: 'Anggaran kategori',
+              actionLabel: state.total == 0 ? null : '${state.total} total',
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+            if (state.budgets.isEmpty)
+              _EmptyBudgetState(
+                hasExpenseCategories: state.hasExpenseCategories,
+                onCreate: () => _showBudgetForm(context, ref, state: state),
+                onAddCategory: () => _goToCategories(context),
+              )
+            else ...[
+              for (final budget in state.budgets) ...[
+                _BudgetCard(
+                  budget: budget,
+                  report: state.reportFor(budget),
+                  categoryName: state.categoryName(budget.categoryId),
+                  onEdit: () => _showBudgetForm(
+                    context,
+                    ref,
+                    state: state,
+                    budget: budget,
+                  ),
+                  onDelete: () => _confirmDelete(context, controller, budget),
                 ),
-              ),
+                const SizedBox(height: AffluenaSpacing.space3),
+              ],
+              if (state.hasMore) ...[
+                const SizedBox(height: AffluenaSpacing.space2),
+                OutlinedButton(
+                  key: const Key('budget-load-more-button'),
+                  onPressed: state.isLoadingMore ? null : controller.loadMore,
+                  child: Text(
+                    state.isLoadingMore
+                        ? 'Memuat...'
+                        : 'Muat lebih banyak (${state.budgets.length} dari ${state.total})',
+                  ),
+                ),
+              ],
             ],
           ],
-        ],
+        ),
       ),
     );
   }

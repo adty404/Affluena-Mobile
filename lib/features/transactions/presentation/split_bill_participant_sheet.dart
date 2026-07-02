@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
@@ -177,10 +178,7 @@ class _SplitBillParticipantSheetState
               ),
               if (_error != null) ...[
                 const SizedBox(height: AffluenaSpacing.space3),
-                Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                AffluenaBanner.error(_error!),
               ],
               const SizedBox(height: AffluenaSpacing.space4),
               FilledButton(

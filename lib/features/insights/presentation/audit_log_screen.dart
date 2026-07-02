@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
@@ -587,18 +588,47 @@ class _DetailRow extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space1),
-        Text(
-          row.value,
-          style: row.isTechnical
-              ? textTheme.bodySmall?.copyWith(
-                  color: colors.inkMuted,
-                  fontFamily: 'monospace',
-                )
-              : textTheme.bodyMedium,
-        ),
+        if (row.isTechnical)
+          // Technical IDs are opaque UUIDs the user may need elsewhere (bug
+          // reports, support) — tap-to-copy beats screenshotting them.
+          InkWell(
+            onTap: () => copyTechnicalValue(context, row.label, row.value),
+            borderRadius: BorderRadius.circular(AffluenaRadii.md),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: Text(
+                    row.value,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colors.inkMuted,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AffluenaSpacing.space2),
+                Icon(Icons.copy_outlined, size: 14, color: colors.inkMuted),
+              ],
+            ),
+          )
+        else
+          Text(row.value, style: textTheme.bodyMedium),
       ],
     );
   }
+}
+
+/// Copies a technical detail value and confirms it with a SnackBar.
+Future<void> copyTechnicalValue(
+  BuildContext context,
+  String label,
+  String value,
+) async {
+  await Clipboard.setData(ClipboardData(text: value));
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text('$label disalin.')));
 }
 
 String _activityCountLabel(int count) {

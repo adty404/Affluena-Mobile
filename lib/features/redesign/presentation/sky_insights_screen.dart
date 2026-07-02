@@ -7,6 +7,8 @@ import '../../../core/formatters/money_formatter.dart';
 import '../../dashboard/application/dashboard_home_controller.dart';
 import '../../dashboard/data/dashboard_models.dart';
 import '../../dashboard/presentation/cashflow_trend_chart.dart';
+import '../../shared/presentation/widgets/empty_state.dart';
+import '../../shared/presentation/widgets/error_state.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
 
 /// Redesign Tahap 6 — Insights: the heavy analytics (cashflow trend, expense
@@ -38,58 +40,91 @@ class SkyInsightsView extends ConsumerWidget {
     final distribution = ref.watch(dashboardExpenseDistributionProvider);
     final forecast = ref.watch(dashboardForecastProvider);
 
-    return ListView(
-      // Extra bottom padding so the last row clears the floating nav pill.
-      padding: AffluenaInsets.screen.copyWith(bottom: 120),
-      children: [
-        Text(
-          'Wawasan',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: context.sky.ink,
+    return RefreshIndicator(
+      onRefresh: () => _refresh(ref),
+      child: ListView(
+        // Always scrollable so pull-to-refresh works even on a short page.
+        physics: const AlwaysScrollableScrollPhysics(),
+        // Extra bottom padding so the last row clears the floating nav pill.
+        padding: AffluenaInsets.screen.copyWith(bottom: 120),
+        children: [
+          Text(
+            'Wawasan',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: context.sky.ink,
+            ),
           ),
-        ),
-        const SizedBox(height: AffluenaSpacing.space4),
-        _SkyCard(
-          title: 'Arus kas',
-          child: trend.when(
-            loading: () => _loader(context),
-            error: (_, _) => _errorText(context),
-            data: (response) => response.trend.isEmpty
-                ? _emptyText(context)
-                : SizedBox(
-                    height: 160,
-                    child: CashflowTrendChart(points: response.trend),
-                  ),
+          const SizedBox(height: AffluenaSpacing.space4),
+          _SkyCard(
+            title: 'Arus kas',
+            child: trend.when(
+              loading: () => _loader(context),
+              error: (_, _) => _error(
+                onRetry: () => ref.invalidate(dashboardCashflowTrendProvider),
+              ),
+              data: (response) => response.trend.isEmpty
+                  ? _empty(icon: Icons.show_chart)
+                  : SizedBox(
+                      height: 160,
+                      child: CashflowTrendChart(points: response.trend),
+                    ),
+            ),
           ),
-        ),
-        _SkyCard(
-          title: 'Ke mana uang pergi',
-          child: distribution.when(
-            loading: () => _loader(context),
-            error: (_, _) => _errorText(context),
-            data: (response) => response.distribution.isEmpty
-                ? _emptyText(context)
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (final item in response.distribution.take(6))
-                        _DistributionRow(item: item),
-                    ],
-                  ),
+          _SkyCard(
+            title: 'Ke mana uang pergi',
+            child: distribution.when(
+              loading: () => _loader(context),
+              error: (_, _) => _error(
+                onRetry: () =>
+                    ref.invalidate(dashboardExpenseDistributionProvider),
+              ),
+              data: (response) => response.distribution.isEmpty
+                  ? _empty(icon: Icons.donut_small_outlined)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final item in response.distribution.take(6))
+                          _DistributionRow(item: item),
+                      ],
+                    ),
+            ),
           ),
-        ),
-        _SkyCard(
-          title: 'Perkiraan bulan ini',
-          child: forecast.when(
-            loading: () => _loader(context),
-            error: (_, _) => _errorText(context),
-            data: _ForecastBody.new,
+          _SkyCard(
+            title: 'Perkiraan bulan ini',
+            child: forecast.when(
+              loading: () => _loader(context),
+              error: (_, _) => _error(
+                onRetry: () => ref.invalidate(dashboardForecastProvider),
+              ),
+              data: _ForecastBody.new,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  /// Pull-to-refresh: re-fetch all three analytics in parallel. Each card
+  /// renders its own error + retry, so failures never throw out of here.
+  Future<void> _refresh(WidgetRef ref) async {
+    ref.invalidate(dashboardCashflowTrendProvider);
+    ref.invalidate(dashboardExpenseDistributionProvider);
+    ref.invalidate(dashboardForecastProvider);
+    await Future.wait([
+      _awaitQuietly(ref.read(dashboardCashflowTrendProvider.future)),
+      _awaitQuietly(ref.read(dashboardExpenseDistributionProvider.future)),
+      _awaitQuietly(ref.read(dashboardForecastProvider.future)),
+    ]);
+  }
+
+  static Future<void> _awaitQuietly(Future<Object?> future) async {
+    try {
+      await future;
+    } catch (_) {
+      // The card renders its own error + retry.
+    }
   }
 
   static Widget _loader(BuildContext context) => Padding(
@@ -97,14 +132,13 @@ class SkyInsightsView extends ConsumerWidget {
     child: Center(child: CircularProgressIndicator(color: context.sky.accent)),
   );
 
-  static Widget _errorText(BuildContext context) => Text(
-    'Tidak bisa memuat.',
-    style: TextStyle(fontSize: 13, color: context.sky.muted),
-  );
+  static Widget _error({required VoidCallback onRetry}) =>
+      ErrorState.compact(message: 'Tidak bisa memuat.', onRetry: onRetry);
 
-  static Widget _emptyText(BuildContext context) => Text(
-    'Belum ada data.',
-    style: TextStyle(fontSize: 13, color: context.sky.faint),
+  static Widget _empty({required IconData icon}) => EmptyState(
+    icon: icon,
+    title: 'Belum ada data',
+    subtitle: 'Catat transaksi dulu untuk mengisi wawasan ini.',
   );
 }
 

@@ -17,6 +17,7 @@ import '../application/csv_share_service.dart';
 import '../application/insights_controller.dart';
 import '../data/insight_models.dart';
 import '../data/insights_repository.dart';
+import 'audit_log_screen.dart' show copyTechnicalValue;
 
 class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({this.initialTab = InsightTab.reports, super.key});
@@ -969,6 +970,7 @@ class _ExportJobDetailSheet extends StatefulWidget {
 
 class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
   bool _isSharing = false;
+  bool _isRetrying = false;
   String? _error;
 
   Future<void> _share() async {
@@ -1000,6 +1002,46 @@ class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
       setState(() {
         _isSharing = false;
         _error = 'Ekspor tidak dapat dibagikan. Coba lagi.';
+      });
+    }
+  }
+
+  /// Re-submits a failed export with the same parameters (a fresh job is
+  /// recorded server-side and the job list refreshed), then hands the new CSV
+  /// to the share sheet so the retry immediately delivers the file.
+  Future<void> _retry() async {
+    setState(() {
+      _isRetrying = true;
+      _error = null;
+    });
+    try {
+      final outcome = await widget.controller.retryExportJob(widget.job);
+      if (!mounted) return;
+      switch (outcome) {
+        case CsvShareOutcome.shared:
+        case CsvShareOutcome.dismissed:
+          // The re-run succeeded; the refreshed list now shows the new job.
+          Navigator.of(context).pop();
+        case CsvShareOutcome.unavailable:
+          setState(() {
+            _isRetrying = false;
+            _error =
+                'Ekspor baru berhasil dibuat, tetapi berbagi tidak tersedia '
+                'di perangkat ini.';
+          });
+        case CsvShareOutcome.empty:
+          setState(() {
+            _isRetrying = false;
+            _error =
+                'Rentang tanggal ini sudah tidak punya transaksi untuk '
+                'diekspor.';
+          });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isRetrying = false;
+        _error = 'Ekspor ulang gagal. Coba lagi.';
       });
     }
   }
@@ -1080,13 +1122,26 @@ class _ExportJobDetailSheetState extends State<_ExportJobDetailSheet> {
                       : const Icon(Icons.ios_share_outlined),
                   label: Text(_isSharing ? 'Menyiapkan' : 'Unduh / bagikan'),
                 )
-              else
+              else ...[
                 AffluenaBanner(
                   message:
                       'Ekspor ini gagal dibuat, jadi tidak ada berkas yang bisa '
                       'diunduh.',
                   tone: AffluenaBannerTone.warning,
                 ),
+                const SizedBox(height: AffluenaSpacing.space3),
+                FilledButton.icon(
+                  key: const Key('export-job-retry-button'),
+                  onPressed: _isRetrying ? null : _retry,
+                  icon: _isRetrying
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh),
+                  label: Text(_isRetrying ? 'Mengulang ekspor' : 'Coba lagi'),
+                ),
+              ],
             ],
           ),
         ),
@@ -1120,15 +1175,31 @@ class _SheetDetailRow extends StatelessWidget {
           style: textTheme.labelMedium?.copyWith(color: colors.inkMuted),
         ),
         const SizedBox(height: AffluenaSpacing.space1),
-        Text(
-          row.value,
-          style: row.isTechnical
-              ? textTheme.bodySmall?.copyWith(
-                  color: colors.inkMuted,
-                  fontFamily: 'monospace',
-                )
-              : textTheme.bodyMedium,
-        ),
+        if (row.isTechnical)
+          // Technical IDs are opaque UUIDs the user may need elsewhere (bug
+          // reports, support) — tap-to-copy beats screenshotting them.
+          InkWell(
+            onTap: () => copyTechnicalValue(context, row.label, row.value),
+            borderRadius: BorderRadius.circular(AffluenaRadii.md),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: Text(
+                    row.value,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colors.inkMuted,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AffluenaSpacing.space2),
+                Icon(Icons.copy_outlined, size: 14, color: colors.inkMuted),
+              ],
+            ),
+          )
+        else
+          Text(row.value, style: textTheme.bodyMedium),
       ],
     );
   }

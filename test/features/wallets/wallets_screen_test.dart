@@ -43,5 +43,9 @@ void main() {
       find.text('Buat dompet dulu sebelum mencatat transaksi.'),
       findsOneWidget,
     );
+    // The empty state carries a CTA that opens the create-wallet form.
+    await tester.tap(find.widgetWithText(FilledButton, 'Buat dompet'));
+    await tester.pumpAndSettle();
+    expect(find.text('Dompet baru'), findsOneWidget);
   });
 }

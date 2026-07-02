@@ -6,6 +6,8 @@ import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../shared/presentation/widgets/empty_state.dart';
+import '../../shared/presentation/widgets/error_state.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
 import '../../wallets/application/wallets_controller.dart';
@@ -50,41 +52,60 @@ class ActivityFeedView extends ConsumerWidget {
     final walletNames = {for (final w in wallets) w.id: w.name};
     final meId = ref.watch(authControllerProvider).user?.id;
 
-    return ListView(
-      // Extra bottom padding so the last row clears the floating nav pill.
-      padding: AffluenaInsets.screen.copyWith(bottom: 120),
-      children: [
-        Text(
-          'Aktivitas',
-          style: TextStyle(
-            fontSize: 21,
-            fontWeight: FontWeight.w700,
-            color: context.sky.ink,
-          ),
-        ),
-        const SizedBox(height: AffluenaSpacing.space4),
-        txAsync.when(
-          loading: () => Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: AffluenaSpacing.space6,
-            ),
-            child: Center(
-              child: CircularProgressIndicator(color: context.sky.accent),
+    return RefreshIndicator(
+      onRefresh: () => _refresh(ref),
+      child: ListView(
+        // Always scrollable so pull-to-refresh works even on a short feed.
+        physics: const AlwaysScrollableScrollPhysics(),
+        // Extra bottom padding so the last row clears the floating nav pill.
+        padding: AffluenaInsets.screen.copyWith(bottom: 120),
+        children: [
+          Text(
+            'Aktivitas',
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.w700,
+              color: context.sky.ink,
             ),
           ),
-          error: (_, _) => Text(
-            'Tidak bisa memuat aktivitas.',
-            style: TextStyle(fontSize: 13, color: context.sky.muted),
+          const SizedBox(height: AffluenaSpacing.space4),
+          txAsync.when(
+            loading: () => Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AffluenaSpacing.space6,
+              ),
+              child: Center(
+                child: CircularProgressIndicator(color: context.sky.accent),
+              ),
+            ),
+            error: (_, _) => ErrorState(
+              message: 'Tidak bisa memuat aktivitas. Coba lagi, ya.',
+              onRetry: () => ref.invalidate(recentActivityProvider),
+            ),
+            data: (txns) => txns.isEmpty
+                ? EmptyState(
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Belum ada transaksi',
+                    subtitle:
+                        'Catat transaksi pertamamu lewat tombol + di bawah.',
+                  )
+                : _Feed(txns: txns, walletNames: walletNames, meId: meId),
           ),
-          data: (txns) => txns.isEmpty
-              ? Text(
-                  'Belum ada transaksi.',
-                  style: TextStyle(fontSize: 13, color: context.sky.faint),
-                )
-              : _Feed(txns: txns, walletNames: walletNames, meId: meId),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  /// Pull-to-refresh: reload the merged feed (and the wallet names shown on
+  /// each row). Errors surface through the provider's error state, not here.
+  Future<void> _refresh(WidgetRef ref) async {
+    ref.invalidate(recentActivityProvider);
+    ref.invalidate(walletListProvider);
+    try {
+      await ref.read(recentActivityProvider.future);
+    } catch (_) {
+      // The feed renders its own error + retry.
+    }
   }
 }
 

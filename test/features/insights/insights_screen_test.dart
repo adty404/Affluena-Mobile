@@ -121,6 +121,50 @@ void main() {
     expect(state.actionMessage, 'Aturan notifikasi diperbarui.');
   });
 
+  test('retrying a failed export re-creates it with the same range', () async {
+    final repository = TestInsightsRepository();
+    const failedJob = ExportJob(
+      id: 'job-failed',
+      userId: 'user-1',
+      format: 'CSV',
+      fromAt: '2026-05-01T00:00:00Z',
+      toAt: '2026-05-31T23:59:59Z',
+      rowCount: 0,
+      status: ExportJobStatus.failed,
+      createdAt: '2026-06-01T08:00:00Z',
+    );
+    repository.exportJobs = const [failedJob];
+    final container = ProviderContainer(
+      retry: noProviderRetry,
+      overrides: [
+        insightsRepositoryProvider.overrideWithValue(repository),
+        csvShareServiceProvider.overrideWithValue(
+          const FakeCsvShareService(CsvShareOutcome.shared),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container.read(insightsControllerProvider);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+
+    // The backend records a fresh job the moment the export re-runs.
+    repository.exportJobs = const [seededExportJob, failedJob];
+    final outcome = await container
+        .read(insightsControllerProvider.notifier)
+        .retryExportJob(failedJob);
+
+    expect(outcome, CsvShareOutcome.shared);
+    // Re-submitted with the failed job's own date range.
+    expect(repository.exportRequests.single.from, failedJob.fromAt);
+    expect(repository.exportRequests.single.to, failedJob.toAt);
+    // The job list was refreshed so the new attempt shows up immediately.
+    final state = container.read(insightsControllerProvider);
+    expect(state.exportJobs.first.status, ExportJobStatus.completed);
+    expect(state.exportJobs, hasLength(2));
+  });
+
   test(
     'update rule keeps updated state when post-update refresh fails',
     () async {

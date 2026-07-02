@@ -775,9 +775,19 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
               FilledButton(
                 key: const Key('template-save-button'),
                 onPressed: canSave ? _save : null,
-                child: Text(
-                  state.isSaving ? 'Menyimpan...' : 'Simpan template',
-                ),
+                child: state.isSaving
+                    ? const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: AffluenaSpacing.space2),
+                          Text('Menyimpan...'),
+                        ],
+                      )
+                    : const Text('Simpan template'),
               ),
             ],
           ),
