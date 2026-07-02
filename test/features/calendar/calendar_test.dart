@@ -179,5 +179,56 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Pemasukan'), findsWidgets);
     });
+
+    testWidgets(
+      'summary header stacks on narrow widths so values are never cut off',
+      (tester) async {
+        final now = DateTime.now();
+        String at(int day) {
+          final m = now.month.toString().padLeft(2, '0');
+          final d = day.toString().padLeft(2, '0');
+          return '${now.year}-$m-${d}T04:00:00Z';
+        }
+
+        final repo = _FakeTransactionRepository([
+          _tx(
+            id: 't1',
+            type: TransactionType.income,
+            amountMinor: 999999999,
+            transactionAt: at(1),
+          ),
+          _tx(
+            id: 't2',
+            type: TransactionType.expense,
+            amountMinor: 888888888,
+            transactionAt: at(1),
+          ),
+        ]);
+
+        Widget app(double width) => ProviderScope(
+          overrides: [transactionRepositoryProvider.overrideWithValue(repo)],
+          child: MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(width: width, child: const CalendarView()),
+              ),
+            ),
+          ),
+        );
+
+        // Narrow: three full IDR values cannot fit side by side — the card
+        // stacks (no vertical dividers) and shows the FULL amounts.
+        await tester.pumpWidget(app(320));
+        await tester.pumpAndSettle();
+        expect(find.byType(VerticalDivider), findsNothing);
+        expect(find.text('Rp 999.999.999'), findsOneWidget);
+        expect(find.text('Rp 888.888.888'), findsOneWidget);
+
+        // Wide: the three-column layout returns (two divider gutters).
+        await tester.pumpWidget(app(700));
+        await tester.pumpAndSettle();
+        expect(find.byType(VerticalDivider), findsNWidgets(2));
+      },
+    );
   });
 }

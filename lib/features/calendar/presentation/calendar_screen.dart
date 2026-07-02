@@ -166,9 +166,38 @@ class _MonthSummaryCard extends StatelessWidget {
   final CalendarMonthData? data;
   final bool loading;
 
+  static const _labelStyle = TextStyle(
+    fontSize: 10.5,
+    fontWeight: FontWeight.w600,
+  );
+  static const _valueStyle = TextStyle(
+    fontSize: 13.5,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.2,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
   @override
   Widget build(BuildContext context) {
     final net = data?.netMinor ?? 0;
+    final entries = <({String label, String? value, Color color})>[
+      (
+        label: 'Pemasukan',
+        value: data == null ? null : MoneyFormatter.idr(data!.incomeMinor),
+        color: context.sky.income,
+      ),
+      (
+        label: 'Pengeluaran',
+        value: data == null ? null : MoneyFormatter.idr(data!.expenseMinor),
+        color: context.sky.danger,
+      ),
+      (
+        label: 'Selisih',
+        value: data == null ? null : MoneyFormatter.signedIdr(net),
+        color: context.sky.ink,
+      ),
+    ];
+
     return Container(
       decoration: BoxDecoration(
         color: context.sky.surface,
@@ -179,34 +208,95 @@ class _MonthSummaryCard extends StatelessWidget {
         horizontal: AffluenaSpacing.space4,
         vertical: AffluenaSpacing.space3,
       ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            _SummaryColumn(
-              label: 'Pemasukan',
-              value: data == null
-                  ? null
-                  : MoneyFormatter.idr(data!.incomeMinor),
-              color: context.sky.income,
-            ),
-            const _SummaryDivider(),
-            _SummaryColumn(
-              label: 'Pengeluaran',
-              value: data == null
-                  ? null
-                  : MoneyFormatter.idr(data!.expenseMinor),
-              color: context.sky.danger,
-            ),
-            const _SummaryDivider(),
-            _SummaryColumn(
-              label: 'Selisih',
-              value: data == null ? null : MoneyFormatter.signedIdr(net),
-              color: context.sky.ink,
-            ),
-          ],
-        ),
+      // Responsive: three columns while every FULL value fits; otherwise
+      // stack label:value rows so large amounts are never cut off.
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (_rowFits(context, entries, constraints.maxWidth)) {
+            return IntrinsicHeight(
+              child: Row(
+                children: [
+                  for (var i = 0; i < entries.length; i++) ...[
+                    if (i > 0) const _SummaryDivider(),
+                    _SummaryColumn(
+                      label: entries[i].label,
+                      value: entries[i].value,
+                      color: entries[i].color,
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }
+          return Column(
+            children: [
+              for (var i = 0; i < entries.length; i++) ...[
+                if (i > 0) const SizedBox(height: AffluenaSpacing.space2),
+                Row(
+                  children: [
+                    Text(
+                      entries[i].label,
+                      style: _labelStyle.copyWith(color: context.sky.muted),
+                    ),
+                    const SizedBox(width: AffluenaSpacing.space3),
+                    // Expanded + scale-down as a last-resort guard so this
+                    // branch can never overflow, whatever the font metrics.
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            entries[i].value ?? '—',
+                            maxLines: 1,
+                            style: _valueStyle.copyWith(
+                              fontSize: 14,
+                              color: entries[i].color,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
+  }
+
+  /// True when three columns of full (untruncated) values fit [maxWidth],
+  /// honoring the user's accessibility text scale.
+  bool _rowFits(
+    BuildContext context,
+    List<({String label, String? value, Color color})> entries,
+    double maxWidth,
+  ) {
+    if (!maxWidth.isFinite) return true;
+    final scaler = MediaQuery.textScalerOf(context);
+    double width(String text, TextStyle style) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        maxLines: 1,
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+      )..layout();
+      final w = painter.width;
+      painter.dispose();
+      return w;
+    }
+
+    var needed = 0.0;
+    for (final entry in entries) {
+      final labelWidth = width(entry.label, _labelStyle);
+      final valueWidth = width(entry.value ?? '—', _valueStyle);
+      needed += labelWidth > valueWidth ? labelWidth : valueWidth;
+    }
+    // Two divider gutters between the three columns.
+    needed += 2 * AffluenaSpacing.space6;
+    return needed <= maxWidth;
   }
 }
 
