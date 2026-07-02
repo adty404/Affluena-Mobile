@@ -67,7 +67,7 @@ The redesign surfaces read colours from **`SkyColors`** (`lib/app/theme/sky_pale
 
 - The app is **dark-mode aware** (follows the system / in-app theme controller); both palettes above ship. Dark mode is the *inverted* ink scheme — the accent flips to white.
 - `accent` is reserved for primary actions, the active nav tab, and the quick-add FAB. Anything rendered **on** an accent fill must use `onAccent` (it flips to near-black in dark mode) — hardcoded `Colors.white` on accent is a dark-mode bug.
-- Colour carries **meaning only**: `income`, `danger`, `AffluenaColors.amber` (warnings), and user-chosen content colours (wallet colours). Everything else is monochrome.
+- Colour carries **meaning only**: `income`, `danger`, `AffluenaColors.amber` (warnings), user-chosen content colours (wallet colours), and the **section hues** (`lib/app/theme/section_palette.dart`) — one identity hue per Beranda money domain (Dompet denim · Dibagikan magenta · Anggaran amber · Tabungan green · Cicilan indigo · Langganan violet · Berulang teal), applied as soft card tints + saturated icons; text on tinted cards stays ink. Everything else is monochrome.
 - No raw colors in redesign widgets — read from `context.sky`. For themed feature screens, extend `AffluenaColors`.
 
 ## 3. Typography
