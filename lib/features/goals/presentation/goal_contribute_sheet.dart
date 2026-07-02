@@ -114,6 +114,11 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
           initialValue: _amountMinor,
           enabled: !_isSaving,
           autofocus: true,
+          // Surface the blocker under the field as the user types instead of
+          // only after a failed save.
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          validator: (value) =>
+              (value ?? 0) > 0 ? null : 'Masukkan jumlah lebih dari nol.',
           onChanged: (value) => setState(() {
             _amountMinor = value;
             _error = null;
@@ -121,10 +126,11 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
         ),
         const SizedBox(height: AffluenaSpacing.space2),
         SelectorRow(
-          label: 'Dari dompet',
+          label: 'Dari dompet (Wajib)',
           value: selected == null
               ? 'Pilih dompet'
               : '${selected.name} · ${MoneyFormatter.idr(selected.balanceMinor)}',
+          isPlaceholder: selected == null,
           icon: Icons.account_balance_wallet_outlined,
           enabled: !_isSaving,
           onTap: () => _pickSource(context, sourceWallets),

@@ -56,6 +56,9 @@ class _SplitBillParticipantSheet extends StatefulWidget {
 class _SplitBillParticipantSheetState
     extends State<_SplitBillParticipantSheet> {
   late final TextEditingController _nameController;
+  // Focus target for the amount field so the name field's "next" action lands
+  // somewhere instead of stranding the keyboard focus.
+  final _amountFocus = FocusNode();
   int? _amountMinor;
   String? _disbursementCategoryId;
   String? _paymentCategoryId;
@@ -72,6 +75,7 @@ class _SplitBillParticipantSheetState
   @override
   void dispose() {
     _nameController.dispose();
+    _amountFocus.dispose();
     super.dispose();
   }
 
@@ -105,21 +109,33 @@ class _SplitBillParticipantSheetState
                     children: [
                       Text('Tambah peserta', style: textTheme.titleLarge),
                       const SizedBox(height: AffluenaSpacing.space4),
-                      TextField(
+                      TextFormField(
                         key: const Key('participant-name-field'),
                         controller: _nameController,
                         textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) => _amountFocus.requestFocus(),
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.person_outline),
-                          labelText: 'Nama',
+                          labelText: 'Nama (Wajib)',
                         ),
+                        // Surface the blocker under the field as the user
+                        // types instead of only after a failed save.
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        validator: (value) => (value ?? '').trim().isEmpty
+                            ? 'Nama peserta wajib diisi.'
+                            : null,
                         onChanged: (_) => setState(() => _error = null),
                       ),
                       const SizedBox(height: AffluenaSpacing.space3),
                       MoneyInput(
                         key: const Key('participant-amount-field'),
-                        label: 'Jumlah bagian',
+                        label: 'Jumlah bagian (Wajib)',
                         initialValue: _amountMinor,
+                        focusNode: _amountFocus,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        validator: (value) => (value ?? 0) > 0
+                            ? null
+                            : 'Masukkan jumlah lebih dari nol.',
                         onChanged: (value) => setState(() {
                           _amountMinor = value;
                           _error = null;
@@ -134,6 +150,7 @@ class _SplitBillParticipantSheetState
                         value: widget.state.expenseCategoryName(
                           _disbursementCategoryId,
                         ),
+                        isPlaceholder: _disbursementCategoryId == null,
                         icon: Icons.category_outlined,
                         enabled: widget.state.expenseCategories.isNotEmpty,
                         onTap: widget.state.expenseCategories.isEmpty
@@ -147,6 +164,7 @@ class _SplitBillParticipantSheetState
                         value: widget.state.incomeCategoryName(
                           _paymentCategoryId,
                         ),
+                        isPlaceholder: _paymentCategoryId == null,
                         icon: Icons.savings_outlined,
                         enabled: widget.state.incomeCategories.isNotEmpty,
                         onTap: widget.state.incomeCategories.isEmpty

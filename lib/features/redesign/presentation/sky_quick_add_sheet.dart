@@ -339,6 +339,7 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
                   child: _PickerChip(
                     icon: Icons.account_balance_wallet_outlined,
                     label: state.walletName(_walletId),
+                    isPlaceholder: _walletId == null,
                     onTap: state.isSaving ? null : () => _selectWallet(state),
                   ),
                 ),
@@ -347,6 +348,7 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
                   child: _PickerChip(
                     icon: Icons.category_outlined,
                     label: state.categoryName(_categoryId),
+                    isPlaceholder: _categoryId == null,
                     onTap: state.isSaving ? null : () => _selectCategory(state),
                   ),
                 ),
@@ -357,6 +359,14 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
               Text(
                 _error!,
                 style: TextStyle(fontSize: 12.5, color: context.sky.danger),
+              ),
+            ] else if (_validate() != null) ...[
+              // Surface why the save will fail BEFORE the tap — muted, not
+              // alarmed, so the sheet never feels broken on open.
+              const SizedBox(height: AffluenaSpacing.space3),
+              Text(
+                _validate()!,
+                style: TextStyle(fontSize: 12.5, color: context.sky.faint),
               ),
             ],
             const SizedBox(height: AffluenaSpacing.space4),
@@ -378,11 +388,20 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
 }
 
 class _PickerChip extends StatelessWidget {
-  const _PickerChip({required this.icon, required this.label, this.onTap});
+  const _PickerChip({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.isPlaceholder = false,
+  });
 
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+
+  /// Render [label] in the muted ink so an unselected placeholder ("Pilih
+  /// dompet") reads differently from a chosen wallet/category.
+  final bool isPlaceholder;
 
   @override
   Widget build(BuildContext context) {
@@ -414,7 +433,7 @@ class _PickerChip extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: context.sky.ink,
+                    color: isPlaceholder ? context.sky.muted : context.sky.ink,
                   ),
                 ),
               ),

@@ -557,6 +557,9 @@ class _TemplateFormSheet extends ConsumerStatefulWidget {
 class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _noteController;
+  // Focus target for the amount field so the name field's "next" action lands
+  // somewhere instead of stranding the keyboard focus.
+  final _amountFocus = FocusNode();
   late TransactionType _type;
   late int _amountMinor;
   String? _walletId;
@@ -587,6 +590,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
   void dispose() {
     _nameController.dispose();
     _noteController.dispose();
+    _amountFocus.dispose();
     super.dispose();
   }
 
@@ -628,6 +632,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         key: const Key('template-name-field'),
                         controller: _nameController,
                         textInputAction: TextInputAction.next,
+                        onSubmitted: (_) => _amountFocus.requestFocus(),
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.bolt_outlined),
                           labelText: 'Nama template',
@@ -640,6 +645,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         label: 'Jumlah',
                         initialValue: _amountMinor,
                         enabled: !state.isSaving,
+                        focusNode: _amountFocus,
                         onChanged: (value) =>
                             setState(() => _amountMinor = value ?? 0),
                       ),
@@ -681,6 +687,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         key: const Key('template-wallet-selector'),
                         label: 'Dompet',
                         value: selectedWallet?.name ?? 'Pilih dompet',
+                        isPlaceholder: selectedWallet == null,
                         icon: Icons.account_balance_wallet_outlined,
                         enabled: state.wallets.isNotEmpty && !state.isSaving,
                         onTap: state.wallets.isEmpty
@@ -694,6 +701,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                           label: 'Dompet tujuan',
                           value:
                               selectedToWallet?.name ?? 'Pilih dompet tujuan',
+                          isPlaceholder: selectedToWallet == null,
                           icon: Icons.swap_horiz,
                           enabled: state.wallets.length > 1 && !state.isSaving,
                           onTap: state.wallets.length <= 1
@@ -708,6 +716,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                           key: const Key('template-category-selector'),
                           label: 'Kategori',
                           value: selectedCategory?.name ?? 'Pilih kategori',
+                          isPlaceholder: selectedCategory == null,
                           icon: Icons.category_outlined,
                           enabled: categories.isNotEmpty && !state.isSaving,
                           onTap: categories.isEmpty

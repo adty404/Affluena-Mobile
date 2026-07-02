@@ -95,7 +95,9 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
               TextField(
                 key: const Key('category-name-field'),
                 controller: _nameController,
-                textInputAction: TextInputAction.next,
+                // The next control is a segmented button/picker that never
+                // receives keyboard focus, so "next" would strand the focus.
+                textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.category_outlined),
                   labelText: 'Nama kategori',

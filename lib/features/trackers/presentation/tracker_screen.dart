@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
@@ -723,6 +724,21 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
     super.dispose();
   }
 
+  /// Inline range feedback while typing; empty text stays quiet because the
+  /// save button already gates on completeness.
+  String? get _tenorError {
+    final text = _tenorController.text.trim();
+    if (text.isEmpty) return null;
+    return _intValue(text) >= 1 ? null : 'Tenor minimal 1 bulan.';
+  }
+
+  String? get _dueDayError {
+    final text = _dueDayController.text.trim();
+    if (text.isEmpty) return null;
+    final day = _intValue(text);
+    return (day >= 1 && day <= 31) ? null : 'Isi tanggal antara 1-31.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(trackerControllerProvider);
@@ -802,6 +818,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
               SelectorRow(
                 label: 'Dompet',
                 value: _wallet?.name ?? 'Pilih dompet',
+                isPlaceholder: _wallet == null,
                 icon: Icons.account_balance_wallet_outlined,
                 onTap: () => _selectWallet(widget.state.wallets),
               ),
@@ -809,6 +826,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
               SelectorRow(
                 label: 'Kategori pengeluaran',
                 value: _category?.name ?? 'Pilih kategori',
+                isPlaceholder: _category == null,
                 icon: Icons.category_outlined,
                 onTap: () => _selectCategory(widget.state.categories),
               ),
@@ -833,9 +851,11 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                 TextField(
                   controller: _tenorController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.timelapse_outlined),
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.timelapse_outlined),
                     labelText: 'Tenor (bulan)',
+                    errorText: _tenorError,
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -843,10 +863,12 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                 TextField(
                   controller: _dueDayController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.event_outlined),
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.event_outlined),
                     labelText: 'Tanggal jatuh tempo',
                     hintText: '1-31',
+                    errorText: _dueDayError,
                   ),
                   onChanged: (_) => setState(() {}),
                 ),

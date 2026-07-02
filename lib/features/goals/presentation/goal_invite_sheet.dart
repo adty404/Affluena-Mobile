@@ -63,7 +63,7 @@ class _GoalInviteSheetState extends ConsumerState<_GoalInviteSheet> {
                 style: textTheme.bodyMedium?.copyWith(color: colors.inkMuted),
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              TextField(
+              TextFormField(
                 key: const Key('goal-invite-email-field'),
                 controller: _emailController,
                 enabled: !_isSaving,
@@ -71,8 +71,14 @@ class _GoalInviteSheetState extends ConsumerState<_GoalInviteSheet> {
                 autocorrect: false,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.mail_outline),
-                  labelText: 'Email',
+                  labelText: 'Email (Wajib)',
                 ),
+                // Surface the blocker under the field as the user types
+                // instead of only after a failed save.
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (value) => _isValidEmail((value ?? '').trim())
+                    ? null
+                    : 'Masukkan alamat email yang valid.',
                 onChanged: (_) => _clearError(),
               ),
               if (_error != null) ...[

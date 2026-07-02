@@ -286,18 +286,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         Form(
           key: _formKey,
           autovalidateMode: _autovalidate,
-          child: TextFormField(
-            key: const Key('forgot-email-field'),
+          child: _SkyField(
+            fieldKey: const Key('forgot-email-field'),
             controller: _emailController,
+            label: 'Email',
+            icon: Icons.mail_outline,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.email],
             validator: AuthValidators.email,
-            onFieldSubmitted: (_) => _submit(authState),
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.mail_outline),
-            ),
+            onSubmitted: (_) => _submit(authState),
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space4),
@@ -392,55 +390,53 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                key: const Key('reset-code-field'),
+              _SkyField(
+                fieldKey: const Key('reset-code-field'),
                 controller: _codeController,
+                label: 'Kode atur ulang',
+                icon: Icons.confirmation_number_outlined,
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
                 enableSuggestions: false,
                 validator: AuthValidators.resetCode,
-                decoration: InputDecoration(
-                  labelText: 'Kode atur ulang',
-                  helperText: 'Kode dari email-mu.',
-                  prefixIcon: const Icon(Icons.confirmation_number_outlined),
-                  suffixIcon: IconButton(
-                    key: const Key('reset-code-paste-button'),
-                    tooltip: 'Tempel kode',
-                    icon: const Icon(Icons.content_paste_outlined),
-                    onPressed: _pasteCode,
+                helperText: 'Kode dari email-mu.',
+                suffixIcon: IconButton(
+                  key: const Key('reset-code-paste-button'),
+                  tooltip: 'Tempel kode',
+                  icon: Icon(
+                    Icons.content_paste_outlined,
+                    size: 18,
+                    color: context.sky.faint,
                   ),
+                  onPressed: _pasteCode,
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space3),
-              TextFormField(
-                key: const Key('reset-password-field'),
+              _SkyField(
+                fieldKey: const Key('reset-password-field'),
                 controller: _passwordController,
-                obscureText: true,
+                label: 'Kata sandi baru',
+                icon: Icons.lock_reset_outlined,
+                obscure: true,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.newPassword],
                 validator: AuthValidators.password,
-                decoration: const InputDecoration(
-                  labelText: 'Kata sandi baru',
-                  helperText: 'Minimal 8 karakter.',
-                  prefixIcon: Icon(Icons.lock_reset_outlined),
-                ),
+                helperText: 'Minimal 8 karakter.',
               ),
               const SizedBox(height: AffluenaSpacing.space3),
-              TextFormField(
-                key: const Key('reset-confirm-password-field'),
+              _SkyField(
+                fieldKey: const Key('reset-confirm-password-field'),
                 controller: _confirmController,
-                obscureText: true,
+                label: 'Konfirmasi kata sandi',
+                icon: Icons.lock_outline,
+                obscure: true,
                 textInputAction: TextInputAction.done,
                 autofillHints: const [AutofillHints.newPassword],
                 validator: (value) => AuthValidators.confirmPassword(
                   _passwordController.text,
                   value,
                 ),
-                onFieldSubmitted: (_) => _submit(authState),
-                decoration: const InputDecoration(
-                  labelText: 'Konfirmasi kata sandi',
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
+                onSubmitted: (_) => _submit(authState),
               ),
             ],
           ),
@@ -662,7 +658,10 @@ class _SkyField extends StatefulWidget {
     this.autofillHints,
     this.validator,
     this.obscure = false,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
     this.helperText,
+    this.suffixIcon,
     this.onSubmitted,
   });
 
@@ -675,7 +674,13 @@ class _SkyField extends StatefulWidget {
   final List<String>? autofillHints;
   final String? Function(String?)? validator;
   final bool obscure;
+  final bool autocorrect;
+  final bool enableSuggestions;
   final String? helperText;
+
+  /// Custom trailing action (e.g. a paste button). Ignored for [obscure]
+  /// fields, which reserve the slot for the visibility toggle.
+  final Widget? suffixIcon;
   final void Function(String)? onSubmitted;
 
   @override
@@ -716,6 +721,8 @@ class _SkyFieldState extends State<_SkyField> {
           autofillHints: widget.autofillHints,
           validator: widget.validator,
           obscureText: _obscured,
+          autocorrect: widget.autocorrect,
+          enableSuggestions: widget.enableSuggestions,
           onFieldSubmitted: widget.onSubmitted,
           decoration: InputDecoration(
             isDense: true,
@@ -738,7 +745,7 @@ class _SkyFieldState extends State<_SkyField> {
                     ),
                     onPressed: () => setState(() => _obscured = !_obscured),
                   )
-                : null,
+                : widget.suffixIcon,
             border: border(context.sky.line),
             enabledBorder: border(context.sky.line),
             focusedBorder: border(context.sky.accent, 1.6),

@@ -88,8 +88,9 @@ void main() {
     expect(find.text('8.000.000'), findsOneWidget);
 
     // The deadline is now a tappable DatePickerField backed by the native date
-    // picker instead of a hand-typed RFC3339 field.
-    await tester.tap(find.text('Tenggat'));
+    // picker instead of a hand-typed RFC3339 field. It carries a required
+    // marker because saving is blocked until it is picked.
+    await tester.tap(find.text('Tenggat (Wajib)'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();

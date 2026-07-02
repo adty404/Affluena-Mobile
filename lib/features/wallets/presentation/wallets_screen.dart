@@ -7,6 +7,7 @@ import '../../../core/formatters/money_formatter.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../application/wallets_controller.dart';
 import '../data/wallet_models.dart';
@@ -289,7 +290,9 @@ class _WalletFormSheet extends ConsumerStatefulWidget {
 
 class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
   late final TextEditingController _nameController;
-  late final TextEditingController _balanceController;
+  // Starting balance in minor units (whole rupiah), captured via MoneyInput so
+  // large IDR amounts are typed with thousand grouping. Create-only.
+  int _initialBalanceMinor = 0;
   late WalletType _type;
   // Chosen appearance. Null = use the default (theme color / per-type icon).
   // When editing, seeded from the wallet so an unrelated edit preserves them.
@@ -303,9 +306,6 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
     super.initState();
     final wallet = widget.wallet;
     _nameController = TextEditingController(text: wallet?.name ?? '');
-    _balanceController = TextEditingController(
-      text: wallet == null ? '' : wallet.balanceMinor.toString(),
-    );
     _type = wallet?.type == WalletType.goal
         ? WalletType.cash
         : wallet?.type ?? WalletType.cash;
@@ -316,7 +316,6 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
   @override
   void dispose() {
     _nameController.dispose();
-    _balanceController.dispose();
     super.dispose();
   }
 
@@ -345,7 +344,9 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Nama'),
-              textInputAction: TextInputAction.next,
+              // The next control is a dropdown that never receives keyboard
+              // focus, so "next" would strand the focus; close instead.
+              textInputAction: TextInputAction.done,
             ),
             const SizedBox(height: AffluenaSpacing.space3),
             DropdownButtonFormField<WalletType>(
@@ -372,10 +373,12 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
             _buildIconPicker(),
             if (!isEditing) ...[
               const SizedBox(height: AffluenaSpacing.space3),
-              TextField(
-                controller: _balanceController,
-                decoration: const InputDecoration(labelText: 'Saldo awal'),
-                keyboardType: TextInputType.number,
+              MoneyInput(
+                label: 'Saldo awal',
+                initialValue: _initialBalanceMinor,
+                enabled: !_isSaving,
+                onChanged: (value) =>
+                    setState(() => _initialBalanceMinor = value ?? 0),
               ),
             ],
             // When editing, the balance is never silently overwritten: the user
@@ -528,9 +531,7 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
       name: name,
       type: _type,
       currencyCode: widget.wallet?.currencyCode ?? 'IDR',
-      balanceMinor: widget.wallet == null
-          ? _parseAmount(_balanceController.text)
-          : null,
+      balanceMinor: widget.wallet == null ? _initialBalanceMinor : null,
       color: _color,
       icon: _icon,
       description: widget.wallet?.description,
@@ -601,12 +602,6 @@ String _walletDescription(Wallet wallet) {
 
 String _walletKey(Wallet wallet) {
   return wallet.name.toLowerCase().replaceAll(RegExp('[^a-z0-9]+'), '-');
-}
-
-int _parseAmount(String value) {
-  final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
-  if (digits.isEmpty) return 0;
-  return int.tryParse(digits) ?? 0;
 }
 
 const _editableWalletTypes = [

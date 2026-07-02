@@ -94,6 +94,7 @@ class _CategoryTagManagementScreenState
           TextField(
             key: const Key('category-tag-search-field'),
             autocorrect: false,
+            textInputAction: TextInputAction.search,
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
               labelText: 'Cari kategori',

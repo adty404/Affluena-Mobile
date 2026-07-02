@@ -575,6 +575,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 SelectorRow(
                   label: 'Dompet',
                   value: _wallet?.name ?? 'Pilih dompet',
+                  isPlaceholder: _wallet == null,
                   icon: Icons.account_balance_wallet_outlined,
                   onTap: () => _selectWallet(widget.state.wallets),
                 ),
@@ -584,6 +585,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                       ? 'Dicatat sebagai pinjaman'
                       : 'Dicatat sebagai pemberian',
                   value: _disbursementCategory?.name ?? 'Pilih kategori',
+                  isPlaceholder: _disbursementCategory == null,
                   icon: Icons.category_outlined,
                   onTap: () => _selectCategory(
                     title: 'Kategori awal',
@@ -599,6 +601,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                       ? 'Pengeluaran pembayaran'
                       : 'Pemasukan penagihan',
                   value: _paymentCategory?.name ?? 'Pilih kategori',
+                  isPlaceholder: _paymentCategory == null,
                   icon: Icons.payments_outlined,
                   onTap: () => _selectCategory(
                     title: 'Kategori pembayaran',
@@ -817,6 +820,9 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
                 label: 'Jumlah pembayaran',
                 initialValue: _amountMinor,
                 onChanged: (value) => setState(() => _amountMinor = value),
+                // Runs the validator while typing; without this the validator
+                // never fired (no enclosing Form calls validate()).
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 validator: (value) {
                   final entered = value ?? 0;
                   if (entered <= 0) return 'Masukkan jumlah.';

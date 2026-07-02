@@ -14,8 +14,10 @@ class MoneyInput extends StatefulWidget {
     required this.onChanged,
     this.initialValue,
     this.validator,
+    this.autovalidateMode,
     this.enabled = true,
     this.autofocus = false,
+    this.focusNode,
     this.hint,
     super.key,
   });
@@ -24,8 +26,14 @@ class MoneyInput extends StatefulWidget {
   final int? initialValue;
   final ValueChanged<int?> onChanged;
   final String? Function(int?)? validator;
+
+  /// When set (e.g. [AutovalidateMode.onUserInteraction]) the [validator] runs
+  /// as the user edits, surfacing the error under the field instead of only
+  /// when a surrounding form validates on save.
+  final AutovalidateMode? autovalidateMode;
   final bool enabled;
   final bool autofocus;
+  final FocusNode? focusNode;
   final String? hint;
 
   @override
@@ -65,7 +73,10 @@ class _MoneyInputState extends State<MoneyInput> {
       controller: _controller,
       enabled: widget.enabled,
       autofocus: widget.autofocus,
-      keyboardType: const TextInputType.numberWithOptions(decimal: false),
+      focusNode: widget.focusNode,
+      // Digits-only pad: amounts are whole rupiah, so the +/- and decimal keys
+      // exposed by numberWithOptions have no valid use here.
+      keyboardType: TextInputType.number,
       inputFormatters: [_formatter],
       decoration: InputDecoration(
         labelText: widget.label,
@@ -75,6 +86,7 @@ class _MoneyInputState extends State<MoneyInput> {
       validator: widget.validator == null
           ? null
           : (raw) => widget.validator!(_parse(raw ?? '')),
+      autovalidateMode: widget.autovalidateMode,
       onChanged: (raw) => widget.onChanged(_parse(raw)),
     );
   }

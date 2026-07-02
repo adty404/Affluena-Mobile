@@ -28,6 +28,7 @@ class _AccountSheet extends ConsumerStatefulWidget {
 class _AccountSheetState extends ConsumerState<_AccountSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _avatarController;
+  final _formKey = GlobalKey<FormState>();
   String? _error;
   bool _isSaving = false;
 
@@ -49,57 +50,83 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
   Widget build(BuildContext context) {
     return SettingsSheetFrame(
       title: 'Akun',
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            key: const Key('settings-name-field'),
-            controller: _nameController,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Nama',
-              prefixIcon: Icon(Icons.person_outline),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextFormField(
+              key: const Key('settings-name-field'),
+              controller: _nameController,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Nama',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              validator: (value) =>
+                  (value ?? '').trim().isEmpty ? 'Nama wajib diisi.' : null,
+              onChanged: (_) => _clearError(),
             ),
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          TextField(
-            key: const Key('settings-avatar-field'),
-            controller: _avatarController,
-            keyboardType: TextInputType.url,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              labelText: 'URL avatar',
-              prefixIcon: Icon(Icons.image_outlined),
-            ),
-          ),
-          if (_error != null) ...[
             const SizedBox(height: AffluenaSpacing.space3),
-            AffluenaBanner.error(_error!),
+            TextFormField(
+              key: const Key('settings-avatar-field'),
+              controller: _avatarController,
+              keyboardType: TextInputType.url,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'URL avatar',
+                prefixIcon: Icon(Icons.image_outlined),
+              ),
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              validator: _validateAvatarUrl,
+              onChanged: (_) => _clearError(),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: AffluenaSpacing.space3),
+              AffluenaBanner.error(_error!),
+            ],
+            const SizedBox(height: AffluenaSpacing.space4),
+            FilledButton.icon(
+              key: const Key('settings-account-save-button'),
+              onPressed: _isSaving ? null : _save,
+              icon: _isSaving
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.done_outline),
+              label: Text(_isSaving ? 'Menyimpan...' : 'Simpan akun'),
+            ),
           ],
-          const SizedBox(height: AffluenaSpacing.space4),
-          FilledButton.icon(
-            key: const Key('settings-account-save-button'),
-            onPressed: _isSaving ? null : _save,
-            icon: _isSaving
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.done_outline),
-            label: Text(_isSaving ? 'Menyimpan...' : 'Simpan akun'),
-          ),
-        ],
+        ),
       ),
     );
   }
 
+  /// Clears a lingering save-error banner once the user starts correcting the
+  /// input (same pattern as the wallet invite sheet).
+  void _clearError() {
+    if (_error == null) return;
+    setState(() => _error = null);
+  }
+
+  /// Empty is fine (no avatar); anything else must be an absolute http(s) URL
+  /// or it would silently render broken images later.
+  String? _validateAvatarUrl(String? value) {
+    final text = (value ?? '').trim();
+    if (text.isEmpty) return null;
+    final uri = Uri.tryParse(text);
+    final isValid =
+        uri != null &&
+        uri.isAbsolute &&
+        (uri.scheme == 'http' || uri.scheme == 'https');
+    return isValid ? null : 'Masukkan URL yang valid.';
+  }
+
   Future<void> _save() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      setState(() => _error = 'Nama wajib diisi.');
-      return;
-    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() {
       _error = null;
       _isSaving = true;
@@ -108,7 +135,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
         .read(settingsProfileProvider.notifier)
         .updateAccount(
           UpdateAccountRequest(
-            name: name,
+            name: _nameController.text.trim(),
             avatarUrl: _avatarController.text.trim(),
           ),
         );

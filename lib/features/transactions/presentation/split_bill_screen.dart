@@ -215,25 +215,8 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
     String walletId,
     String categoryId,
   ) async {
-    final confirmed = await showModalBottomSheet<bool>(
-      context: context,
-      showDragHandle: true,
-      useSafeArea: true,
-      builder: (context) => _SplitConfirmSheet(
-        totalAmount: _totalAmountMinor ?? 0,
-        participantTotal: _participantTotal,
-        participantCount: _participants.length,
-      ),
-    );
-    if (!mounted || confirmed != true) return;
-    await _submit(state, walletId, categoryId);
-  }
-
-  Future<void> _submit(
-    SplitBillState state,
-    String walletId,
-    String categoryId,
-  ) async {
+    // Validate completeness BEFORE opening the confirmation sheet so users
+    // never confirm a form that will immediately fail afterwards.
     final totalAmount = _totalAmountMinor ?? 0;
     final splitError = _splitValidationError(totalAmount, _participantTotal);
     if (splitError != null ||
@@ -249,6 +232,26 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
       return;
     }
 
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (context) => _SplitConfirmSheet(
+        totalAmount: totalAmount,
+        participantTotal: _participantTotal,
+        participantCount: _participants.length,
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+    await _submit(state, walletId, categoryId);
+  }
+
+  Future<void> _submit(
+    SplitBillState state,
+    String walletId,
+    String categoryId,
+  ) async {
+    final totalAmount = _totalAmountMinor ?? 0;
     final request = SplitTransactionRequest(
       walletId: walletId,
       categoryId: categoryId,

@@ -119,6 +119,13 @@ class PartnerController extends Notifier<PartnerState> {
     return null;
   }
 
+  /// Clears a lingering action error once the user starts correcting the
+  /// input, so a stale banner never sits next to a fresh email.
+  void clearActionError() {
+    if (state.actionError == null) return;
+    state = state.copyWith(actionError: null);
+  }
+
   Future<bool> respond(String id, String status) => _mutate(
     () => ref
         .read(partnerRepositoryProvider)

@@ -62,6 +62,7 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
                 value,
                 message: 'Masukkan kata sandimu saat ini.',
               ),
+              onChanged: (_) => _clearError(),
               decoration: const InputDecoration(
                 labelText: 'Kata sandi saat ini',
                 prefixIcon: Icon(Icons.lock_outline),
@@ -75,6 +76,7 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
               autofillHints: const [AutofillHints.newPassword],
               textInputAction: TextInputAction.next,
               validator: AuthValidators.password,
+              onChanged: (_) => _clearError(),
               decoration: const InputDecoration(
                 labelText: 'Kata sandi baru',
                 helperText: 'Minimal 8 karakter.',
@@ -90,6 +92,7 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
               textInputAction: TextInputAction.done,
               validator: (value) =>
                   AuthValidators.confirmPassword(_newController.text, value),
+              onChanged: (_) => _clearError(),
               onFieldSubmitted: (_) => _save(),
               decoration: const InputDecoration(
                 labelText: 'Konfirmasi kata sandi baru',
@@ -116,6 +119,13 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
         ),
       ),
     );
+  }
+
+  /// Clears a lingering API-error banner once the user starts correcting the
+  /// input (same pattern as the wallet invite sheet).
+  void _clearError() {
+    if (_errorMessage == null) return;
+    setState(() => _errorMessage = null);
   }
 
   Future<void> _save() async {
