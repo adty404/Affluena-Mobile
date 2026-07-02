@@ -9,6 +9,7 @@ abstract final class AffluenaDateFormatter {
   static final DateFormat _dateTime = DateFormat('d MMM yyyy · HH:mm', 'id_ID');
   static final DateFormat _monthKey = DateFormat('yyyy-MM');
   static final DateFormat _monthLabel = DateFormat('MMM yyyy', 'id_ID');
+  static final DateFormat _monthLabelFull = DateFormat('MMMM yyyy', 'id_ID');
   static final DateFormat _time = DateFormat('HH:mm');
   static final DateFormat _dayHeader = DateFormat('EEE, d MMM yyyy', 'id_ID');
 
@@ -51,5 +52,10 @@ abstract final class AffluenaDateFormatter {
   /// Human-readable month, e.g. "Jun 2026".
   static String monthLabel(DateTime date) {
     return _monthLabel.format(date);
+  }
+
+  /// Full human-readable month, e.g. "Juni 2026".
+  static String monthLabelFull(DateTime date) {
+    return _monthLabelFull.format(date);
   }
 }

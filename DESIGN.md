@@ -18,7 +18,7 @@ Affluena Mobile feels like a calm personal finance companion for daily use: ligh
 
 ### Information architecture
 
-The authenticated shell (`RedesignShell`, route `/beranda`) is an **icon-only floating pill** bottom-nav with three tabs — **Beranda** · **Aktivitas** (cross-wallet feed) · **Wawasan** (insights) — plus a center quick-add **FAB** and a **"Lainnya"** item that opens **Pengaturan** (Settings), the hub for the remaining feature screens.
+The authenticated shell (`RedesignShell`, route `/beranda`) is an **icon-only floating pill** bottom-nav with four tabs — **Beranda** · **Aktivitas** (cross-wallet feed) · **Kalender** (monthly money calendar: per-day masuk/keluar/selisih, swipe between months, tap a day for its transactions) · **Wawasan** (insights) — plus a center quick-add **FAB** and a **"Lainnya"** item that opens **Pengaturan** (Settings), the hub for the remaining feature screens.
 
 #### Beranda — sectioned dashboard
 

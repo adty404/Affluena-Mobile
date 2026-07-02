@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
+import '../../calendar/presentation/calendar_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import 'activity_feed_screen.dart';
 import 'beranda_dashboard_screen.dart';
@@ -30,6 +31,7 @@ class _RedesignShellState extends State<RedesignShell> {
   static const _tabs = <Widget>[
     BerandaDashboardView(),
     ActivityFeedView(),
+    CalendarView(),
     SkyInsightsView(),
   ];
 
@@ -133,10 +135,16 @@ class _SkyBottomNav extends StatelessWidget {
                     onTap: () => onSelect(1),
                   ),
                   _NavItem(
-                    key: const ValueKey('nav-wawasan'),
-                    icon: Icons.insights_outlined,
+                    key: const ValueKey('nav-kalender'),
+                    icon: Icons.calendar_month_outlined,
                     active: currentIndex == 2,
                     onTap: () => onSelect(2),
+                  ),
+                  _NavItem(
+                    key: const ValueKey('nav-wawasan'),
+                    icon: Icons.insights_outlined,
+                    active: currentIndex == 3,
+                    onTap: () => onSelect(3),
                   ),
                   _NavItem(
                     key: const ValueKey('nav-lainnya'),
