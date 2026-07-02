@@ -507,6 +507,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
     final state = ref.watch(debtControllerProvider);
     final canSave =
         _counterpartyController.text.trim().isNotEmpty &&
@@ -619,6 +620,20 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                   onChanged: (value) => setState(() => _amountMinor = value),
                 ),
               ] else ...[
+                // The wallet stays part of the debt but is fixed at creation:
+                // show it read-only instead of hiding the field entirely so
+                // the form doesn't look like the wallet vanished.
+                SelectorRow(
+                  label: 'Dompet',
+                  value: widget.state.walletName(widget.debt!.walletId),
+                  icon: Icons.account_balance_wallet_outlined,
+                  enabled: false,
+                ),
+                Text(
+                  'Dompet ditetapkan saat utang dibuat dan tidak bisa diubah.',
+                  style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
+                ),
+                const SizedBox(height: AffluenaSpacing.space3),
                 DropdownButtonFormField<DebtStatus>(
                   initialValue: _status,
                   decoration: const InputDecoration(

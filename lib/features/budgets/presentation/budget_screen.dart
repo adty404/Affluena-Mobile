@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/presentation/category_tag_management_screen.dart';
@@ -159,7 +160,7 @@ class _MonthControl extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              month,
+              _monthLabel,
               textAlign: TextAlign.center,
               style: textTheme.titleMedium,
             ),
@@ -173,8 +174,25 @@ class _MonthControl extends StatelessWidget {
     );
   }
 
+  /// [month] is the controller's 'YYYY-MM' API key, but parse defensively —
+  /// API DATE fields arrive as full RFC3339 timestamps elsewhere (see
+  /// budget_detail_screen.dart) — and degrade to the raw text instead of
+  /// throwing.
+  DateTime? get _monthDate {
+    final key = month.length >= 7 ? month.substring(0, 7) : month;
+    return DateTime.tryParse('$key-01');
+  }
+
+  /// Human-readable month for the control, e.g. "Jun 2026" instead of the
+  /// raw "2026-06" API key.
+  String get _monthLabel {
+    final date = _monthDate;
+    return date == null ? month : AffluenaDateFormatter.monthLabel(date);
+  }
+
   String _shiftMonth(int delta) {
-    final date = DateTime.parse('$month-01');
+    final date = _monthDate;
+    if (date == null) return month;
     final shifted = DateTime(date.year, date.month + delta);
     return '${shifted.year.toString().padLeft(4, '0')}-${shifted.month.toString().padLeft(2, '0')}';
   }

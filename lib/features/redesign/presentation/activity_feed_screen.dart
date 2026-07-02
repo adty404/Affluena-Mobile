@@ -8,8 +8,10 @@ import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/widgets/empty_state.dart';
 import '../../shared/presentation/widgets/error_state.dart';
+import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
+import '../../transactions/presentation/transaction_detail_sheet.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
 
@@ -51,6 +53,18 @@ class ActivityFeedView extends ConsumerWidget {
         ref.watch(walletListProvider).asData?.value ?? const <Wallet>[];
     final walletNames = {for (final w in wallets) w.id: w.name};
     final meId = ref.watch(authControllerProvider).user?.id;
+    // Row taps open the shared transaction detail sheet — the same surface
+    // TransactionsScreen uses. It needs the transactions controller's lookup
+    // maps (wallet/category names) and powers the sheet's edit/delete flows.
+    final txState = ref.watch(transactionsControllerProvider);
+    // The controller reloads its own list after an edit/delete from the
+    // sheet; mirror that into this feed so mutated rows don't linger stale.
+    ref.listen(transactionsControllerProvider, (previous, next) {
+      if (previous != null &&
+          !identical(previous.transactions, next.transactions)) {
+        ref.invalidate(recentActivityProvider);
+      }
+    });
 
     return RefreshIndicator(
       onRefresh: () => _refresh(ref),
@@ -89,7 +103,13 @@ class ActivityFeedView extends ConsumerWidget {
                     subtitle:
                         'Catat transaksi pertamamu lewat tombol + di bawah.',
                   )
-                : _Feed(txns: txns, walletNames: walletNames, meId: meId),
+                : _Feed(
+                    txns: txns,
+                    walletNames: walletNames,
+                    meId: meId,
+                    onOpen: (tx) =>
+                        showTransactionDetail(context, ref, txState, tx),
+                  ),
           ),
         ],
       ),
@@ -114,11 +134,13 @@ class _Feed extends StatelessWidget {
     required this.txns,
     required this.walletNames,
     required this.meId,
+    required this.onOpen,
   });
 
   final List<Transaction> txns;
   final Map<String, String> walletNames;
   final String? meId;
+  final ValueChanged<Transaction> onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +172,7 @@ class _Feed extends StatelessWidget {
           tx: tx,
           walletName: walletNames[tx.walletId] ?? 'Dompet',
           mine: meId != null && tx.userId == meId,
+          onTap: () => onOpen(tx),
         ),
       );
     }
@@ -165,11 +188,13 @@ class _ActivityRow extends StatelessWidget {
     required this.tx,
     required this.walletName,
     required this.mine,
+    required this.onTap,
   });
 
   final Transaction tx;
   final String walletName;
   final bool mine;
+  final VoidCallback onTap;
 
   static String _typeLabel(TransactionType type) => switch (type) {
     TransactionType.income => 'Pemasukan',
@@ -192,72 +217,89 @@ class _ActivityRow extends StatelessWidget {
         ? 'K'
         : (title.isNotEmpty ? title[0].toUpperCase() : '?');
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AffluenaSpacing.space3,
-        vertical: 11,
-      ),
-      decoration: BoxDecoration(
+    // Material + InkWell (the _DashCard pattern) so the tap ripples on the
+    // card surface. The 30px avatar plus 2×11px vertical padding keeps the
+    // touch target at ≥52px, clear of the 48px minimum.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
+      child: Material(
         color: context.sky.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.sky.line),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            alignment: Alignment.center,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AffluenaSpacing.space3,
+              vertical: 11,
+            ),
             decoration: BoxDecoration(
-              color: mine ? context.sky.accent : context.sky.avatarSecondary,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.sky.line),
             ),
-            child: Text(
-              initial,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: mine ? context.sky.onAccent : Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: AffluenaSpacing.space3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: context.sky.ink,
+                Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: mine
+                        ? context.sky.accent
+                        : context.sky.avatarSecondary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    initial,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: mine ? context.sky.onAccent : Colors.white,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(width: AffluenaSpacing.space3),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: context.sky.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        meta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.sky.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AffluenaSpacing.space2),
                 Text(
-                  meta,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: context.sky.muted),
+                  amount,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: isIncome ? context.sky.income : context.sky.ink,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AffluenaSpacing.space2),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: isIncome ? context.sky.income : context.sky.ink,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -534,11 +534,12 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 ],
                 selected: {_type},
                 onSelectionChanged: (values) {
-                  setState(() {
-                    _type = values.first;
-                    if (_type == RecurringType.transfer) _category = null;
-                    if (_type != RecurringType.transfer) _toWallet = null;
-                  });
+                  // Keep the category/destination selections in state when the
+                  // type changes: _save already omits the irrelevant one per
+                  // type (transfer sends toWalletId, the rest send categoryId),
+                  // so switching to Transfer and back must not silently
+                  // discard a chosen category.
+                  setState(() => _type = values.first);
                 },
               ),
               const SizedBox(height: AffluenaSpacing.space3),

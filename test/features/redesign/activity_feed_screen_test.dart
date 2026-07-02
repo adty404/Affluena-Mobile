@@ -1,6 +1,7 @@
 import 'package:affluena_mobile/features/auth/application/auth_controller.dart';
 import 'package:affluena_mobile/features/auth/data/auth_models.dart';
 import 'package:affluena_mobile/features/redesign/presentation/activity_feed_screen.dart';
+import 'package:affluena_mobile/features/transactions/application/transactions_controller.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/wallets/application/wallets_controller.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
@@ -61,12 +62,23 @@ class _AuthedController extends AuthController {
   AuthState build() => AuthState.authenticated(_me);
 }
 
+// The feed watches the transactions controller for the shared detail sheet;
+// stub it (no microtask load) so the test stays hermetic.
+class _StubTransactionsController extends TransactionsController {
+  @override
+  TransactionsState build() =>
+      const TransactionsState(walletNames: {'w1': 'GoPay'});
+}
+
 Future<void> _pump(WidgetTester tester) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         authControllerProvider.overrideWith(_AuthedController.new),
         walletListProvider.overrideWith((ref) async => const [_gopay]),
+        transactionsControllerProvider.overrideWith(
+          _StubTransactionsController.new,
+        ),
         recentActivityProvider.overrideWith(
           (ref) async => const [_byMe, _bySarah],
         ),
@@ -98,5 +110,19 @@ void main() {
     expect(find.textContaining('kamu'), findsOneWidget);
     // Wallet name shows in the row metadata.
     expect(find.textContaining('GoPay'), findsWidgets);
+  });
+
+  testWidgets('tapping a row opens the shared transaction detail sheet', (
+    tester,
+  ) async {
+    await _pump(tester);
+
+    await tester.tap(find.text('Top-up'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Detail transaksi'), findsOneWidget);
+    // My own transaction exposes the creator actions inside the sheet.
+    expect(find.text('Ubah transaksi'), findsOneWidget);
+    expect(find.text('Hapus transaksi'), findsOneWidget);
   });
 }
