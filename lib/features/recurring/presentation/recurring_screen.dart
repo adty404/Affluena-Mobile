@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
@@ -449,6 +450,14 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
     super.dispose();
   }
 
+  /// Inline range feedback while typing; empty text stays quiet because the
+  /// save button already gates on completeness.
+  String? get _intervalError {
+    final text = _intervalController.text.trim();
+    if (text.isEmpty) return null;
+    return _intValue(text) >= 1 ? null : 'Interval minimal 1.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(recurringControllerProvider);
@@ -546,6 +555,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
               SelectorRow(
                 label: 'Dompet',
                 value: _wallet?.name ?? 'Pilih dompet',
+                isPlaceholder: _wallet == null,
                 icon: Icons.account_balance_wallet_outlined,
                 onTap: () => _selectWallet(isDestination: false),
               ),
@@ -554,6 +564,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 SelectorRow(
                   label: 'Dompet tujuan',
                   value: _toWallet?.name ?? 'Pilih tujuan',
+                  isPlaceholder: _toWallet == null,
                   icon: Icons.swap_horiz,
                   onTap: () => _selectWallet(isDestination: true),
                 ),
@@ -562,6 +573,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 SelectorRow(
                   label: 'Kategori',
                   value: _category?.name ?? 'Pilih kategori',
+                  isPlaceholder: _category == null,
                   icon: Icons.category_outlined,
                   onTap: _selectCategory,
                 ),
@@ -598,16 +610,18 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
               TextField(
                 controller: _intervalController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.timelapse_outlined),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.timelapse_outlined),
                   labelText: 'Jumlah interval',
+                  errorText: _intervalError,
                 ),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
                 key: const Key('recurring-next-run-field'),
-                label: 'Tanggal jalan berikutnya',
+                label: 'Tanggal jalan berikutnya (Wajib)',
                 value: _nextRunAt,
                 icon: Icons.event_outlined,
                 placeholder: 'Pilih tanggal',

@@ -84,6 +84,9 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
               busy: state.isSaving,
               error: state.actionError,
               onSubmit: _invite,
+              onChanged: () => ref
+                  .read(partnerControllerProvider.notifier)
+                  .clearActionError(),
             )
           else
             const _LimitNote(),
@@ -190,12 +193,17 @@ class _InviteCard extends StatelessWidget {
     required this.busy,
     required this.error,
     required this.onSubmit,
+    required this.onChanged,
   });
 
   final TextEditingController controller;
   final bool busy;
   final String? error;
   final VoidCallback onSubmit;
+
+  /// Fired on every keystroke so the screen can clear a stale invite error
+  /// while the user corrects the email (wallet-invite-sheet pattern).
+  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +225,7 @@ class _InviteCard extends StatelessWidget {
             controller: controller,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
+            onChanged: (_) => onChanged(),
             onSubmitted: (_) => onSubmit(),
             decoration: InputDecoration(
               isDense: true,

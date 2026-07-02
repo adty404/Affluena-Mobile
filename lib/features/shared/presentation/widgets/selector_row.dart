@@ -9,6 +9,7 @@ class SelectorRow extends StatelessWidget {
     required this.icon,
     this.onTap,
     this.enabled = true,
+    this.isPlaceholder = false,
     super.key,
   });
 
@@ -17,6 +18,11 @@ class SelectorRow extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
   final bool enabled;
+
+  /// Render [value] in the muted ink so an unselected placeholder (e.g.
+  /// "Pilih dompet") reads differently from a chosen value, mirroring
+  /// [DatePickerField]'s placeholder treatment.
+  final bool isPlaceholder;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +75,9 @@ class SelectorRow extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: textTheme.bodyLarge?.copyWith(
-                            color: enabled ? colors.ink : colors.inkMuted,
+                            color: enabled && !isPlaceholder
+                                ? colors.ink
+                                : colors.inkMuted,
                           ),
                         ),
                       ],

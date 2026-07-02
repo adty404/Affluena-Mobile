@@ -75,7 +75,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              TextField(
+              TextFormField(
                 key: const Key('goal-name-field'),
                 controller: _nameController,
                 enabled: !_isSaving,
@@ -84,6 +84,12 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                   prefixIcon: Icon(Icons.label_outline),
                   labelText: 'Nama',
                 ),
+                // Surface the blocker under the field as the user types
+                // instead of only after a failed save.
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (value) => (value ?? '').trim().isEmpty
+                    ? 'Beri nama untuk target ini.'
+                    : null,
                 onChanged: (_) => _clearError(),
               ),
               const SizedBox(height: AffluenaSpacing.space3),
@@ -92,6 +98,10 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                 label: 'Jumlah target',
                 initialValue: _targetMinor,
                 enabled: !_isSaving,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (value) => (value ?? 0) > 0
+                    ? null
+                    : 'Tetapkan jumlah target lebih dari nol.',
                 onChanged: (value) => setState(() {
                   _targetMinor = value;
                   _error = null;
@@ -99,7 +109,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
-                label: 'Tenggat',
+                label: 'Tenggat (Wajib)',
                 value: _deadline,
                 enabled: !_isSaving,
                 firstDate: DateTime.now(),

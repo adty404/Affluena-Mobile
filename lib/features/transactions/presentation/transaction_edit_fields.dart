@@ -104,6 +104,7 @@ class _TransactionEditFields extends StatelessWidget {
         TextField(
           key: const Key('transaction-edit-note-field'),
           controller: noteController,
+          enabled: !isSaving,
           decoration: const InputDecoration(labelText: 'Catatan'),
           textInputAction: TextInputAction.done,
           onChanged: (_) => onTextChanged(),
