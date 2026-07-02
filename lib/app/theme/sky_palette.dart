@@ -1,41 +1,52 @@
 import 'package:flutter/material.dart';
 
-/// Sky & Denim — the app's palette.
+/// Tinta — the app's monochrome ink palette.
 ///
-/// The redesign surfaces reference these tokens directly; the themed feature
-/// screens reach the same colours through [AffluenaColors] /
-/// [AffluenaSemanticColors], whose light tokens now resolve to this palette
-/// (dark mode uses a cool Sky-flavoured variant). The old warm-paper palette
-/// has been fully retired.
+/// The UI chrome is black-and-white: neutral greys, near-black ink, and an
+/// accent that IS the ink (white in dark mode). Colour is reserved for
+/// meaning — [income], [danger], and the amber warning in `AffluenaColors` —
+/// plus user-chosen content colours (e.g. wallet colours). The redesign
+/// surfaces reference these tokens directly; the themed feature screens reach
+/// the same colours through [AffluenaColors] / [AffluenaSemanticColors],
+/// whose light tokens resolve to this palette. The previous Sky & Denim
+/// (denim-blue) palette has been retired; token names are kept.
 abstract final class SkyPalette {
-  static const ground = Color(0xFFEEF3F8);
+  static const ground = Color(0xFFF7F7F5);
   static const surface = Color(0xFFFFFFFF);
-  static const sheet = Color(0xFFF4F8FC);
-  static const line = Color(0xFFE0E8F0);
-  static const ink = Color(0xFF1E2A38);
-  static const muted = Color(0xFF6B7B8C);
-  static const faint = Color(0xFF9FB0C0);
-  static const accent = Color(0xFF3E72B8);
-  static const accentSoft = Color(0xFFE6EFF8);
-  static const accentSoftBorder = Color(0xFFD3E2F1);
-  static const accentInk = Color(0xFF2F5C97);
+  static const sheet = Color(0xFFF1F1EF);
+  static const line = Color(0xFFE5E5E3);
+  static const ink = Color(0xFF17181A);
+  static const muted = Color(0xFF6E7073);
+  static const faint = Color(0xFFA4A5A8);
+  static const accent = Color(0xFF17181A);
+  static const accentSoft = Color(0xFFECECEA);
+  static const accentSoftBorder = Color(0xFFDCDCDA);
+  static const accentInk = Color(0xFF17181A);
 
-  /// Member avatars (owner / partner). Initials render in white.
-  static const avatarPrimary = Color(0xFF3E72B8);
-  static const avatarSecondary = Color(0xFF5E6E80);
+  /// Foreground for content sitting ON an [accent] fill (FAB icon, selected
+  /// chip label). White here; the dark set flips it to near-black because the
+  /// dark accent is white. Never hardcode `Colors.white` on an accent fill.
+  static const onAccent = Color(0xFFFFFFFF);
 
-  /// Semantic colours, kept separate from [accent] so status stays legible.
+  /// Member avatars (owner / partner). Initials render in white, so both
+  /// tones stay dark enough for white text in either mode.
+  static const avatarPrimary = Color(0xFF17181A);
+  static const avatarSecondary = Color(0xFF77797D);
+
+  /// Semantic colours — the only colour in the UI chrome, kept separate from
+  /// [accent] so money and status stay scannable in a monochrome interface.
   static const income = Color(0xFF2E8B57);
   static const danger = Color(0xFFC2553F);
 }
 
-/// Brightness-resolved Sky & Denim colours. [SkyPalette] holds the light
-/// constants; this resolves the right value for the active theme so the
-/// redesign surfaces respect dark mode. Read it via `context.sky`.
+/// Brightness-resolved Tinta colours. [SkyPalette] holds the light constants;
+/// this resolves the right value for the active theme so the redesign
+/// surfaces respect dark mode. Read it via `context.sky`.
 ///
-/// The light set is identical to [SkyPalette]; the dark set is a cool,
-/// Sky-flavoured dark that matches the dark `AffluenaColors` used by the
-/// themed feature screens, so the whole app stays consistent in either mode.
+/// The light set is identical to [SkyPalette]; the dark set is the inverted
+/// ink scheme (near-black grounds, white ink/accent) that matches the dark
+/// `AffluenaColors` used by the themed feature screens, so the whole app
+/// stays consistent in either mode.
 @immutable
 class SkyColors {
   const SkyColors({
@@ -50,6 +61,7 @@ class SkyColors {
     required this.accentSoft,
     required this.accentSoftBorder,
     required this.accentInk,
+    required this.onAccent,
     required this.avatarPrimary,
     required this.avatarSecondary,
     required this.income,
@@ -67,6 +79,7 @@ class SkyColors {
   final Color accentSoft;
   final Color accentSoftBorder;
   final Color accentInk;
+  final Color onAccent;
   final Color avatarPrimary;
   final Color avatarSecondary;
   final Color income;
@@ -84,6 +97,7 @@ class SkyColors {
     accentSoft: SkyPalette.accentSoft,
     accentSoftBorder: SkyPalette.accentSoftBorder,
     accentInk: SkyPalette.accentInk,
+    onAccent: SkyPalette.onAccent,
     avatarPrimary: SkyPalette.avatarPrimary,
     avatarSecondary: SkyPalette.avatarSecondary,
     income: SkyPalette.income,
@@ -91,19 +105,20 @@ class SkyColors {
   );
 
   static const dark = SkyColors(
-    ground: Color(0xFF0F1822),
-    surface: Color(0xFF16212E),
-    sheet: Color(0xFF1C2A39),
-    line: Color(0xFF2A3A48),
-    ink: Color(0xFFE8EEF4),
-    muted: Color(0xFF9FB0C0),
-    faint: Color(0xFF6E7E8E),
-    accent: Color(0xFF6BA0D8),
-    accentSoft: Color(0xFF1E3147),
-    accentSoftBorder: Color(0xFF34527A),
-    accentInk: Color(0xFFA9C8E8),
-    avatarPrimary: Color(0xFF4E82C8),
-    avatarSecondary: Color(0xFF7E8EA0),
+    ground: Color(0xFF0C0D0F),
+    surface: Color(0xFF17181B),
+    sheet: Color(0xFF1D1E22),
+    line: Color(0xFF2A2B2F),
+    ink: Color(0xFFF2F2F1),
+    muted: Color(0xFF9B9DA1),
+    faint: Color(0xFF6E7074),
+    accent: Color(0xFFF2F2F1),
+    accentSoft: Color(0xFF232428),
+    accentSoftBorder: Color(0xFF3A3B40),
+    accentInk: Color(0xFFF2F2F1),
+    onAccent: Color(0xFF0C0D0F),
+    avatarPrimary: Color(0xFF4A4C51),
+    avatarSecondary: Color(0xFF33353A),
     income: Color(0xFF6BC089),
     danger: Color(0xFFE08070),
   );
@@ -114,6 +129,6 @@ class SkyColors {
 }
 
 extension SkyColorsContext on BuildContext {
-  /// The Sky & Denim colours for the active theme brightness.
+  /// The Tinta colours for the active theme brightness.
   SkyColors get sky => SkyColors.of(this);
 }

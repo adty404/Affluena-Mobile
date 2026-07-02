@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'sky_palette.dart';
 
-/// The app-wide semantic palette. As of the redesign, these resolve to the
-/// "Sky & Denim" language ([SkyPalette]) so every themed feature screen matches
-/// the redesign surfaces — the old warm-paper palette is fully retired. The
-/// token names are kept (e.g. `forest` now holds the denim accent) so the wide
-/// surface of existing `context.affluenaColors.*` call sites is untouched.
+/// The app-wide semantic palette. These resolve to the monochrome "Tinta"
+/// language ([SkyPalette]) so every themed feature screen matches the redesign
+/// surfaces. The token names are kept (e.g. `forest` now holds the ink accent)
+/// so the wide surface of existing `context.affluenaColors.*` call sites is
+/// untouched. Colour survives only in the semantic tokens: [amber] (warning),
+/// [coral] (danger/expense), and [success] (income).
 abstract final class AffluenaColors {
-  // Light — Sky & Denim.
+  // Light — Tinta (monochrome ink).
   static const surfaceCanvas = SkyPalette.ground;
   static const surfaceSoft = SkyPalette.surface;
   static const surfaceElevated = SkyPalette.surface;
@@ -22,16 +23,16 @@ abstract final class AffluenaColors {
   static const coral = SkyPalette.danger;
   static const success = SkyPalette.income;
 
-  // Dark — a cool, Sky-flavoured dark (replaces the old warm dark).
-  static const darkCanvas = Color(0xFF0F1822);
-  static const darkSurface = Color(0xFF16212E);
-  static const darkSurfaceElevated = Color(0xFF1C2A39);
-  static const darkSurfaceTintSoft = Color(0xFF22323F);
-  static const darkInk = Color(0xFFE8EEF4);
-  static const darkMuted = Color(0xFF9FB0C0);
-  static const darkBorderSubtle = Color(0xFF2A3A48);
-  static const darkForest = Color(0xFF6BA0D8);
-  static const darkForestSoft = Color(0xFF1E3147);
+  // Dark — the inverted ink scheme (white accent on near-black grounds).
+  static const darkCanvas = Color(0xFF0C0D0F);
+  static const darkSurface = Color(0xFF17181B);
+  static const darkSurfaceElevated = Color(0xFF1D1E22);
+  static const darkSurfaceTintSoft = Color(0xFF232428);
+  static const darkInk = Color(0xFFF2F2F1);
+  static const darkMuted = Color(0xFF9B9DA1);
+  static const darkBorderSubtle = Color(0xFF2A2B2F);
+  static const darkForest = Color(0xFFF2F2F1);
+  static const darkForestSoft = Color(0xFF232428);
   static const darkAmber = Color(0xFFE0B05E);
   static const darkCoral = Color(0xFFE08070);
   static const darkSuccess = Color(0xFF6BC089);
@@ -197,6 +198,9 @@ abstract final class AffluenaTheme {
       colorScheme:
           ColorScheme.fromSeed(
             seedColor: colors.forest,
+            // Keep every derived M3 slot greyscale — the near-black seed
+            // would otherwise leak chroma into containers/tints.
+            dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
             brightness: Brightness.light,
             surface: colors.surfaceSoft,
           ).copyWith(
@@ -217,6 +221,7 @@ abstract final class AffluenaTheme {
       colorScheme:
           ColorScheme.fromSeed(
             seedColor: colors.forest,
+            dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
             brightness: Brightness.dark,
             surface: colors.surfaceSoft,
           ).copyWith(

@@ -149,7 +149,7 @@ class _RoomDetailContent extends ConsumerWidget {
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: context.sky.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: context.sky.onAccent,
                 minimumSize: const Size.fromHeight(46),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -374,7 +374,7 @@ class _MemberRow extends StatelessWidget {
           initial: initial,
           size: 30,
           color: initial == 'A'
-              ? context.sky.accent
+              ? context.sky.avatarPrimary
               : context.sky.avatarSecondary,
         ),
         const SizedBox(width: AffluenaSpacing.space3),

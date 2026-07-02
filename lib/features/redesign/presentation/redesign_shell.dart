@@ -57,7 +57,7 @@ class _RedesignShellState extends State<RedesignShell> {
         ),
         child: FloatingActionButton(
           backgroundColor: context.sky.accent,
-          foregroundColor: Colors.white,
+          foregroundColor: context.sky.onAccent,
           elevation: 0,
           onPressed: () => showSkyQuickAddSheet(context),
           child: const Icon(Icons.add),
@@ -110,7 +110,7 @@ class _SkyBottomNav extends StatelessWidget {
                 border: Border.all(color: context.sky.line),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x291E2A38), // #1E2A38 @ 16%
+                    color: Color(0x29000000), // black @ 16%
                     blurRadius: 18,
                     offset: Offset(0, 6),
                   ),

@@ -49,8 +49,13 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   recurring, quick_entry, dashboard, insights, settings, onboarding, **partner** (the "Berbagi
   Dompet" sharing feature), **redesign** (the Beranda dashboard + bottom-nav shell), shared.
 
-## Design system — "Sky & Denim" (see DESIGN.md + design/affluena-design-guide.html)
+## Design system — "Tinta" monochrome (see DESIGN.md + design/affluena-design-guide.html)
 
+- The palette is **monochrome ink**: accent = ink (near-black, flips to WHITE in dark mode);
+  colour only for meaning (income green, danger coral, amber warning, user wallet colours).
+  Anything rendered ON an accent fill must use `context.sky.onAccent` — hardcoding
+  `Colors.white` there is a dark-mode bug. (The design-guide HTML mockups still show the
+  retired denim-blue colours; §2 of DESIGN.md is the colour source of truth.)
 - **Two token accessors, same theme** (`lib/app/theme/`): the older `context.affluenaColors.*`
   (forest/ink/inkMuted/coral/…) used by list/form screens, and the newer `context.sky.*`
   (accent/ink/muted/surface/line/…) used by detail screens. Both are real; match the surrounding file.

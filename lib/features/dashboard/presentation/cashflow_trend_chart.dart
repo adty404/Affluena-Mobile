@@ -20,7 +20,7 @@ class CashflowTrendChart extends StatelessWidget {
       child: CustomPaint(
         painter: _CashflowTrendPainter(
           points: points,
-          income: colors.forest,
+          income: colors.success,
           expense: colors.coral,
           axis: colors.borderSubtle,
           label: colors.inkMuted,

@@ -35,7 +35,7 @@ class RoomsHomeScreen extends StatelessWidget {
       backgroundColor: context.sky.ground,
       floatingActionButton: FloatingActionButton(
         backgroundColor: context.sky.accent,
-        foregroundColor: Colors.white,
+        foregroundColor: context.sky.onAccent,
         onPressed: () => showSkyQuickAddSheet(context),
         child: const Icon(Icons.add),
       ),
