@@ -271,7 +271,7 @@ class _HeroArt extends StatelessWidget {
                   border: Border.all(color: context.sky.line),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x231E2A38),
+                      color: Color(0x23000000),
                       blurRadius: 22,
                       offset: Offset(0, 10),
                     ),

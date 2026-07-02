@@ -5,15 +5,16 @@
 > self-contained file (open it in any browser). This `DESIGN.md` is the *written*
 > spec; the HTML is the *visual* reference. Keep the two in sync.
 >
-> **Build status:** the app now matches the guide — shipped: the Sky & Denim
-> palette, dark mode, the icon-only floating pill nav, the bundled **Inter** type,
+> **Build status:** the app now matches the guide — shipped: the monochrome
+> **Tinta** palette (which replaced Sky & Denim; the guide's mockup colours
+> predate it), dark mode, the icon-only floating pill nav, the bundled **Inter** type,
 > the **6-section Beranda dashboard** (§1), the per-item **detail screens** (§8,
 > opened from the dashboard cards), and the **quick-add "Catat cepat" sheet with
 > a `PAKAI TEMPLATE` one-tap row** (§1).
 
 ## 1. Atmosphere & Identity
 
-Affluena Mobile feels like a calm personal finance companion for daily use: light, tactile, trustworthy, and quick to operate. The visual language is **"Sky & Denim"** — cool blue-grey surfaces with a calm denim-blue accent, clear money hierarchy, and touch-friendly rows that make recording small daily transactions feel low-friction. (The earlier warm-paper / forest "Editorial Light" direction is fully retired.)
+Affluena Mobile feels like a calm personal finance companion for daily use: light, tactile, trustworthy, and quick to operate. The visual language is **"Tinta"** — a monochrome ink interface: neutral off-white/near-black surfaces, an accent that *is* the ink (white in dark mode), and heavy "tegas" type. Colour is reserved for **meaning only**: income green, danger coral, amber warnings, and user-chosen content colours (e.g. wallet colours) — which makes the little colour there is highly scannable. (Both earlier directions — warm-paper "Editorial Light" and denim-blue "Sky & Denim" — are fully retired.)
 
 ### Information architecture
 
@@ -40,31 +41,34 @@ Logging is a fast bottom-sheet: a **template row inside the sheet** (one-tap pre
 
 ## 2. Color
 
-The redesign surfaces read colours from **`SkyColors`** (`lib/app/theme/sky_palette.dart`) via the `context.sky` extension, which resolves **light and dark** by the active brightness. The themed feature screens use the `AffluenaColors` / `AffluenaSemanticColors` theme extension (`lib/app/theme/affluena_theme.dart`), kept aligned to the same Sky & Denim values (its `forest` token now carries the denim accent).
+The redesign surfaces read colours from **`SkyColors`** (`lib/app/theme/sky_palette.dart`) via the `context.sky` extension, which resolves **light and dark** by the active brightness. The themed feature screens use the `AffluenaColors` / `AffluenaSemanticColors` theme extension (`lib/app/theme/affluena_theme.dart`), kept aligned to the same Tinta values (its `forest` token now carries the ink accent). Class/token names keep their historical `Sky*` prefixes.
 
-### Sky & Denim palette (`SkyColors`)
+### Tinta palette (`SkyColors`)
 
 | Role | Token | Light | Dark | Usage |
 |------|-------|-------|------|-------|
-| Ground | `ground` | `#EEF3F8` | `#0F1822` | App background |
-| Surface | `surface` | `#FFFFFF` | `#16212E` | Cards, the floating nav pill |
-| Sheet | `sheet` | `#F4F8FC` | `#1C2A39` | Bottom sheets, tinted tiles |
-| Line | `line` | `#E0E8F0` | `#2A3A48` | Borders, dividers |
-| Ink | `ink` | `#1E2A38` | `#E8EEF4` | Headlines, body, money values |
-| Muted | `muted` | `#6B7B8C` | `#9FB0C0` | Secondary text |
-| Faint | `faint` | `#9FB0C0` | `#6E7E8E` | Tertiary text, inactive icons |
-| Accent (denim) | `accent` | `#3E72B8` | `#6BA0D8` | Primary actions, active nav, FAB |
-| Accent soft | `accentSoft` | `#E6EFF8` | `#1E3147` | Selected surfaces, active-nav circle |
-| Accent soft border | `accentSoftBorder` | `#D3E2F1` | `#34527A` | Pill / badge borders |
-| Accent ink | `accentInk` | `#2F5C97` | `#A9C8E8` | Text on accent-soft pills |
+| Ground | `ground` | `#F7F7F5` | `#0C0D0F` | App background |
+| Surface | `surface` | `#FFFFFF` | `#17181B` | Cards, the floating nav pill |
+| Sheet | `sheet` | `#F1F1EF` | `#1D1E22` | Bottom sheets, tinted tiles |
+| Line | `line` | `#E5E5E3` | `#2A2B2F` | Borders, dividers |
+| Ink | `ink` | `#17181A` | `#F2F2F1` | Headlines, body, money values |
+| Muted | `muted` | `#6E7073` | `#9B9DA1` | Secondary text |
+| Faint | `faint` | `#A4A5A8` | `#6E7074` | Tertiary text, inactive icons |
+| Accent (ink) | `accent` | `#17181A` | `#F2F2F1` | Primary actions, active nav, FAB — same as `ink`, white in dark |
+| On accent | `onAccent` | `#FFFFFF` | `#0C0D0F` | Icon/label ON an accent fill (never hardcode white) |
+| Accent soft | `accentSoft` | `#ECECEA` | `#232428` | Selected surfaces, active-nav circle |
+| Accent soft border | `accentSoftBorder` | `#DCDCDA` | `#3A3B40` | Pill / badge borders |
+| Accent ink | `accentInk` | `#17181A` | `#F2F2F1` | Text on accent-soft pills |
+| Avatar primary / secondary | `avatarPrimary` / `avatarSecondary` | `#17181A` / `#77797D` | `#4A4C51` / `#33353A` | Member avatars (white initials in both modes) |
 | Income / success | `income` | `#2E8B57` | `#6BC089` | Positive cashflow |
 | Danger | `danger` | `#C2553F` | `#E08070` | Destructive actions, errors |
 
 ### Rules
 
-- The app is **dark-mode aware** (follows the system / in-app theme controller); both palettes above ship.
-- Denim `accent` is reserved for primary actions, the active nav tab, and the quick-add FAB.
-- No raw colors in redesign widgets — read from `context.sky`. For themed feature screens, extend `AffluenaColors`. (`AffluenaColors` also keeps `amber` for budget/due warnings on feature screens.)
+- The app is **dark-mode aware** (follows the system / in-app theme controller); both palettes above ship. Dark mode is the *inverted* ink scheme — the accent flips to white.
+- `accent` is reserved for primary actions, the active nav tab, and the quick-add FAB. Anything rendered **on** an accent fill must use `onAccent` (it flips to near-black in dark mode) — hardcoded `Colors.white` on accent is a dark-mode bug.
+- Colour carries **meaning only**: `income`, `danger`, `AffluenaColors.amber` (warnings), and user-chosen content colours (wallet colours). Everything else is monochrome.
+- No raw colors in redesign widgets — read from `context.sky`. For themed feature screens, extend `AffluenaColors`.
 
 ## 3. Typography
 
@@ -277,8 +281,10 @@ The UI should feel tactile, not glossy. Avoid glassmorphism, neon effects, and h
 
 The full set of mockups lives in
 [`design/affluena-design-guide.html`](design/affluena-design-guide.html) — 21
-screens across 7 flows, all in the Sky & Denim language (light + a dark sample).
-Open it in any browser; it is self-contained, no build step.
+screens across 7 flows. Open it in any browser; it is self-contained, no build
+step. **Colour caveat:** the mockups still render in the retired Sky & Denim
+(denim-blue) colours — for layout, spacing, type, and flows they remain the
+source of truth, but for colour the Tinta table in §2 wins.
 
 1. **Onboarding & Auth** — onboarding (shared-wallet hero), Masuk (login), Daftar (register).
 2. **Beranda** — the 6-section dashboard (Dompet → Anggaran → Tabungan → Cicilan → Langganan → Berulang).

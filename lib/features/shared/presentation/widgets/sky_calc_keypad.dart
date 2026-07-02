@@ -218,15 +218,15 @@ class _ConfirmCell extends StatelessWidget {
       filled: true,
       onTap: onTap,
       child: isSaving
-          ? const SizedBox(
+          ? SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation(Colors.white),
+                valueColor: AlwaysStoppedAnimation(context.sky.onAccent),
               ),
             )
-          : const Icon(Icons.check, size: 22, color: Colors.white),
+          : Icon(Icons.check, size: 22, color: context.sky.onAccent),
     );
   }
 }

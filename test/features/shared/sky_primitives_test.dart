@@ -16,11 +16,13 @@ Future<void> _pump(WidgetTester tester, Widget child) {
 }
 
 void main() {
-  test('Sky & Denim tokens are locked', () {
-    expect(SkyPalette.accent, const Color(0xFF3E72B8));
-    expect(SkyPalette.ground, const Color(0xFFEEF3F8));
-    expect(SkyPalette.ink, const Color(0xFF1E2A38));
+  test('Tinta tokens are locked', () {
+    expect(SkyPalette.accent, const Color(0xFF17181A));
+    expect(SkyPalette.accent, SkyPalette.ink);
+    expect(SkyPalette.ground, const Color(0xFFF7F7F5));
     expect(SkyPalette.income, const Color(0xFF2E8B57));
+    expect(SkyColors.dark.accent, SkyColors.dark.ink);
+    expect(SkyColors.dark.onAccent, SkyColors.dark.ground);
   });
 
   testWidgets('SkyAvatar renders its initial', (tester) async {

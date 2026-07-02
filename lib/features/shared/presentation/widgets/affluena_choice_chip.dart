@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/affluena_theme.dart';
+import '../../../../app/theme/sky_palette.dart';
 
 /// The app's standard single-select pill chip (the look used by the Transaksi
 /// type filters): a stadium pill that fills with the brand accent when
@@ -46,7 +47,7 @@ class AffluenaChoiceChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : colors.inkMuted,
+                color: selected ? context.sky.onAccent : colors.inkMuted,
               ),
             ),
           ),

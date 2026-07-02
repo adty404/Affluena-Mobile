@@ -194,10 +194,10 @@ class _ActivityRow extends StatelessWidget {
             ),
             child: Text(
               initial,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: mine ? context.sky.onAccent : Colors.white,
               ),
             ),
           ),

@@ -10,14 +10,18 @@ the source of truth); money is handled as **integer minor units** (IDR).
 - Riverpod (state) · go_router (navigation) · Dio (HTTP) · flutter_secure_storage (tokens)
 - **Shorebird** code-push for over-the-air updates (see [`SHOREBIRD.md`](SHOREBIRD.md))
 
-## Design — "Sky & Denim"
+## Design — "Tinta"
 
-The app uses the **Sky & Denim** visual language: a calm cool-grey/denim-blue
-palette. The old warm-paper / forest "Editorial Light" direction is **fully
-retired**.
+The app uses the **Tinta** visual language: a monochrome ink UI (neutral
+greys, near-black accent that flips to white in dark mode) where colour is
+reserved for meaning — income green, danger coral, amber warnings, and
+user-chosen wallet colours. The earlier warm-paper "Editorial Light" and
+denim-blue "Sky & Denim" directions are **fully retired** (class/token names
+keep their `Sky*` prefixes).
 
 - Palette tokens: `lib/app/theme/sky_palette.dart` — `SkyColors` resolves
   **light + dark** by brightness; read via `context.sky` (e.g. `context.sky.accent`).
+  Content ON an accent fill must use `context.sky.onAccent`, never `Colors.white`.
   The legacy theme + spacing/radii/typography tokens live in `lib/app/theme/affluena_theme.dart`.
 - **Dark mode aware** (follows the system / the in-app theme controller).
 - **Visual guide:** [`design/affluena-design-guide.html`](design/affluena-design-guide.html)
