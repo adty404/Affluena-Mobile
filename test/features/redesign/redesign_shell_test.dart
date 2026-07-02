@@ -10,6 +10,7 @@ import 'package:affluena_mobile/features/recurring/application/recurring_control
 import 'package:affluena_mobile/features/redesign/presentation/activity_feed_screen.dart';
 import 'package:affluena_mobile/features/redesign/presentation/redesign_shell.dart';
 import 'package:affluena_mobile/features/trackers/application/tracker_controller.dart';
+import 'package:affluena_mobile/features/transactions/application/transactions_controller.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/wallets/application/wallets_controller.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
@@ -121,6 +122,13 @@ class _StubPartnerController extends PartnerController {
   PartnerState build() => const PartnerState();
 }
 
+// The Activity tab watches the transactions controller for its detail sheet;
+// stub it (no microtask load) so the shell test stays hermetic.
+class _StubTransactionsController extends TransactionsController {
+  @override
+  TransactionsState build() => const TransactionsState();
+}
+
 class _AuthedController extends AuthController {
   @override
   AuthState build() => AuthState.authenticated(_me);
@@ -139,6 +147,9 @@ Future<void> _pump(WidgetTester tester) async {
         trackerControllerProvider.overrideWith(_StubTrackerController.new),
         recurringControllerProvider.overrideWith(_StubRecurringController.new),
         partnerControllerProvider.overrideWith(_StubPartnerController.new),
+        transactionsControllerProvider.overrideWith(
+          _StubTransactionsController.new,
+        ),
         recentActivityProvider.overrideWith((ref) async => const [_txn]),
         dashboardCashflowTrendProvider.overrideWith((ref) async => _trend),
         dashboardExpenseDistributionProvider.overrideWith(

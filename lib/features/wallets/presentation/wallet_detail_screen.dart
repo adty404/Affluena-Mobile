@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -178,8 +179,10 @@ class _WalletDetailContent extends ConsumerWidget {
   }
 }
 
-/// Banner that lets a member accept or decline their own pending invitation to
-/// this wallet directly from the detail header.
+/// Banner that lets the invitee accept or decline their own pending invitation
+/// to this wallet directly from the detail header. Anyone else (e.g. the owner
+/// looking at a wallet with an unanswered invite) sees a neutral "waiting for
+/// their answer" line instead of buttons they cannot use.
 class _PendingInviteCard extends ConsumerWidget {
   const _PendingInviteCard({required this.wallet});
 
@@ -193,7 +196,11 @@ class _PendingInviteCard extends ConsumerWidget {
     final controller = ref.read(
       walletMembersControllerProvider(wallet.id).notifier,
     );
-    final self = _selfMember(wallet);
+    // Only the invitee themself may answer: match the signed-in user against
+    // the pending membership instead of guessing from the members list.
+    final meId = ref.watch(authControllerProvider).user?.id;
+    final self = _selfMember(wallet, meId);
+    final pendingOther = self == null ? _firstPendingMember(wallet) : null;
     final isBusy = self != null && action.isPending(self.userId);
 
     return AffluenaCard(
@@ -211,7 +218,9 @@ class _PendingInviteCard extends ConsumerWidget {
               const SizedBox(width: AffluenaSpacing.space3),
               Expanded(
                 child: Text(
-                  'Kamu punya undangan yang menunggu untuk dompet bersama ini.',
+                  self != null
+                      ? 'Kamu punya undangan yang menunggu untuk dompet bersama ini.'
+                      : 'Dompet ini punya undangan berbagi yang belum dijawab.',
                   style: textTheme.bodyMedium?.copyWith(color: colors.ink),
                 ),
               ),
@@ -224,7 +233,9 @@ class _PendingInviteCard extends ConsumerWidget {
           const SizedBox(height: AffluenaSpacing.space4),
           if (self == null)
             Text(
-              'Undangan ini bisa dijawab dari perangkat tujuan undangan.',
+              pendingOther != null
+                  ? 'Undangan untuk ${pendingOther.email} menunggu jawaban mereka.'
+                  : 'Undangan ini bisa dijawab dari perangkat tujuan undangan.',
               style: textTheme.bodySmall,
             )
           else
@@ -260,13 +271,20 @@ class _PendingInviteCard extends ConsumerWidget {
     );
   }
 
-  WalletMember? _selfMember(Wallet wallet) {
+  /// The signed-in user's own pending membership, or null when the pending
+  /// invite belongs to someone else (e.g. the owner viewing a wallet whose
+  /// invitee hasn't answered) or when the auth user isn't resolved yet.
+  WalletMember? _selfMember(Wallet wallet, String? meId) {
+    if (meId == null) return null;
     for (final member in wallet.members) {
-      if (member.userId == wallet.userId &&
-          member.status == WalletShareStatus.pending) {
+      if (member.userId == meId && member.status == WalletShareStatus.pending) {
         return member;
       }
     }
+    return null;
+  }
+
+  WalletMember? _firstPendingMember(Wallet wallet) {
     for (final member in wallet.members) {
       if (member.status == WalletShareStatus.pending) return member;
     }

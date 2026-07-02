@@ -175,20 +175,28 @@ class _PaymentTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Newest payment at the top — the latest activity is what users scan for.
+    final ordered = [...payments]
+      ..sort((a, b) => _paidAtValue(b).compareTo(_paidAtValue(a)));
+
     return AffluenaCard(
       child: Column(
         children: [
-          for (final (index, payment) in payments.indexed)
+          for (final (index, payment) in ordered.indexed)
             _TimelineEntry(
               payment: payment,
               accent: accent,
               isFirst: index == 0,
-              isLast: index == payments.length - 1,
+              isLast: index == ordered.length - 1,
             ),
         ],
       ),
     );
   }
+
+  static DateTime _paidAtValue(DebtPayment payment) =>
+      DateTime.tryParse(payment.paidAt) ??
+      DateTime.fromMillisecondsSinceEpoch(0);
 }
 
 class _TimelineEntry extends StatelessWidget {

@@ -5,6 +5,7 @@ import 'package:affluena_mobile/features/categories/data/category_repository.dar
 import 'package:affluena_mobile/features/debts/application/debt_controller.dart';
 import 'package:affluena_mobile/features/debts/data/debt_models.dart';
 import 'package:affluena_mobile/features/debts/data/debt_repository.dart';
+import 'package:affluena_mobile/features/debts/presentation/debt_detail_screen.dart';
 import 'package:affluena_mobile/features/debts/presentation/debt_screen.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
@@ -109,6 +110,29 @@ void main() {
     );
   });
 
+  testWidgets('edit sheet shows the linked wallet read-only', (tester) async {
+    await tester.pumpWidget(debtTestApp());
+    await tester.pumpDebtState();
+
+    await tester.scrollUntilVisible(
+      find.text('Alya'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ubah'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ubah utang'), findsOneWidget);
+    // The wallet stays visible (read-only) instead of vanishing in edit mode.
+    expect(find.text('Main Wallet'), findsOneWidget);
+    expect(
+      find.text('Dompet ditetapkan saat utang dibuat dan tidak bisa diubah.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('records a debt payment', (tester) async {
     final repository = TestDebtRepository();
 
@@ -133,6 +157,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.paymentRequests.single.amountMinor, 250000);
+  });
+
+  testWidgets('debt detail timeline lists the newest payment first', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        retry: noProviderRetry,
+        overrides: [
+          debtRepositoryProvider.overrideWithValue(
+            TestDebtRepository(debts: const [paidDebt]),
+          ),
+        ],
+        child: const MaterialApp(home: DebtDetailScreen(debtId: 'debt-paid')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Rp 250.000'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    // The June 20 payment (Rp 250.000) renders above the June 10 payment
+    // (Rp 100.000) even though the repository returns them oldest-first.
+    final newestY = tester.getTopLeft(find.text('Rp 250.000')).dy;
+    final oldestY = tester.getTopLeft(find.text('Rp 100.000')).dy;
+    expect(newestY, lessThan(oldestY));
   });
 }
 
@@ -410,6 +463,50 @@ const foodCategory = Category(
   type: CategoryType.expense,
   createdAt: '2026-06-01T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
+);
+
+/// A debt whose payments arrive OLDEST-first — the detail timeline must
+/// reorder them newest-first.
+const paidDebt = Debt(
+  id: 'debt-paid',
+  userId: 'user-1',
+  type: DebtType.payable,
+  counterpartyName: 'Alya',
+  walletId: 'wallet-main',
+  disbursementCategoryId: 'category-salary',
+  paymentCategoryId: 'category-food',
+  originationTransactionId: 'transaction-origin',
+  principalAmountMinor: 1500000,
+  paidAmountMinor: 350000,
+  remainingAmountMinor: 1150000,
+  openedAt: '2026-06-01T00:00:00Z',
+  dueDate: '2026-06-30',
+  status: DebtStatus.partial,
+  note: '',
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-20T00:00:00Z',
+  payments: [
+    DebtPayment(
+      id: 'payment-old',
+      userId: 'user-1',
+      debtId: 'debt-paid',
+      transactionId: 'transaction-pay-1',
+      amountMinor: 100000,
+      paidAt: '2026-06-10T00:00:00Z',
+      note: '',
+      createdAt: '2026-06-10T00:00:00Z',
+    ),
+    DebtPayment(
+      id: 'payment-new',
+      userId: 'user-1',
+      debtId: 'debt-paid',
+      transactionId: 'transaction-pay-2',
+      amountMinor: 250000,
+      paidAt: '2026-06-20T00:00:00Z',
+      note: '',
+      createdAt: '2026-06-20T00:00:00Z',
+    ),
+  ],
 );
 
 const seedDebt = Debt(

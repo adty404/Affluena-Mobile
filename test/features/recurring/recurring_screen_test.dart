@@ -122,6 +122,38 @@ void main() {
     expect(repository.createdRequests.single.name, 'Gym');
     expect(repository.createdRequests.single.categoryId, 'category-rent');
   });
+
+  testWidgets('keeps the chosen category when toggling type through transfer', (
+    tester,
+  ) async {
+    final repository = TestRecurringRepository(rules: const []);
+
+    await tester.pumpWidget(recurringTestApp(repository));
+    await tester.pumpRecurringState();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Pilih kategori'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rent'));
+    await tester.pumpAndSettle();
+    expect(find.text('Rent'), findsOneWidget);
+
+    // Switching to Transfer swaps the category selector for the destination
+    // wallet selector...
+    await tester.tap(find.text('Transfer'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pilih tujuan'), findsOneWidget);
+    expect(find.text('Rent'), findsNothing);
+
+    // ...and switching back must restore the previously chosen category
+    // instead of silently discarding it.
+    await tester.tap(find.text('Pengeluaran'));
+    await tester.pumpAndSettle();
+    expect(find.text('Rent'), findsOneWidget);
+    expect(find.text('Pilih kategori'), findsNothing);
+  });
 }
 
 extension on WidgetTester {

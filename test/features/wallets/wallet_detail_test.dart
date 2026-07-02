@@ -1,5 +1,8 @@
 import 'package:affluena_mobile/app/provider_retry.dart';
 import 'package:affluena_mobile/app/theme/affluena_theme.dart';
+import 'package:affluena_mobile/features/auth/application/auth_controller.dart';
+import 'package:affluena_mobile/features/auth/data/auth_models.dart';
+import 'package:affluena_mobile/features/shared/presentation/widgets/affluena_card.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:affluena_mobile/features/wallets/presentation/wallet_detail_screen.dart';
@@ -133,6 +136,71 @@ void main() {
     expect(repository.getAttempts, greaterThanOrEqualTo(2));
   });
 
+  testWidgets('pending invite offers accept/reject to the invitee', (
+    tester,
+  ) async {
+    final repository = TestWalletRepository(wallets: [invitedWallet]);
+
+    await tester.pumpWidget(
+      walletRouteTestApp(
+        repository,
+        WalletDetailScreen.location(invitedWalletId),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Kamu punya undangan yang menunggu untuk dompet bersama ini.'),
+      findsOneWidget,
+    );
+    expect(find.text('Terima'), findsWidgets);
+    expect(find.text('Tolak'), findsWidgets);
+  });
+
+  testWidgets(
+    'pending invite for someone else names the invitee without buttons',
+    (tester) async {
+      final repository = TestWalletRepository(wallets: [ownerPendingWallet]);
+
+      await tester.pumpWidget(
+        walletRouteTestApp(
+          repository,
+          WalletDetailScreen.location(ownerPendingWalletId),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Dompet ini punya undangan berbagi yang belum dijawab.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Undangan untuk partner@affluena.test menunggu jawaban mereka.',
+        ),
+        findsOneWidget,
+      );
+      // The invite card itself carries no accept/reject actions for a user who
+      // is not the invitee (the members section below still shows its own).
+      final card = find
+          .ancestor(
+            of: find.text(
+              'Dompet ini punya undangan berbagi yang belum dijawab.',
+            ),
+            matching: find.byType(AffluenaCard),
+          )
+          .first;
+      expect(
+        find.descendant(of: card, matching: find.text('Terima')),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('Tolak')),
+        findsNothing,
+      );
+    },
+  );
+
   testWidgets('delete confirmation removes wallet and returns to list', (
     tester,
   ) async {
@@ -169,6 +237,20 @@ void main() {
   });
 }
 
+const _me = AuthUser(
+  id: 'user-me',
+  email: 'me@affluena.test',
+  name: 'Me',
+  avatarUrl: '',
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+class _AuthedController extends AuthController {
+  @override
+  AuthState build() => AuthState.authenticated(_me);
+}
+
 Widget walletRouteTestApp(TestWalletRepository repository, String location) {
   final router = GoRouter(
     initialLocation: location,
@@ -192,7 +274,12 @@ Widget walletRouteTestApp(TestWalletRepository repository, String location) {
 
   return ProviderScope(
     retry: noProviderRetry,
-    overrides: [walletRepositoryProvider.overrideWithValue(repository)],
+    overrides: [
+      // The pending-invite card matches the signed-in user against the
+      // pending membership, so the tests need a known auth identity.
+      authControllerProvider.overrideWith(_AuthedController.new),
+      walletRepositoryProvider.overrideWithValue(repository),
+    ],
     child: MaterialApp.router(
       theme: AffluenaTheme.light,
       darkTheme: AffluenaTheme.dark,
@@ -213,6 +300,66 @@ class _FlakyWalletRepository extends TestWalletRepository {
     return super.getWallet(id);
   }
 }
+
+const invitedWalletId = '22222222-2222-2222-2222-222222220003';
+
+/// A wallet shared TO the signed-in user ('user-me') whose invite is still
+/// unanswered — the invite card must offer accept/reject.
+const invitedWallet = Wallet(
+  id: invitedWalletId,
+  userId: '11111111-1111-1111-1111-111111111111',
+  name: 'Dompet Keluarga',
+  type: WalletType.bank,
+  currencyCode: 'IDR',
+  balanceMinor: 500000,
+  color: 'blue',
+  description: '',
+  role: 'member',
+  shareStatus: WalletShareStatus.pending,
+  members: [
+    WalletMember(
+      walletId: invitedWalletId,
+      userId: 'user-me',
+      email: 'me@affluena.test',
+      role: 'member',
+      status: WalletShareStatus.pending,
+      createdAt: '2026-06-01T00:00:00Z',
+      updatedAt: '2026-06-01T00:00:00Z',
+    ),
+  ],
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+const ownerPendingWalletId = '22222222-2222-2222-2222-222222220004';
+
+/// The signed-in user OWNS this wallet; the pending invite belongs to someone
+/// else — the invite card must name them instead of offering buttons.
+const ownerPendingWallet = Wallet(
+  id: ownerPendingWalletId,
+  userId: 'user-me',
+  name: 'Dompet Bersama',
+  type: WalletType.bank,
+  currencyCode: 'IDR',
+  balanceMinor: 750000,
+  color: 'green',
+  description: '',
+  role: 'owner',
+  shareStatus: WalletShareStatus.pending,
+  members: [
+    WalletMember(
+      walletId: ownerPendingWalletId,
+      userId: 'member-1',
+      email: 'partner@affluena.test',
+      role: 'viewer',
+      status: WalletShareStatus.pending,
+      createdAt: '2026-06-01T00:00:00Z',
+      updatedAt: '2026-06-01T00:00:00Z',
+    ),
+  ],
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
 
 const sharedWalletId = '22222222-2222-2222-2222-222222220002';
 
