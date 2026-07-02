@@ -582,9 +582,12 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 ),
                 const Divider(height: 1),
                 SelectorRow(
+                  // Say plainly that this picks a CATEGORY (and for which
+                  // leg of the debt) — "Dicatat sebagai pinjaman" read like a
+                  // status, not a category picker.
                   label: _type == DebtType.payable
-                      ? 'Dicatat sebagai pinjaman'
-                      : 'Dicatat sebagai pemberian',
+                      ? 'Kategori penerimaan pinjaman'
+                      : 'Kategori pemberian pinjaman',
                   value: _disbursementCategory?.name ?? 'Pilih kategori',
                   isPlaceholder: _disbursementCategory == null,
                   icon: Icons.category_outlined,
@@ -599,8 +602,8 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 const Divider(height: 1),
                 SelectorRow(
                   label: _type == DebtType.payable
-                      ? 'Pengeluaran pembayaran'
-                      : 'Pemasukan penagihan',
+                      ? 'Kategori pembayaran utang'
+                      : 'Kategori penerimaan penagihan',
                   value: _paymentCategory?.name ?? 'Pilih kategori',
                   isPlaceholder: _paymentCategory == null,
                   icon: Icons.payments_outlined,
@@ -684,6 +687,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
     final selected = await showLookupSelectorSheet<Wallet>(
       context: context,
       title: 'Dompet utang',
+      searchHint: 'Cari dompet',
       selectedValue: _wallet,
       options: [
         for (final wallet in wallets)
@@ -708,6 +712,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
     final category = await showLookupSelectorSheet<Category>(
       context: context,
       title: title,
+      searchHint: 'Cari kategori',
       selectedValue: selected,
       options: [
         for (final category in options)
@@ -849,10 +854,13 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
               ),
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
-                label: 'Dibayar pada',
+                label: 'Dibayar pada (hari ini atau sebelumnya)',
                 value: _paidAt,
                 icon: Icons.today_outlined,
-                placeholder: 'Opsional',
+                placeholder: 'Opsional — tanpa tanggal berarti hari ini',
+                // A payment is a record of something that already happened,
+                // so the picker matches the stated constraint.
+                lastDate: DateTime.now(),
                 onChanged: (value) => setState(() => _paidAt = value),
               ),
               const SizedBox(height: AffluenaSpacing.space2),

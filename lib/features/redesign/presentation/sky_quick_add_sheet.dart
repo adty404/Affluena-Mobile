@@ -77,6 +77,7 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: 'Pilih dompet',
+      searchHint: 'Cari dompet',
       selectedValue: _walletId,
       options: [
         for (final wallet in state.wallets)

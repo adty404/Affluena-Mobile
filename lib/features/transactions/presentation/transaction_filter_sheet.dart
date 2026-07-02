@@ -176,6 +176,7 @@ class _TransactionFilterSheetState extends State<_TransactionFilterSheet> {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: 'Saring berdasarkan dompet',
+      searchHint: 'Cari dompet',
       selectedValue: _walletId,
       options: [
         for (final wallet in widget.state.wallets)
@@ -223,6 +224,7 @@ class _TransactionFilterSheetState extends State<_TransactionFilterSheet> {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: 'Saring berdasarkan tag',
+      searchHint: 'Cari tag',
       selectedValue: _tagId,
       options: [
         for (final tag in widget.state.tags)

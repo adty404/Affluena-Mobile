@@ -19,6 +19,7 @@ class MoneyInput extends StatefulWidget {
     this.autofocus = false,
     this.focusNode,
     this.hint,
+    this.helperText,
     super.key,
   });
 
@@ -35,6 +36,10 @@ class MoneyInput extends StatefulWidget {
   final bool autofocus;
   final FocusNode? focusNode;
   final String? hint;
+
+  /// Persistent helper line under the field (e.g. to explain what the amount
+  /// means), shown via [InputDecoration.helperText].
+  final String? helperText;
 
   @override
   State<MoneyInput> createState() => _MoneyInputState();
@@ -81,6 +86,8 @@ class _MoneyInputState extends State<MoneyInput> {
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
+        helperText: widget.helperText,
+        helperMaxLines: 2,
         prefixText: 'Rp ',
       ),
       validator: widget.validator == null

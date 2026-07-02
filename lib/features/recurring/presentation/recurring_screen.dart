@@ -686,6 +686,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
     final selected = await showLookupSelectorSheet<Wallet>(
       context: context,
       title: isDestination ? 'Dompet tujuan' : 'Dompet aturan berulang',
+      searchHint: 'Cari dompet',
       selectedValue: isDestination ? _toWallet : _wallet,
       options: [
         for (final wallet in widget.state.wallets)

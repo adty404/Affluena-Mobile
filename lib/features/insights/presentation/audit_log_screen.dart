@@ -6,6 +6,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/affluena_chip_bar.dart';
 import '../../shared/presentation/widgets/affluena_choice_chip.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
@@ -149,10 +150,10 @@ class _AuditLogTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AffluenaSpacing.space2,
-      runSpacing: AffluenaSpacing.space2,
-      children: [
+    // Chip rows follow the AffluenaChipBar convention (single-line,
+    // horizontally scrollable) so they never wrap raggedly on narrow screens.
+    return AffluenaChipBar(
+      chips: [
         AffluenaChoiceChip(
           key: const Key('audit-log-tab-activity'),
           selected: selected == AuditLogTab.activity,

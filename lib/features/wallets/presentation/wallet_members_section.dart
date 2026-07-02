@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../app/theme/sky_palette.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
+import '../../shared/presentation/widgets/sky_avatar.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/wallet_members_controller.dart';
 import '../data/wallet_models.dart';
@@ -79,7 +81,6 @@ class WalletMemberRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colors = context.affluenaColors;
     final isInvitePending = member.status == WalletShareStatus.pending;
 
     return Padding(
@@ -89,12 +90,14 @@ class WalletMemberRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                backgroundColor: colors.surfaceTintSoft,
-                foregroundColor: colors.forest,
-                child: Text(
-                  member.email.isEmpty ? '?' : member.email[0].toUpperCase(),
-                ),
+              SkyAvatar(
+                initial: member.email.isEmpty
+                    ? '?'
+                    : member.email[0].toUpperCase(),
+                size: 40,
+                // Deterministic per-member tone (shared with the room detail
+                // screen) so members stop looking identical.
+                color: context.sky.avatarColorFor(member.email),
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               Expanded(

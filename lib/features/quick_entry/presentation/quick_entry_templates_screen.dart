@@ -728,8 +728,10 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                       SelectorRow(
                         key: const Key('template-tag-selector'),
                         label: 'Tag',
+                        // Matches the list rows' empty label ('Tanpa tag')
+                        // instead of the inconsistent 'Opsional'.
                         value: selectedTags.isEmpty
-                            ? 'Opsional'
+                            ? 'Tanpa tag'
                             : selectedTags
                                   .map((tag) => tagLabel(tag.name))
                                   .join(', '),
@@ -814,6 +816,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: 'Dompet template',
+      searchHint: 'Cari dompet',
       selectedValue: _walletId,
       options: [
         for (final wallet in state.wallets)
@@ -836,6 +839,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: 'Dompet tujuan',
+      searchHint: 'Cari dompet',
       selectedValue: _toWalletId,
       options: [
         for (final wallet in state.wallets)

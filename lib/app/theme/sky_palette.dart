@@ -33,6 +33,18 @@ abstract final class SkyPalette {
   static const avatarPrimary = Color(0xFF17181A);
   static const avatarSecondary = Color(0xFF77797D);
 
+  /// The restrained member-avatar palette: deep, low-chroma tones in the
+  /// Tinta spirit, every one dark enough to carry a white initial. Pick per
+  /// person via [SkyColors.avatarColorFor] so avatars stay distinguishable
+  /// without introducing loud colour into the chrome.
+  static const avatarPalette = <Color>[
+    Color(0xFF17181A), // ink
+    Color(0xFF475569), // slate
+    Color(0xFF3E5C50), // moss
+    Color(0xFF6D4A3F), // clay
+    Color(0xFF544763), // plum
+  ];
+
   /// Semantic colours — the only colour in the UI chrome, kept separate from
   /// [accent] so money and status stay scannable in a monochrome interface.
   static const income = Color(0xFF2E8B57);
@@ -64,6 +76,7 @@ class SkyColors {
     required this.onAccent,
     required this.avatarPrimary,
     required this.avatarSecondary,
+    required this.avatarPalette,
     required this.income,
     required this.danger,
   });
@@ -82,8 +95,24 @@ class SkyColors {
   final Color onAccent;
   final Color avatarPrimary;
   final Color avatarSecondary;
+
+  /// Brightness-tuned tones for [avatarColorFor]; each one carries a white
+  /// initial legibly in the active mode.
+  final List<Color> avatarPalette;
   final Color income;
   final Color danger;
+
+  /// Deterministic member-avatar fill: hashes [seed] (usually the member's
+  /// email) onto [avatarPalette], so the same person always gets the same
+  /// restrained tone — and two members rarely share one.
+  Color avatarColorFor(String seed) {
+    if (seed.isEmpty) return avatarPrimary;
+    var hash = 0;
+    for (final unit in seed.toLowerCase().codeUnits) {
+      hash = (hash * 31 + unit) & 0x7fffffff;
+    }
+    return avatarPalette[hash % avatarPalette.length];
+  }
 
   static const light = SkyColors(
     ground: SkyPalette.ground,
@@ -100,6 +129,7 @@ class SkyColors {
     onAccent: SkyPalette.onAccent,
     avatarPrimary: SkyPalette.avatarPrimary,
     avatarSecondary: SkyPalette.avatarSecondary,
+    avatarPalette: SkyPalette.avatarPalette,
     income: SkyPalette.income,
     danger: SkyPalette.danger,
   );
@@ -119,6 +149,15 @@ class SkyColors {
     onAccent: Color(0xFF0C0D0F),
     avatarPrimary: Color(0xFF4A4C51),
     avatarSecondary: Color(0xFF33353A),
+    // Slightly lifted so the fills read against near-black surfaces while
+    // staying dark enough for white initials.
+    avatarPalette: <Color>[
+      Color(0xFF4A4C51), // ink-grey
+      Color(0xFF56637A), // slate
+      Color(0xFF4C6B5E), // moss
+      Color(0xFF7A594E), // clay
+      Color(0xFF635573), // plum
+    ],
     income: Color(0xFF6BC089),
     danger: Color(0xFFE08070),
   );

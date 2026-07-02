@@ -135,13 +135,13 @@ class _CategoryTreeNode extends StatelessWidget {
     final isRoot = depth == 0;
     final isIncome = category.type == CategoryType.income;
 
+    // ≥44px hit target: the glyph stays 20px, only the tappable box grows.
     final chevron = hasChildren
         ? IconButton(
             key: Key('category-toggle-${category.id}'),
             tooltip: collapsed ? 'Buka' : 'Tutup',
-            visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             iconSize: 20,
             onPressed: onToggle,
             icon: Icon(
@@ -149,7 +149,7 @@ class _CategoryTreeNode extends StatelessWidget {
               color: colors.inkMuted,
             ),
           )
-        : const SizedBox(width: 32);
+        : const SizedBox(width: 44);
 
     return AffluenaCard(
       padding: const EdgeInsets.symmetric(

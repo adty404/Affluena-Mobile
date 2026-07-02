@@ -92,7 +92,6 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                     icon: Icons.chevron_left,
                     onTap: () => _shiftMonth(-1),
                   ),
-                  const SizedBox(width: AffluenaSpacing.space2),
                   _ChevronButton(
                     key: const ValueKey('calendar-next-month'),
                     icon: Icons.chevron_right,
@@ -128,18 +127,32 @@ class _ChevronButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
+  /// Visual diameter of the circle; the tappable area is [_hitSize].
+  static const double _visualSize = 36;
+
+  /// Minimum touch target (44px) — larger than the drawn circle so the
+  /// chevron stays visually compact but is comfortable to hit.
+  static const double _hitSize = 44;
+
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: context.sky.surface,
-      shape: CircleBorder(side: BorderSide(color: context.sky.line)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          width: 36,
-          height: 36,
-          child: Icon(icon, size: 20, color: context.sky.ink),
+    return InkResponse(
+      onTap: onTap,
+      radius: _hitSize / 2,
+      child: SizedBox(
+        width: _hitSize,
+        height: _hitSize,
+        child: Center(
+          child: Container(
+            width: _visualSize,
+            height: _visualSize,
+            alignment: Alignment.center,
+            decoration: ShapeDecoration(
+              color: context.sky.surface,
+              shape: CircleBorder(side: BorderSide(color: context.sky.line)),
+            ),
+            child: Icon(icon, size: 20, color: context.sky.ink),
+          ),
         ),
       ),
     );
@@ -166,38 +179,47 @@ class _MonthSummaryCard extends StatelessWidget {
         horizontal: AffluenaSpacing.space4,
         vertical: AffluenaSpacing.space3,
       ),
-      child: Row(
-        children: [
-          _SummaryColumn(
-            label: 'Pemasukan',
-            value: data == null ? null : MoneyFormatter.idr(data!.incomeMinor),
-            color: context.sky.income,
-          ),
-          _SummaryDivider(),
-          _SummaryColumn(
-            label: 'Pengeluaran',
-            value: data == null ? null : MoneyFormatter.idr(data!.expenseMinor),
-            color: context.sky.danger,
-          ),
-          _SummaryDivider(),
-          _SummaryColumn(
-            label: 'Selisih',
-            value: data == null ? null : MoneyFormatter.signedIdr(net),
-            color: context.sky.ink,
-          ),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            _SummaryColumn(
+              label: 'Pemasukan',
+              value: data == null
+                  ? null
+                  : MoneyFormatter.idr(data!.incomeMinor),
+              color: context.sky.income,
+            ),
+            const _SummaryDivider(),
+            _SummaryColumn(
+              label: 'Pengeluaran',
+              value: data == null
+                  ? null
+                  : MoneyFormatter.idr(data!.expenseMinor),
+              color: context.sky.danger,
+            ),
+            const _SummaryDivider(),
+            _SummaryColumn(
+              label: 'Selisih',
+              value: data == null ? null : MoneyFormatter.signedIdr(net),
+              color: context.sky.ink,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _SummaryDivider extends StatelessWidget {
+  const _SummaryDivider();
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 30,
-      margin: const EdgeInsets.symmetric(horizontal: AffluenaSpacing.space3),
+    // Stretches to the row's intrinsic height instead of a fixed magic size;
+    // [width] is the whole gutter (divider + breathing room on both sides).
+    return VerticalDivider(
+      width: AffluenaSpacing.space6,
+      thickness: 1,
       color: context.sky.line,
     );
   }
@@ -229,19 +251,18 @@ class _SummaryColumn extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value ?? '—',
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
-                color: color,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+          // Truncate instead of FittedBox-down-scaling: a large IDR value
+          // stays at a legible 13.5px and simply ellipsizes.
+          Text(
+            value ?? '—',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],
@@ -402,7 +423,7 @@ class _DayCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasActivity = summary != null;
     return Padding(
-      padding: const EdgeInsets.all(1.5),
+      padding: const EdgeInsets.all(AffluenaSpacing.space1 / 2),
       child: Material(
         color: loading
             ? context.sky.sheet
@@ -425,7 +446,10 @@ class _DayCell extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(10),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AffluenaSpacing.space1 / 2,
+              vertical: AffluenaSpacing.space1,
+            ),
             child: Column(
               children: [
                 Text(
@@ -481,6 +505,9 @@ class _CellAmount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Day-cell amounts keep FittedBox: values are already shortened via
+    // MoneyFormatter.compactIdr, so scaling only kicks in on the narrowest
+    // cells — while ellipsis at this width would hide the value entirely.
     return FittedBox(
       fit: BoxFit.scaleDown,
       child: Text(

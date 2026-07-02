@@ -150,7 +150,8 @@ class _RoomDetailContent extends ConsumerWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: context.sky.accent,
                 foregroundColor: context.sky.onAccent,
-                minimumSize: const Size.fromHeight(46),
+                // ≥48px touch target.
+                minimumSize: const Size.fromHeight(48),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -373,9 +374,9 @@ class _MemberRow extends StatelessWidget {
         SkyAvatar(
           initial: initial,
           size: 30,
-          color: initial == 'A'
-              ? context.sky.avatarPrimary
-              : context.sky.avatarSecondary,
+          // Deterministic per-member tone so different members are
+          // distinguishable at a glance (same email → same colour).
+          color: context.sky.avatarColorFor(member.email),
         ),
         const SizedBox(width: AffluenaSpacing.space3),
         Expanded(
