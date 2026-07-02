@@ -93,6 +93,8 @@ class Goal {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.color = '',
+    this.icon = '',
     this.members = const [],
   });
 
@@ -105,6 +107,10 @@ class Goal {
       collectedAmountMinor: ApiJson.readInt(json, 'collected_amount_minor'),
       deadline: ApiJson.nullableString(json, 'deadline'),
       status: GoalStatus.fromApiValue(ApiJson.readString(json, 'status')),
+      // Appearance fields are a recent API addition; parse defensively so a
+      // backend without them (or with nulls) still yields "no color".
+      color: ApiJson.optionalString(json, 'color'),
+      icon: ApiJson.optionalString(json, 'icon'),
       createdAt: ApiJson.readString(json, 'created_at'),
       updatedAt: ApiJson.readString(json, 'updated_at'),
       members: ApiJson.readObjectList(
@@ -121,6 +127,8 @@ class Goal {
   final int collectedAmountMinor;
   final String? deadline;
   final GoalStatus status;
+  final String color;
+  final String icon;
   final String createdAt;
   final String updatedAt;
   final List<GoalMember> members;
@@ -148,6 +156,8 @@ class Goal {
       collectedAmountMinor: collectedAmountMinor,
       deadline: deadline,
       status: status,
+      color: color,
+      icon: icon,
       createdAt: createdAt,
       updatedAt: updatedAt,
       members: members,
@@ -183,16 +193,22 @@ class GoalRequest {
     required this.name,
     required this.targetAmountMinor,
     required this.deadline,
+    this.color,
+    this.icon,
   });
 
   final String name;
   final int targetAmountMinor;
   final String deadline;
+  final String? color;
+  final String? icon;
 
   JsonMap toJson() => {
     'name': name,
     'target_amount_minor': targetAmountMinor,
     'deadline': deadline,
+    if (color != null) 'color': color,
+    if (icon != null) 'icon': icon,
   };
 }
 
@@ -206,18 +222,24 @@ class GoalStatusRequest {
     required this.targetAmountMinor,
     required this.deadline,
     required this.status,
+    this.color,
+    this.icon,
   });
 
   final String name;
   final int targetAmountMinor;
   final String deadline;
   final GoalStatus status;
+  final String? color;
+  final String? icon;
 
   JsonMap toJson() => {
     'name': name,
     'target_amount_minor': targetAmountMinor,
     'deadline': deadline,
     'status': status.apiValue,
+    if (color != null) 'color': color,
+    if (icon != null) 'icon': icon,
   };
 }
 

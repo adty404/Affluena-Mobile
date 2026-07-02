@@ -133,6 +133,9 @@ class TrackerController extends Notifier<TrackerState> {
         dueDay: installment.dueDay,
         status: InstallmentStatus.cancelled,
         note: installment.note,
+        // Re-send the stored appearance so the cancel preserves it.
+        color: installment.color,
+        icon: installment.icon,
       ),
     );
   }
@@ -199,6 +202,9 @@ class TrackerController extends Notifier<TrackerState> {
         nextDueDate: subscription.nextDueDate,
         status: status,
         note: subscription.note,
+        // Re-send the stored appearance so the status change preserves it.
+        color: subscription.color,
+        icon: subscription.icon,
       ),
     );
   }

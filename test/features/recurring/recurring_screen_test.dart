@@ -108,6 +108,14 @@ void main() {
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
 
+    // The form exposes the shared color swatches; the chosen color rides
+    // along on the create request.
+    await tester.ensureVisible(
+      find.byKey(const Key('recurring-color-#2E8B57')),
+    );
+    await tester.tap(find.byKey(const Key('recurring-color-#2E8B57')));
+    await tester.pump();
+
     expect(
       tester
           .widget<FilledButton>(find.byKey(const Key('recurring-save-button')))
@@ -121,6 +129,7 @@ void main() {
 
     expect(repository.createdRequests.single.name, 'Gym');
     expect(repository.createdRequests.single.categoryId, 'category-rent');
+    expect(repository.createdRequests.single.color, '#2E8B57');
   });
 
   testWidgets('keeps the chosen category when toggling type through transfer', (

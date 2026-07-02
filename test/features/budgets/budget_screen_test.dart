@@ -83,16 +83,25 @@ void main() {
       '900000',
     );
     await tester.pump();
+
+    // The form exposes the shared color swatches; the chosen color rides
+    // along on the create request.
+    await tester.ensureVisible(find.byKey(const Key('budget-color-#2E8B57')));
+    await tester.tap(find.byKey(const Key('budget-color-#2E8B57')));
+    await tester.pump();
+
     final saveButton = tester.widget<FilledButton>(
       find.byKey(const Key('budget-save-button')),
     );
     expect(saveButton.onPressed, isNotNull);
 
+    await tester.ensureVisible(find.byKey(const Key('budget-save-button')));
     await tester.tap(find.byKey(const Key('budget-save-button')));
     await tester.pumpAndSettle();
 
     expect(repository.createdRequests.single.categoryId, 'category-transport');
     expect(repository.createdRequests.single.limitMinor, 900000);
+    expect(repository.createdRequests.single.color, '#2E8B57');
   });
 }
 

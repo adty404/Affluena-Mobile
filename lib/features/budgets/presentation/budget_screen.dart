@@ -7,6 +7,7 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/presentation/category_tag_management_screen.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -330,6 +331,15 @@ class _BudgetCard extends StatelessWidget {
         children: [
           Row(
             children: [
+              // The item's chosen colour accents the icon tile; without one it
+              // keeps the neutral forest theming.
+              ItemAccentIconTile(
+                icon: Icons.pie_chart_outline,
+                colorHex: budget.color,
+                fallback: colors.forest,
+                fallbackBackground: colors.forestSoft,
+              ),
+              const SizedBox(width: AffluenaSpacing.space3),
               Expanded(child: Text(categoryName, style: textTheme.titleMedium)),
               StatusBadge(label: statusLabel, tone: statusTone),
               PopupMenuButton<String>(
@@ -556,6 +566,9 @@ class _BudgetFormSheet extends ConsumerStatefulWidget {
 class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   int? _limitMinorValue;
   Category? _category;
+  // Chosen appearance. Null = no color (default section theming). When
+  // editing, seeded from the budget so an unrelated edit preserves it.
+  String? _color;
 
   bool get _isEditing => widget.budget != null;
 
@@ -563,6 +576,8 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   void initState() {
     super.initState();
     _limitMinorValue = widget.budget?.limitMinor;
+    final storedColor = widget.budget?.color ?? '';
+    _color = storedColor.isEmpty ? null : storedColor;
     if (widget.budget != null) {
       for (final category in widget.state.categories) {
         if (category.id == widget.budget!.categoryId) {
@@ -626,6 +641,20 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                 enabled: !state.isSaving,
                 onChanged: (value) => setState(() => _limitMinorValue = value),
               ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              Text(
+                'Warna',
+                style: textTheme.labelMedium?.copyWith(
+                  color: context.affluenaColors.inkMuted,
+                ),
+              ),
+              const SizedBox(height: AffluenaSpacing.space2),
+              ItemColorPickerRow(
+                entity: 'budget',
+                selected: _color,
+                enabled: !state.isSaving,
+                onChanged: (hex) => setState(() => _color = hex),
+              ),
               if (state.actionError != null) ...[
                 const SizedBox(height: AffluenaSpacing.space4),
                 AffluenaBanner.error(state.actionError!),
@@ -672,12 +701,19 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
     final limitMinor = _limitMinorValue ?? 0;
     if (limitMinor <= 0) return;
     final controller = ref.read(budgetControllerProvider.notifier);
+    // Always send the color ('' = cleared) so picking "no color" on edit
+    // actually removes it server-side.
     if (_isEditing) {
-      await controller.updateBudget(widget.budget!, limitMinor: limitMinor);
+      await controller.updateBudget(
+        widget.budget!,
+        limitMinor: limitMinor,
+        color: _color ?? '',
+      );
     } else {
       await controller.createBudget(
         categoryId: _category!.id,
         limitMinor: limitMinor,
+        color: _color ?? '',
       );
     }
     if (!mounted) return;

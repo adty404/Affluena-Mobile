@@ -404,39 +404,11 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
   }
 
   Widget _buildColorPicker() {
-    final colors = context.affluenaColors;
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: kWalletColorPalette.length,
-        separatorBuilder: (_, _) =>
-            const SizedBox(width: AffluenaSpacing.space3),
-        itemBuilder: (context, index) {
-          final hex = kWalletColorPalette[index];
-          final color = resolveWalletColor(hex, colors.forest);
-          final selected = _color == hex;
-          return GestureDetector(
-            key: Key('wallet-color-$hex'),
-            onTap: _isSaving ? null : () => setState(() => _color = hex),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected ? colors.ink : Colors.transparent,
-                  width: 2.5,
-                ),
-              ),
-              child: selected
-                  ? const Icon(Icons.check, color: Colors.white, size: 20)
-                  : null,
-            ),
-          );
-        },
-      ),
+    return ItemColorPickerRow(
+      entity: 'wallet',
+      selected: _color,
+      enabled: !_isSaving,
+      onChanged: (hex) => setState(() => _color = hex),
     );
   }
 

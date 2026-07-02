@@ -6,6 +6,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -330,6 +331,8 @@ class _InstallmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _TrackerCard(
       title: item.name,
+      icon: Icons.receipt_long_outlined,
+      colorHex: item.color,
       statusApiValue: item.status.apiValue,
       statusLabel: item.status.label,
       amount: MoneyFormatter.idr(item.monthlyAmountMinor),
@@ -385,6 +388,8 @@ class _SubscriptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _TrackerCard(
       title: item.name,
+      icon: Icons.autorenew,
+      colorHex: item.color,
       statusApiValue: item.status.apiValue,
       statusLabel: item.status.label,
       amount: MoneyFormatter.idr(item.amountMinor),
@@ -419,6 +424,8 @@ class _SubscriptionCard extends StatelessWidget {
 class _TrackerCard extends StatelessWidget {
   const _TrackerCard({
     required this.title,
+    required this.icon,
+    required this.colorHex,
     required this.statusApiValue,
     required this.statusLabel,
     required this.amount,
@@ -432,6 +439,10 @@ class _TrackerCard extends StatelessWidget {
   });
 
   final String title;
+  final IconData icon;
+
+  /// The item's chosen colour (may be empty) accenting the icon tile.
+  final String colorHex;
   final String statusApiValue;
   final String statusLabel;
   final String amount;
@@ -460,6 +471,15 @@ class _TrackerCard extends StatelessWidget {
         children: [
           Row(
             children: [
+              // The item's chosen colour accents the icon tile; without one it
+              // keeps the neutral forest theming.
+              ItemAccentIconTile(
+                icon: icon,
+                colorHex: colorHex,
+                fallback: colors.forest,
+                fallbackBackground: colors.forestSoft,
+              ),
+              const SizedBox(width: AffluenaSpacing.space3),
               Expanded(child: Text(title, style: textTheme.titleMedium)),
               StatusBadge.forStatus(statusApiValue, label: statusLabel),
               PopupMenuButton<int>(
@@ -669,6 +689,9 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
   InstallmentStatus? _installmentStatus;
   SubscriptionStatus? _subscriptionStatus;
   BillingCycle _billingCycle = BillingCycle.monthly;
+  // Chosen appearance. Null = no color (default section theming). When
+  // editing, seeded from the item so an unrelated edit preserves it.
+  String? _color;
 
   bool get _isEditing =>
       widget.installment != null || widget.subscription != null;
@@ -704,6 +727,8 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
     _installmentStatus = installment?.status;
     _subscriptionStatus = subscription?.status;
     _billingCycle = subscription?.billingCycle ?? BillingCycle.monthly;
+    final storedColor = installment?.color ?? subscription?.color ?? '';
+    _color = storedColor.isEmpty ? null : storedColor;
     _wallet = _findById(
       widget.state.wallets,
       installment?.walletId ?? subscription?.walletId,
@@ -951,7 +976,23 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                       setState(() => _subscriptionStatus = status),
                 ),
               ],
+              const SizedBox(height: AffluenaSpacing.space4),
+              Text(
+                'Warna',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: context.affluenaColors.inkMuted,
+                ),
+              ),
               const SizedBox(height: AffluenaSpacing.space2),
+              ItemColorPickerRow(
+                entity: _tab == TrackerTab.installments
+                    ? 'installment'
+                    : 'subscription',
+                selected: _color,
+                enabled: !state.isSaving,
+                onChanged: (hex) => setState(() => _color = hex),
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
               TextField(
                 controller: _noteController,
                 maxLines: 2,
@@ -1031,6 +1072,10 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
         dueDay: _intValue(_dueDayController.text),
         status: _installmentStatus,
         note: note,
+        // Always send the color ('' = cleared) so picking "no color" on edit
+        // actually removes it; the icon is threaded through unchanged.
+        color: _color ?? '',
+        icon: widget.installment?.icon,
       );
       if (widget.installment == null) {
         await controller.createInstallment(request);
@@ -1048,6 +1093,10 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
         nextDueDate: dateValue,
         status: _subscriptionStatus,
         note: note,
+        // Always send the color ('' = cleared) so picking "no color" on edit
+        // actually removes it; the icon is threaded through unchanged.
+        color: _color ?? '',
+        icon: widget.subscription?.icon,
       );
       if (widget.subscription == null) {
         await controller.createSubscription(request);

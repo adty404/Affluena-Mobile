@@ -57,6 +57,9 @@ class GoalController extends Notifier<GoalState> {
               targetAmountMinor: goal.targetAmountMinor,
               deadline: goal.deadline ?? goal.createdAt,
               status: status,
+              // Re-send the stored appearance so the transition preserves it.
+              color: goal.color,
+              icon: goal.icon,
             ),
           ),
     );

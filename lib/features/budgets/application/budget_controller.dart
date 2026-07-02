@@ -109,22 +109,34 @@ class BudgetController extends Notifier<BudgetState> {
   Future<void> createBudget({
     required String categoryId,
     required int limitMinor,
+    String? color,
+    String? icon,
   }) async {
     await _saveBudget(
       BudgetRequest(
         categoryId: categoryId,
         month: state.month,
         limitMinor: limitMinor,
+        color: color,
+        icon: icon,
       ),
     );
   }
 
-  Future<void> updateBudget(BudgetSummary budget, {required int limitMinor}) {
+  Future<void> updateBudget(
+    BudgetSummary budget, {
+    required int limitMinor,
+    String? color,
+    String? icon,
+  }) {
     return _saveBudget(
       BudgetRequest(
         categoryId: budget.categoryId,
         month: state.month,
         limitMinor: limitMinor,
+        // Default to the stored appearance so an unrelated edit preserves it.
+        color: color ?? budget.color,
+        icon: icon ?? budget.icon,
       ),
       id: budget.id,
     );

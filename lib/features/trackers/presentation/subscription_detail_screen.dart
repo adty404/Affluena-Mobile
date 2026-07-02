@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../application/tracker_controller.dart';
@@ -46,7 +47,11 @@ class SubscriptionDetailScreen extends ConsumerWidget {
 
     final current = item;
     final controller = ref.read(trackerControllerProvider.notifier);
-    final (statusLabel, statusColor) = _status(context, current.status);
+    // The item's chosen colour accents the hero + active status pill;
+    // paused/cancelled semantics stay untouched.
+    final itemColor = parseItemColor(current.color);
+    final accent = itemColor ?? context.sky.accent;
+    final (statusLabel, statusColor) = _status(context, current.status, accent);
     final upcoming = current.status == SubscriptionStatus.active
         ? _upcomingBills(current)
         : const <DateTime>[];
@@ -61,6 +66,7 @@ class SubscriptionDetailScreen extends ConsumerWidget {
             amount: MoneyFormatter.idr(current.amountMinor),
             sub:
                 '${current.billingCycle.label} · tagih berikutnya ${AffluenaDateFormatter.shortDate(current.nextDueDate)}',
+            accent: itemColor,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
           Align(
@@ -165,9 +171,13 @@ class SubscriptionDetailScreen extends ConsumerWidget {
     return bills;
   }
 
-  (String, Color) _status(BuildContext context, SubscriptionStatus status) {
+  (String, Color) _status(
+    BuildContext context,
+    SubscriptionStatus status,
+    Color accent,
+  ) {
     return switch (status) {
-      SubscriptionStatus.active => (status.label, context.sky.accent),
+      SubscriptionStatus.active => (status.label, accent),
       SubscriptionStatus.paused => (status.label, context.sky.muted),
       SubscriptionStatus.cancelled => (status.label, context.sky.faint),
     };

@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
@@ -49,7 +50,11 @@ class InstallmentDetailScreen extends ConsumerWidget {
     final current = item;
     final paid = current.tenorMonths - current.remainingMonths;
     final remainingMinor = current.remainingMonths * current.monthlyAmountMinor;
-    final (statusLabel, statusColor) = _status(context, current.status);
+    // The item's chosen colour accents the hero + progress; status semantics
+    // (paid off = income, cancelled = faint) stay untouched.
+    final itemColor = parseItemColor(current.color);
+    final accent = itemColor ?? context.sky.accent;
+    final (statusLabel, statusColor) = _status(context, current.status, accent);
     final schedule = _buildSchedule(current);
 
     return DrillInScaffold(
@@ -62,9 +67,14 @@ class InstallmentDetailScreen extends ConsumerWidget {
             amount: '${MoneyFormatter.idr(current.monthlyAmountMinor)}/bln',
             sub:
                 'Cicilan $paid dari ${current.tenorMonths} · sisa ${MoneyFormatter.idr(remainingMinor)}',
+            accent: itemColor,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
-          SkyProgressBar(value: current.paidPercent / 100, height: 8),
+          SkyProgressBar(
+            value: current.paidPercent / 100,
+            height: 8,
+            fillColor: accent,
+          ),
           const SizedBox(height: AffluenaSpacing.space3),
           Row(
             children: [
@@ -156,9 +166,13 @@ class InstallmentDetailScreen extends ConsumerWidget {
     return entries;
   }
 
-  (String, Color) _status(BuildContext context, InstallmentStatus status) {
+  (String, Color) _status(
+    BuildContext context,
+    InstallmentStatus status,
+    Color accent,
+  ) {
     return switch (status) {
-      InstallmentStatus.active => (status.label, context.sky.accent),
+      InstallmentStatus.active => (status.label, accent),
       InstallmentStatus.paidOff => (status.label, context.sky.income),
       InstallmentStatus.cancelled => (status.label, context.sky.faint),
     };

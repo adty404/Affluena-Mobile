@@ -137,6 +137,9 @@ RecurringRuleRequest requestFromRule(
     endAt: rule.endAt,
     status: status ?? rule.status,
     note: rule.note,
+    // Re-send the stored appearance so a status change preserves it.
+    color: rule.color,
+    icon: rule.icon,
   );
 }
 

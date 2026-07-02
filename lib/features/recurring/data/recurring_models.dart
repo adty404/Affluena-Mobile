@@ -104,6 +104,8 @@ class RecurringRule {
     required this.note,
     required this.createdAt,
     required this.updatedAt,
+    this.color = '',
+    this.icon = '',
   });
 
   factory RecurringRule.fromJson(JsonMap json) {
@@ -125,6 +127,10 @@ class RecurringRule {
       lastRunAt: ApiJson.nullableString(json, 'last_run_at'),
       status: RecurringStatus.fromApiValue(ApiJson.readString(json, 'status')),
       note: ApiJson.optionalString(json, 'note'),
+      // Appearance fields are a recent API addition; parse defensively so a
+      // backend without them (or with nulls) still yields "no color".
+      color: ApiJson.optionalString(json, 'color'),
+      icon: ApiJson.optionalString(json, 'icon'),
       createdAt: ApiJson.readString(json, 'created_at'),
       updatedAt: ApiJson.readString(json, 'updated_at'),
     );
@@ -145,6 +151,8 @@ class RecurringRule {
   final String? lastRunAt;
   final RecurringStatus status;
   final String note;
+  final String color;
+  final String icon;
   final String createdAt;
   final String updatedAt;
 
@@ -185,6 +193,8 @@ class RecurringRule {
       lastRunAt: lastRunAt,
       status: status,
       note: note,
+      color: color,
+      icon: icon,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -259,6 +269,8 @@ class RecurringRuleRequest {
     this.endAt,
     this.status,
     this.note,
+    this.color,
+    this.icon,
   });
 
   final String name;
@@ -273,6 +285,8 @@ class RecurringRuleRequest {
   final String? endAt;
   final RecurringStatus? status;
   final String? note;
+  final String? color;
+  final String? icon;
 
   JsonMap toJson() => {
     'name': name,
@@ -288,5 +302,7 @@ class RecurringRuleRequest {
     if (endAt != null && endAt!.isNotEmpty) 'end_at': endAt,
     if (status != null) 'status': status!.apiValue,
     if (note != null) 'note': note,
+    if (color != null) 'color': color,
+    if (icon != null) 'icon': icon,
   };
 }
