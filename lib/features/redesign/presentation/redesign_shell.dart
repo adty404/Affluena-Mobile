@@ -49,9 +49,9 @@ class _RedesignShellState extends State<RedesignShell> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: context.sky.accent.withValues(alpha: 0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: context.sky.accent.withValues(alpha: 0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -116,7 +116,7 @@ class _SkyBottomNav extends StatelessWidget {
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -169,20 +169,22 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = active ? context.sky.accent : context.sky.faint;
+    // 52px keeps the touch target comfortably above the 48px minimum while
+    // the pill stays slim; 25px is the standard bottom-nav icon size.
     return InkResponse(
       onTap: onTap,
-      radius: 44,
+      radius: 30,
       containedInkWell: true,
       customBorder: const CircleBorder(),
       child: Container(
-        width: 72,
-        height: 72,
+        width: 52,
+        height: 52,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: active ? context.sky.accentSoft : Colors.transparent,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 34, color: iconColor),
+        child: Icon(icon, size: 25, color: iconColor),
       ),
     );
   }
