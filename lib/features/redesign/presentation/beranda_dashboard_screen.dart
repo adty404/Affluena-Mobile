@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../app/theme/section_palette.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../budgets/application/budget_controller.dart';
@@ -210,20 +211,27 @@ class BerandaDashboardView extends ConsumerWidget {
     final colorHex = wallet.color;
     final color = parseWalletColor(colorHex);
     final hasColor = color != null;
+    final hue = SectionPalette.dompet.of(context);
 
     return _DashCard(
-      backgroundColor: hasColor ? color : null,
-      borderColor: hasColor ? color : null,
+      // A user-chosen wallet colour wins; otherwise the section tint applies.
+      backgroundColor: hasColor ? color : hue.tint,
+      borderColor: hasColor ? color : hue.border,
       titleColor: hasColor ? Colors.white : null,
       subtitleColor: hasColor ? Colors.white70 : null,
       valueColor: hasColor ? Colors.white : null,
       leading: useAvatars
-          ? _AvatarStack(members: wallet.members)
+          ? _AvatarStack(
+              members: wallet.members,
+              ring: hasColor ? color : hue.tint,
+            )
           : _IconTile(
               icon: resolveWalletIcon(wallet),
-              customColor: hasColor ? Colors.white : null,
-              customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : null,
-              customBorder: hasColor ? Colors.transparent : null,
+              customColor: hasColor ? Colors.white : hue.strong,
+              customBg: hasColor
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : hue.iconBg,
+              customBorder: Colors.transparent,
             ),
       badge: wallet.isViewer
           ? const _Badge(label: 'LIHAT')
@@ -246,18 +254,19 @@ class BerandaDashboardView extends ConsumerWidget {
     final colorHex = wallet.color;
     final color = parseWalletColor(colorHex);
     final hasColor = color != null;
+    final hue = SectionPalette.dibagikan.of(context);
 
     return _DashCard(
-      backgroundColor: hasColor ? color : null,
-      borderColor: hasColor ? color : null,
+      backgroundColor: hasColor ? color : hue.tint,
+      borderColor: hasColor ? color : hue.border,
       titleColor: hasColor ? Colors.white : null,
       subtitleColor: hasColor ? Colors.white70 : null,
       valueColor: hasColor ? Colors.white : null,
       leading: _IconTile(
         icon: resolveWalletIcon(wallet),
-        customColor: hasColor ? Colors.white : null,
-        customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : null,
-        customBorder: hasColor ? Colors.transparent : null,
+        customColor: hasColor ? Colors.white : hue.strong,
+        customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
+        customBorder: Colors.transparent,
       ),
       badge: const _Badge(label: 'LIHAT'),
       title: wallet.name,
@@ -275,47 +284,81 @@ class BerandaDashboardView extends ConsumerWidget {
     required BudgetSummary budget,
   }) {
     final over = budget.usagePercent >= 100;
+    final hue = SectionPalette.anggaran.of(context);
     return _DashCard(
-      leading: const _IconTile(icon: Icons.pie_chart_outline, accent: true),
+      backgroundColor: hue.tint,
+      borderColor: hue.border,
+      leading: _IconTile(
+        icon: Icons.pie_chart_outline,
+        customColor: hue.strong,
+        customBg: hue.iconBg,
+        customBorder: Colors.transparent,
+      ),
       title: name,
       subtitle:
           '${MoneyFormatter.idr(budget.spentMinor)} / ${MoneyFormatter.idr(budget.limitMinor)}',
       progress: budget.usagePercent / 100,
-      progressColor: over ? context.sky.danger : context.sky.accent,
+      progressColor: over ? context.sky.danger : hue.strong,
       value: '${budget.usagePercent.round()}%',
-      valueColor: over ? context.sky.danger : context.sky.accent,
+      valueColor: over ? context.sky.danger : hue.strong,
       onTap: () => context.push(BudgetDetailScreen.location(budget.id)),
     );
   }
 
   Widget _goalCard(BuildContext context, Goal goal) {
+    final hue = SectionPalette.tabungan.of(context);
     return _DashCard(
-      leading: const _IconTile(icon: Icons.savings_outlined, accent: true),
+      backgroundColor: hue.tint,
+      borderColor: hue.border,
+      leading: _IconTile(
+        icon: Icons.savings_outlined,
+        customColor: hue.strong,
+        customBg: hue.iconBg,
+        customBorder: Colors.transparent,
+      ),
       title: goal.name,
       subtitle:
           '${MoneyFormatter.idr(goal.collectedAmountMinor)} / ${MoneyFormatter.idr(goal.targetAmountMinor)}',
       progress: goal.progressPercent / 100,
+      progressColor: hue.strong,
       value: '${goal.progressPercent}%',
-      valueColor: context.sky.accent,
+      valueColor: hue.strong,
       onTap: () => context.push(GoalDetailScreen.location(goal.id)),
     );
   }
 
   Widget _installmentCard(BuildContext context, Installment item) {
     final paid = item.tenorMonths - item.remainingMonths;
+    final hue = SectionPalette.cicilan.of(context);
     return _DashCard(
-      leading: const _IconTile(icon: Icons.credit_card_outlined),
+      backgroundColor: hue.tint,
+      borderColor: hue.border,
+      leading: _IconTile(
+        icon: Icons.credit_card_outlined,
+        customColor: hue.strong,
+        customBg: hue.iconBg,
+        customBorder: Colors.transparent,
+      ),
       title: item.name,
       subtitle: '$paid/${item.tenorMonths} terbayar',
       progress: item.paidPercent / 100,
+      progressColor: hue.strong,
       value: '${MoneyFormatter.idr(item.monthlyAmountMinor)}/bln',
       onTap: () => context.push(InstallmentDetailScreen.location(item.id)),
     );
   }
 
   Widget _subscriptionCard(BuildContext context, Subscription item) {
+    final hue = SectionPalette.langganan.of(context);
     return _DashCard(
-      leading: const _IconTile(icon: Icons.subscriptions_outlined),
+      backgroundColor: hue.tint,
+      borderColor: hue.border,
+      leading: _IconTile(
+        icon: Icons.subscriptions_outlined,
+        customColor: hue.strong,
+        customBg: hue.iconBg,
+        customBorder: Colors.transparent,
+      ),
       title: item.name,
       subtitle: item.billingCycle.label,
       value: MoneyFormatter.idr(item.amountMinor),
@@ -325,8 +368,16 @@ class BerandaDashboardView extends ConsumerWidget {
 
   Widget _recurringCard(BuildContext context, RecurringRule rule) {
     final income = rule.type == RecurringType.income;
+    final hue = SectionPalette.berulang.of(context);
     return _DashCard(
-      leading: _IconTile(icon: _recurringIcon(rule.type)),
+      backgroundColor: hue.tint,
+      borderColor: hue.border,
+      leading: _IconTile(
+        icon: _recurringIcon(rule.type),
+        customColor: hue.strong,
+        customBg: hue.iconBg,
+        customBorder: Colors.transparent,
+      ),
       title: rule.name,
       subtitle: rule.type.label,
       value: MoneyFormatter.idr(rule.amountMinor),
@@ -624,14 +675,12 @@ class _DashCard extends StatelessWidget {
 class _IconTile extends StatelessWidget {
   const _IconTile({
     required this.icon,
-    this.accent = false,
     this.customColor,
     this.customBg,
     this.customBorder,
   });
 
   final IconData icon;
-  final bool accent;
   final Color? customColor;
   final Color? customBg;
   final Color? customBorder;
@@ -643,33 +692,29 @@ class _IconTile extends StatelessWidget {
       height: 34,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color:
-            customBg ?? (accent ? context.sky.accentSoft : context.sky.sheet),
+        color: customBg ?? context.sky.sheet,
         borderRadius: BorderRadius.circular(11),
-        border: Border.all(
-          color:
-              customBorder ??
-              (accent ? context.sky.accentSoftBorder : context.sky.line),
-        ),
+        border: Border.all(color: customBorder ?? context.sky.line),
       ),
-      child: Icon(
-        icon,
-        size: 18,
-        color: customColor ?? (accent ? context.sky.accent : context.sky.muted),
-      ),
+      child: Icon(icon, size: 18, color: customColor ?? context.sky.muted),
     );
   }
 }
 
 class _AvatarStack extends StatelessWidget {
-  const _AvatarStack({required this.members});
+  const _AvatarStack({required this.members, this.ring});
 
   final List<WalletMember> members;
+
+  /// Ring colour between overlapping avatars — match the card background so
+  /// the overlap reads as a cutout.
+  final Color? ring;
 
   @override
   Widget build(BuildContext context) {
     String initial(WalletMember m) =>
         m.email.isEmpty ? '?' : m.email[0].toUpperCase();
+    final ringColor = ring ?? context.sky.accentSoft;
 
     return SizedBox(
       width: 44,
@@ -681,7 +726,7 @@ class _AvatarStack extends StatelessWidget {
             top: 3,
             child: SkyAvatar(
               initial: initial(members[0]),
-              borderColor: context.sky.accentSoft,
+              borderColor: ringColor,
             ),
           ),
           Positioned(
@@ -690,7 +735,7 @@ class _AvatarStack extends StatelessWidget {
             child: SkyAvatar(
               initial: initial(members[1]),
               color: context.sky.avatarSecondary,
-              borderColor: context.sky.accentSoft,
+              borderColor: ringColor,
             ),
           ),
         ],
