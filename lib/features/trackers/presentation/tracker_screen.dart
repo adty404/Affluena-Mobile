@@ -868,6 +868,10 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                     prefixIcon: const Icon(Icons.event_outlined),
                     labelText: 'Tanggal jatuh tempo',
                     hintText: '1-31',
+                    helperText:
+                        'Di bulan yang lebih pendek dipakai tanggal terakhir '
+                        'bulan itu (mis. 31 menjadi 28 Feb).',
+                    helperMaxLines: 2,
                     errorText: _dueDayError,
                   ),
                   onChanged: (_) => setState(() {}),
@@ -897,9 +901,11 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
                 key: const Key('tracker-date-field'),
+                // "Tagihan berikutnya": the subscription date is the NEXT
+                // billing date, not when the subscription started.
                 label: _tab == TrackerTab.installments
                     ? 'Tanggal mulai'
-                    : 'Tanggal jatuh tempo berikutnya',
+                    : 'Tagihan berikutnya',
                 value: _date,
                 icon: Icons.today_outlined,
                 placeholder: 'Pilih tanggal',
@@ -971,6 +977,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
     final selected = await showLookupSelectorSheet<Wallet>(
       context: context,
       title: 'Dompet',
+      searchHint: 'Cari dompet',
       selectedValue: _wallet,
       options: [
         for (final wallet in wallets)
@@ -990,6 +997,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
     final selected = await showLookupSelectorSheet<Category>(
       context: context,
       title: 'Kategori pengeluaran',
+      searchHint: 'Cari kategori',
       selectedValue: _category,
       options: [
         for (final category in categories)

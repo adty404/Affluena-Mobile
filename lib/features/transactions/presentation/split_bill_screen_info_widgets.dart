@@ -107,6 +107,7 @@ class _SplitBillInfoSection extends StatelessWidget {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: 'Dompet bagi tagihan',
+      searchHint: 'Cari dompet',
       selectedValue: walletId,
       options: [
         for (final wallet in state.wallets)

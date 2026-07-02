@@ -76,6 +76,9 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
             MoneyInput(
               key: const Key('wallet-adjust-amount-field'),
               label: 'Saldo baru',
+              helperText:
+                  'Masukkan saldo target — selisihnya dicatat sebagai '
+                  'penyesuaian.',
               initialValue: widget.wallet.balanceMinor,
               enabled: !_isSaving,
               onChanged: (value) => setState(() {

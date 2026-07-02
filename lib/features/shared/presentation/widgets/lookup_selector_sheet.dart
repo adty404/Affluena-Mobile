@@ -21,6 +21,7 @@ Future<T?> showLookupSelectorSheet<T>({
   required String title,
   required List<LookupSelectorOption<T>> options,
   T? selectedValue,
+  String searchHint = 'Cari',
 }) {
   return showModalBottomSheet<T>(
     context: context,
@@ -32,6 +33,7 @@ Future<T?> showLookupSelectorSheet<T>({
         title: title,
         options: options,
         selectedValue: selectedValue,
+        searchHint: searchHint,
       );
     },
   );
@@ -42,12 +44,17 @@ class LookupSelectorSheet<T> extends StatefulWidget {
     required this.title,
     required this.options,
     this.selectedValue,
+    this.searchHint = 'Cari',
     super.key,
   });
 
   final String title;
   final List<LookupSelectorOption<T>> options;
   final T? selectedValue;
+
+  /// Contextual hint for the search field (e.g. 'Cari dompet'), so the
+  /// generic 'Cari' only appears when a caller has nothing more specific.
+  final String searchHint;
 
   @override
   State<LookupSelectorSheet<T>> createState() => _LookupSelectorSheetState<T>();
@@ -91,9 +98,9 @@ class _LookupSelectorSheetState<T> extends State<LookupSelectorSheet<T>> {
               key: const Key('lookup-search-field'),
               autocorrect: false,
               textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Cari',
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: widget.searchHint,
               ),
               onChanged: (value) => setState(() => _query = value),
             ),

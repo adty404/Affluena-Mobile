@@ -534,24 +534,33 @@ class _Section extends StatelessWidget {
               InkWell(
                 onTap: onSeeAll,
                 borderRadius: BorderRadius.circular(AffluenaRadii.md),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
+                // ≥44px hit target: the link stays visually a small text
+                // label, but its tappable box is grown to a comfortable size.
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
                   ),
-                  child: Text(
-                    'Lihat semua',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: context.sky.accent,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AffluenaSpacing.space2,
+                      ),
+                      child: Text(
+                        'Lihat semua',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: context.sky.accent,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AffluenaSpacing.space3),
+          const SizedBox(height: AffluenaSpacing.space1),
           content,
         ],
       ),

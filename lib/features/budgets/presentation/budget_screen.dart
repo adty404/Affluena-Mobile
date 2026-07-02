@@ -610,7 +610,13 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                     ? null
                     : _selectCategory,
               ),
-              const Divider(height: 1),
+              if (_isEditing)
+                Text(
+                  'Kategori tidak bisa diubah setelah dibuat.',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: context.affluenaColors.inkMuted,
+                  ),
+                ),
               const SizedBox(height: AffluenaSpacing.space3),
               MoneyInput(
                 key: const Key('budget-limit-field'),

@@ -153,6 +153,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: 'Pilih dompet',
+      searchHint: 'Cari dompet',
       selectedValue: _selectedWalletId,
       options: [
         for (final wallet in lookup.wallets)
@@ -171,6 +172,7 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: 'Pilih tujuan',
+      searchHint: 'Cari dompet',
       selectedValue: _selectedToWalletId,
       options: [
         for (final wallet in lookup.wallets)

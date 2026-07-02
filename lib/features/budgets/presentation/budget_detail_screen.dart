@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
@@ -217,65 +218,64 @@ class _TxnRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final income = tx.type == TransactionType.income;
     final amount = '${income ? '+' : '−'}${MoneyFormatter.idr(tx.amountMinor)}';
-    return Container(
-      margin: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: context.sky.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.sky.line),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: context.sky.sheet,
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(color: context.sky.line),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
+      child: AffluenaCard(
+        padding: const EdgeInsets.all(AffluenaSpacing.space4),
+        backgroundColor: context.sky.surface,
+        borderColor: context.sky.line,
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: context.sky.sheet,
+                borderRadius: BorderRadius.circular(11),
+                border: Border.all(color: context.sky.line),
+              ),
+              child: Icon(
+                income ? Icons.south_west : Icons.north_east,
+                size: 18,
+                color: income ? context.sky.income : context.sky.muted,
+              ),
             ),
-            child: Icon(
-              income ? Icons.south_west : Icons.north_east,
-              size: 18,
-              color: income ? context.sky.income : context.sky.muted,
-            ),
-          ),
-          const SizedBox(width: AffluenaSpacing.space3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  tx.note.isEmpty ? 'Transaksi' : tx.note,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: context.sky.ink,
+            const SizedBox(width: AffluenaSpacing.space3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tx.note.isEmpty ? 'Transaksi' : tx.note,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: context.sky.ink,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  AffluenaDateFormatter.time(tx.transactionAt),
-                  style: TextStyle(fontSize: 11, color: context.sky.faint),
-                ),
-              ],
+                  const SizedBox(height: 1),
+                  Text(
+                    AffluenaDateFormatter.time(tx.transactionAt),
+                    style: TextStyle(fontSize: 11, color: context.sky.faint),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: AffluenaSpacing.space2),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: income ? context.sky.income : context.sky.ink,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            const SizedBox(width: AffluenaSpacing.space2),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: income ? context.sky.income : context.sky.ink,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

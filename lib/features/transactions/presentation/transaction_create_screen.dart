@@ -251,6 +251,7 @@ class _TransactionCreateScreenState
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: _isTransfer ? 'Dari dompet' : 'Dompet',
+      searchHint: 'Cari dompet',
       selectedValue: _walletId,
       options: [
         for (final wallet in state.wallets)
@@ -275,6 +276,7 @@ class _TransactionCreateScreenState
     final selected = await showLookupSelectorSheet<String>(
       context: context,
       title: 'Ke dompet',
+      searchHint: 'Cari dompet',
       selectedValue: _toWalletId,
       options: [
         for (final wallet in state.wallets)
