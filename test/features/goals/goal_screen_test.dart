@@ -95,11 +95,19 @@ void main() {
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
 
+    // The form exposes the shared color swatches; the chosen color rides
+    // along on the create request.
+    await tester.ensureVisible(find.byKey(const Key('goal-color-#2E8B57')));
+    await tester.tap(find.byKey(const Key('goal-color-#2E8B57')));
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('goal-save-button')));
     await tester.tap(find.byKey(const Key('goal-save-button')));
     await tester.pumpAndSettle();
 
     expect(repository.createdRequests.single.name, 'Holiday');
     expect(repository.createdRequests.single.targetAmountMinor, 8000000);
+    expect(repository.createdRequests.single.color, '#2E8B57');
   });
 
   testWidgets('responds to a pending goal invite and refreshes actions', (

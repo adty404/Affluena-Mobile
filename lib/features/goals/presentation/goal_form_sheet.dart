@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -33,6 +34,9 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
   late final TextEditingController _nameController;
   int? _targetMinor;
   DateTime? _deadline;
+  // Chosen appearance. Null = no color (default section theming). When
+  // editing, seeded from the goal so an unrelated edit preserves it.
+  String? _color;
   String? _error;
   bool _isSaving = false;
 
@@ -45,6 +49,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
     _nameController = TextEditingController(text: goal?.name ?? '');
     _targetMinor = goal?.targetAmountMinor;
     _deadline = _parseDeadline(goal?.deadline);
+    _color = (goal != null && goal.color.isNotEmpty) ? goal.color : null;
   }
 
   @override
@@ -118,6 +123,20 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                   _error = null;
                 }),
               ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              Text(
+                'Warna',
+                style: textTheme.labelMedium?.copyWith(
+                  color: context.affluenaColors.inkMuted,
+                ),
+              ),
+              const SizedBox(height: AffluenaSpacing.space2),
+              ItemColorPickerRow(
+                entity: 'goal',
+                selected: _color,
+                enabled: !_isSaving,
+                onChanged: (hex) => setState(() => _color = hex),
+              ),
               if (_error != null) ...[
                 const SizedBox(height: AffluenaSpacing.space4),
                 AffluenaBanner.error(_error!, onRetry: _save),
@@ -167,6 +186,10 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
       name: name,
       targetAmountMinor: target,
       deadline: deadline.toUtc().toIso8601String(),
+      // Always send the color ('' = cleared) so picking "no color" on edit
+      // actually removes it; the icon is threaded through unchanged.
+      color: _color ?? '',
+      icon: widget.goal?.icon,
     );
 
     final controller = ref.read(goalControllerProvider.notifier);

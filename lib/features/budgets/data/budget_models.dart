@@ -23,6 +23,8 @@ class Budget {
     required this.limitMinor,
     required this.createdAt,
     required this.updatedAt,
+    this.color = '',
+    this.icon = '',
   });
 
   factory Budget.fromJson(JsonMap json) {
@@ -32,6 +34,10 @@ class Budget {
       categoryId: ApiJson.readString(json, 'category_id'),
       month: ApiJson.readString(json, 'month'),
       limitMinor: ApiJson.readInt(json, 'limit_minor'),
+      // Appearance fields are a recent API addition; parse defensively so a
+      // backend without them (or with nulls) still yields "no color".
+      color: ApiJson.optionalString(json, 'color'),
+      icon: ApiJson.optionalString(json, 'icon'),
       createdAt: ApiJson.readString(json, 'created_at'),
       updatedAt: ApiJson.readString(json, 'updated_at'),
     );
@@ -42,6 +48,8 @@ class Budget {
   final String categoryId;
   final String month;
   final int limitMinor;
+  final String color;
+  final String icon;
   final String createdAt;
   final String updatedAt;
 }
@@ -58,6 +66,8 @@ class BudgetSummary extends Budget {
     required this.spentMinor,
     required this.remainingMinor,
     required this.usagePercent,
+    super.color,
+    super.icon,
   });
 
   factory BudgetSummary.fromJson(JsonMap json) {
@@ -70,6 +80,8 @@ class BudgetSummary extends Budget {
       spentMinor: ApiJson.readInt(json, 'spent_minor'),
       remainingMinor: ApiJson.readInt(json, 'remaining_minor'),
       usagePercent: ApiJson.readDouble(json, 'usage_percent'),
+      color: ApiJson.optionalString(json, 'color'),
+      icon: ApiJson.optionalString(json, 'icon'),
       createdAt: ApiJson.readString(json, 'created_at'),
       updatedAt: ApiJson.readString(json, 'updated_at'),
     );
@@ -102,16 +114,22 @@ class BudgetRequest {
     required this.categoryId,
     required this.month,
     required this.limitMinor,
+    this.color,
+    this.icon,
   });
 
   final String categoryId;
   final String month;
   final int limitMinor;
+  final String? color;
+  final String? icon;
 
   JsonMap toJson() => {
     'category_id': categoryId,
     'month': month,
     'limit_minor': limitMinor,
+    if (color != null) 'color': color,
+    if (icon != null) 'icon': icon,
   };
 }
 
@@ -197,6 +215,8 @@ class BudgetReportItem extends BudgetSummary {
     required this.varianceMinor,
     required this.dailyAllowanceMinor,
     required this.recommendation,
+    super.color,
+    super.icon,
   });
 
   factory BudgetReportItem.fromJson(JsonMap json) {
@@ -209,6 +229,8 @@ class BudgetReportItem extends BudgetSummary {
       spentMinor: ApiJson.readInt(json, 'spent_minor'),
       remainingMinor: ApiJson.readInt(json, 'remaining_minor'),
       usagePercent: ApiJson.readDouble(json, 'usage_percent'),
+      color: ApiJson.optionalString(json, 'color'),
+      icon: ApiJson.optionalString(json, 'icon'),
       varianceMinor: ApiJson.readInt(json, 'variance_minor'),
       dailyAllowanceMinor: ApiJson.readInt(json, 'daily_allowance_minor'),
       recommendation: ApiJson.readString(json, 'recommendation'),

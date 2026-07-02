@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../application/recurring_controller.dart';
@@ -44,7 +45,11 @@ class RecurringDetailScreen extends ConsumerWidget {
 
     final current = rule;
     final income = current.type == RecurringType.income;
-    final (statusLabel, statusColor) = _status(context, current.status);
+    // The item's chosen colour accents the hero + active status pill;
+    // paused/cancelled semantics stay untouched.
+    final itemColor = parseItemColor(current.color);
+    final accent = itemColor ?? context.sky.accent;
+    final (statusLabel, statusColor) = _status(context, current.status, accent);
 
     return DrillInScaffold(
       title: current.name,
@@ -57,6 +62,7 @@ class RecurringDetailScreen extends ConsumerWidget {
             sub:
                 '${current.frequency.label} · berikutnya ${AffluenaDateFormatter.shortDate(current.nextRunAt)}',
             amountColor: income ? context.sky.income : null,
+            accent: itemColor,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
           Align(
@@ -89,9 +95,13 @@ class RecurringDetailScreen extends ConsumerWidget {
     );
   }
 
-  (String, Color) _status(BuildContext context, RecurringStatus status) {
+  (String, Color) _status(
+    BuildContext context,
+    RecurringStatus status,
+    Color accent,
+  ) {
     return switch (status) {
-      RecurringStatus.active => (status.label, context.sky.accent),
+      RecurringStatus.active => (status.label, accent),
       RecurringStatus.paused => (status.label, context.sky.muted),
       RecurringStatus.cancelled => (status.label, context.sky.faint),
     };

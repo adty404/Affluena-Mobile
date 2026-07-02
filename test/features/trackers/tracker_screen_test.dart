@@ -11,8 +11,14 @@ import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
+  setUpAll(() async {
+    // DatePickerField formats with the 'id_ID' locale, mirroring main().
+    await initializeDateFormatting('id_ID');
+  });
+
   test('loads tracker state from repositories', () async {
     final container = ProviderContainer(
       retry: noProviderRetry,
@@ -87,6 +93,58 @@ void main() {
 
     expect(repository.subscriptionPaymentRequests, hasLength(1));
   });
+
+  testWidgets('creates a subscription with a chosen color', (tester) async {
+    final repository = TestTrackerRepository();
+
+    await tester.pumpWidget(trackerTestApp(repository));
+    await tester.pumpTrackerState();
+
+    // Open the form from the subscriptions tab so it starts on that flow.
+    await tester.tap(find.byKey(const Key('tracker-subscriptions-tab')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    expect(find.text('Buat langganan'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Nama').first,
+      'Disney+',
+    );
+    await tester.tap(find.text('Pilih dompet'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Main Wallet'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pilih kategori'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Food & Dining'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('tracker-amount-field')),
+      '65000',
+    );
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('tracker-date-field')));
+    await tester.tap(find.byKey(const Key('tracker-date-field')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
+    // The form exposes the shared color swatches; the chosen color rides
+    // along on the create request.
+    await tester.ensureVisible(
+      find.byKey(const Key('subscription-color-#2E8B57')),
+    );
+    await tester.tap(find.byKey(const Key('subscription-color-#2E8B57')));
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('tracker-save-button')));
+    await tester.tap(find.byKey(const Key('tracker-save-button')));
+    await tester.pumpAndSettle();
+
+    expect(repository.createdSubscriptionRequests.single.name, 'Disney+');
+    expect(repository.createdSubscriptionRequests.single.color, '#2E8B57');
+  });
 }
 
 extension on WidgetTester {
@@ -114,6 +172,8 @@ Widget trackerTestApp(TestTrackerRepository repository) {
 class TestTrackerRepository implements TrackerRepository {
   final installmentPaymentRequests = <TrackerPaymentRequest>[];
   final subscriptionPaymentRequests = <TrackerPaymentRequest>[];
+  final createdInstallmentRequests = <InstallmentRequest>[];
+  final createdSubscriptionRequests = <SubscriptionRequest>[];
 
   @override
   Future<InstallmentListResponse> listInstallments({
@@ -131,8 +191,10 @@ class TestTrackerRepository implements TrackerRepository {
   Future<Installment> getInstallment(String id) async => seedInstallment;
 
   @override
-  Future<Installment> createInstallment(InstallmentRequest request) async =>
-      seedInstallment;
+  Future<Installment> createInstallment(InstallmentRequest request) async {
+    createdInstallmentRequests.add(request);
+    return seedInstallment;
+  }
 
   @override
   Future<Installment> updateInstallment(
@@ -179,8 +241,10 @@ class TestTrackerRepository implements TrackerRepository {
   Future<Subscription> getSubscription(String id) async => seedSubscription;
 
   @override
-  Future<Subscription> createSubscription(SubscriptionRequest request) async =>
-      seedSubscription;
+  Future<Subscription> createSubscription(SubscriptionRequest request) async {
+    createdSubscriptionRequests.add(request);
+    return seedSubscription;
+  }
 
   @override
   Future<Subscription> updateSubscription(

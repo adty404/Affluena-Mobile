@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
@@ -48,6 +49,10 @@ class GoalDetailScreen extends ConsumerWidget {
 
     final current = goal;
     final achieved = current.progressPercent >= 100;
+    // The item's chosen colour accents the hero + progress; achieved keeps
+    // its income-green semantics.
+    final itemColor = parseItemColor(current.color);
+    final accent = itemColor ?? context.sky.accent;
     final currentUserId = ref.watch(
       authControllerProvider.select((auth) => auth.user?.id),
     );
@@ -61,9 +66,14 @@ class GoalDetailScreen extends ConsumerWidget {
             label: 'Terkumpul',
             amount: MoneyFormatter.idr(current.collectedAmountMinor),
             sub: 'dari ${MoneyFormatter.idr(current.targetAmountMinor)}',
+            accent: itemColor,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
-          SkyProgressBar(value: current.progressPercent / 100, height: 8),
+          SkyProgressBar(
+            value: current.progressPercent / 100,
+            height: 8,
+            fillColor: accent,
+          ),
           const SizedBox(height: AffluenaSpacing.space3),
           Row(
             children: [
@@ -78,9 +88,7 @@ class GoalDetailScreen extends ConsumerWidget {
                     : (current.isActive ? 'Aktif' : 'Selesai'),
                 color: achieved
                     ? context.sky.income
-                    : (current.isActive
-                          ? context.sky.accent
-                          : context.sky.faint),
+                    : (current.isActive ? accent : context.sky.faint),
               ),
             ],
           ),

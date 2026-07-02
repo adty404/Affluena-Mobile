@@ -1,29 +1,24 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../data/wallet_models.dart';
 import 'wallet_format.dart';
 
+export '../../shared/presentation/appearance/item_appearance.dart';
+
 /// Wallet appearance catalog: the curated color palette + icon set a user can
-/// pick from when creating/editing a wallet. The chosen values are persisted on
-/// the API as plain strings (`color` = hex, `icon` = a semantic id from
+/// pick from when creating/editing a wallet. The color palette and hex parsing
+/// now live in the shared item-appearance module (budgets, goals, trackers,
+/// and recurring rules share the same swatches); this file keeps the
+/// wallet-specific icon catalog plus the historical wallet-named aliases so
+/// existing call sites keep working. The chosen values are persisted on the
+/// API as plain strings (`color` = hex, `icon` = a semantic id from
 /// [kWalletIconCatalog]); the catalog itself lives client-side so web + mobile
 /// can map the same id to their own icon set. Keep these in sync with the web
 /// catalog when it is added.
 
-/// Curated swatches that sit well within the "Sky & Denim" palette. Stored as
-/// uppercase `#RRGGBB` hex strings (the value sent to / received from the API).
-const List<String> kWalletColorPalette = <String>[
-  '#3E72B8', // denim (accent)
-  '#2BB3A3', // teal
-  '#2E8B57', // green
-  '#E0A23B', // amber
-  '#C2553F', // coral
-  '#7C5BC2', // purple
-  '#4256B8', // indigo
-  '#C2588A', // pink
-  '#5E6E80', // slate
-  '#9E7B4F', // bronze
-];
+/// Historical alias for [kItemColorPalette].
+const List<String> kWalletColorPalette = kItemColorPalette;
 
 /// Semantic icon ids a user can choose, mapped to Material icons. The id (the
 /// map key) is what gets persisted; never persist the [IconData].
@@ -44,23 +39,13 @@ const Map<String, IconData> kWalletIconCatalog = <String, IconData>{
   'travel': Icons.flight_outlined,
 };
 
-/// Parses a `#RRGGBB` (or `RRGGBB`) hex string into a [Color]. Returns null for
-/// anything it cannot parse, so callers can fall back to a theme color.
-Color? parseWalletColor(String hex) {
-  var value = hex.trim();
-  if (value.isEmpty) return null;
-  if (value.startsWith('#')) value = value.substring(1);
-  if (value.length != 6) return null;
-  final parsed = int.tryParse(value, radix: 16);
-  if (parsed == null) return null;
-  return Color(0xFF000000 | parsed);
-}
+/// Historical alias for [parseItemColor].
+Color? parseWalletColor(String hex) => parseItemColor(hex);
 
-/// The accent color for a wallet: its chosen [Wallet.color] if set and valid,
-/// otherwise [fallback] (the theme accent), so wallets without a color keep
-/// rendering exactly as before.
+/// Historical alias for [resolveItemColor]: the accent color for a wallet is
+/// its chosen [Wallet.color] if set and valid, otherwise [fallback].
 Color resolveWalletColor(String colorHex, Color fallback) {
-  return parseWalletColor(colorHex) ?? fallback;
+  return resolveItemColor(colorHex, fallback);
 }
 
 /// The icon for a wallet: its chosen [Wallet.icon] if set and known, otherwise

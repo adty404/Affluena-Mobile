@@ -6,6 +6,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/data/category_models.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -195,6 +196,15 @@ class _RecurringCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // The item's chosen colour accents the icon tile; without one it
+              // keeps the neutral forest theming.
+              ItemAccentIconTile(
+                icon: _recurringTypeIcon(rule.type),
+                colorHex: rule.color,
+                fallback: colors.forest,
+                fallbackBackground: colors.forestSoft,
+              ),
+              const SizedBox(width: AffluenaSpacing.space3),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,6 +296,15 @@ class _RecurringCard extends StatelessWidget {
       ),
     );
   }
+}
+
+IconData _recurringTypeIcon(RecurringType type) {
+  return switch (type) {
+    RecurringType.income => Icons.south_west,
+    RecurringType.expense => Icons.north_east,
+    RecurringType.transfer => Icons.swap_horiz,
+    RecurringType.adjustment => Icons.tune,
+  };
 }
 
 class _RecurringEmptyState extends StatelessWidget {
@@ -419,6 +438,9 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
   Wallet? _wallet;
   Wallet? _toWallet;
   Category? _category;
+  // Chosen appearance. Null = no color (default section theming). When
+  // editing, seeded from the rule so an unrelated edit preserves it.
+  String? _color;
 
   bool get _isEditing => widget.rule != null;
 
@@ -429,6 +451,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
     _type = rule?.type ?? RecurringType.expense;
     _frequency = rule?.frequency ?? RecurringFrequency.monthly;
     _status = rule?.status ?? RecurringStatus.active;
+    _color = (rule != null && rule.color.isNotEmpty) ? rule.color : null;
     _nameController = TextEditingController(text: rule?.name ?? '');
     _amountMinor = rule?.amountMinor;
     _intervalController = TextEditingController(
@@ -658,7 +681,21 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                   },
                 ),
               ],
+              const SizedBox(height: AffluenaSpacing.space4),
+              Text(
+                'Warna',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: context.affluenaColors.inkMuted,
+                ),
+              ),
               const SizedBox(height: AffluenaSpacing.space2),
+              ItemColorPickerRow(
+                entity: 'recurring',
+                selected: _color,
+                enabled: !state.isSaving,
+                onChanged: (hex) => setState(() => _color = hex),
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
               TextField(
                 controller: _noteController,
                 maxLines: 2,
@@ -746,6 +783,10 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
       endAt: _formatDateTime(_endAt),
       status: _status,
       note: _noteController.text.trim(),
+      // Always send the color ('' = cleared) so picking "no color" on edit
+      // actually removes it; the icon is threaded through unchanged.
+      color: _color ?? '',
+      icon: widget.rule?.icon,
     );
 
     if (widget.rule == null) {

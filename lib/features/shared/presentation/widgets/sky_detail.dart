@@ -15,6 +15,7 @@ class SkyDetailHero extends StatelessWidget {
     this.label,
     this.sub,
     this.amountColor,
+    this.accent,
     super.key,
   });
 
@@ -23,19 +24,39 @@ class SkyDetailHero extends StatelessWidget {
   final String? sub;
   final Color? amountColor;
 
+  /// Optional item accent (a user-chosen colour): shown as a small swatch
+  /// beside the eyebrow label. The amount itself stays ink/white so the hero
+  /// remains legible in both brightnesses.
+  final Color? accent;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label != null) ...[
-          Text(
-            label!,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: context.sky.muted,
-            ),
+          Row(
+            children: [
+              if (accent != null) ...[
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                label!,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: context.sky.muted,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 3),
         ],

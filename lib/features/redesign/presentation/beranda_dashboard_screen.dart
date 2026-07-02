@@ -318,44 +318,65 @@ class BerandaDashboardView extends ConsumerWidget {
   }) {
     final over = budget.usagePercent >= 100;
     final hue = SectionPalette.anggaran.of(context);
+    // A user-chosen item colour wins over the section tint — solid card,
+    // white text/icon, exactly like a coloured wallet card. Over-budget
+    // danger still wins on the progress fill.
+    final color = parseItemColor(budget.color);
+    final hasColor = color != null;
     return _DashCard(
-      backgroundColor: hue.tint,
-      borderColor: hue.border,
+      backgroundColor: hasColor ? color : hue.tint,
+      borderColor: hasColor ? color : hue.border,
+      titleColor: hasColor ? Colors.white : null,
+      subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
         icon: Icons.pie_chart_outline,
-        customColor: hue.strong,
-        customBg: hue.iconBg,
+        customColor: hasColor ? Colors.white : hue.strong,
+        customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
       ),
       title: name,
       subtitle:
           '${MoneyFormatter.idr(budget.spentMinor)} / ${MoneyFormatter.idr(budget.limitMinor)}',
       progress: budget.usagePercent / 100,
-      progressColor: over ? context.sky.danger : hue.strong,
+      progressColor: over
+          ? context.sky.danger
+          : (hasColor ? Colors.white : hue.strong),
+      progressTrackColor: hasColor
+          ? Colors.white.withValues(alpha: 0.25)
+          : null,
       value: '${budget.usagePercent.round()}%',
-      valueColor: over ? context.sky.danger : hue.strong,
+      valueColor: hasColor
+          ? Colors.white
+          : (over ? context.sky.danger : hue.strong),
       onTap: () => context.push(BudgetDetailScreen.location(budget.id)),
     );
   }
 
   Widget _goalCard(BuildContext context, Goal goal) {
     final hue = SectionPalette.tabungan.of(context);
+    final color = parseItemColor(goal.color);
+    final hasColor = color != null;
     return _DashCard(
-      backgroundColor: hue.tint,
-      borderColor: hue.border,
+      backgroundColor: hasColor ? color : hue.tint,
+      borderColor: hasColor ? color : hue.border,
+      titleColor: hasColor ? Colors.white : null,
+      subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
         icon: Icons.savings_outlined,
-        customColor: hue.strong,
-        customBg: hue.iconBg,
+        customColor: hasColor ? Colors.white : hue.strong,
+        customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
       ),
       title: goal.name,
       subtitle:
           '${MoneyFormatter.idr(goal.collectedAmountMinor)} / ${MoneyFormatter.idr(goal.targetAmountMinor)}',
       progress: goal.progressPercent / 100,
-      progressColor: hue.strong,
+      progressColor: hasColor ? Colors.white : hue.strong,
+      progressTrackColor: hasColor
+          ? Colors.white.withValues(alpha: 0.25)
+          : null,
       value: '${goal.progressPercent}%',
-      valueColor: hue.strong,
+      valueColor: hasColor ? Colors.white : hue.strong,
       onTap: () => context.push(GoalDetailScreen.location(goal.id)),
     );
   }
@@ -363,19 +384,26 @@ class BerandaDashboardView extends ConsumerWidget {
   Widget _installmentCard(BuildContext context, Installment item) {
     final paid = item.tenorMonths - item.remainingMonths;
     final hue = SectionPalette.cicilan.of(context);
+    final color = parseItemColor(item.color);
+    final hasColor = color != null;
     return _DashCard(
-      backgroundColor: hue.tint,
-      borderColor: hue.border,
+      backgroundColor: hasColor ? color : hue.tint,
+      borderColor: hasColor ? color : hue.border,
+      titleColor: hasColor ? Colors.white : null,
+      subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
         icon: Icons.credit_card_outlined,
-        customColor: hue.strong,
-        customBg: hue.iconBg,
+        customColor: hasColor ? Colors.white : hue.strong,
+        customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
       ),
       title: item.name,
       subtitle: '$paid/${item.tenorMonths} terbayar',
       progress: item.paidPercent / 100,
-      progressColor: hue.strong,
+      progressColor: hasColor ? Colors.white : hue.strong,
+      progressTrackColor: hasColor
+          ? Colors.white.withValues(alpha: 0.25)
+          : null,
       value: '${MoneyFormatter.idr(item.monthlyAmountMinor)}/bln',
       onTap: () => context.push(InstallmentDetailScreen.location(item.id)),
     );
@@ -383,13 +411,17 @@ class BerandaDashboardView extends ConsumerWidget {
 
   Widget _subscriptionCard(BuildContext context, Subscription item) {
     final hue = SectionPalette.langganan.of(context);
+    final color = parseItemColor(item.color);
+    final hasColor = color != null;
     return _DashCard(
-      backgroundColor: hue.tint,
-      borderColor: hue.border,
+      backgroundColor: hasColor ? color : hue.tint,
+      borderColor: hasColor ? color : hue.border,
+      titleColor: hasColor ? Colors.white : null,
+      subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
         icon: Icons.subscriptions_outlined,
-        customColor: hue.strong,
-        customBg: hue.iconBg,
+        customColor: hasColor ? Colors.white : hue.strong,
+        customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
       ),
       title: item.name,
@@ -402,19 +434,25 @@ class BerandaDashboardView extends ConsumerWidget {
   Widget _recurringCard(BuildContext context, RecurringRule rule) {
     final income = rule.type == RecurringType.income;
     final hue = SectionPalette.berulang.of(context);
+    final color = parseItemColor(rule.color);
+    final hasColor = color != null;
     return _DashCard(
-      backgroundColor: hue.tint,
-      borderColor: hue.border,
+      backgroundColor: hasColor ? color : hue.tint,
+      borderColor: hasColor ? color : hue.border,
+      titleColor: hasColor ? Colors.white : null,
+      subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
         icon: _recurringIcon(rule.type),
-        customColor: hue.strong,
-        customBg: hue.iconBg,
+        customColor: hasColor ? Colors.white : hue.strong,
+        customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
       ),
       title: rule.name,
       subtitle: rule.type.label,
       value: MoneyFormatter.idr(rule.amountMinor),
-      valueColor: income ? context.sky.income : context.sky.ink,
+      valueColor: hasColor
+          ? Colors.white
+          : (income ? context.sky.income : context.sky.ink),
       onTap: () => context.push(RecurringDetailScreen.location(rule.id)),
     );
   }
@@ -614,6 +652,7 @@ class _DashCard extends StatelessWidget {
     this.badge,
     this.progress,
     this.progressColor,
+    this.progressTrackColor,
     this.onLongPress,
     this.backgroundColor,
     this.borderColor,
@@ -630,6 +669,10 @@ class _DashCard extends StatelessWidget {
   final Widget? badge;
   final double? progress;
   final Color? progressColor;
+
+  /// Track behind the progress fill — a translucent white on solid coloured
+  /// cards so the bar stays legible on the user's colour.
+  final Color? progressTrackColor;
   final VoidCallback? onLongPress;
   final Color? backgroundColor;
   final Color? borderColor;
@@ -689,6 +732,7 @@ class _DashCard extends StatelessWidget {
                   value: progress!,
                   height: 6,
                   fillColor: progressColor,
+                  trackColor: progressTrackColor,
                 ),
               ],
               if (value != null) ...[

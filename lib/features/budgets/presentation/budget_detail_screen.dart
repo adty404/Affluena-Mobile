@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
@@ -63,7 +64,12 @@ class BudgetDetailScreen extends ConsumerWidget {
     final current = budget;
     final over = current.usagePercent >= 100;
     final overMinor = current.spentMinor - current.limitMinor;
-    final accent = over ? context.sky.danger : context.sky.accent;
+    // The item's chosen colour accents the hero + progress; over-budget
+    // danger still wins on the fill.
+    final itemColor = parseItemColor(current.color);
+    final accent = over
+        ? context.sky.danger
+        : (itemColor ?? context.sky.accent);
     // budget.month arrives as a full ISO timestamp (the API serializes a DATE
     // column to RFC3339), or as 'YYYY-MM' in tests. Take the calendar-month
     // prefix and build a local date — never parse the raw string with '-01'
@@ -95,6 +101,7 @@ class BudgetDetailScreen extends ConsumerWidget {
             amount: MoneyFormatter.idr(current.spentMinor),
             sub: 'dari ${MoneyFormatter.idr(current.limitMinor)}',
             amountColor: over ? context.sky.danger : null,
+            accent: itemColor,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
           SkyDetailCard(

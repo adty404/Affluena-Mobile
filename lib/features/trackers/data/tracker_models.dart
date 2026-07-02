@@ -87,6 +87,8 @@ class Installment {
     required this.note,
     required this.createdAt,
     required this.updatedAt,
+    this.color = '',
+    this.icon = '',
   });
 
   factory Installment.fromJson(JsonMap json) {
@@ -106,6 +108,10 @@ class Installment {
         ApiJson.readString(json, 'status'),
       ),
       note: ApiJson.optionalString(json, 'note'),
+      // Appearance fields are a recent API addition; parse defensively so a
+      // backend without them (or with nulls) still yields "no color".
+      color: ApiJson.optionalString(json, 'color'),
+      icon: ApiJson.optionalString(json, 'icon'),
       createdAt: ApiJson.readString(json, 'created_at'),
       updatedAt: ApiJson.readString(json, 'updated_at'),
     );
@@ -124,6 +130,8 @@ class Installment {
   final int dueDay;
   final InstallmentStatus status;
   final String note;
+  final String color;
+  final String icon;
   final String createdAt;
   final String updatedAt;
 
@@ -186,6 +194,8 @@ class Subscription {
     required this.note,
     required this.createdAt,
     required this.updatedAt,
+    this.color = '',
+    this.icon = '',
   });
 
   factory Subscription.fromJson(JsonMap json) {
@@ -205,6 +215,10 @@ class Subscription {
         ApiJson.readString(json, 'status'),
       ),
       note: ApiJson.optionalString(json, 'note'),
+      // Appearance fields are a recent API addition; parse defensively so a
+      // backend without them (or with nulls) still yields "no color".
+      color: ApiJson.optionalString(json, 'color'),
+      icon: ApiJson.optionalString(json, 'icon'),
       createdAt: ApiJson.readString(json, 'created_at'),
       updatedAt: ApiJson.readString(json, 'updated_at'),
     );
@@ -221,6 +235,8 @@ class Subscription {
   final String nextDueDate;
   final SubscriptionStatus status;
   final String note;
+  final String color;
+  final String icon;
   final String createdAt;
   final String updatedAt;
 
@@ -315,6 +331,8 @@ class InstallmentRequest {
     this.remainingMonths,
     this.status,
     this.note,
+    this.color,
+    this.icon,
   });
 
   final String name;
@@ -328,6 +346,8 @@ class InstallmentRequest {
   final int dueDay;
   final InstallmentStatus? status;
   final String? note;
+  final String? color;
+  final String? icon;
 
   JsonMap toJson() => {
     'name': name,
@@ -341,6 +361,8 @@ class InstallmentRequest {
     'due_day': dueDay,
     if (status != null) 'status': status!.apiValue,
     if (note != null) 'note': note,
+    if (color != null) 'color': color,
+    if (icon != null) 'icon': icon,
   };
 }
 
@@ -355,6 +377,8 @@ class SubscriptionRequest {
     this.accountDetail,
     this.status,
     this.note,
+    this.color,
+    this.icon,
   });
 
   final String name;
@@ -366,6 +390,8 @@ class SubscriptionRequest {
   final String nextDueDate;
   final SubscriptionStatus? status;
   final String? note;
+  final String? color;
+  final String? icon;
 
   JsonMap toJson() => {
     'name': name,
@@ -377,6 +403,8 @@ class SubscriptionRequest {
     'next_due_date': nextDueDate,
     if (status != null) 'status': status!.apiValue,
     if (note != null) 'note': note,
+    if (color != null) 'color': color,
+    if (icon != null) 'icon': icon,
   };
 }
 

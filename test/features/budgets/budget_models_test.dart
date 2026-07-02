@@ -23,6 +23,9 @@ void main() {
 
     expect(list.budgets.single.categoryId, 'category-food');
     expect(list.budgets.single.usagePercent, 85);
+    // Appearance fields are optional server-side; absent means "no color".
+    expect(list.budgets.single.color, '');
+    expect(list.budgets.single.icon, '');
     expect(list.pagination.total, 1);
 
     final alerts = BudgetAlertsResponse.fromJson(const {
@@ -80,5 +83,44 @@ void main() {
 
     expect(report.summary.warningCount, 1);
     expect(report.report.single.dailyAllowanceMinor, 75000);
+  });
+
+  test('parses budget appearance fields and serializes them on requests', () {
+    final budget = BudgetSummary.fromJson(const {
+      'id': 'budget-food',
+      'user_id': 'user-1',
+      'category_id': 'category-food',
+      'month': '2026-06',
+      'limit_minor': 1500000,
+      'spent_minor': 1275000,
+      'remaining_minor': 225000,
+      'usage_percent': 85.0,
+      'color': '#2E8B57',
+      'icon': 'food',
+      'created_at': '2026-06-01T00:00:00Z',
+      'updated_at': '2026-06-01T00:00:00Z',
+    });
+
+    expect(budget.color, '#2E8B57');
+    expect(budget.icon, 'food');
+
+    final json = const BudgetRequest(
+      categoryId: 'category-food',
+      month: '2026-06',
+      limitMinor: 1500000,
+      color: '#2E8B57',
+      icon: 'food',
+    ).toJson();
+    expect(json, containsPair('color', '#2E8B57'));
+    expect(json, containsPair('icon', 'food'));
+
+    // Omitted appearance fields stay off the wire entirely.
+    final bare = const BudgetRequest(
+      categoryId: 'category-food',
+      month: '2026-06',
+      limitMinor: 1500000,
+    ).toJson();
+    expect(bare.containsKey('color'), isFalse);
+    expect(bare.containsKey('icon'), isFalse);
   });
 }

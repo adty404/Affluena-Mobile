@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -217,6 +218,15 @@ class _GoalCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // The item's chosen colour accents the icon tile; without one it
+              // keeps the neutral forest theming.
+              ItemAccentIconTile(
+                icon: Icons.savings_outlined,
+                colorHex: goal.color,
+                fallback: colors.forest,
+                fallbackBackground: colors.forestSoft,
+              ),
+              const SizedBox(width: AffluenaSpacing.space3),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
