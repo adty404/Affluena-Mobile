@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
 import '../../shared/application/financial_refresh.dart';
@@ -144,8 +145,8 @@ class TransactionCreateState {
     List<Tag>? tags,
     bool? isLoading,
     bool? isSaving,
-    Object? loadError = _unchanged,
-    Object? actionError = _unchanged,
+    Object? loadError = kUnchanged,
+    Object? actionError = kUnchanged,
   }) {
     return TransactionCreateState(
       wallets: wallets ?? this.wallets,
@@ -153,14 +154,12 @@ class TransactionCreateState {
       tags: tags ?? this.tags,
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
-      loadError: identical(loadError, _unchanged)
+      loadError: identical(loadError, kUnchanged)
           ? this.loadError
           : loadError as String?,
-      actionError: identical(actionError, _unchanged)
+      actionError: identical(actionError, kUnchanged)
           ? this.actionError
           : actionError as String?,
     );
   }
 }
-
-const _unchanged = Object();

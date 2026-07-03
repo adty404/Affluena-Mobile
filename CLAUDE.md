@@ -17,6 +17,9 @@ the pixel-level **`design/affluena-design-guide.html`** (open in a browser — v
   Flutter bump) or a version bump need a **release** (`scripts/shorebird_release.sh` → reinstall the
   APK once) — they are NOT patchable. Builds pass `--no-tree-shake-icons` so the full Material Icons
   font is always bundled (adding/removing icons stays OTA-patchable); other asset changes need a release.
+  The push-triggered patch job **fails fast if `pubspec.yaml`'s `version:` changed** (a bump means you
+  needed a *release*; the auto-patch targets the previous release) — so bump the version only when
+  you intend to run the release workflow manually.
 
 ## Run / test / build (Flutter SDK is NOT pre-installed in a cloud sandbox — install fvm + 3.44.2 first)
 
@@ -43,7 +46,7 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   (`MoneyFormatter`, `AffluenaDateFormatter`), `storage` (secure token store), `calc`.
 - `lib/features/<x>/` → one folder per feature, each layered:
   - `data/` → models + a `Repository` (a `Provider` over `dioProvider`)
-  - `application/` → a `NotifierProvider`/`AsyncNotifier` controller (auto-loads via `Future.microtask(load)`, `_mutate` helper)
+  - `application/` → a `NotifierProvider`/`AsyncNotifier` controller (auto-loads via `Future.microtask(load)`, `_mutate` helper). Their `copyWith` methods distinguish "omitted" from "set to null" using the **shared `kUnchanged` sentinel** from `core/state/copy_with_sentinel.dart` — don't redeclare a per-file `_unchanged`.
   - `presentation/` → screens/widgets
   Features: auth, wallets, transactions, budgets, categories, tags, goals, debts, trackers,
   recurring, quick_entry, dashboard, insights, settings, onboarding, **partner** (the "Berbagi

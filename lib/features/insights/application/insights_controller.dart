@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/formatters/date_formatter.dart';
+import '../../../core/state/copy_with_sentinel.dart';
 import '../data/insight_models.dart';
 import '../data/insights_repository.dart';
 import 'csv_share_service.dart';
@@ -370,9 +371,9 @@ class InsightsState {
     bool? isLoading,
     bool? isReportLoading,
     bool? isSaving,
-    Object? loadError = _unchanged,
-    Object? actionError = _unchanged,
-    Object? actionMessage = _unchanged,
+    Object? loadError = kUnchanged,
+    Object? actionError = kUnchanged,
+    Object? actionMessage = kUnchanged,
   }) {
     return InsightsState(
       month: month ?? this.month,
@@ -388,13 +389,13 @@ class InsightsState {
       isLoading: isLoading ?? this.isLoading,
       isReportLoading: isReportLoading ?? this.isReportLoading,
       isSaving: isSaving ?? this.isSaving,
-      loadError: identical(loadError, _unchanged)
+      loadError: identical(loadError, kUnchanged)
           ? this.loadError
           : loadError as String?,
-      actionError: identical(actionError, _unchanged)
+      actionError: identical(actionError, kUnchanged)
           ? this.actionError
           : actionError as String?,
-      actionMessage: identical(actionMessage, _unchanged)
+      actionMessage: identical(actionMessage, kUnchanged)
           ? this.actionMessage
           : actionMessage as String?,
     );
@@ -419,5 +420,3 @@ ExportCsvRequest _monthExportRequest(String month) {
     to: to.toIso8601String(),
   );
 }
-
-const _unchanged = Object();

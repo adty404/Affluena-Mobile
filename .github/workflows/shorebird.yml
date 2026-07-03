@@ -44,7 +44,24 @@ jobs:
       SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
       API_URL: ${{ vars.AFFLUENA_API_BASE_URL || 'http://43.133.147.101/api/v1' }}
     steps:
+      # fetch-depth: 2 so the version-bump guard below can diff HEAD^..HEAD.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # A pubspec `version:` bump means a *release* was intended — but the
+      # push-triggered patch below targets the LATEST release, so it would patch
+      # the WRONG (previous) release, silently shipping users a broken/no update.
+      # Fail loudly on a bump and tell the operator to run a release instead.
+      # (Deploys land as squash-merges = single commits, so HEAD^ is prev master.)
+      - name: Guard — block auto-patch on a pubspec version bump
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          if git diff --unified=0 HEAD^ HEAD -- pubspec.yaml | grep -qE '^\+version:'; then
+            echo "::error::pubspec.yaml 'version:' changed in this push. A version bump needs a Shorebird *release* (re-run this workflow manually with mode=release), NOT an auto OTA patch — otherwise the patch targets the previous release. Aborting."
+            exit 1
+          fi
+          echo "No pubspec version bump — proceeding with the OTA patch."
 
       - name: Set up Shorebird
         uses: shorebirdtech/setup-shorebird@v1

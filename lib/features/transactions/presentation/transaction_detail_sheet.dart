@@ -214,8 +214,6 @@ class _CreatorActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.affluenaColors;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -232,8 +230,8 @@ class _CreatorActions extends ConsumerWidget {
         OutlinedButton.icon(
           key: const Key('transaction-detail-delete-button'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: colors.coral,
-            side: BorderSide(color: colors.coral),
+            foregroundColor: context.sky.danger,
+            side: BorderSide(color: context.sky.danger),
           ),
           onPressed: () => _confirmDelete(context, ref),
           icon: const Icon(Icons.delete_outline),
@@ -277,10 +275,8 @@ class _DeleteConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-
     return AlertDialog(
-      icon: Icon(Icons.delete_outline, color: colors.coral),
+      icon: Icon(Icons.delete_outline, color: context.sky.danger),
       title: const Text('Hapus transaksi ini?'),
       content: Text(
         'Ini menghapus permanen "${transactionTitle(state, transaction)}" '
@@ -295,7 +291,7 @@ class _DeleteConfirmationDialog extends StatelessWidget {
         ),
         FilledButton(
           key: const Key('transaction-delete-confirm'),
-          style: FilledButton.styleFrom(backgroundColor: colors.coral),
+          style: FilledButton.styleFrom(backgroundColor: context.sky.danger),
           onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Hapus'),
         ),

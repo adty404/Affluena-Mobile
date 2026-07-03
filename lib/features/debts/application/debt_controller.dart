@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
 import '../../shared/application/financial_refresh.dart';
@@ -231,12 +232,12 @@ class DebtState {
     List<Category>? expenseCategories,
     Map<String, String>? walletNames,
     Map<String, String>? categoryNames,
-    Object? typeFilter = _unchanged,
+    Object? typeFilter = kUnchanged,
     bool? isLoading,
     bool? isLoadingMore,
     bool? isSaving,
-    Object? loadError = _unchanged,
-    Object? actionError = _unchanged,
+    Object? loadError = kUnchanged,
+    Object? actionError = kUnchanged,
   }) {
     return DebtState(
       debts: debts ?? this.debts,
@@ -246,16 +247,16 @@ class DebtState {
       expenseCategories: expenseCategories ?? this.expenseCategories,
       walletNames: walletNames ?? this.walletNames,
       categoryNames: categoryNames ?? this.categoryNames,
-      typeFilter: identical(typeFilter, _unchanged)
+      typeFilter: identical(typeFilter, kUnchanged)
           ? this.typeFilter
           : typeFilter as DebtType?,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       isSaving: isSaving ?? this.isSaving,
-      loadError: identical(loadError, _unchanged)
+      loadError: identical(loadError, kUnchanged)
           ? this.loadError
           : loadError as String?,
-      actionError: identical(actionError, _unchanged)
+      actionError: identical(actionError, kUnchanged)
           ? this.actionError
           : actionError as String?,
     );
@@ -272,5 +273,3 @@ bool _isDueSoon(Debt debt) {
   final end = DateTime(today.year, today.month, today.day + 7);
   return !dueDate.isAfter(end);
 }
-
-const _unchanged = Object();

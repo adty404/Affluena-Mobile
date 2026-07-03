@@ -153,12 +153,11 @@ class _MembersEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colors = context.affluenaColors;
 
     return AffluenaCard(
       child: Column(
         children: [
-          Icon(Icons.group_outlined, color: colors.forest, size: 32),
+          Icon(Icons.group_outlined, color: context.sky.accent, size: 32),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
             'Belum ada yang berbagi dompet ini',

@@ -8,8 +8,10 @@ import '../../shared/presentation/widgets/sky_detail.dart';
 import '../application/partner_controller.dart';
 import '../data/partner_models.dart';
 
-/// Settings → "Pasangan": link a partner (by email) who can then view ALL of
-/// your wallets (read-only), and respond to incoming invites.
+/// Settings → "Berbagi Dompet": invite a Pemantau (by email) who can then view
+/// ALL of your wallets (read-only, max 5, one-way), plus accept/reject the
+/// wallets others invite you to view. (Internal names stay `partner`/`Partner`
+/// and the endpoints are the historical `/api/v1/partners` — see the API repo.)
 class PartnerScreen extends ConsumerStatefulWidget {
   const PartnerScreen({super.key});
 

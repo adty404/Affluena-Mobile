@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/formatters/tag_formatter.dart';
+import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
 import '../../shared/application/financial_refresh.dart';
@@ -241,9 +242,9 @@ class QuickEntryTemplatesState {
     int? total,
     bool? isLoading,
     bool? isSaving,
-    Object? loadError = _unchanged,
-    Object? actionError = _unchanged,
-    Object? message = _unchanged,
+    Object? loadError = kUnchanged,
+    Object? actionError = kUnchanged,
+    Object? message = kUnchanged,
   }) {
     return QuickEntryTemplatesState(
       wallets: wallets ?? this.wallets,
@@ -254,13 +255,13 @@ class QuickEntryTemplatesState {
       total: total ?? this.total,
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
-      loadError: identical(loadError, _unchanged)
+      loadError: identical(loadError, kUnchanged)
           ? this.loadError
           : loadError as String?,
-      actionError: identical(actionError, _unchanged)
+      actionError: identical(actionError, kUnchanged)
           ? this.actionError
           : actionError as String?,
-      message: identical(message, _unchanged)
+      message: identical(message, kUnchanged)
           ? this.message
           : message as String?,
     );
@@ -296,5 +297,3 @@ T? _findById<T>(Iterable<T> items, String? id) {
   }
   return null;
 }
-
-const _unchanged = Object();
