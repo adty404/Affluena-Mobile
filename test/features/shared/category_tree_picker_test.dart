@@ -47,10 +47,7 @@ void main() {
       find.byKey(const Key('category-picker-manage-button')),
       findsOneWidget,
     );
-    expect(
-      find.byKey(const Key('category-picker-add-button')),
-      findsNothing,
-    );
+    expect(find.byKey(const Key('category-picker-add-button')), findsNothing);
     expect(find.text('Tambah kategori'), findsNothing);
 
     // Tapping a category pops the sheet with that id.
