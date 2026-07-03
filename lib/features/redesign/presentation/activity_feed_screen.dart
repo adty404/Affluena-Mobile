@@ -6,12 +6,14 @@ import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/empty_state.dart';
 import '../../shared/presentation/widgets/error_state.dart';
 import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
 import '../../transactions/presentation/transaction_detail_sheet.dart';
+import '../../transactions/presentation/transaction_display.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
 
@@ -107,6 +109,7 @@ class ActivityFeedView extends ConsumerWidget {
                     txns: txns,
                     walletNames: walletNames,
                     meId: meId,
+                    txState: txState,
                     onOpen: (tx) =>
                         showTransactionDetail(context, ref, txState, tx),
                   ),
@@ -134,12 +137,17 @@ class _Feed extends StatelessWidget {
     required this.txns,
     required this.walletNames,
     required this.meId,
+    required this.txState,
     required this.onOpen,
   });
 
   final List<Transaction> txns;
   final Map<String, String> walletNames;
   final String? meId;
+
+  /// The transactions controller state, used to resolve each row's category
+  /// (its chosen icon + color) — the same source the main ledger reads.
+  final TransactionsState txState;
   final ValueChanged<Transaction> onOpen;
 
   @override
@@ -172,6 +180,7 @@ class _Feed extends StatelessWidget {
           tx: tx,
           walletName: walletNames[tx.walletId] ?? 'Dompet',
           mine: meId != null && tx.userId == meId,
+          category: txState.categoryOf(tx),
           onTap: () => onOpen(tx),
         ),
       );
@@ -188,12 +197,17 @@ class _ActivityRow extends StatelessWidget {
     required this.tx,
     required this.walletName,
     required this.mine,
+    required this.category,
     required this.onTap,
   });
 
   final Transaction tx;
   final String walletName;
   final bool mine;
+
+  /// The resolved category for [tx] (null when uncategorized/transfer) — drives
+  /// the leading tile's chosen icon + color.
+  final Category? category;
   final VoidCallback onTap;
 
   static String _typeLabel(TransactionType type) => switch (type) {
@@ -211,14 +225,15 @@ class _ActivityRow extends StatelessWidget {
         ? '+'
         : (tx.type == TransactionType.expense ? '-' : '');
     final amount = '$sign${MoneyFormatter.idr(tx.amountMinor.abs())}';
+    // Ownership ("kamu") stays in the meta line so the leading slot can show
+    // the CATEGORY icon+color instead of an initial avatar.
     final meta =
         '$walletName · ${AffluenaDateFormatter.time(tx.transactionAt)}${mine ? ' · kamu' : ''}';
-    final initial = mine
-        ? 'K'
-        : (title.isNotEmpty ? title[0].toUpperCase() : '?');
+    final appearance = categoryAppearanceFor(category, type: tx.type);
+    final tileColor = appearance.color ?? context.sky.accent;
 
     // Material + InkWell (the _DashCard pattern) so the tap ripples on the
-    // card surface. The 30px avatar plus 2×11px vertical padding keeps the
+    // card surface. The 34px tile plus 2×11px vertical padding keeps the
     // touch target at ≥52px, clear of the 48px minimum.
     return Padding(
       padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
@@ -240,23 +255,15 @@ class _ActivityRow extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  width: 30,
-                  height: 30,
+                  key: const Key('activity-row-category-icon'),
+                  width: 34,
+                  height: 34,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: mine
-                        ? context.sky.accent
-                        : context.sky.avatarSecondary,
-                    shape: BoxShape.circle,
+                    color: tileColor.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(11),
                   ),
-                  child: Text(
-                    initial,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: mine ? context.sky.onAccent : Colors.white,
-                    ),
-                  ),
+                  child: Icon(appearance.icon, size: 18, color: tileColor),
                 ),
                 const SizedBox(width: AffluenaSpacing.space3),
                 Expanded(

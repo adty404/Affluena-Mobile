@@ -1,6 +1,8 @@
 import 'package:affluena_mobile/features/auth/application/auth_controller.dart';
 import 'package:affluena_mobile/features/auth/data/auth_models.dart';
+import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/redesign/presentation/activity_feed_screen.dart';
+import 'package:affluena_mobile/features/shared/presentation/appearance/item_appearance.dart';
 import 'package:affluena_mobile/features/transactions/application/transactions_controller.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/wallets/application/wallets_controller.dart';
@@ -49,6 +51,7 @@ const _bySarah = Transaction(
   userId: 'u-sarah',
   type: TransactionType.expense,
   walletId: 'w1',
+  categoryId: 'c-food',
   amountMinor: 100000,
   tagIds: [],
   transactionAt: '2026-06-20T08:00:00Z',
@@ -57,17 +60,35 @@ const _bySarah = Transaction(
   updatedAt: '2026-06-20T08:00:00Z',
 );
 
+// A category with a chosen icon (food -> restaurant) and color (green) so the
+// feed row must render that glyph in that color.
+const _foodColor = '#2E8B57';
+const _food = Category(
+  id: 'c-food',
+  userId: 'u-me',
+  name: 'Makanan',
+  type: CategoryType.expense,
+  icon: 'food',
+  color: _foodColor,
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
 class _AuthedController extends AuthController {
   @override
   AuthState build() => AuthState.authenticated(_me);
 }
 
-// The feed watches the transactions controller for the shared detail sheet;
-// stub it (no microtask load) so the test stays hermetic.
+// The feed watches the transactions controller for the shared detail sheet and
+// for category resolution; stub it (no microtask load) so the test stays
+// hermetic.
 class _StubTransactionsController extends TransactionsController {
   @override
-  TransactionsState build() =>
-      const TransactionsState(walletNames: {'w1': 'GoPay'});
+  TransactionsState build() => const TransactionsState(
+    walletNames: {'w1': 'GoPay'},
+    categories: [_food],
+    categoryNames: {'c-food': 'Makanan'},
+  );
 }
 
 Future<void> _pump(WidgetTester tester) async {
@@ -110,6 +131,30 @@ void main() {
     expect(find.textContaining('kamu'), findsOneWidget);
     // Wallet name shows in the row metadata.
     expect(find.textContaining('GoPay'), findsWidgets);
+  });
+
+  testWidgets('renders the category icon in its chosen color on each row', (
+    tester,
+  ) async {
+    await _pump(tester);
+
+    // The categorized expense (Makanan) shows its chosen glyph...
+    final icon = tester.widget<Icon>(
+      find.descendant(
+        of: find.byKey(const Key('activity-row-category-icon')).at(1),
+        matching: find.byType(Icon),
+      ),
+    );
+    expect(icon.icon, Icons.restaurant_outlined);
+    // ...in the category's chosen color, not a monochrome avatar.
+    expect(icon.color, parseItemColor(_foodColor));
+
+    // Every row carries a category-icon tile (no initial-letter avatar).
+    expect(
+      find.byKey(const Key('activity-row-category-icon')),
+      findsNWidgets(2),
+    );
+    expect(find.text('K'), findsNothing);
   });
 
   testWidgets('tapping a row opens the shared transaction detail sheet', (

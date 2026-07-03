@@ -6,9 +6,12 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../categories/application/category_tag_management_controller.dart';
+import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
+import '../../transactions/presentation/transaction_display.dart';
 import '../../wallets/application/wallet_detail_controller.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../../wallets/presentation/wallet_display.dart';
@@ -193,13 +196,17 @@ class _RoomDetailContent extends ConsumerWidget {
   }
 }
 
-class _TransactionList extends StatelessWidget {
+class _TransactionList extends ConsumerWidget {
   const _TransactionList({required this.txns});
 
   final List<Transaction> txns;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // The category catalog resolves each row's chosen icon + color, matching
+    // the main ledger. Watching the shared management controller keeps this
+    // isolated from the global transactions filter.
+    final categories = ref.watch(categoryTagManagementControllerProvider);
     final rows = <Widget>[];
     DateTime? currentDay;
     for (final tx in txns) {
@@ -223,7 +230,14 @@ class _TransactionList extends StatelessWidget {
           ),
         );
       }
-      rows.add(_TransactionRow(tx: tx));
+      rows.add(
+        _TransactionRow(
+          tx: tx,
+          category: tx.categoryId == null
+              ? null
+              : categories.categoryById(tx.categoryId!),
+        ),
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -233,9 +247,13 @@ class _TransactionList extends StatelessWidget {
 }
 
 class _TransactionRow extends StatelessWidget {
-  const _TransactionRow({required this.tx});
+  const _TransactionRow({required this.tx, required this.category});
 
   final Transaction tx;
+
+  /// Resolved category for [tx] (null when uncategorized/transfer) — drives the
+  /// leading tile's chosen icon + color.
+  final Category? category;
 
   static String _typeLabel(TransactionType type) => switch (type) {
     TransactionType.income => 'Pemasukan',
@@ -252,6 +270,8 @@ class _TransactionRow extends StatelessWidget {
         ? '+'
         : (tx.type == TransactionType.expense ? '-' : '');
     final amount = '$sign${MoneyFormatter.idr(tx.amountMinor.abs())}';
+    final appearance = categoryAppearanceFor(category, type: tx.type);
+    final tileColor = appearance.color ?? context.sky.muted;
 
     return Container(
       margin: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
@@ -268,19 +288,17 @@ class _TransactionRow extends StatelessWidget {
             height: 34,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: context.sky.sheet,
+              color: appearance.color != null
+                  ? tileColor.withValues(alpha: 0.14)
+                  : context.sky.sheet,
               borderRadius: BorderRadius.circular(11),
-              border: Border.all(color: context.sky.line),
+              border: Border.all(
+                color: appearance.color != null
+                    ? Colors.transparent
+                    : context.sky.line,
+              ),
             ),
-            child: Icon(
-              isIncome
-                  ? Icons.south_west
-                  : (tx.type == TransactionType.expense
-                        ? Icons.north_east
-                        : Icons.swap_horiz),
-              size: 18,
-              color: context.sky.muted,
-            ),
+            child: Icon(appearance.icon, size: 18, color: tileColor),
           ),
           const SizedBox(width: AffluenaSpacing.space3),
           Expanded(

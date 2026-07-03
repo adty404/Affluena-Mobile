@@ -169,6 +169,28 @@ All spacing derives from a base of 4.
 - **Spacing**: `space3` inner gap, `space4` vertical padding.
 - **States**: default, pressed, loading skeleton later.
 - **Accessibility**: row title and amount must be readable without color alone.
+- **Category icon + color (everywhere)**: the leading mark shows the
+  transaction's category **chosen icon in its chosen color** on a soft tinted
+  tile — the same treatment across **every** transaction-history surface, so a
+  categorized transaction looks identical wherever it is listed. Transfers keep
+  the swap glyph; income/expense with no category color fall back to the default
+  theming. The canonical resolver is `categoryAppearanceFor(Category?, {type})`
+  in `transactions/presentation/transaction_display.dart` (the ledger's
+  `transactionIcon` / `transactionIconColor` delegate to it). Surfaces:
+  - **Main ledger** (`transactions_screen.dart` via `TransactionTile`).
+  - **Aktivitas feed** (`redesign/activity_feed_screen.dart`) — leading slot is
+    the category tile; the "kamu" ownership signal lives in the meta line.
+  - **Calendar day sheet** (`calendar/calendar_screen.dart`) — `TransactionTile`
+    fed the category icon+color.
+  - **Room (wallet) detail** (`redesign/room_detail_screen.dart`).
+  - **Budget detail transaction list** (`budgets/budget_detail_screen.dart`) —
+    every row is the budget's category, so it renders that category's icon+color
+    (falling back to the budget's own color when the category has none).
+  - **Transaction detail sheet** (`transactions/transaction_detail_sheet.dart`) —
+    header shows the category icon+color beside the title.
+  Surfaces without a `TransactionsState` in scope watch
+  `categoryTagManagementControllerProvider` for the category catalog (overridable
+  in hermetic tests).
 
 ### Selector Row
 

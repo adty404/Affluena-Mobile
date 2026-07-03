@@ -92,6 +92,15 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   list via `PUT /categories/reorder`, optimistic + revert on failure) and the picker's pinned
   "Tambah kategori" action creates a category inline (`quickAdd:` preset type, `onMutated:` caller
   refresh hook) and selects it immediately — no detour to the master screen.
+- **Transaction-history rows show the category's icon+color everywhere**: every surface that lists
+  transactions renders the transaction's category chosen icon in its chosen color on a soft tinted
+  leading tile — the main ledger, the **Aktivitas** feed, the **Kalender** day sheet, **room/wallet
+  detail**, the **budget detail** transaction list, and the **transaction detail sheet**. The shared
+  resolver is `categoryAppearanceFor(Category?, {type})` in
+  `transactions/presentation/transaction_display.dart` (the ledger's `transactionIcon` /
+  `transactionIconColor` delegate to it); transfers keep the swap glyph, uncolored income/expense
+  fall back to default theming. Surfaces without a `TransactionsState` watch
+  `categoryTagManagementControllerProvider` for the category catalog. See DESIGN.md "Transaction Row".
 - **Sharing feature naming**: UI "Berbagi Dompet"; people you invite are "Pemantau" (max 5, one-way,
   read-only); the wallets others share to you show under Beranda's "Dibagikan untukku" section /
   `SharedWithMeScreen`. Endpoints are `/api/v1/partners` (historical) — see the API repo's contract.

@@ -64,12 +64,29 @@ class _TransactionDetailSheet extends ConsumerWidget {
             children: [
               Text('Detail transaksi', style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space4),
-              Text(
-                transactionTitle(state, transaction),
-                style: textTheme.headlineMedium,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _CategoryIcon(state: state, transaction: transaction),
+                  const SizedBox(width: AffluenaSpacing.space3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          transactionTitle(state, transaction),
+                          style: textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: AffluenaSpacing.space2),
+                        Text(
+                          transactionAmount(transaction),
+                          style: textTheme.titleLarge,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: AffluenaSpacing.space2),
-              Text(transactionAmount(transaction), style: textTheme.titleLarge),
               const SizedBox(height: AffluenaSpacing.space4),
               _DetailLine(
                 label: transaction.type == TransactionType.transfer
@@ -207,6 +224,35 @@ class _DeleteConfirmationDialog extends StatelessWidget {
           child: const Text('Hapus'),
         ),
       ],
+    );
+  }
+}
+
+/// The transaction's category icon in its chosen color on a soft tinted tile —
+/// the same leading treatment used across every transaction-history surface.
+class _CategoryIcon extends StatelessWidget {
+  const _CategoryIcon({required this.state, required this.transaction});
+
+  final TransactionsState state;
+  final Transaction transaction;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+    final icon = transactionIcon(state, transaction);
+    final accent = transactionIconColor(state, transaction) ?? colors.forest;
+    final background = transactionIconColor(state, transaction) != null
+        ? accent.withValues(alpha: 0.14)
+        : colors.surfaceTintSoft;
+    return Container(
+      width: 44,
+      height: 44,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(AffluenaRadii.md),
+      ),
+      child: Icon(icon, size: 22, color: accent),
     );
   }
 }
