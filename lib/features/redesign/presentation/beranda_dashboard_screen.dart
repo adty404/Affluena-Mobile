@@ -10,6 +10,7 @@ import '../../budgets/application/budget_controller.dart';
 import '../../budgets/data/budget_models.dart';
 import '../../budgets/presentation/budget_detail_screen.dart';
 import '../../budgets/presentation/budget_screen.dart';
+import '../../categories/data/category_models.dart';
 import '../../goals/application/goal_controller.dart';
 import '../../goals/data/goal_models.dart';
 import '../../goals/presentation/goal_detail_screen.dart';
@@ -146,6 +147,9 @@ class BerandaDashboardView extends ConsumerWidget {
                   context,
                   name: budgetState.categoryName(budget.categoryId),
                   budget: budget,
+                  category: budgetState.categories
+                      .where((category) => category.id == budget.categoryId)
+                      .firstOrNull,
                 ),
             ],
           ),
@@ -315,6 +319,7 @@ class BerandaDashboardView extends ConsumerWidget {
     BuildContext context, {
     required String name,
     required BudgetSummary budget,
+    Category? category,
   }) {
     final over = budget.usagePercent >= 100;
     final hue = SectionPalette.anggaran.of(context);
@@ -329,7 +334,13 @@ class BerandaDashboardView extends ConsumerWidget {
       titleColor: hasColor ? Colors.white : null,
       subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
-        icon: Icons.pie_chart_outline,
+        // The budget's own icon wins over its category's icon, which wins
+        // over the generic pie glyph — same precedence as the budget rows.
+        icon: resolveEntityIcon(
+          budget.icon,
+          (category != null ? categoryIconFor(category.icon) : null) ??
+              Icons.pie_chart_outline,
+        ),
         customColor: hasColor ? Colors.white : hue.strong,
         customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
@@ -362,7 +373,7 @@ class BerandaDashboardView extends ConsumerWidget {
       titleColor: hasColor ? Colors.white : null,
       subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
-        icon: Icons.savings_outlined,
+        icon: resolveEntityIcon(goal.icon, Icons.savings_outlined),
         customColor: hasColor ? Colors.white : hue.strong,
         customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
@@ -392,7 +403,7 @@ class BerandaDashboardView extends ConsumerWidget {
       titleColor: hasColor ? Colors.white : null,
       subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
-        icon: Icons.credit_card_outlined,
+        icon: resolveEntityIcon(item.icon, Icons.credit_card_outlined),
         customColor: hasColor ? Colors.white : hue.strong,
         customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
@@ -419,7 +430,7 @@ class BerandaDashboardView extends ConsumerWidget {
       titleColor: hasColor ? Colors.white : null,
       subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
-        icon: Icons.subscriptions_outlined,
+        icon: resolveEntityIcon(item.icon, Icons.subscriptions_outlined),
         customColor: hasColor ? Colors.white : hue.strong,
         customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
@@ -442,7 +453,7 @@ class BerandaDashboardView extends ConsumerWidget {
       titleColor: hasColor ? Colors.white : null,
       subtitleColor: hasColor ? Colors.white70 : null,
       leading: _IconTile(
-        icon: _recurringIcon(rule.type),
+        icon: resolveEntityIcon(rule.icon, _recurringIcon(rule.type)),
         customColor: hasColor ? Colors.white : hue.strong,
         customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,

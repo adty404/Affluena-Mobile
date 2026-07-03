@@ -231,6 +231,21 @@ const goPayWallet = Wallet(
   updatedAt: '2026-06-01T00:00:00Z',
 );
 
+/// Carries a parseable palette hex, so its card renders the solid colored
+/// treatment (the other fixtures keep legacy non-hex color strings).
+const greenWallet = Wallet(
+  id: '22222222-2222-2222-2222-222222220004',
+  userId: '11111111-1111-1111-1111-111111111111',
+  name: 'Dompet Hijau',
+  type: WalletType.bank,
+  currencyCode: 'IDR',
+  balanceMinor: 1000000,
+  color: '#2E8B57',
+  description: 'Tabungan utama',
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
 const goalWallet = Wallet(
   id: '22222222-2222-2222-2222-222222220099',
   userId: '11111111-1111-1111-1111-111111111111',

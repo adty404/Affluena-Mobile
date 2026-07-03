@@ -145,6 +145,55 @@ void main() {
     expect(repository.createdSubscriptionRequests.single.name, 'Disney+');
     expect(repository.createdSubscriptionRequests.single.color, '#2E8B57');
   });
+
+  testWidgets(
+    'colored installment and subscription render solid cards on both tabs',
+    (tester) async {
+      final repository = TestTrackerRepository(
+        installments: const [coloredInstallment],
+        subscriptions: const [coloredSubscription],
+      );
+
+      await tester.pumpWidget(trackerTestApp(repository));
+      await tester.pumpTrackerState();
+
+      // Installments tab: the colored item paints its whole row solid with a
+      // white title — the same treatment as Beranda's dashboard cards.
+      await tester.scrollUntilVisible(
+        find.text('Laptop'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      const indigo = Color(0xFF4256B8);
+      expect(_solidCard(indigo), findsOneWidget);
+      final installmentTitle = tester.widget<Text>(find.text('Laptop'));
+      expect(installmentTitle.style?.color, Colors.white);
+
+      // Subscriptions tab gets the same treatment.
+      await tester.tap(find.byKey(const Key('tracker-subscriptions-tab')));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Spotify'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      const purple = Color(0xFF7C5BC2);
+      expect(_solidCard(purple), findsOneWidget);
+      final subscriptionTitle = tester.widget<Text>(find.text('Spotify'));
+      expect(subscriptionTitle.style?.color, Colors.white);
+    },
+  );
+}
+
+/// Finds a card painted solid in [color] (the AffluenaCard DecoratedBox whose
+/// BoxDecoration carries the item's chosen color as its fill).
+Finder _solidCard(Color color) {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is DecoratedBox &&
+        widget.decoration is BoxDecoration &&
+        (widget.decoration as BoxDecoration).color == color,
+  );
 }
 
 extension on WidgetTester {
@@ -170,6 +219,14 @@ Widget trackerTestApp(TestTrackerRepository repository) {
 }
 
 class TestTrackerRepository implements TrackerRepository {
+  TestTrackerRepository({
+    List<Installment> installments = const [seedInstallment],
+    List<Subscription> subscriptions = const [seedSubscription],
+  }) : _installments = List<Installment>.of(installments),
+       _subscriptions = List<Subscription>.of(subscriptions);
+
+  final List<Installment> _installments;
+  final List<Subscription> _subscriptions;
   final installmentPaymentRequests = <TrackerPaymentRequest>[];
   final subscriptionPaymentRequests = <TrackerPaymentRequest>[];
   final createdInstallmentRequests = <InstallmentRequest>[];
@@ -182,13 +239,18 @@ class TestTrackerRepository implements TrackerRepository {
     String? sort,
   }) async {
     return InstallmentListResponse(
-      installments: const [seedInstallment],
-      pagination: Pagination(total: 1, limit: limit ?? 1, offset: offset ?? 0),
+      installments: _installments,
+      pagination: Pagination(
+        total: _installments.length,
+        limit: limit ?? _installments.length,
+        offset: offset ?? 0,
+      ),
     );
   }
 
   @override
-  Future<Installment> getInstallment(String id) async => seedInstallment;
+  Future<Installment> getInstallment(String id) async =>
+      _installments.firstWhere((item) => item.id == id);
 
   @override
   Future<Installment> createInstallment(InstallmentRequest request) async {
@@ -232,13 +294,18 @@ class TestTrackerRepository implements TrackerRepository {
     String? sort,
   }) async {
     return SubscriptionListResponse(
-      subscriptions: const [seedSubscription],
-      pagination: Pagination(total: 1, limit: limit ?? 1, offset: offset ?? 0),
+      subscriptions: _subscriptions,
+      pagination: Pagination(
+        total: _subscriptions.length,
+        limit: limit ?? _subscriptions.length,
+        offset: offset ?? 0,
+      ),
     );
   }
 
   @override
-  Future<Subscription> getSubscription(String id) async => seedSubscription;
+  Future<Subscription> getSubscription(String id) async =>
+      _subscriptions.firstWhere((item) => item.id == id);
 
   @override
   Future<Subscription> createSubscription(SubscriptionRequest request) async {
@@ -408,6 +475,46 @@ const seedInstallment = Installment(
   dueDay: 5,
   status: InstallmentStatus.active,
   note: 'Office laptop',
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
+);
+
+/// [seedInstallment] with a user-chosen color, so its row renders the solid
+/// colored treatment.
+const coloredInstallment = Installment(
+  id: 'installment-laptop',
+  userId: 'user-1',
+  name: 'Laptop',
+  walletId: 'wallet-main',
+  categoryId: 'category-food',
+  totalAmountMinor: 12000000,
+  monthlyAmountMinor: 1000000,
+  tenorMonths: 12,
+  remainingMonths: 8,
+  startDate: '2026-01-01',
+  dueDay: 5,
+  status: InstallmentStatus.active,
+  note: 'Office laptop',
+  color: '#4256B8',
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
+);
+
+/// [seedSubscription] with a user-chosen color, so its row renders the solid
+/// colored treatment.
+const coloredSubscription = Subscription(
+  id: 'subscription-spotify',
+  userId: 'user-1',
+  name: 'Spotify',
+  accountDetail: 'Family plan',
+  walletId: 'wallet-main',
+  categoryId: 'category-food',
+  amountMinor: 65000,
+  billingCycle: BillingCycle.monthly,
+  nextDueDate: '2026-07-01',
+  status: SubscriptionStatus.active,
+  note: '',
+  color: '#7C5BC2',
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
 );

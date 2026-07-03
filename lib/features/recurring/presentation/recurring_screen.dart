@@ -188,28 +188,45 @@ class _RecurringCard extends StatelessWidget {
     final detail = rule.type == RecurringType.transfer
         ? '$walletName ke ${destinationName ?? 'Dompet tidak diketahui'}'
         : '$walletName · $categoryName';
+    // A valid user-chosen rule color paints the whole row SOLID (the same
+    // treatment as Beranda's dashboard cards): white text, white icon on a
+    // translucent tile, onColor status pills — the income-green amount yields
+    // to white for contrast. Without one, the color only accents the icon
+    // tile as before.
+    final custom = parseItemColor(rule.color);
+    final hasColor = custom != null;
+    final income = rule.type == RecurringType.income;
+    final icon = resolveEntityIcon(rule.icon, _recurringTypeIcon(rule.type));
 
     return AffluenaCard(
+      backgroundColor: hasColor ? custom : null,
+      borderColor: hasColor ? custom : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // The item's chosen colour accents the icon tile; without one it
-              // keeps the neutral forest theming.
-              ItemAccentIconTile(
-                icon: _recurringTypeIcon(rule.type),
-                colorHex: rule.color,
-                fallback: colors.forest,
-                fallbackBackground: colors.forestSoft,
-              ),
+              if (hasColor)
+                ItemOnColorIconTile(icon: icon)
+              else
+                ItemAccentIconTile(
+                  icon: icon,
+                  colorHex: rule.color,
+                  fallback: colors.forest,
+                  fallbackBackground: colors.forestSoft,
+                ),
               const SizedBox(width: AffluenaSpacing.space3),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(rule.name, style: textTheme.titleMedium),
+                    Text(
+                      rule.name,
+                      style: hasColor
+                          ? textTheme.titleMedium?.copyWith(color: Colors.white)
+                          : textTheme.titleMedium,
+                    ),
                     const SizedBox(height: AffluenaSpacing.space1),
                     Wrap(
                       spacing: AffluenaSpacing.space2,
@@ -218,10 +235,12 @@ class _RecurringCard extends StatelessWidget {
                         StatusBadge(
                           label: rule.type.label,
                           tone: StatusTone.neutral,
+                          onColor: hasColor,
                         ),
                         StatusBadge.forStatus(
                           rule.status.apiValue,
                           label: rule.status.label,
+                          onColor: hasColor,
                         ),
                       ],
                     ),
@@ -229,6 +248,7 @@ class _RecurringCard extends StatelessWidget {
                 ),
               ),
               PopupMenuButton<String>(
+                iconColor: hasColor ? Colors.white : null,
                 onSelected: (value) {
                   if (value == 'edit') onEdit();
                   if (value == 'pause' && onPause != null) onPause!();
@@ -264,25 +284,43 @@ class _RecurringCard extends StatelessWidget {
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
             MoneyFormatter.idr(rule.amountMinor),
-            style: textTheme.headlineSmall,
+            // Income amounts carry the income green (as on Beranda), but it
+            // yields to white on a solid colored card for contrast.
+            style: textTheme.headlineSmall?.copyWith(
+              color: hasColor ? Colors.white : (income ? colors.success : null),
+            ),
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             '${rule.frequencyLabel} · berikutnya ${AffluenaDateFormatter.shortDate(rule.nextRunAt)}',
-            style: textTheme.bodySmall,
+            style: hasColor
+                ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                : textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
-          Text(detail, style: textTheme.bodySmall),
+          Text(
+            detail,
+            style: hasColor
+                ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                : textTheme.bodySmall,
+          ),
           if (rule.lastRunAt != null) ...[
             const SizedBox(height: AffluenaSpacing.space1),
             Text(
               'Terakhir dijalankan ${AffluenaDateFormatter.shortDate(rule.lastRunAt!)}',
-              style: textTheme.bodySmall,
+              style: hasColor
+                  ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                  : textTheme.bodySmall,
             ),
           ],
           if (rule.note.isNotEmpty) ...[
             const SizedBox(height: AffluenaSpacing.space2),
-            Text(rule.note, style: textTheme.bodySmall),
+            Text(
+              rule.note,
+              style: hasColor
+                  ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                  : textTheme.bodySmall,
+            ),
           ],
           if (onRun != null) ...[
             const SizedBox(height: AffluenaSpacing.space4),

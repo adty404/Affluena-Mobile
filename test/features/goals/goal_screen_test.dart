@@ -110,6 +110,28 @@ void main() {
     expect(repository.createdRequests.single.color, '#2E8B57');
   });
 
+  testWidgets('goal with a chosen color renders a solid colored card', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      goalTestApp(TestGoalRepository(goals: const [coloredGoal])),
+    );
+    await tester.pumpGoalState();
+
+    await tester.scrollUntilVisible(
+      find.text('Dana Liburan'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    // The colored goal paints its whole row solid with a white title — the
+    // same treatment as Beranda's dashboard cards.
+    const green = Color(0xFF2E8B57);
+    expect(_solidCard(green), findsOneWidget);
+    final title = tester.widget<Text>(find.text('Dana Liburan'));
+    expect(title.style?.color, Colors.white);
+  });
+
   testWidgets('responds to a pending goal invite and refreshes actions', (
     tester,
   ) async {
@@ -300,6 +322,32 @@ extension on GoalMember {
     );
   }
 }
+
+/// Finds a card painted solid in [color] (the AffluenaCard DecoratedBox whose
+/// BoxDecoration carries the item's chosen color as its fill).
+Finder _solidCard(Color color) {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is DecoratedBox &&
+        widget.decoration is BoxDecoration &&
+        (widget.decoration as BoxDecoration).color == color,
+  );
+}
+
+/// A goal with a user-chosen color, so its row renders the solid colored
+/// treatment.
+const coloredGoal = Goal(
+  id: 'goal-colored',
+  userId: 'user-1',
+  name: 'Dana Liburan',
+  targetAmountMinor: 8000000,
+  collectedAmountMinor: 2000000,
+  deadline: null,
+  status: GoalStatus.active,
+  color: '#2E8B57',
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
 
 const seedGoal = Goal(
   id: 'goal-1',

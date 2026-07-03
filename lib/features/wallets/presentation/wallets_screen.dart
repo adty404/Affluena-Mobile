@@ -127,14 +127,16 @@ class _WalletCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
-    // Use the wallet's chosen color when set, otherwise the theme accent so
-    // wallets without a color render exactly as before.
-    final hasColor = wallet.color.isNotEmpty;
-    final accent = hasColor
-        ? resolveWalletColor(wallet.color, colors.forest)
-        : colors.forest;
+    // A valid user-chosen wallet color paints the whole card SOLID — the same
+    // treatment as Beranda's dashboard cards (bg + border = the color, white
+    // title/balance, white70 type label, white icon on a translucent-white
+    // tile). Missing/unparseable colors keep the default theming exactly as
+    // before.
+    final custom = parseWalletColor(wallet.color);
+    final hasColor = custom != null;
+    final accent = custom ?? colors.forest;
     final accentSoft = hasColor
-        ? accent.withValues(alpha: 0.14)
+        ? Colors.white.withValues(alpha: 0.2)
         : colors.forestSoft;
 
     return InkWell(
@@ -142,6 +144,8 @@ class _WalletCard extends StatelessWidget {
       onTap: onOpen,
       child: AffluenaCard(
         padding: const EdgeInsets.all(AffluenaSpacing.space4),
+        backgroundColor: hasColor ? accent : null,
+        borderColor: hasColor ? accent : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -154,12 +158,19 @@ class _WalletCard extends StatelessWidget {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(AffluenaSpacing.space3),
-                    child: Icon(resolveWalletIcon(wallet), color: accent),
+                    child: Icon(
+                      resolveWalletIcon(wallet),
+                      color: hasColor ? Colors.white : accent,
+                    ),
                   ),
                 ),
                 const Spacer(),
                 if (_isShared(wallet))
-                  Icon(Icons.group, size: 18, color: colors.inkMuted),
+                  Icon(
+                    Icons.group,
+                    size: 18,
+                    color: hasColor ? Colors.white : colors.inkMuted,
+                  ),
                 if (onEdit != null)
                   IconButton(
                     key: Key('edit-wallet-${_walletKey(wallet)}'),
@@ -170,7 +181,11 @@ class _WalletCard extends StatelessWidget {
                       maxHeight: 36,
                     ),
                     padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    icon: Icon(
+                      Icons.edit_outlined,
+                      size: 20,
+                      color: hasColor ? Colors.white : null,
+                    ),
                   ),
               ],
             ),
@@ -179,14 +194,18 @@ class _WalletCard extends StatelessWidget {
               wallet.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: textTheme.titleMedium,
+              style: hasColor
+                  ? textTheme.titleMedium?.copyWith(color: Colors.white)
+                  : textTheme.titleMedium,
             ),
             const SizedBox(height: AffluenaSpacing.space1),
             Text(
               '${walletTypeLabel(wallet.type)} · ${_walletDescription(wallet)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: textTheme.bodySmall,
+              style: hasColor
+                  ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                  : textTheme.bodySmall,
             ),
             const Spacer(),
             FittedBox(
@@ -195,7 +214,9 @@ class _WalletCard extends StatelessWidget {
               child: Text(
                 MoneyFormatter.idr(wallet.balanceMinor),
                 maxLines: 1,
-                style: textTheme.titleMedium,
+                style: hasColor
+                    ? textTheme.titleMedium?.copyWith(color: Colors.white)
+                    : textTheme.titleMedium,
               ),
             ),
           ],

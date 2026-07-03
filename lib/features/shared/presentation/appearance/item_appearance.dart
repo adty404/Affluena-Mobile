@@ -172,6 +172,30 @@ class ItemAccentIconTile extends StatelessWidget {
   }
 }
 
+/// The icon-tile variant for rows painted **in** the item's color (the solid
+/// list-card treatment mirroring Beranda's dashboard cards): a white glyph on
+/// a translucent-white square, so the icon stays legible on any palette
+/// swatch. Pair with white title/value text and `StatusBadge(onColor: true)`.
+class ItemOnColorIconTile extends StatelessWidget {
+  const ItemOnColorIconTile({required this.icon, super.key});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(AffluenaRadii.md),
+      ),
+      child: Icon(icon, size: 20, color: Colors.white),
+    );
+  }
+}
+
 /// One entry in the category icon catalog: the semantic id persisted on the
 /// API, a short Indonesian label for pickers, and the Material glyph both
 /// clients render for that id.
@@ -290,6 +314,45 @@ IconData? categoryIconFor(String id) {
     if (option.id == id) return option.icon;
   }
   return null;
+}
+
+/// Semantic wallet icon ids a user can choose, mapped to Material icons. The
+/// id (the map key) is what gets persisted; never persist the [IconData].
+/// Lives here (not in the wallets feature) so [entityIconFor] can union it
+/// with the category catalog without a feature import; `wallet_appearance.dart`
+/// re-exports it for the historical wallet-named call sites.
+const Map<String, IconData> kWalletIconCatalog = <String, IconData>{
+  'wallet': Icons.account_balance_wallet_outlined,
+  'bank': Icons.account_balance_outlined,
+  'cash': Icons.payments_outlined,
+  'card': Icons.credit_card_outlined,
+  'ewallet': Icons.phone_iphone_outlined,
+  'savings': Icons.savings_outlined,
+  'investment': Icons.trending_up,
+  'gift': Icons.card_giftcard_outlined,
+  'shopping': Icons.shopping_bag_outlined,
+  'food': Icons.restaurant_outlined,
+  'transport': Icons.directions_car_outlined,
+  'home': Icons.home_outlined,
+  'health': Icons.favorite_outline,
+  'travel': Icons.flight_outlined,
+};
+
+/// The glyph for a stored *entity* icon id (budgets, goals, installments,
+/// subscriptions, recurring rules): looked up against the union of
+/// [kCategoryIconCatalog] + [kWalletIconCatalog], the category catalog winning
+/// on an id clash so both clients resolve the same glyph. Returns null when
+/// the id is empty or unknown (e.g. saved by a newer client) so callers can
+/// fall back. Wallets keep `resolveWalletIcon` (per-type default fallback).
+IconData? entityIconFor(String icon) {
+  if (icon.isEmpty) return null;
+  return categoryIconFor(icon) ?? kWalletIconCatalog[icon];
+}
+
+/// The glyph to render for an entity: its own stored icon when set and known,
+/// otherwise [fallback] (the surface's existing default glyph).
+IconData resolveEntityIcon(String icon, IconData fallback) {
+  return entityIconFor(icon) ?? fallback;
 }
 
 /// Resolves the glyph shown for [type] when a category has no chosen icon.

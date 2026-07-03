@@ -11,14 +11,24 @@ class StatusBadge extends StatelessWidget {
   const StatusBadge({
     required this.label,
     this.tone = StatusTone.neutral,
+    this.onColor = false,
     super.key,
   });
 
   final String label;
   final StatusTone tone;
 
+  /// Renders the white-on-translucent-white variant used on cards painted in
+  /// the item's own color (the solid list-card treatment), where the semantic
+  /// tints would lose contrast. Status stays carried by the label text.
+  final bool onColor;
+
   /// Maps a backend status string to a tone + a human-readable label.
-  factory StatusBadge.forStatus(String status, {String? label}) {
+  factory StatusBadge.forStatus(
+    String status, {
+    String? label,
+    bool onColor = false,
+  }) {
     final normalized = status.trim().toLowerCase();
     final tone = switch (normalized) {
       'active' ||
@@ -35,7 +45,11 @@ class StatusBadge extends StatelessWidget {
       'overdue' => StatusTone.danger,
       _ => StatusTone.neutral,
     };
-    return StatusBadge(label: label ?? _humanize(normalized), tone: tone);
+    return StatusBadge(
+      label: label ?? _humanize(normalized),
+      tone: tone,
+      onColor: onColor,
+    );
   }
 
   static String _humanize(String value) {
@@ -69,7 +83,9 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.affluenaColors;
     final textTheme = Theme.of(context).textTheme;
-    final spec = _resolve(colors);
+    final spec = onColor
+        ? (fg: Colors.white, bg: Colors.white.withValues(alpha: 0.2))
+        : _resolve(colors);
 
     return DecoratedBox(
       decoration: BoxDecoration(
