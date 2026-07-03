@@ -3,19 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../budgets/application/budget_controller.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../dashboard/application/dashboard_home_controller.dart';
+import '../../redesign/presentation/activity_feed_screen.dart';
+import '../../redesign/presentation/room_detail_screen.dart';
 import '../../transactions/application/transactions_controller.dart';
 import '../../wallets/application/wallet_detail_controller.dart';
 import '../../wallets/application/wallets_controller.dart';
 
-/// Every provider whose data depends on wallet balances (but NOT the
-/// transaction ledger itself). Single source of truth shared by both the [Ref]
-/// and [WidgetRef] extensions so the two lists can never drift apart and
-/// reintroduce stale-balance bugs.
+/// Every provider that must refresh after a money move — wallet balances,
+/// dashboard/analytics/budgets, AND the transaction-list surfaces that are NOT
+/// owned by the main [transactionsControllerProvider] (which reloads itself).
+/// Single source of truth shared by both the [Ref] and [WidgetRef] extensions
+/// so the two lists can never drift apart and reintroduce stale-data bugs.
 ///
-/// Family providers (e.g. [walletDetailProvider]) are listed once — invalidating
-/// a family without an argument refreshes every currently-alive instance. The
-/// element type is inferred as `ProviderOrFamily` (not publicly exported, so it
-/// can't be spelled here); every entry is a valid argument to `invalidate`.
+/// Family providers (e.g. [walletDetailProvider], [walletTransactionsProvider])
+/// are listed once — invalidating a family without an argument refreshes every
+/// currently-alive instance. The element type is inferred as `ProviderOrFamily`
+/// (not publicly exported, so it can't be spelled here); every entry is a valid
+/// argument to `invalidate`.
 final _balanceProviders = [
   walletListProvider,
   walletDetailProvider,
@@ -26,6 +30,12 @@ final _balanceProviders = [
   budgetControllerProvider,
   // The calendar month grid + any open day sheet re-aggregate from the ledger.
   calendarMonthProvider,
+  // Standalone transaction-list surfaces the main ledger controller doesn't own:
+  // the cross-wallet Aktivitas feed and each room/wallet detail's list. Without
+  // these, a quick-add (or any non-ledger mutation) leaves them showing a stale
+  // list even though balances updated.
+  recentActivityProvider,
+  walletTransactionsProvider,
 ];
 
 /// Invalidates every provider whose data depends on wallet balances or the

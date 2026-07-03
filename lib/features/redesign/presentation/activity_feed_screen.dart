@@ -59,14 +59,6 @@ class ActivityFeedView extends ConsumerWidget {
     // TransactionsScreen uses. It needs the transactions controller's lookup
     // maps (wallet/category names) and powers the sheet's edit/delete flows.
     final txState = ref.watch(transactionsControllerProvider);
-    // The controller reloads its own list after an edit/delete from the
-    // sheet; mirror that into this feed so mutated rows don't linger stale.
-    ref.listen(transactionsControllerProvider, (previous, next) {
-      if (previous != null &&
-          !identical(previous.transactions, next.transactions)) {
-        ref.invalidate(recentActivityProvider);
-      }
-    });
 
     return RefreshIndicator(
       onRefresh: () => _refresh(ref),

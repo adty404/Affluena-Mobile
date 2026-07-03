@@ -14,11 +14,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Golden (design-snapshot) of the Wawasan headline "Ke mana uang bulan ini?"
-/// category-breakdown card in its default (Pengeluaran) state: the segmented
-/// toggle, the total, and the ranked category rows (icon tile + name + amount +
-/// proportion bar + %). Text renders as the placeholder test font, so this is a
-/// layout drift detector, not a pixel match.
+/// Golden (design-snapshot) of the Wawasan headline "Ke mana uang?"
+/// category-breakdown card: the period chips, the pager, the segmented toggle,
+/// the total, and the ranked category rows (icon tile + name + amount +
+/// proportion bar + %). Scoped to the "Tahun" period so the pager label is a
+/// constant-width year (deterministic regardless of the calendar month). Text
+/// renders as the placeholder test font, so this is a layout drift detector,
+/// not a pixel match.
 
 const _trend = CashflowTrendResponse(trend: []);
 const _distribution = ExpenseDistributionResponse(distribution: []);
@@ -157,6 +159,15 @@ void main() {
     );
     // The theme defaults to Tinta light via the app; pump until the async
     // breakdown settles.
+    await tester.pumpAndSettle();
+
+    // Scope to "Tahun": the pager label becomes a constant-width year, so the
+    // snapshot doesn't drift with the calendar month, and the whole current
+    // year includes the (current-month) fixtures regardless of today's date.
+    final yearChip = find.byKey(const Key('insight-period-year'));
+    await tester.ensureVisible(yearChip);
+    await tester.pumpAndSettle();
+    await tester.tap(yearChip);
     await tester.pumpAndSettle();
 
     await expectLater(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../core/formatters/date_formatter.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -45,6 +46,8 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
   late String? _walletId;
   late String? _toWalletId;
   late String? _categoryId;
+  // The transaction's local date+time, editable via the date/time pickers.
+  late DateTime _transactionAt;
   String? _error;
   bool _isSaving = false;
 
@@ -63,6 +66,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
     _walletId = transaction.walletId;
     _toWalletId = transaction.toWalletId;
     _categoryId = transaction.categoryId;
+    _transactionAt = DateTime.parse(transaction.transactionAt).toLocal();
   }
 
   @override
@@ -140,6 +144,10 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
                   _error = null;
                 }),
                 onSelectCategory: _selectCategory,
+                transactionAtLabel: AffluenaDateFormatter.dateTime(
+                  _transactionAt.toUtc().toIso8601String(),
+                ),
+                onSelectDateTime: _selectDateTime,
                 onSave: _save,
               ),
             ],
@@ -174,6 +182,35 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
     });
   }
 
+  /// Opens a date picker then a time picker so the transaction can be
+  /// re-stamped. Cancelling either keeps the current value.
+  Future<void> _selectDateTime() async {
+    final current = _transactionAt;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(current.year + 5, 12, 31),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+    );
+    if (!mounted) return;
+    final picked = time ?? TimeOfDay.fromDateTime(current);
+    setState(() {
+      _transactionAt = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        picked.hour,
+        picked.minute,
+      );
+      _error = null;
+    });
+  }
+
   Future<void> _save() async {
     final transaction = widget.transaction;
     final amountMinor = _amountMinor ?? 0;
@@ -203,7 +240,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
           ? null
           : _categoryId,
       amountMinor: signed,
-      transactionAt: transaction.transactionAt,
+      transactionAt: _transactionAt.toUtc().toIso8601String(),
       note: note.isEmpty ? null : note,
       tagIds: transaction.tagIds,
     );

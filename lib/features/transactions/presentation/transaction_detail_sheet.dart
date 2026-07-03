@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
@@ -47,7 +48,11 @@ class _TransactionDetailSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final textTheme = Theme.of(context).textTheme;
+    final sky = context.sky;
+    final isIncome = transaction.type == TransactionType.income;
+    final isTransfer = transaction.type == TransactionType.transfer;
+    final amountColor = isIncome ? sky.income : sky.ink;
+    final note = transaction.note;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -60,12 +65,21 @@ class _TransactionDetailSheet extends ConsumerWidget {
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Detail transaksi', style: textTheme.titleLarge),
+              Text(
+                'Detail transaksi',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                  color: sky.muted,
+                ),
+              ),
               const SizedBox(height: AffluenaSpacing.space4),
+              // Hero: category icon + title + type pill, with the amount as the
+              // focal number (income green, everything else ink).
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _CategoryIcon(state: state, transaction: transaction),
                   const SizedBox(width: AffluenaSpacing.space3),
@@ -75,43 +89,71 @@ class _TransactionDetailSheet extends ConsumerWidget {
                       children: [
                         Text(
                           transactionTitle(state, transaction),
-                          style: textTheme.headlineMedium,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            height: 1.2,
+                            color: sky.ink,
+                          ),
                         ),
-                        const SizedBox(height: AffluenaSpacing.space2),
-                        Text(
-                          transactionAmount(transaction),
-                          style: textTheme.titleLarge,
-                        ),
+                        const SizedBox(height: 6),
+                        _TypePill(type: transaction.type),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              _DetailLine(
-                label: transaction.type == TransactionType.transfer
-                    ? 'Dari dompet'
-                    : 'Dompet',
-                value: state.walletName(transaction.walletId),
-              ),
-              if (transaction.type == TransactionType.transfer &&
-                  transaction.toWalletId != null)
-                _DetailLine(
-                  label: 'Ke dompet',
-                  value: state.walletName(transaction.toWalletId!),
-                ),
-              _DetailLine(
-                label: 'Kategori',
-                value: state.categoryName(transaction),
-              ),
-              _DetailLine(
-                label: 'Tanggal & waktu',
-                value: AffluenaDateFormatter.dateTime(
-                  transaction.transactionAt,
+              Text(
+                transactionAmount(transaction),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  color: amountColor,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
-              if (transaction.note.isNotEmpty)
-                _DetailLine(label: 'Catatan', value: transaction.note),
+              const SizedBox(height: AffluenaSpacing.space5),
+              // Details card.
+              Container(
+                decoration: BoxDecoration(
+                  color: sky.surface,
+                  borderRadius: BorderRadius.circular(AffluenaRadii.card),
+                  border: Border.all(color: sky.line),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AffluenaSpacing.space4,
+                ),
+                child: Column(
+                  children: [
+                    _InfoRow(
+                      label: isTransfer ? 'Dari dompet' : 'Dompet',
+                      value: state.walletName(transaction.walletId),
+                    ),
+                    if (isTransfer && transaction.toWalletId != null)
+                      _InfoRow(
+                        label: 'Ke dompet',
+                        value: state.walletName(transaction.toWalletId!),
+                      ),
+                    if (!isTransfer)
+                      _InfoRow(
+                        label: 'Kategori',
+                        value: state.categoryName(transaction),
+                      ),
+                    _InfoRow(
+                      label: 'Tanggal & waktu',
+                      value: AffluenaDateFormatter.dateTime(
+                        transaction.transactionAt,
+                      ),
+                    ),
+                    if (note.isNotEmpty)
+                      _InfoRow(label: 'Catatan', value: note),
+                  ],
+                ),
+              ),
               const SizedBox(height: AffluenaSpacing.space5),
               if (_isCreator)
                 _CreatorActions(state: state, transaction: transaction)
@@ -124,6 +166,40 @@ class _TransactionDetailSheet extends ConsumerWidget {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A small pill naming the transaction type (Pengeluaran / Pemasukan / Transfer
+/// / Penyesuaian) in a soft tinted chip.
+class _TypePill extends StatelessWidget {
+  const _TypePill({required this.type});
+
+  final TransactionType type;
+
+  @override
+  Widget build(BuildContext context) {
+    final sky = context.sky;
+    final (label, color) = switch (type) {
+      TransactionType.income => ('Pemasukan', sky.income),
+      TransactionType.expense => ('Pengeluaran', sky.ink),
+      TransactionType.transfer => ('Transfer', sky.muted),
+      TransactionType.adjustment => ('Penyesuaian', sky.muted),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
         ),
       ),
     );
@@ -238,41 +314,63 @@ class _CategoryIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
+    final sky = context.sky;
     final icon = transactionIcon(state, transaction);
-    final accent = transactionIconColor(state, transaction) ?? colors.forest;
-    final background = transactionIconColor(state, transaction) != null
+    final custom = transactionIconColor(state, transaction);
+    final accent = custom ?? sky.accent;
+    final background = custom != null
         ? accent.withValues(alpha: 0.14)
-        : colors.surfaceTintSoft;
+        : sky.sheet;
     return Container(
-      width: 44,
-      height: 44,
+      width: 48,
+      height: 48,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(AffluenaRadii.md),
+        borderRadius: BorderRadius.circular(AffluenaRadii.lg),
+        border: custom != null ? null : Border.all(color: sky.line),
       ),
-      child: Icon(icon, size: 22, color: accent),
+      child: Icon(icon, size: 24, color: accent),
     );
   }
 }
 
-class _DetailLine extends StatelessWidget {
-  const _DetailLine({required this.label, required this.value});
+/// One label/value row inside the details card: muted label on the left, the
+/// value right-aligned in ink. Rows are separated by their own vertical padding
+/// (no dividers) for a calm card.
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
 
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final sky = context.sky;
     return Padding(
-      padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
+      padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 88, child: Text(label, style: textTheme.bodySmall)),
-          Expanded(child: Text(value, style: textTheme.bodyLarge)),
+          SizedBox(
+            width: 104,
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 12.5, color: sky.muted),
+            ),
+          ),
+          const SizedBox(width: AffluenaSpacing.space3),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: sky.ink,
+              ),
+            ),
+          ),
         ],
       ),
     );

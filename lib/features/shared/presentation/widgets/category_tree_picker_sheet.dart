@@ -126,6 +126,10 @@ class _FlatNode {
 class _CategoryTreePickerSheetState
     extends ConsumerState<_CategoryTreePickerSheet> {
   String _query = '';
+
+  /// Search starts collapsed behind a header icon so the field doesn't crowd
+  /// the list; tapping the search icon reveals it (and clearing it hides it).
+  bool _searchVisible = false;
   final Set<String> _collapsed = <String>{};
 
   /// The categories this picker renders (reorder/CRUD live on the dedicated
@@ -161,6 +165,21 @@ class _CategoryTreePickerSheetState
                 Expanded(
                   child: Text(widget.title, style: textTheme.titleLarge),
                 ),
+                // Search is a header icon (not an always-on field): tapping it
+                // toggles the input; collapsing clears the query.
+                IconButton(
+                  key: const Key('category-picker-search-button'),
+                  tooltip: _searchVisible ? 'Tutup pencarian' : 'Cari kategori',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => setState(() {
+                    _searchVisible = !_searchVisible;
+                    if (!_searchVisible) _query = '';
+                  }),
+                  icon: Icon(
+                    _searchVisible ? Icons.close : Icons.search,
+                    color: colors.inkMuted,
+                  ),
+                ),
                 // Manage categories (full CRUD + drag-to-reorder) on a dedicated
                 // screen. The picker itself stays selection-only — no direct
                 // reorder here.
@@ -176,18 +195,21 @@ class _CategoryTreePickerSheetState
                 ),
               ],
             ),
-            const SizedBox(height: AffluenaSpacing.space4),
-            TextField(
-              key: const Key('category-tree-search-field'),
-              autocorrect: false,
-              textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Cari kategori',
+            if (_searchVisible) ...[
+              const SizedBox(height: AffluenaSpacing.space3),
+              TextField(
+                key: const Key('category-tree-search-field'),
+                autofocus: true,
+                autocorrect: false,
+                textInputAction: TextInputAction.search,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Cari kategori',
+                ),
+                onChanged: (value) => setState(() => _query = value),
               ),
-              onChanged: (value) => setState(() => _query = value),
-            ),
-            const SizedBox(height: AffluenaSpacing.space3),
+            ],
+            const SizedBox(height: AffluenaSpacing.space4),
             if (widget.allowNone && normalizedQuery.isEmpty) ...[
               _NoneTile(
                 label: widget.noneLabel,

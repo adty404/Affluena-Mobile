@@ -95,9 +95,10 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   revert on failure). The master screen's add button is a plain **`Icons.add`** (no tree glyph); its
   create/edit form shows the expense/income toggle **only on create** — a category's type is fixed
   once it exists (editing changes name/icon/color/parent only). The shared `showCategoryTreePicker`
-  is **selection-only** — no in-place reorder and no inline create; its header has a "Kelola kategori"
-  gear (`category-picker-manage-button`) that pushes the master screen for all CRUD + reorder, and
-  `onMutated:` refreshes the caller after returning.
+  is **selection-only** — no in-place reorder and no inline create; its header has a search icon
+  (`category-picker-search-button`, toggles the `Cari kategori` field — the field is hidden until
+  tapped, not always-on) and a "Kelola kategori" gear (`category-picker-manage-button`) that pushes
+  the master screen for all CRUD + reorder, and `onMutated:` refreshes the caller after returning.
 - **Transaction-history rows show the category's icon+color everywhere**: every surface that lists
   transactions renders the transaction's category chosen icon in its chosen color on a soft tinted
   leading tile — the main ledger, the **Aktivitas** feed, the **Kalender** day sheet, **room/wallet
@@ -112,7 +113,15 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   Aktivitas, the Kalender day sheet, **room/wallet detail**, and the **budget detail** list. Surfaces
   outside the global ledger (room detail, budget detail, calendar) pass
   `ref.read(transactionsControllerProvider)` as `txState` (it powers name resolution + edit/delete)
-  even though their rows come from a feature-local provider.
+  even though their rows come from a feature-local provider. The detail sheet is a polished hero
+  (category icon + type pill + big signed amount) over a details card; **editing a transaction can
+  change its date & time** (the edit form has a `Tanggal & waktu` selector wiring `showDatePicker` +
+  `showTimePicker` into `transactionAt`).
+- **`invalidateBalances()` also refreshes the standalone transaction-list surfaces** the main ledger
+  controller doesn't own — the cross-wallet **Aktivitas** feed (`recentActivityProvider`) and each
+  **room/wallet detail** list (`walletTransactionsProvider`) are in the shared `_balanceProviders`
+  set (`shared/application/financial_refresh.dart`). Without this a quick-add (or any non-ledger
+  mutation) moved balances but left those feeds showing a stale list.
 - **Calendar day sheet is add/edit-capable**: tapping any day in the Kalender grid opens a sheet with
   a **"Tambah"** button (`showSkyQuickAddSheet(context, date: day)` — quick-add gained a `date` param
   that stamps the transaction on that day, keeping the wall-clock time) and **tap-to-edit** rows
