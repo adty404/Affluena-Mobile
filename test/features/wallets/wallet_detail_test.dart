@@ -231,7 +231,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.deletedIds, [sharedWalletId]);
-    expect(find.text('Dompet'), findsOneWidget);
+    // Back on the wallets list — its summary hero is present.
+    expect(find.text('Total saldo'), findsOneWidget);
     expect(find.text('Cash Wallet'), findsOneWidget);
     expect(find.text('BCA Primary'), findsNothing);
   });

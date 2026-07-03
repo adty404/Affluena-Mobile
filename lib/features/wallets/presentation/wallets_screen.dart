@@ -8,7 +8,6 @@ import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/empty_state.dart';
-import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../application/wallets_controller.dart';
@@ -65,24 +64,7 @@ class _WalletsContent extends ConsumerWidget {
               onAction: () => _showWalletForm(context, ref),
             ),
           ] else ...[
-            AffluenaCard(
-              child: Row(
-                children: [
-                  MetricTile(
-                    label: 'Total saldo',
-                    value: MoneyFormatter.idr(_totalBalance(wallets)),
-                    helper: 'Dari ${wallets.length} dompet',
-                  ),
-                  const SizedBox(width: AffluenaSpacing.space3),
-                  MetricTile(
-                    label: 'Dibagikan',
-                    value: _sharedWalletLabel(wallets),
-                    helper: _sharedWalletHelper(wallets),
-                    icon: Icons.group_outlined,
-                  ),
-                ],
-              ),
-            ),
+            _WalletsSummary(wallets: wallets),
             const SizedBox(height: AffluenaSpacing.space6),
             const SectionHeader(title: 'Dompet kamu'),
             const SizedBox(height: AffluenaSpacing.space3),
@@ -110,6 +92,142 @@ class _WalletsContent extends ConsumerWidget {
               },
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The wallets-screen hero: the combined total balance as the focal number,
+/// then a clear breakdown (total wallets · shared · private). Replaces the
+/// earlier two-metric card whose "Dibagikan: N dompet / Hanya pribadi" read as
+/// contradictory.
+class _WalletsSummary extends StatelessWidget {
+  const _WalletsSummary({required this.wallets});
+
+  final List<Wallet> wallets;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+    final total = _totalBalance(wallets);
+    final count = wallets.length;
+    final shared = wallets.where(_isShared).length;
+    final private = count - shared;
+
+    return AffluenaCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Total saldo',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: colors.inkMuted,
+            ),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              MoneyFormatter.idr(total),
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+                color: colors.ink,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'Saldo gabungan semua dompet',
+            style: TextStyle(fontSize: 11.5, color: colors.inkMuted),
+          ),
+          const SizedBox(height: AffluenaSpacing.space4),
+          Divider(height: 1, thickness: 1, color: colors.borderSubtle),
+          const SizedBox(height: AffluenaSpacing.space3),
+          Row(
+            children: [
+              _MiniStat(
+                icon: Icons.account_balance_wallet_outlined,
+                label: 'Dompet',
+                value: '$count',
+              ),
+              _MiniStat(
+                icon: Icons.group_outlined,
+                label: 'Bersama',
+                value: '$shared',
+              ),
+              _MiniStat(
+                icon: Icons.lock_outline,
+                label: 'Pribadi',
+                value: '$private',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  const _MiniStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+    return Expanded(
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: colors.surfaceTintSoft,
+              borderRadius: BorderRadius.circular(AffluenaRadii.md),
+            ),
+            child: Icon(icon, size: 18, color: colors.inkMuted),
+          ),
+          const SizedBox(width: AffluenaSpacing.space2),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: colors.ink,
+                  ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11, color: colors.inkMuted),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -546,20 +664,6 @@ Future<void> _showWalletForm(
 
 int _totalBalance(List<Wallet> wallets) {
   return wallets.fold(0, (total, wallet) => total + wallet.balanceMinor);
-}
-
-String _sharedWalletLabel(List<Wallet> wallets) {
-  final count = wallets.where(_isShared).length;
-  return count == 1 ? '1 dompet' : '$count dompet';
-}
-
-String _sharedWalletHelper(List<Wallet> wallets) {
-  final members = wallets.fold<int>(
-    0,
-    (total, wallet) => total + wallet.members.length,
-  );
-  if (members == 0) return 'Hanya pribadi';
-  return members == 1 ? '1 anggota' : '$members anggota';
 }
 
 bool _isShared(Wallet wallet) {
