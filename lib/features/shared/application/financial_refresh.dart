@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../budgets/application/budget_controller.dart';
+import '../../calendar/application/calendar_providers.dart';
 import '../../dashboard/application/dashboard_home_controller.dart';
 import '../../transactions/application/transactions_controller.dart';
 import '../../wallets/application/wallet_detail_controller.dart';
@@ -29,6 +30,8 @@ extension FinancialRefresh on Ref {
     invalidate(dashboardExpenseDistributionProvider);
     invalidate(dashboardForecastProvider);
     invalidate(budgetControllerProvider);
+    // The calendar month grid + any open day sheet re-aggregate from the ledger.
+    invalidate(calendarMonthProvider);
   }
 
   /// Balances + the transaction list. Use this from controllers OTHER than the
@@ -51,6 +54,7 @@ extension FinancialRefreshWidget on WidgetRef {
     invalidate(dashboardExpenseDistributionProvider);
     invalidate(dashboardForecastProvider);
     invalidate(budgetControllerProvider);
+    invalidate(calendarMonthProvider);
   }
 
   void invalidateFinancialData() {

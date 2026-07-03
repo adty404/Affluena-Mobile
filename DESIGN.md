@@ -18,7 +18,7 @@ Affluena Mobile feels like a calm personal finance companion for daily use: ligh
 
 ### Information architecture
 
-The authenticated shell (`RedesignShell`, route `/beranda`) is an **icon-only floating pill** bottom-nav with four tabs — **Beranda** · **Aktivitas** (cross-wallet feed) · **Kalender** (monthly money calendar: per-day masuk/keluar/selisih, swipe between months, tap a day for its transactions) · **Wawasan** (insights) — plus a center quick-add **FAB** and a **"Lainnya"** item that opens **Pengaturan** (Settings), the hub for the remaining feature screens.
+The authenticated shell (`RedesignShell`, route `/beranda`) is an **icon-only floating pill** bottom-nav with four tabs — **Beranda** · **Aktivitas** (cross-wallet feed) · **Kalender** (monthly money calendar: per-day masuk/keluar/selisih, swipe between months, tap any day for a sheet of its transactions — with a "Tambah" button that quick-adds on that date and tap-to-edit on each row) · **Wawasan** (insights) — plus a center quick-add **FAB** and a **"Lainnya"** item that opens **Pengaturan** (Settings), the hub for the remaining feature screens.
 
 #### Beranda — sectioned dashboard
 
@@ -181,7 +181,11 @@ All spacing derives from a base of 4.
   - **Aktivitas feed** (`redesign/activity_feed_screen.dart`) — leading slot is
     the category tile; the "kamu" ownership signal lives in the meta line.
   - **Calendar day sheet** (`calendar/calendar_screen.dart`) — `TransactionTile`
-    fed the category icon+color.
+    fed the category icon+color. Tapping any day opens this sheet; it has a
+    **"Tambah"** button that opens quick-add pre-set to that date, and each row
+    is **tappable to edit** (opens the transaction detail sheet). The sheet
+    watches `calendarMonthProvider`, and `invalidateBalances()` invalidates that
+    provider, so add/edit/delete refresh the day + grid live.
   - **Room (wallet) detail** (`redesign/room_detail_screen.dart`).
   - **Budget detail transaction list** (`budgets/budget_detail_screen.dart`) —
     every row is the budget's category, so it renders that category's icon+color

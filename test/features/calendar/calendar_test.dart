@@ -275,6 +275,50 @@ void main() {
       expect(icon.color, parseItemColor(_foodColor));
     });
 
+    testWidgets('day sheet exposes an add button and a tappable txn row', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      String at(int day) {
+        final m = now.month.toString().padLeft(2, '0');
+        final d = day.toString().padLeft(2, '0');
+        return '${now.year}-$m-${d}T04:00:00Z';
+      }
+
+      final repo = _FakeTransactionRepository([
+        _tx(
+          id: 't1',
+          type: TransactionType.expense,
+          amountMinor: 250000,
+          transactionAt: at(1),
+          categoryId: 'c-food',
+          note: 'Makan siang',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            transactionRepositoryProvider.overrideWithValue(repo),
+            walletListProvider.overrideWith((ref) async => const [_wallet]),
+            categoryTagManagementControllerProvider.overrideWith(
+              _StubCategoriesController.new,
+            ),
+          ],
+          child: const MaterialApp(home: Scaffold(body: CalendarView())),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('−250rb').first);
+      await tester.pumpAndSettle();
+
+      // "Tambah" opens quick-add pre-set to this date; the row is tappable to
+      // open the transaction detail (edit/delete).
+      expect(find.byKey(const Key('calendar-day-add')), findsOneWidget);
+      expect(find.byKey(const Key('calendar-day-txn-t1')), findsOneWidget);
+    });
+
     testWidgets(
       'summary header stacks on narrow widths so values are never cut off',
       (tester) async {
