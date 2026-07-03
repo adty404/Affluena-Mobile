@@ -107,6 +107,12 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   `transactionIconColor` delegate to it); transfers keep the swap glyph, uncolored income/expense
   fall back to default theming. Surfaces without a `TransactionsState` watch
   `categoryTagManagementControllerProvider` for the category catalog. See DESIGN.md "Transaction Row".
+- **Every transaction row is tappable → the detail sheet**: tapping a transaction anywhere it's
+  listed opens `showTransactionDetail(context, ref, txState, tx)` (view / edit / delete) — the ledger,
+  Aktivitas, the Kalender day sheet, **room/wallet detail**, and the **budget detail** list. Surfaces
+  outside the global ledger (room detail, budget detail, calendar) pass
+  `ref.read(transactionsControllerProvider)` as `txState` (it powers name resolution + edit/delete)
+  even though their rows come from a feature-local provider.
 - **Calendar day sheet is add/edit-capable**: tapping any day in the Kalender grid opens a sheet with
   a **"Tambah"** button (`showSkyQuickAddSheet(context, date: day)` — quick-add gained a `date` param
   that stamps the transaction on that day, keeping the wall-clock time) and **tap-to-edit** rows
@@ -115,4 +121,11 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   day sheet live.
 - **Sharing feature naming**: UI "Berbagi Dompet"; people you invite are "Pemantau" (max 5, one-way,
   read-only); the wallets others share to you show under Beranda's "Dibagikan untukku" section /
-  `SharedWithMeScreen`. Endpoints are `/api/v1/partners` (historical) — see the API repo's contract.
+  `SharedWithMeScreen` (rendered as full cards mirroring Beranda's, **no "LIHAT" badge**). Endpoints
+  are `/api/v1/partners` (historical) — see the API repo's contract.
+- **`WalletsScreen` = your own spending wallets only**: it excludes goal-backing wallets (`isGoal` —
+  they live under Tabungan) and wallets shared TO you (`isViewer` — they live under "Dibagikan
+  untukku"), mirroring Beranda's Dompet section. Because sharing is one-way read-only, "Bersama" in
+  the summary means *your* wallets you've shared to a Pemantau (`members.isNotEmpty`); "Pribadi" means
+  not shared. The card subtitle is terse (`type · Bersama|Pribadi`) so it never truncates in the
+  2-column grid; the full description shows on the wallet detail screen.

@@ -15,7 +15,7 @@ Finder _solidCard(Color color) {
 }
 
 void main() {
-  testWidgets('renders repository wallets and marks goal wallets read-only', (
+  testWidgets('shows owned wallets and hides goal-backing wallets', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -35,13 +35,11 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('GoPay'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Europe Trip Fund'),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Europe Trip Fund'), findsOneWidget);
-    expect(find.textContaining('Dompet target hanya-baca'), findsOneWidget);
+
+    // Goal-backing wallets belong under Tabungan, not the Dompet list — so the
+    // "Target" wallet and its read-only tag never render here.
+    expect(find.text('Europe Trip Fund'), findsNothing);
+    expect(find.textContaining('Dompet target hanya-baca'), findsNothing);
     expect(find.byKey(const Key('edit-wallet-goal-wallet')), findsNothing);
   });
 

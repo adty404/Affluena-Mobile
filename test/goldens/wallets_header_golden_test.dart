@@ -74,7 +74,17 @@ void main() {
           name: 'Dompet Bersama',
           type: WalletType.bank,
           balanceMinor: 4100000,
-          role: 'viewer',
+          members: [
+            WalletMember(
+              walletId: 'w4',
+              userId: 'viewer-1',
+              email: 'partner@contoh.com',
+              role: 'viewer',
+              status: WalletShareStatus.pending,
+              createdAt: '2026-06-01T00:00:00Z',
+              updatedAt: '2026-06-01T00:00:00Z',
+            ),
+          ],
         ),
       ],
     );

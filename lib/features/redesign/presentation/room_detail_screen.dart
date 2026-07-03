@@ -9,8 +9,10 @@ import '../../../core/formatters/money_formatter.dart';
 import '../../categories/application/category_tag_management_controller.dart';
 import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
+import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
+import '../../transactions/presentation/transaction_detail_sheet.dart';
 import '../../transactions/presentation/transaction_display.dart';
 import '../../wallets/application/wallet_detail_controller.dart';
 import '../../wallets/data/wallet_models.dart';
@@ -236,6 +238,15 @@ class _TransactionList extends ConsumerWidget {
           category: tx.categoryId == null
               ? null
               : categories.categoryById(tx.categoryId!),
+          // Tapping opens the same detail sheet as Aktivitas. The global
+          // ledger state powers name resolution + edit/delete without coupling
+          // this room to the main transactions filter.
+          onTap: () => showTransactionDetail(
+            context,
+            ref,
+            ref.read(transactionsControllerProvider),
+            tx,
+          ),
         ),
       );
     }
@@ -247,13 +258,16 @@ class _TransactionList extends ConsumerWidget {
 }
 
 class _TransactionRow extends StatelessWidget {
-  const _TransactionRow({required this.tx, required this.category});
+  const _TransactionRow({required this.tx, required this.category, this.onTap});
 
   final Transaction tx;
 
   /// Resolved category for [tx] (null when uncategorized/transfer) — drives the
   /// leading tile's chosen icon + color.
   final Category? category;
+
+  /// Opens the transaction detail sheet (view/edit/delete) when tapped.
+  final VoidCallback? onTap;
 
   static String _typeLabel(TransactionType type) => switch (type) {
     TransactionType.income => 'Pemasukan',
@@ -275,65 +289,77 @@ class _TransactionRow extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: context.sky.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.sky.line),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: appearance.color != null
-                  ? tileColor.withValues(alpha: 0.14)
-                  : context.sky.sheet,
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(
-                color: appearance.color != null
-                    ? Colors.transparent
-                    : context.sky.line,
-              ),
-            ),
-            child: Icon(appearance.icon, size: 18, color: tileColor),
-          ),
-          const SizedBox(width: AffluenaSpacing.space3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
               children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: appearance.color != null
+                        ? tileColor.withValues(alpha: 0.14)
+                        : context.sky.sheet,
+                    borderRadius: BorderRadius.circular(11),
+                    border: Border.all(
+                      color: appearance.color != null
+                          ? Colors.transparent
+                          : context.sky.line,
+                    ),
+                  ),
+                  child: Icon(appearance.icon, size: 18, color: tileColor),
+                ),
+                const SizedBox(width: AffluenaSpacing.space3),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.sky.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        AffluenaDateFormatter.time(tx.transactionAt),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.sky.faint,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AffluenaSpacing.space2),
                 Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  amount,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: context.sky.ink,
+                    color: isIncome ? context.sky.income : context.sky.ink,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  AffluenaDateFormatter.time(tx.transactionAt),
-                  style: TextStyle(fontSize: 11, color: context.sky.faint),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AffluenaSpacing.space2),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: isIncome ? context.sky.income : context.sky.ink,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

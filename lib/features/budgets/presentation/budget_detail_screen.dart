@@ -12,8 +12,10 @@ import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
+import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
+import '../../transactions/presentation/transaction_detail_sheet.dart';
 import '../../transactions/presentation/transaction_display.dart';
 import '../application/budget_controller.dart';
 import '../data/budget_models.dart';
@@ -241,7 +243,7 @@ class _CategoryTxnList extends StatelessWidget {
   }
 }
 
-class _TxnRow extends StatelessWidget {
+class _TxnRow extends ConsumerWidget {
   const _TxnRow({
     required this.tx,
     required this.category,
@@ -253,7 +255,7 @@ class _TxnRow extends StatelessWidget {
   final Color? rowColor;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final income = tx.type == TransactionType.income;
     final amount = '${income ? '+' : '−'}${MoneyFormatter.idr(tx.amountMinor)}';
     final appearance = categoryAppearanceFor(category, type: tx.type);
@@ -261,63 +263,74 @@ class _TxnRow extends StatelessWidget {
     // back to theming when neither the category nor the budget has a color.
     final tileColor = appearance.color ?? rowColor ?? context.sky.muted;
     final tinted = appearance.color != null || rowColor != null;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
-      child: AffluenaCard(
-        padding: const EdgeInsets.all(AffluenaSpacing.space4),
-        backgroundColor: context.sky.surface,
-        borderColor: context.sky.line,
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: tinted
-                    ? tileColor.withValues(alpha: 0.14)
-                    : context.sky.sheet,
-                borderRadius: BorderRadius.circular(11),
-                border: Border.all(
-                  color: tinted ? Colors.transparent : context.sky.line,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      // Tap opens the shared detail sheet (view/edit/delete), same as the
+      // ledger and Aktivitas.
+      onTap: () => showTransactionDetail(
+        context,
+        ref,
+        ref.read(transactionsControllerProvider),
+        tx,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
+        child: AffluenaCard(
+          padding: const EdgeInsets.all(AffluenaSpacing.space4),
+          backgroundColor: context.sky.surface,
+          borderColor: context.sky.line,
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: tinted
+                      ? tileColor.withValues(alpha: 0.14)
+                      : context.sky.sheet,
+                  borderRadius: BorderRadius.circular(11),
+                  border: Border.all(
+                    color: tinted ? Colors.transparent : context.sky.line,
+                  ),
+                ),
+                child: Icon(appearance.icon, size: 18, color: tileColor),
+              ),
+              const SizedBox(width: AffluenaSpacing.space3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tx.note.isEmpty ? 'Transaksi' : tx.note,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: context.sky.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      AffluenaDateFormatter.time(tx.transactionAt),
+                      style: TextStyle(fontSize: 11, color: context.sky.faint),
+                    ),
+                  ],
                 ),
               ),
-              child: Icon(appearance.icon, size: 18, color: tileColor),
-            ),
-            const SizedBox(width: AffluenaSpacing.space3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tx.note.isEmpty ? 'Transaksi' : tx.note,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: context.sky.ink,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    AffluenaDateFormatter.time(tx.transactionAt),
-                    style: TextStyle(fontSize: 11, color: context.sky.faint),
-                  ),
-                ],
+              const SizedBox(width: AffluenaSpacing.space2),
+              Text(
+                amount,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: income ? context.sky.income : context.sky.ink,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
-            ),
-            const SizedBox(width: AffluenaSpacing.space2),
-            Text(
-              amount,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: income ? context.sky.income : context.sky.ink,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

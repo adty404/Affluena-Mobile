@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../../app/theme/section_palette.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../redesign/presentation/room_detail_screen.dart';
-import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
+import '../../wallets/presentation/wallet_appearance.dart';
 import '../../wallets/presentation/wallet_format.dart';
 import '../application/partner_controller.dart';
 
@@ -76,16 +77,10 @@ class SharedWithMeScreen extends ConsumerWidget {
                     title: 'Dari ${nameByOwner[ownerId] ?? 'Seseorang'}',
                   ),
                   const SizedBox(height: AffluenaSpacing.space3),
-                  AffluenaCard(
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < byOwner[ownerId]!.length; i++) ...[
-                          if (i > 0) const Divider(height: 1),
-                          _SharedWalletRow(wallet: byOwner[ownerId]![i]),
-                        ],
-                      ],
-                    ),
-                  ),
+                  for (var i = 0; i < byOwner[ownerId]!.length; i++) ...[
+                    if (i > 0) const SizedBox(height: AffluenaSpacing.space3),
+                    _SharedWalletCard(wallet: byOwner[ownerId]![i]),
+                  ],
                 ],
               ],
             );
@@ -96,64 +91,85 @@ class SharedWithMeScreen extends ConsumerWidget {
   }
 }
 
-class _SharedWalletRow extends StatelessWidget {
-  const _SharedWalletRow({required this.wallet});
+/// A wallet shared TO me, rendered as a full card matching Beranda's
+/// "Dibagikan untukku" cards: the relational magenta section hue (or the
+/// wallet's own colour, solid, when set), its icon, name, type, and balance.
+/// Tapping opens the read-only room detail.
+class _SharedWalletCard extends StatelessWidget {
+  const _SharedWalletCard({required this.wallet});
 
   final Wallet wallet;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.affluenaColors;
-    final textTheme = Theme.of(context).textTheme;
+    final hue = SectionPalette.dibagikan.of(context);
+    final color = parseWalletColor(wallet.color);
+    final hasColor = color != null;
+    final titleColor = hasColor ? Colors.white : colors.ink;
+    final subtitleColor = hasColor ? Colors.white70 : colors.inkMuted;
+    final iconColor = hasColor ? Colors.white : hue.strong;
+    final iconBg = hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg;
+    final radius = BorderRadius.circular(AffluenaRadii.card);
+
     return Material(
-      type: MaterialType.transparency,
+      color: hasColor ? color : hue.tint,
+      borderRadius: radius,
       child: InkWell(
         onTap: () => context.push(RoomDetailScreen.location(wallet.id)),
-        borderRadius: BorderRadius.circular(AffluenaRadii.md),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space2),
-          child: Row(
+        borderRadius: radius,
+        child: Ink(
+          decoration: BoxDecoration(
+            border: Border.all(color: hasColor ? color : hue.border),
+            borderRadius: radius,
+          ),
+          padding: const EdgeInsets.all(AffluenaSpacing.space4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: colors.forestSoft,
-                  borderRadius: BorderRadius.circular(AffluenaRadii.md),
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(AffluenaRadii.lg),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(AffluenaSpacing.space3),
                   child: Icon(
-                    walletIcon(wallet.type),
-                    color: colors.forest,
-                    size: 18,
+                    resolveWalletIcon(wallet),
+                    color: iconColor,
+                    size: 20,
                   ),
                 ),
               ),
-              const SizedBox(width: AffluenaSpacing.space3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      wallet.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodyLarge?.copyWith(color: colors.ink),
-                    ),
-                    Text(
-                      walletTypeLabel(wallet.type),
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colors.inkMuted,
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: AffluenaSpacing.space3),
+              Text(
+                wallet.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: titleColor,
                 ),
               ),
-              const SizedBox(width: AffluenaSpacing.space2),
+              const SizedBox(height: 2),
+              Text(
+                walletTypeLabel(wallet.type),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: subtitleColor),
+              ),
+              const SizedBox(height: AffluenaSpacing.space3),
               Text(
                 MoneyFormatter.idr(wallet.balanceMinor),
-                style: textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colors.ink,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                  color: titleColor,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ],
