@@ -171,6 +171,51 @@ class _MonthSummaryCard extends StatelessWidget {
   final CalendarMonthData? data;
   final bool loading;
 
+  @override
+  Widget build(BuildContext context) {
+    final net = data?.netMinor ?? 0;
+    return Container(
+      decoration: BoxDecoration(
+        color: context.sky.surface,
+        border: Border.all(color: context.sky.line),
+        borderRadius: BorderRadius.circular(AffluenaRadii.control),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AffluenaSpacing.space4,
+        vertical: AffluenaSpacing.space3,
+      ),
+      child: _MoneySummary(
+        entries: [
+          (
+            label: 'Pemasukan',
+            value: data == null ? null : MoneyFormatter.idr(data!.incomeMinor),
+            color: context.sky.income,
+          ),
+          (
+            label: 'Pengeluaran',
+            value: data == null ? null : MoneyFormatter.idr(data!.expenseMinor),
+            color: context.sky.danger,
+          ),
+          (
+            label: 'Selisih',
+            value: data == null ? null : MoneyFormatter.signedIdr(net),
+            color: context.sky.ink,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A masuk/keluar/selisih (or any labelled-money) summary that is **responsive
+/// so full amounts are never truncated**: three columns while every full value
+/// fits the width, otherwise stacked label:value rows that each show the whole
+/// number. Shared by the month header and the day sheet.
+class _MoneySummary extends StatelessWidget {
+  const _MoneySummary({required this.entries});
+
+  final List<({String label, String? value, Color color})> entries;
+
   static const _labelStyle = TextStyle(
     fontSize: 10.5,
     fontWeight: FontWeight.w600,
@@ -184,91 +229,59 @@ class _MonthSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final net = data?.netMinor ?? 0;
-    final entries = <({String label, String? value, Color color})>[
-      (
-        label: 'Pemasukan',
-        value: data == null ? null : MoneyFormatter.idr(data!.incomeMinor),
-        color: context.sky.income,
-      ),
-      (
-        label: 'Pengeluaran',
-        value: data == null ? null : MoneyFormatter.idr(data!.expenseMinor),
-        color: context.sky.danger,
-      ),
-      (
-        label: 'Selisih',
-        value: data == null ? null : MoneyFormatter.signedIdr(net),
-        color: context.sky.ink,
-      ),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: context.sky.surface,
-        border: Border.all(color: context.sky.line),
-        borderRadius: BorderRadius.circular(AffluenaRadii.control),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AffluenaSpacing.space4,
-        vertical: AffluenaSpacing.space3,
-      ),
-      // Responsive: three columns while every FULL value fits; otherwise
-      // stack label:value rows so large amounts are never cut off.
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (_rowFits(context, entries, constraints.maxWidth)) {
-            return IntrinsicHeight(
-              child: Row(
-                children: [
-                  for (var i = 0; i < entries.length; i++) ...[
-                    if (i > 0) const _SummaryDivider(),
-                    _SummaryColumn(
-                      label: entries[i].label,
-                      value: entries[i].value,
-                      color: entries[i].color,
-                    ),
-                  ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (_rowFits(context, entries, constraints.maxWidth)) {
+          return IntrinsicHeight(
+            child: Row(
+              children: [
+                for (var i = 0; i < entries.length; i++) ...[
+                  if (i > 0) const _SummaryDivider(),
+                  _SummaryColumn(
+                    label: entries[i].label,
+                    value: entries[i].value,
+                    color: entries[i].color,
+                  ),
                 ],
-              ),
-            );
-          }
-          return Column(
-            children: [
-              for (var i = 0; i < entries.length; i++) ...[
-                if (i > 0) const SizedBox(height: AffluenaSpacing.space2),
-                Row(
-                  children: [
-                    Text(
-                      entries[i].label,
-                      style: _labelStyle.copyWith(color: context.sky.muted),
-                    ),
-                    const SizedBox(width: AffluenaSpacing.space3),
-                    // Expanded + scale-down as a last-resort guard so this
-                    // branch can never overflow, whatever the font metrics.
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            entries[i].value ?? '—',
-                            maxLines: 1,
-                            style: _valueStyle.copyWith(
-                              fontSize: 14,
-                              color: entries[i].color,
-                            ),
+              ],
+            ),
+          );
+        }
+        // Stacked: each amount gets the full row width, so it always shows in
+        // full (no ellipsis) — FittedBox only scales a truly enormous number.
+        return Column(
+          children: [
+            for (var i = 0; i < entries.length; i++) ...[
+              if (i > 0) const SizedBox(height: AffluenaSpacing.space2),
+              Row(
+                children: [
+                  Text(
+                    entries[i].label,
+                    style: _labelStyle.copyWith(color: context.sky.muted),
+                  ),
+                  const SizedBox(width: AffluenaSpacing.space3),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          entries[i].value ?? '—',
+                          maxLines: 1,
+                          style: _valueStyle.copyWith(
+                            fontSize: 14,
+                            color: entries[i].color,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ],
-          );
-        },
-      ),
+          ],
+        );
+      },
     );
   }
 
@@ -686,30 +699,27 @@ class _DayTransactionsSheet extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space3),
-              // The same tidy 3-column summary the month header uses, so the
-              // amounts never collide on one cramped line.
-              IntrinsicHeight(
-                child: Row(
-                  children: [
-                    _SummaryColumn(
-                      label: 'Masuk',
-                      value: MoneyFormatter.signedIdr(incomeMinor),
-                      color: context.sky.income,
-                    ),
-                    const _SummaryDivider(),
-                    _SummaryColumn(
-                      label: 'Keluar',
-                      value: MoneyFormatter.signedIdr(-expenseMinor),
-                      color: context.sky.danger,
-                    ),
-                    const _SummaryDivider(),
-                    _SummaryColumn(
-                      label: 'Selisih',
-                      value: MoneyFormatter.signedIdr(netMinor),
-                      color: context.sky.ink,
-                    ),
-                  ],
-                ),
+              // The same responsive summary the month header uses: three columns
+              // when the full amounts fit, otherwise stacked full-width rows so
+              // long numbers are shown in full (never "8.820.0…").
+              _MoneySummary(
+                entries: [
+                  (
+                    label: 'Masuk',
+                    value: MoneyFormatter.signedIdr(incomeMinor),
+                    color: context.sky.income,
+                  ),
+                  (
+                    label: 'Keluar',
+                    value: MoneyFormatter.signedIdr(-expenseMinor),
+                    color: context.sky.danger,
+                  ),
+                  (
+                    label: 'Selisih',
+                    value: MoneyFormatter.signedIdr(netMinor),
+                    color: context.sky.ink,
+                  ),
+                ],
               ),
               const SizedBox(height: AffluenaSpacing.space4),
               // Prominent, unmistakable full-width add action.
