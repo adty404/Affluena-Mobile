@@ -192,10 +192,7 @@ class _InsightTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     return AffluenaChipBar(
       chips: [
-        // CSV export is hidden for now; only the reports/insights tabs show.
-        for (final tab in InsightTab.values.where(
-          (t) => t != InsightTab.exports,
-        ))
+        for (final tab in InsightTab.values)
           AffluenaChoiceChip(
             key: Key('insights-tab-${tab.name}'),
             selected: selected == tab,

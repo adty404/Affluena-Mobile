@@ -43,8 +43,31 @@ void main() {
     expect(find.text('79%'), findsOneWidget);
     expect(find.text('Rp 79'), findsNothing);
 
-    // CSV export is hidden from the UI for now, so its tab chip is not offered.
-    expect(find.byKey(const Key('insights-tab-exports')), findsNothing);
+    // The CSV export ("Ekspor") tab is now offered alongside the other tabs.
+    expect(find.byKey(const Key('insights-tab-exports')), findsOneWidget);
+  });
+
+  testWidgets('exports tab lists export jobs and exports a CSV', (
+    tester,
+  ) async {
+    final repository = TestInsightsRepository();
+
+    await tester.pumpWidget(insightsTestApp(repository));
+    await tester.pumpInsightsState();
+
+    await tester.tap(find.byKey(const Key('insights-tab-exports')));
+    await tester.pumpAndSettle();
+
+    // The seeded export job renders in the "Tugas ekspor" list.
+    expect(find.text('42 baris'), findsOneWidget);
+
+    // Tapping "Ekspor CSV" generates + shares the month CSV via the fake share
+    // service, then returns to the reports tab with a success banner.
+    await tester.tap(find.byKey(const Key('insights-export-button')));
+    await tester.pumpAndSettle();
+
+    expect(repository.exportRequests, hasLength(1));
+    expect(find.text('Ekspor CSV dibagikan.'), findsOneWidget);
   });
 
   testWidgets('opens alert and activity detail cards', (tester) async {

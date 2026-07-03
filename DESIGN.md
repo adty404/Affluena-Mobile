@@ -230,14 +230,6 @@ All spacing derives from a base of 4.
 - **States**: off, on, disabled unsupported, saving.
 - **Accessibility**: use switch rows only for behavior backed by an API route or safe local-device capability.
 
-### Parity Surface
-
-- **Structure**: screen title, compact contextual summary card, and a grouped list of route-backed modules.
-- **Variants**: wallet detail, sharing, category/tag, quick-entry templates, split bill, audit logs.
-- **Spacing**: `space5` screen padding, `space6` major section breaks, `space3` row gaps.
-- **States**: static route shell, later replaced by module-specific loading/empty/error states.
-- **Accessibility**: rows use visible text labels and Material icons; parameter IDs are not shown as user-facing copy.
-
 ### Skeleton
 
 - **Structure**: tonal shimmer block sized to the content it stands in for; compose several to mirror the loaded layout.
