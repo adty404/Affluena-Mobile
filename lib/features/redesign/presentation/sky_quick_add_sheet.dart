@@ -23,19 +23,28 @@ import '../../wallets/data/wallet_models.dart';
 /// [transactionCreateControllerProvider] for the writable-wallet + category
 /// data and the create() mutation; owns its field state locally. Returns true
 /// when a transaction was saved.
-Future<bool?> showSkyQuickAddSheet(BuildContext context, {Wallet? wallet}) {
+Future<bool?> showSkyQuickAddSheet(
+  BuildContext context, {
+  Wallet? wallet,
+  DateTime? date,
+}) {
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _SkyQuickAddSheet(initialWallet: wallet),
+    builder: (_) => _SkyQuickAddSheet(initialWallet: wallet, date: date),
   );
 }
 
 class _SkyQuickAddSheet extends ConsumerStatefulWidget {
-  const _SkyQuickAddSheet({this.initialWallet});
+  const _SkyQuickAddSheet({this.initialWallet, this.date});
 
   final Wallet? initialWallet;
+
+  /// The calendar day this transaction is being recorded for. When set, the
+  /// transaction is stamped on this date (keeping the local wall-clock time)
+  /// instead of "now", so quick-adding from a day sheet lands on that day.
+  final DateTime? date;
 
   @override
   ConsumerState<_SkyQuickAddSheet> createState() => _SkyQuickAddSheetState();
@@ -56,6 +65,24 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
   void initState() {
     super.initState();
     _walletId = widget.initialWallet?.id;
+  }
+
+  /// The ISO-8601 (UTC) instant to stamp a transaction with. For a chosen
+  /// calendar day, keep the current wall-clock time so the row sorts naturally
+  /// and the local-day bucket round-trips back to the picked date; otherwise
+  /// use now.
+  String _transactionAtIso() {
+    final date = widget.date;
+    if (date == null) return DateTime.now().toUtc().toIso8601String();
+    final now = DateTime.now();
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      now.hour,
+      now.minute,
+      now.second,
+    ).toUtc().toIso8601String();
   }
 
   void _run(void Function() action) {
@@ -134,7 +161,7 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
       walletId: _walletId!,
       categoryId: _categoryId,
       amountMinor: _calc.amountMinor,
-      transactionAt: DateTime.now().toUtc().toIso8601String(),
+      transactionAt: _transactionAtIso(),
     );
     final saved = await ref
         .read(transactionCreateControllerProvider.notifier)
@@ -160,9 +187,7 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
         .read(quickEntryTemplatesControllerProvider.notifier)
         .executeTemplate(
           template,
-          ExecuteQuickEntryRequest(
-            transactionAt: DateTime.now().toUtc().toIso8601String(),
-          ),
+          ExecuteQuickEntryRequest(transactionAt: _transactionAtIso()),
         );
     if (!mounted) return;
     if (executed) {

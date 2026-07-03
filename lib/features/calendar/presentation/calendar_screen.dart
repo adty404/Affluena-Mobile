@@ -6,9 +6,13 @@ import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/application/category_tag_management_controller.dart';
+import '../../redesign/presentation/sky_quick_add_sheet.dart';
+import '../../shared/presentation/widgets/empty_state.dart';
 import '../../shared/presentation/widgets/error_state.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
+import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
+import '../../transactions/presentation/transaction_detail_sheet.dart';
 import '../../transactions/presentation/transaction_display.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
@@ -522,9 +526,9 @@ class _DayCell extends StatelessWidget {
             : (hasActivity ? context.sky.surface : Colors.transparent),
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
-          onTap: hasActivity
-              ? () => _showDaySheet(context, month, day, summary!)
-              : null,
+          // Every day is tappable: the sheet shows the day's transactions and
+          // lets the user add a new one on that date (or edit an existing one).
+          onTap: loading ? null : () => _showDaySheet(context, month, day),
           borderRadius: BorderRadius.circular(10),
           child: Container(
             decoration: BoxDecoration(
@@ -617,104 +621,144 @@ class _CellAmount extends StatelessWidget {
   }
 }
 
-void _showDaySheet(
-  BuildContext context,
-  DateTime month,
-  int day,
-  CalendarDaySummary summary,
-) {
+void _showDaySheet(BuildContext context, DateTime month, int day) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (context) => _DayTransactionsSheet(
-      day: DateTime(month.year, month.month, day),
-      summary: summary,
-    ),
+    builder: (context) =>
+        _DayTransactionsSheet(day: DateTime(month.year, month.month, day)),
   );
 }
 
-/// The tapped day's transactions with a mini summary header.
+/// The tapped day's transactions, with a mini summary header, an "add on this
+/// date" button, and tap-to-edit on each row. It watches [calendarMonthProvider]
+/// so adding/editing/deleting a transaction refreshes the list live (the shared
+/// financial-refresh invalidates that provider on every money mutation).
 class _DayTransactionsSheet extends ConsumerWidget {
-  const _DayTransactionsSheet({required this.day, required this.summary});
+  const _DayTransactionsSheet({required this.day});
 
   final DateTime day;
-  final CalendarDaySummary summary;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final monthKey = AffluenaDateFormatter.monthKey(day);
+    final data = ref.watch(calendarMonthProvider(monthKey)).asData?.value;
+    final summary = data?.days[day.day];
+    final txns = summary?.transactions ?? const <Transaction>[];
+
     final wallets =
         ref.watch(walletListProvider).asData?.value ?? const <Wallet>[];
     final walletNames = {for (final w in wallets) w.id: w.name};
-    // The category catalog resolves each row's chosen icon + color; watching
-    // the shared management controller keeps the day sheet consistent with the
-    // main ledger without coupling to the global transactions filter.
+    // The category catalog resolves each row's chosen icon + color; the ledger
+    // state powers tap-to-edit (detail sheet + edit/delete) without coupling to
+    // the global transactions filter.
     final categories = ref.watch(categoryTagManagementControllerProvider);
+    final txState = ref.watch(transactionsControllerProvider);
+
+    final incomeMinor = summary?.incomeMinor ?? 0;
+    final expenseMinor = summary?.expenseMinor ?? 0;
+    final netMinor = summary?.netMinor ?? 0;
 
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
-          0,
+          AffluenaSpacing.space4,
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * 0.7,
+            maxHeight: MediaQuery.sizeOf(context).height * 0.75,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                AffluenaDateFormatter.dayHeader(day),
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: context.sky.ink,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      AffluenaDateFormatter.dayHeader(day),
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: context.sky.ink,
+                      ),
+                    ),
+                  ),
+                  FilledButton.icon(
+                    key: const Key('calendar-day-add'),
+                    onPressed: () => showSkyQuickAddSheet(context, date: day),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Tambah'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: context.sky.accent,
+                      foregroundColor: context.sky.onAccent,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(
-                '${MoneyFormatter.signedIdr(summary.incomeMinor)} masuk · '
-                '${MoneyFormatter.signedIdr(-summary.expenseMinor)} keluar · '
-                'selisih ${MoneyFormatter.signedIdr(summary.netMinor)}',
+                '${MoneyFormatter.signedIdr(incomeMinor)} masuk · '
+                '${MoneyFormatter.signedIdr(-expenseMinor)} keluar · '
+                'selisih ${MoneyFormatter.signedIdr(netMinor)}',
                 style: TextStyle(fontSize: 12, color: context.sky.muted),
               ),
-              const SizedBox(height: AffluenaSpacing.space2),
+              const SizedBox(height: AffluenaSpacing.space3),
               Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: summary.transactions.length,
-                  itemBuilder: (context, index) {
-                    final tx = summary.transactions[index];
-                    final category = tx.categoryId == null
-                        ? null
-                        : categories.categoryById(tx.categoryId!);
-                    final appearance = categoryAppearanceFor(
-                      category,
-                      type: tx.type,
-                    );
-                    return TransactionTile(
-                      title: tx.note.isNotEmpty ? tx.note : _typeLabel(tx.type),
-                      metadata:
-                          '${AffluenaDateFormatter.time(tx.transactionAt)}'
-                          '${walletNames[tx.walletId] != null ? ' · ${walletNames[tx.walletId]}' : ''}',
-                      amount: switch (tx.type) {
-                        TransactionType.income => MoneyFormatter.signedIdr(
-                          tx.amountMinor,
-                        ),
-                        TransactionType.expense => MoneyFormatter.signedIdr(
-                          -tx.amountMinor,
-                        ),
-                        _ => MoneyFormatter.idr(tx.amountMinor),
-                      },
-                      icon: appearance.icon,
-                      iconColor: appearance.color,
-                      isIncome: tx.type == TransactionType.income,
-                    );
-                  },
-                ),
+                child: txns.isEmpty
+                    ? EmptyState.compact(
+                        icon: Icons.receipt_long_outlined,
+                        title: 'Belum ada transaksi di tanggal ini.',
+                        onTap: () => showSkyQuickAddSheet(context, date: day),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: txns.length,
+                        itemBuilder: (context, index) {
+                          final tx = txns[index];
+                          final category = tx.categoryId == null
+                              ? null
+                              : categories.categoryById(tx.categoryId!);
+                          final appearance = categoryAppearanceFor(
+                            category,
+                            type: tx.type,
+                          );
+                          return InkWell(
+                            key: Key('calendar-day-txn-${tx.id}'),
+                            onTap: () => showTransactionDetail(
+                              context,
+                              ref,
+                              txState,
+                              tx,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AffluenaRadii.md,
+                            ),
+                            child: TransactionTile(
+                              title: tx.note.isNotEmpty
+                                  ? tx.note
+                                  : _typeLabel(tx.type),
+                              metadata:
+                                  '${AffluenaDateFormatter.time(tx.transactionAt)}'
+                                  '${walletNames[tx.walletId] != null ? ' · ${walletNames[tx.walletId]}' : ''}',
+                              amount: switch (tx.type) {
+                                TransactionType.income =>
+                                  MoneyFormatter.signedIdr(tx.amountMinor),
+                                TransactionType.expense =>
+                                  MoneyFormatter.signedIdr(-tx.amountMinor),
+                                _ => MoneyFormatter.idr(tx.amountMinor),
+                              },
+                              icon: appearance.icon,
+                              iconColor: appearance.color,
+                              isIncome: tx.type == TransactionType.income,
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),

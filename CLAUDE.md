@@ -101,6 +101,12 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   `transactionIconColor` delegate to it); transfers keep the swap glyph, uncolored income/expense
   fall back to default theming. Surfaces without a `TransactionsState` watch
   `categoryTagManagementControllerProvider` for the category catalog. See DESIGN.md "Transaction Row".
+- **Calendar day sheet is add/edit-capable**: tapping any day in the Kalender grid opens a sheet with
+  a **"Tambah"** button (`showSkyQuickAddSheet(context, date: day)` — quick-add gained a `date` param
+  that stamps the transaction on that day, keeping the wall-clock time) and **tap-to-edit** rows
+  (`showTransactionDetail`). It watches `calendarMonthProvider`, and `invalidateBalances()` now also
+  invalidates that provider, so any money mutation (from anywhere) refreshes the calendar grid + open
+  day sheet live.
 - **Sharing feature naming**: UI "Berbagi Dompet"; people you invite are "Pemantau" (max 5, one-way,
   read-only); the wallets others share to you show under Beranda's "Dibagikan untukku" section /
   `SharedWithMeScreen`. Endpoints are `/api/v1/partners` (historical) — see the API repo's contract.
