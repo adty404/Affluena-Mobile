@@ -3,11 +3,52 @@ import 'package:affluena_mobile/core/formatters/date_formatter.dart';
 import 'package:affluena_mobile/core/formatters/money_formatter.dart';
 import 'package:affluena_mobile/features/calendar/application/calendar_providers.dart';
 import 'package:affluena_mobile/features/calendar/presentation/calendar_screen.dart';
+import 'package:affluena_mobile/features/categories/application/category_tag_management_controller.dart';
+import 'package:affluena_mobile/features/categories/data/category_models.dart';
+import 'package:affluena_mobile/features/shared/presentation/appearance/item_appearance.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_repository.dart';
+import 'package:affluena_mobile/features/transactions/presentation/transaction_display.dart';
+import 'package:affluena_mobile/features/wallets/application/wallets_controller.dart';
+import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+const _wallet = Wallet(
+  id: 'w1',
+  userId: 'u1',
+  name: 'GoPay',
+  type: WalletType.eWallet,
+  currencyCode: 'IDR',
+  balanceMinor: 0,
+  color: '',
+  description: '',
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+// A category with a chosen icon + color so the day sheet must render that
+// glyph in that color on the transaction tile.
+const _foodColor = '#2E8B57';
+const _food = Category(
+  id: 'c-food',
+  userId: 'u1',
+  name: 'Makanan',
+  type: CategoryType.expense,
+  icon: 'food',
+  color: _foodColor,
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+// Stub the category catalog (no microtask load) so the day sheet resolves the
+// category hermetically.
+class _StubCategoriesController extends CategoryTagManagementController {
+  @override
+  CategoryTagManagementState build() =>
+      const CategoryTagManagementState(categories: [_food]);
+}
 
 class _FakeTransactionRepository extends Fake implements TransactionRepository {
   _FakeTransactionRepository(this.transactions);
@@ -42,16 +83,19 @@ Transaction _tx({
   required TransactionType type,
   required int amountMinor,
   required String transactionAt,
+  String? categoryId,
+  String note = '',
 }) {
   return Transaction(
     id: id,
     userId: 'u1',
     type: type,
     walletId: 'w1',
+    categoryId: categoryId,
     amountMinor: amountMinor,
     tagIds: const [],
     transactionAt: transactionAt,
-    note: '',
+    note: note,
     createdAt: transactionAt,
     updatedAt: transactionAt,
   );
@@ -178,6 +222,57 @@ void main() {
       await tester.tap(find.text('+8jt'));
       await tester.pumpAndSettle();
       expect(find.text('Pemasukan'), findsWidgets);
+    });
+
+    testWidgets('day sheet renders the category icon in its chosen color', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      String at(int day) {
+        final m = now.month.toString().padLeft(2, '0');
+        final d = day.toString().padLeft(2, '0');
+        return '${now.year}-$m-${d}T04:00:00Z';
+      }
+
+      final repo = _FakeTransactionRepository([
+        _tx(
+          id: 't1',
+          type: TransactionType.expense,
+          amountMinor: 250000,
+          transactionAt: at(1),
+          categoryId: 'c-food',
+          note: 'Makan siang',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            transactionRepositoryProvider.overrideWithValue(repo),
+            walletListProvider.overrideWith((ref) async => const [_wallet]),
+            categoryTagManagementControllerProvider.overrideWith(
+              _StubCategoriesController.new,
+            ),
+          ],
+          child: const MaterialApp(home: Scaffold(body: CalendarView())),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open the day sheet for the day with the categorized expense (the
+      // expense and net cells both read −250rb; tapping either opens it).
+      await tester.tap(find.text('−250rb').first);
+      await tester.pumpAndSettle();
+
+      // The tile shows the category's chosen glyph in its chosen color.
+      expect(find.text('Makan siang'), findsOneWidget);
+      final appearance = categoryAppearanceFor(
+        _food,
+        type: TransactionType.expense,
+      );
+      expect(appearance.icon, Icons.restaurant_outlined);
+      final icon = tester.widget<Icon>(find.byIcon(Icons.restaurant_outlined));
+      expect(icon.color, parseItemColor(_foodColor));
     });
 
     testWidgets(

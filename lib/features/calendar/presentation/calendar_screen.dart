@@ -5,9 +5,11 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../categories/application/category_tag_management_controller.dart';
 import '../../shared/presentation/widgets/error_state.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
 import '../../transactions/data/transaction_models.dart';
+import '../../transactions/presentation/transaction_display.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/calendar_providers.dart';
@@ -643,6 +645,10 @@ class _DayTransactionsSheet extends ConsumerWidget {
     final wallets =
         ref.watch(walletListProvider).asData?.value ?? const <Wallet>[];
     final walletNames = {for (final w in wallets) w.id: w.name};
+    // The category catalog resolves each row's chosen icon + color; watching
+    // the shared management controller keeps the day sheet consistent with the
+    // main ledger without coupling to the global transactions filter.
+    final categories = ref.watch(categoryTagManagementControllerProvider);
 
     return SafeArea(
       child: Padding(
@@ -682,6 +688,13 @@ class _DayTransactionsSheet extends ConsumerWidget {
                   itemCount: summary.transactions.length,
                   itemBuilder: (context, index) {
                     final tx = summary.transactions[index];
+                    final category = tx.categoryId == null
+                        ? null
+                        : categories.categoryById(tx.categoryId!);
+                    final appearance = categoryAppearanceFor(
+                      category,
+                      type: tx.type,
+                    );
                     return TransactionTile(
                       title: tx.note.isNotEmpty ? tx.note : _typeLabel(tx.type),
                       metadata:
@@ -696,7 +709,8 @@ class _DayTransactionsSheet extends ConsumerWidget {
                         ),
                         _ => MoneyFormatter.idr(tx.amountMinor),
                       },
-                      icon: _typeIcon(tx.type),
+                      icon: appearance.icon,
+                      iconColor: appearance.color,
                       isIncome: tx.type == TransactionType.income,
                     );
                   },
@@ -714,12 +728,5 @@ class _DayTransactionsSheet extends ConsumerWidget {
     TransactionType.expense => 'Pengeluaran',
     TransactionType.transfer => 'Transfer',
     TransactionType.adjustment => 'Penyesuaian',
-  };
-
-  static IconData _typeIcon(TransactionType type) => switch (type) {
-    TransactionType.income => Icons.south_west,
-    TransactionType.expense => Icons.north_east,
-    TransactionType.transfer => Icons.swap_horiz,
-    TransactionType.adjustment => Icons.tune,
   };
 }

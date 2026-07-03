@@ -5,6 +5,8 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../categories/application/category_tag_management_controller.dart';
+import '../../categories/data/category_models.dart';
 import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
@@ -12,6 +14,7 @@ import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
+import '../../transactions/presentation/transaction_display.dart';
 import '../application/budget_controller.dart';
 import '../data/budget_models.dart';
 
@@ -84,6 +87,14 @@ class BudgetDetailScreen extends ConsumerWidget {
     final transactions = ref.watch(
       categoryTransactionsProvider(current.categoryId),
     );
+    // Every transaction here shares the budget's category, so resolve its
+    // chosen icon + color once and render it on each row (consistent with the
+    // main ledger). Fall back to the budget's own stored color when the
+    // category itself has none.
+    final category = ref
+        .watch(categoryTagManagementControllerProvider)
+        .categoryById(current.categoryId);
+    final rowColor = parseItemColor(category?.color ?? '') ?? itemColor;
     final txnCount = transactions.asData?.value.length;
     final txnHeader = (txnCount != null && txnCount > 0)
         ? 'Transaksi · $txnCount'
@@ -169,7 +180,11 @@ class BudgetDetailScreen extends ConsumerWidget {
                     'Belum ada transaksi di kategori ini.',
                     style: TextStyle(fontSize: 12.5, color: context.sky.muted),
                   )
-                : _CategoryTxnList(items: items),
+                : _CategoryTxnList(
+                    items: items,
+                    category: category,
+                    rowColor: rowColor,
+                  ),
           ),
         ],
       ),
@@ -178,9 +193,19 @@ class BudgetDetailScreen extends ConsumerWidget {
 }
 
 class _CategoryTxnList extends StatelessWidget {
-  const _CategoryTxnList({required this.items});
+  const _CategoryTxnList({
+    required this.items,
+    required this.category,
+    required this.rowColor,
+  });
 
   final List<Transaction> items;
+
+  /// The budget's category (shared by every row), for the chosen icon glyph.
+  final Category? category;
+
+  /// The accent for every row's leading tile (category color → budget color).
+  final Color? rowColor;
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +232,7 @@ class _CategoryTxnList extends StatelessWidget {
           ),
         );
       }
-      rows.add(_TxnRow(tx: tx));
+      rows.add(_TxnRow(tx: tx, category: category, rowColor: rowColor));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -217,14 +242,25 @@ class _CategoryTxnList extends StatelessWidget {
 }
 
 class _TxnRow extends StatelessWidget {
-  const _TxnRow({required this.tx});
+  const _TxnRow({
+    required this.tx,
+    required this.category,
+    required this.rowColor,
+  });
 
   final Transaction tx;
+  final Category? category;
+  final Color? rowColor;
 
   @override
   Widget build(BuildContext context) {
     final income = tx.type == TransactionType.income;
     final amount = '${income ? '+' : '−'}${MoneyFormatter.idr(tx.amountMinor)}';
+    final appearance = categoryAppearanceFor(category, type: tx.type);
+    // The list is per-category, so lean on the shared row accent; only fall
+    // back to theming when neither the category nor the budget has a color.
+    final tileColor = appearance.color ?? rowColor ?? context.sky.muted;
+    final tinted = appearance.color != null || rowColor != null;
     return Padding(
       padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
       child: AffluenaCard(
@@ -238,15 +274,15 @@ class _TxnRow extends StatelessWidget {
               height: 34,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: context.sky.sheet,
+                color: tinted
+                    ? tileColor.withValues(alpha: 0.14)
+                    : context.sky.sheet,
                 borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: context.sky.line),
+                border: Border.all(
+                  color: tinted ? Colors.transparent : context.sky.line,
+                ),
               ),
-              child: Icon(
-                income ? Icons.south_west : Icons.north_east,
-                size: 18,
-                color: income ? context.sky.income : context.sky.muted,
-              ),
+              child: Icon(appearance.icon, size: 18, color: tileColor),
             ),
             const SizedBox(width: AffluenaSpacing.space3),
             Expanded(
