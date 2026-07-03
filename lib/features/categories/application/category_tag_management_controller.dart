@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_error.dart';
+import '../../../core/state/copy_with_sentinel.dart';
 import '../../tags/data/tag_models.dart';
 import '../../tags/data/tag_repository.dart';
 import '../data/category_models.dart';
@@ -315,8 +316,8 @@ class CategoryTagManagementState {
     bool? isLoadingMoreCategories,
     bool? isLoadingMoreTags,
     bool? isSaving,
-    Object? loadError = _unchanged,
-    Object? actionError = _unchanged,
+    Object? loadError = kUnchanged,
+    Object? actionError = kUnchanged,
   }) {
     return CategoryTagManagementState(
       categories: categories ?? this.categories,
@@ -328,14 +329,12 @@ class CategoryTagManagementState {
           isLoadingMoreCategories ?? this.isLoadingMoreCategories,
       isLoadingMoreTags: isLoadingMoreTags ?? this.isLoadingMoreTags,
       isSaving: isSaving ?? this.isSaving,
-      loadError: identical(loadError, _unchanged)
+      loadError: identical(loadError, kUnchanged)
           ? this.loadError
           : loadError as String?,
-      actionError: identical(actionError, _unchanged)
+      actionError: identical(actionError, kUnchanged)
           ? this.actionError
           : actionError as String?,
     );
   }
 }
-
-const _unchanged = Object();

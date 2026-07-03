@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
 import '../../shared/application/financial_refresh.dart';
@@ -198,8 +199,8 @@ class RecurringState {
     Map<String, String>? categoryNames,
     bool? isLoading,
     bool? isSaving,
-    Object? loadError = _unchanged,
-    Object? actionError = _unchanged,
+    Object? loadError = kUnchanged,
+    Object? actionError = kUnchanged,
   }) {
     return RecurringState(
       rules: rules ?? this.rules,
@@ -210,10 +211,10 @@ class RecurringState {
       categoryNames: categoryNames ?? this.categoryNames,
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
-      loadError: identical(loadError, _unchanged)
+      loadError: identical(loadError, kUnchanged)
           ? this.loadError
           : loadError as String?,
-      actionError: identical(actionError, _unchanged)
+      actionError: identical(actionError, kUnchanged)
           ? this.actionError
           : actionError as String?,
     );
@@ -229,5 +230,3 @@ bool _isUpcoming(RecurringRule rule) {
   final end = DateTime(today.year, today.month, today.day + 7);
   return !nextRun.isBefore(start) && !nextRun.isAfter(end);
 }
-
-const _unchanged = Object();

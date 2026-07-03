@@ -2,13 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_error.dart';
+import '../../../core/state/copy_with_sentinel.dart';
 import '../data/partner_models.dart';
 import '../data/partner_repository.dart';
 
 final partnerControllerProvider =
     NotifierProvider<PartnerController, PartnerState>(PartnerController.new);
-
-const Object _unchanged = Object();
 
 class PartnerState {
   const PartnerState({
@@ -53,17 +52,17 @@ class PartnerState {
     List<PartnerLink>? links,
     bool? isLoading,
     bool? isSaving,
-    Object? loadError = _unchanged,
-    Object? actionError = _unchanged,
+    Object? loadError = kUnchanged,
+    Object? actionError = kUnchanged,
   }) {
     return PartnerState(
       links: links ?? this.links,
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
-      loadError: identical(loadError, _unchanged)
+      loadError: identical(loadError, kUnchanged)
           ? this.loadError
           : loadError as String?,
-      actionError: identical(actionError, _unchanged)
+      actionError: identical(actionError, kUnchanged)
           ? this.actionError
           : actionError as String?,
     );

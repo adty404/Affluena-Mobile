@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/formatters/date_formatter.dart';
+import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
 import '../../shared/application/financial_refresh.dart';
@@ -53,24 +54,24 @@ class TransactionFilters {
       (to != null ? 1 : 0);
 
   TransactionFilters copyWith({
-    Object? type = _unchanged,
-    Object? walletId = _unchanged,
-    Object? categoryId = _unchanged,
-    Object? tagId = _unchanged,
-    Object? from = _unchanged,
-    Object? to = _unchanged,
+    Object? type = kUnchanged,
+    Object? walletId = kUnchanged,
+    Object? categoryId = kUnchanged,
+    Object? tagId = kUnchanged,
+    Object? from = kUnchanged,
+    Object? to = kUnchanged,
   }) {
     return TransactionFilters(
-      type: identical(type, _unchanged) ? this.type : type as TransactionType?,
-      walletId: identical(walletId, _unchanged)
+      type: identical(type, kUnchanged) ? this.type : type as TransactionType?,
+      walletId: identical(walletId, kUnchanged)
           ? this.walletId
           : walletId as String?,
-      categoryId: identical(categoryId, _unchanged)
+      categoryId: identical(categoryId, kUnchanged)
           ? this.categoryId
           : categoryId as String?,
-      tagId: identical(tagId, _unchanged) ? this.tagId : tagId as String?,
-      from: identical(from, _unchanged) ? this.from : from as DateTime?,
-      to: identical(to, _unchanged) ? this.to : to as DateTime?,
+      tagId: identical(tagId, kUnchanged) ? this.tagId : tagId as String?,
+      from: identical(from, kUnchanged) ? this.from : from as DateTime?,
+      to: identical(to, kUnchanged) ? this.to : to as DateTime?,
     );
   }
 
@@ -374,8 +375,8 @@ class TransactionsState {
     String? searchQuery,
     bool? isLoading,
     bool? isLoadingMore,
-    Object? loadError = _unchanged,
-    Object? actionError = _unchanged,
+    Object? loadError = kUnchanged,
+    Object? actionError = kUnchanged,
   }) {
     return TransactionsState(
       transactions: transactions ?? this.transactions,
@@ -391,14 +392,12 @@ class TransactionsState {
       searchQuery: searchQuery ?? this.searchQuery,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      loadError: identical(loadError, _unchanged)
+      loadError: identical(loadError, kUnchanged)
           ? this.loadError
           : loadError as String?,
-      actionError: identical(actionError, _unchanged)
+      actionError: identical(actionError, kUnchanged)
           ? this.actionError
           : actionError as String?,
     );
   }
 }
-
-const _unchanged = Object();

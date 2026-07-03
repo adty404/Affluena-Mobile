@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/state/copy_with_sentinel.dart';
 import '../data/insight_models.dart';
 import '../data/insights_repository.dart';
 
@@ -86,7 +87,7 @@ class AuditLogState {
     int? activityTotal,
     List<SystemLog>? systemLogs,
     bool? isLoading,
-    Object? loadError = _unchanged,
+    Object? loadError = kUnchanged,
   }) {
     return AuditLogState(
       selectedTab: selectedTab ?? this.selectedTab,
@@ -94,11 +95,9 @@ class AuditLogState {
       activityTotal: activityTotal ?? this.activityTotal,
       systemLogs: systemLogs ?? this.systemLogs,
       isLoading: isLoading ?? this.isLoading,
-      loadError: identical(loadError, _unchanged)
+      loadError: identical(loadError, kUnchanged)
           ? this.loadError
           : loadError as String?,
     );
   }
 }
-
-const _unchanged = Object();
