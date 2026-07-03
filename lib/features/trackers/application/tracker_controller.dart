@@ -45,12 +45,7 @@ class TrackerController extends Notifier<TrackerState> {
           .listWallets(limit: 100, offset: 0, sort: 'name_asc');
       final categoriesFuture = ref
           .read(categoryRepositoryProvider)
-          .listCategories(
-            type: CategoryType.expense,
-            limit: 100,
-            offset: 0,
-            sort: 'name_asc',
-          );
+          .listCategories(type: CategoryType.expense, limit: 100, offset: 0);
 
       final installmentsResponse = await installmentsFuture;
       final subscriptionsResponse = await subscriptionsFuture;

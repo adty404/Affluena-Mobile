@@ -290,6 +290,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     metadata: transactionGroupedMetadata(state, entry.$2),
                     amount: transactionAmount(entry.$2),
                     icon: transactionIcon(state, entry.$2),
+                    iconColor: transactionIconColor(state, entry.$2),
                     isIncome: entry.$2.type == TransactionType.income,
                   ),
                 ),

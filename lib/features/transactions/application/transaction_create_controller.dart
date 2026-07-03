@@ -37,11 +37,7 @@ class TransactionCreateController extends Notifier<TransactionCreateState> {
           );
       final categoryFuture = ref
           .read(categoryRepositoryProvider)
-          .listCategories(
-            limit: _createLookupPageSize,
-            offset: 0,
-            sort: 'name_asc',
-          );
+          .listCategories(limit: _createLookupPageSize, offset: 0);
       final tagFuture = ref
           .read(tagRepositoryProvider)
           .listTags(limit: _createLookupPageSize, offset: 0, sort: 'name_asc');

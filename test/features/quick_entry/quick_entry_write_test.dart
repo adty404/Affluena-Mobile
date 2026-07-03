@@ -459,6 +459,9 @@ class WriteCategoryRepository implements CategoryRepository {
 
   @override
   Future<void> deleteCategory(String id) async {}
+
+  @override
+  Future<void> reorderCategories(List<String> ids) async {}
 }
 
 class WriteTagRepository implements TagRepository {

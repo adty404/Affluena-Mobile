@@ -47,7 +47,7 @@ class DebtController extends Notifier<DebtState> {
           .listWallets(limit: 100, offset: 0, sort: 'name_asc');
       final categoriesFuture = ref
           .read(categoryRepositoryProvider)
-          .listCategories(limit: 100, offset: 0, sort: 'name_asc');
+          .listCategories(limit: 100, offset: 0);
 
       final debtResponse = await debtsFuture;
       final walletResponse = await walletsFuture;

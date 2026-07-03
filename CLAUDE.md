@@ -75,6 +75,15 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   short date throws and blanks the screen.
 - **Tests are hermetic**: full-app tests use `authTestApp`/`pumpAuthTestApp` (overrides every repo
   with fakes). `redesign_shell_test` uses its own `ProviderScope` and stubs controllers directly.
+- **Category appearance & ordering**: categories carry client-owned `icon` (semantic id → catalog in
+  `lib/features/shared/presentation/appearance/item_appearance.dart`, `resolveCategoryIcon`) and
+  `color` (`#RRGGBB` from the shared 10-swatch `kItemColorPalette`), plus a server-side `position`
+  (the user's arranged order). **Don't pass `sort` when listing categories** — the API default is
+  position ASC and every list/picker must respect it. Both the master Kategori screen and the shared
+  `showCategoryTreePicker` support **long-press drag-to-reorder** (persists the full flattened id
+  list via `PUT /categories/reorder`, optimistic + revert on failure) and the picker's pinned
+  "Tambah kategori" action creates a category inline (`quickAdd:` preset type, `onMutated:` caller
+  refresh hook) and selects it immediately — no detour to the master screen.
 - **Sharing feature naming**: UI "Berbagi Dompet"; people you invite are "Pemantau" (max 5, one-way,
   read-only); the wallets others share to you show under Beranda's "Dibagikan untukku" section /
   `SharedWithMeScreen`. Endpoints are `/api/v1/partners` (historical) — see the API repo's contract.

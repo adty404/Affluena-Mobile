@@ -247,6 +247,21 @@ All spacing derives from a base of 4.
 - **Usage**: lifecycle/status pills (active, paused, partial, paid_off, cancelled, joined, rejected, …). Active and Cancelled must look different.
 - **Accessibility**: status is carried by the label text, not color alone.
 
+### Category Tree Picker
+
+- **Structure**: bottom sheet with search field, optional "no category" row, the 3-level category tree (parents with indented, collapsible children), and a pinned "Tambah kategori" action.
+- **Appearance**: each category renders its user-chosen icon (semantic id → catalog in `item_appearance.dart`) inside a soft tinted chip of its chosen color; categories without an appearance keep the minimal row so lists stay calm. The same icon+color follows the category onto transaction tiles, budget rows, and the master Kategori screen.
+- **Order**: rows follow the user's arranged order (API `position`); long-press drag rearranges a category among its siblings and persists immediately (optimistic, reverted with a snackbar on failure). The master screen offers the same drag on the full hierarchy.
+- **Inline add**: the pinned action opens a compact create form (name, type — preset from the calling context when unambiguous, icon, color); on success the new category is selected immediately.
+- **States**: searching (flat pruned results, drag disabled), reordering, inline create (saving, inline error).
+- **Accessibility**: selection is marked with a check icon and `Semantics(selected:)`, never color alone.
+
+### Item Appearance (icon & color)
+
+- **Palette**: the shared 10-swatch `kItemColorPalette` (`#RRGGBB`, stored as-is on the API) with a leading "no color" option; used by wallets, budgets, goals, trackers, recurring rules, and categories via `ItemColorPickerRow` (keys `<entity>-color-<hex>`).
+- **Category icons**: `kCategoryIconCatalog` maps ~20 semantic ids (food, transport, home, health, salary, travel, savings, …) to Material glyphs; `CategoryIconPickerGrid` renders the picker (keys `category-icon-<id>`, selected cell fills with the chosen accent). Unknown/empty ids fall back to the income/expense trend glyph via `resolveCategoryIcon`.
+- **Rules**: never rename a catalog id (values persist server-side); the icon catalog and palette are client-owned and must stay in sync with the web app.
+
 ## 6. Motion & Interaction
 
 ### Timing

@@ -42,6 +42,8 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
   late final TextEditingController _nameController;
   late CategoryType _type;
   Category? _parent;
+  String? _icon;
+  String? _color;
 
   bool get _isEditing => widget.category != null;
 
@@ -53,6 +55,10 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
         widget.category?.type ??
         widget.presetParent?.type ??
         CategoryType.expense;
+    final icon = widget.category?.icon ?? '';
+    final color = widget.category?.color ?? '';
+    _icon = icon.isEmpty ? null : icon;
+    _color = color.isEmpty ? null : color;
     if (widget.category?.parentId != null) {
       _parent = widget.initialState.categoryById(widget.category!.parentId!);
     } else if (widget.category == null && widget.presetParent != null) {
@@ -128,6 +134,25 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
                         });
                       },
               ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              Text('Ikon', style: textTheme.labelLarge),
+              const SizedBox(height: AffluenaSpacing.space2),
+              CategoryIconPickerGrid(
+                selected: _icon,
+                accentHex: _color,
+                enabled: !state.isSaving,
+                fallbackIcon: categoryTypeFallbackIcon(_type),
+                onChanged: (value) => setState(() => _icon = value),
+              ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              Text('Warna ikon', style: textTheme.labelLarge),
+              const SizedBox(height: AffluenaSpacing.space2),
+              ItemColorPickerRow(
+                entity: 'category',
+                selected: _color,
+                enabled: !state.isSaving,
+                onChanged: (value) => setState(() => _color = value),
+              ),
               const SizedBox(height: AffluenaSpacing.space3),
               SelectorRow(
                 label: 'Kategori induk',
@@ -196,11 +221,7 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
       noneLabel: 'Tanpa induk',
       categories: [
         for (final category in options)
-          CategoryTreeEntry(
-            id: category.id,
-            name: category.name,
-            parentId: category.parentId,
-          ),
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
     if (!mounted || selected == null) return;
@@ -226,6 +247,8 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
           name: _nameController.text,
           type: _type,
           parentId: selectedParent?.id,
+          icon: _icon ?? '',
+          color: _color ?? '',
         );
     if (!mounted) return;
     if (saved) Navigator.of(context).pop();

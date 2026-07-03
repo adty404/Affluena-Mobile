@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../../core/formatters/tag_formatter.dart';
+import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_chip_bar.dart';
@@ -109,6 +110,8 @@ class _SplitBillScreenState extends ConsumerState<SplitBillScreen> {
           const SizedBox(height: AffluenaSpacing.space5),
           _SplitBillInfoSection(
             state: state,
+            onCategoriesMutated: () =>
+                ref.read(splitBillControllerProvider.notifier).load(),
             walletId: walletId,
             categoryId: categoryId,
             selectedTagId: _tagId,

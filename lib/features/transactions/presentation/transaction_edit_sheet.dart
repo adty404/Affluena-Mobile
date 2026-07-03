@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -81,9 +82,17 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
         transaction.type == TransactionType.income ||
         transaction.type == TransactionType.expense;
     final walletOptions = _walletOptions(widget.state, _walletId, _toWalletId);
+    // Resolve against the live controller state (not the snapshot the sheet
+    // was opened with) so a category created inline from the picker resolves
+    // to its name immediately.
+    final liveCategoryNames = ref
+        .watch(transactionsControllerProvider)
+        .categoryNames;
     final categoryLabel = _categoryId == null
         ? 'Pilih kategori'
-        : (widget.state.categoryNames[_categoryId] ?? 'Tanpa kategori');
+        : (liveCategoryNames[_categoryId] ??
+              widget.state.categoryNames[_categoryId] ??
+              'Tanpa kategori');
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -148,17 +157,19 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
 
   Future<void> _selectCategory() async {
     // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    final categoryType = widget.transaction.type == TransactionType.income
+        ? CategoryType.income
+        : CategoryType.expense;
     final selectedId = await showCategoryTreePicker(
       context: context,
       title: 'Kategori',
       selectedId: _categoryId,
+      quickAdd: CategoryQuickAdd(type: categoryType),
+      onMutated: () =>
+          ref.read(transactionsControllerProvider.notifier).load(reset: true),
       categories: [
         for (final category in widget.state.categories)
-          CategoryTreeEntry(
-            id: category.id,
-            name: category.name,
-            parentId: category.parentId,
-          ),
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
     if (!mounted || selectedId == null || selectedId.isEmpty) return;

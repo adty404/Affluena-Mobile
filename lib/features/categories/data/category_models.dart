@@ -32,6 +32,9 @@ class Category {
     required this.createdAt,
     required this.updatedAt,
     this.parentId,
+    this.icon = '',
+    this.color = '',
+    this.position = 0,
   });
 
   factory Category.fromJson(JsonMap json) {
@@ -41,6 +44,9 @@ class Category {
       parentId: ApiJson.nullableString(json, 'parent_id'),
       name: ApiJson.readString(json, 'name'),
       type: CategoryType.fromApiValue(ApiJson.readString(json, 'type')),
+      icon: ApiJson.optionalString(json, 'icon'),
+      color: ApiJson.optionalString(json, 'color'),
+      position: ApiJson.optionalInt(json, 'position'),
       createdAt: ApiJson.readString(json, 'created_at'),
       updatedAt: ApiJson.readString(json, 'updated_at'),
     );
@@ -51,6 +57,17 @@ class Category {
   final String? parentId;
   final String name;
   final CategoryType type;
+
+  /// Semantic icon id from the client-owned catalog ('' = no icon chosen).
+  final String icon;
+
+  /// `#RRGGBB` hex accent ('' = no color chosen).
+  final String color;
+
+  /// User-arranged order (the API's default list sort is position ASC).
+  /// Not settable via create/update — use the reorder endpoint.
+  final int position;
+
   final String createdAt;
   final String updatedAt;
 }
@@ -80,15 +97,25 @@ class CategoryRequest {
     required this.name,
     required this.type,
     this.parentId,
+    this.icon,
+    this.color,
   });
 
   final String name;
   final CategoryType type;
   final String? parentId;
 
+  /// Semantic icon id; send '' to clear. Omitted when null.
+  final String? icon;
+
+  /// `#RRGGBB` hex; send '' to clear. Omitted when null.
+  final String? color;
+
   JsonMap toJson() => {
     'name': name,
     'type': type.apiValue,
     if (parentId != null) 'parent_id': parentId,
+    if (icon != null) 'icon': icon,
+    if (color != null) 'color': color,
   };
 }

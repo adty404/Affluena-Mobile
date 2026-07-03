@@ -45,7 +45,6 @@ class SplitBillController extends Notifier<SplitBillState> {
             type: CategoryType.expense,
             limit: splitBillLookupPageSize,
             offset: 0,
-            sort: 'name_asc',
           );
       final incomeCategoryFuture = ref
           .read(categoryRepositoryProvider)
@@ -53,7 +52,6 @@ class SplitBillController extends Notifier<SplitBillState> {
             type: CategoryType.income,
             limit: splitBillLookupPageSize,
             offset: 0,
-            sort: 'name_asc',
           );
       final tagFuture = ref
           .read(tagRepositoryProvider)

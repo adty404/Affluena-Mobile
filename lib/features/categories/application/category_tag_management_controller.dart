@@ -29,13 +29,11 @@ class CategoryTagManagementController
     state = state.copyWith(isLoading: true, loadError: null, actionError: null);
 
     try {
+      // No explicit sort: the API default is position ASC (the user-arranged
+      // drag-and-drop order), name as tie-break.
       final categoryFuture = ref
           .read(categoryRepositoryProvider)
-          .listCategories(
-            limit: categoryTagPageSize,
-            offset: 0,
-            sort: 'name_asc',
-          );
+          .listCategories(limit: categoryTagPageSize, offset: 0);
       final tagFuture = ref
           .read(tagRepositoryProvider)
           .listTags(limit: categoryTagPageSize, offset: 0, sort: 'name_asc');
@@ -71,7 +69,6 @@ class CategoryTagManagementController
           .listCategories(
             limit: categoryTagPageSize,
             offset: state.categories.length,
-            sort: 'name_asc',
           );
       state = state.copyWith(
         isLoadingMoreCategories: false,
@@ -117,6 +114,8 @@ class CategoryTagManagementController
     required String name,
     required CategoryType type,
     String? parentId,
+    String icon = '',
+    String color = '',
   }) async {
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) {
@@ -125,10 +124,14 @@ class CategoryTagManagementController
     }
 
     state = state.copyWith(isSaving: true, actionError: null);
+    // Always send icon/color ('' = cleared) so removing an icon or picking
+    // "no color" on edit actually clears the stored value.
     final request = CategoryRequest(
       name: trimmedName,
       type: type,
       parentId: parentId,
+      icon: icon,
+      color: color,
     );
 
     try {
@@ -171,6 +174,27 @@ class CategoryTagManagementController
       await load();
     } catch (_) {
       state = state.copyWith(actionError: 'Kategori gagal dihapus.');
+    }
+  }
+
+  /// Persists a drag-and-drop rearrangement. [ordered] is the full loaded
+  /// category list in its new order; the UI is updated optimistically and
+  /// reverted when the API call fails. Returns false on failure so the caller
+  /// can surface a SnackBar.
+  Future<bool> reorderCategories(List<Category> ordered) async {
+    final previous = state.categories;
+    state = state.copyWith(
+      categories: List<Category>.of(ordered),
+      actionError: null,
+    );
+    try {
+      await ref.read(categoryRepositoryProvider).reorderCategories([
+        for (final category in ordered) category.id,
+      ]);
+      return true;
+    } catch (_) {
+      state = state.copyWith(categories: previous);
+      return false;
     }
   }
 

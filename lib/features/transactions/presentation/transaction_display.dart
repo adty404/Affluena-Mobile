@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
 
@@ -55,10 +56,26 @@ IconData transactionIcon(TransactionsState state, Transaction transaction) {
   if (transaction.type == TransactionType.transfer) {
     return Icons.swap_horiz_rounded;
   }
+  // The category's chosen icon wins over any generic glyph.
+  final category = state.categoryOf(transaction);
+  if (category != null) {
+    final chosen = categoryIconFor(category.icon);
+    if (chosen != null) return chosen;
+  }
   if (transaction.type == TransactionType.income) return Icons.work_outline;
-  final category = state.categoryName(transaction).toLowerCase();
-  if (category.contains('food')) return Icons.restaurant_outlined;
-  if (category.contains('transport')) return Icons.local_gas_station_outlined;
-  if (category.contains('bill')) return Icons.bolt_outlined;
+  final categoryName = state.categoryName(transaction).toLowerCase();
+  if (categoryName.contains('food')) return Icons.restaurant_outlined;
+  if (categoryName.contains('transport')) {
+    return Icons.local_gas_station_outlined;
+  }
+  if (categoryName.contains('bill')) return Icons.bolt_outlined;
   return Icons.receipt_long_outlined;
+}
+
+/// The category's chosen accent for [transaction]'s tile icon, or null to
+/// keep the default theming.
+Color? transactionIconColor(TransactionsState state, Transaction transaction) {
+  final category = state.categoryOf(transaction);
+  if (category == null) return null;
+  return parseItemColor(category.color);
 }

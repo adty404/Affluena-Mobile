@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/tag_formatter.dart';
@@ -24,17 +25,18 @@ Future<TransactionFilters?> showTransactionFilterSheet({
   );
 }
 
-class _TransactionFilterSheet extends StatefulWidget {
+class _TransactionFilterSheet extends ConsumerStatefulWidget {
   const _TransactionFilterSheet({required this.state});
 
   final TransactionsState state;
 
   @override
-  State<_TransactionFilterSheet> createState() =>
+  ConsumerState<_TransactionFilterSheet> createState() =>
       _TransactionFilterSheetState();
 }
 
-class _TransactionFilterSheetState extends State<_TransactionFilterSheet> {
+class _TransactionFilterSheetState
+    extends ConsumerState<_TransactionFilterSheet> {
   late String? _walletId;
   late String? _categoryId;
   late String? _tagId;
@@ -57,7 +59,9 @@ class _TransactionFilterSheetState extends State<_TransactionFilterSheet> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
-    final state = widget.state;
+    // Watch the live controller state (not just the snapshot the sheet opened
+    // with) so a category created inline from the picker resolves immediately.
+    final state = ref.watch(transactionsControllerProvider);
 
     return SafeArea(
       child: Padding(
@@ -204,13 +208,15 @@ class _TransactionFilterSheetState extends State<_TransactionFilterSheet> {
       selectedId: _categoryId,
       allowNone: true,
       noneLabel: 'Semua kategori',
+      // No preset type: the filter spans both, so the inline form shows the
+      // expense/income toggle.
+      quickAdd: const CategoryQuickAdd(),
+      onMutated: () =>
+          ref.read(transactionsControllerProvider.notifier).load(reset: true),
       categories: [
-        for (final category in widget.state.categories)
-          CategoryTreeEntry(
-            id: category.id,
-            name: category.name,
-            parentId: category.parentId,
-          ),
+        for (final category
+            in ref.read(transactionsControllerProvider).categories)
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
     if (!mounted || selected == null) return;

@@ -25,13 +25,11 @@ final quickEntryLookupProvider = FutureProvider<QuickEntryLookup>((ref) async {
     type: CategoryType.expense,
     limit: 100,
     offset: 0,
-    sort: 'name_asc',
   );
   final incomeCategoriesFuture = categoryRepository.listCategories(
     type: CategoryType.income,
     limit: 100,
     offset: 0,
-    sort: 'name_asc',
   );
   final tagsFuture = tagRepository.listTags(
     limit: 100,
