@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/affluena_theme.dart';
 import '../../../categories/data/category_models.dart';
 import '../../../categories/data/category_repository.dart';
+import '../../../categories/presentation/category_tag_management_screen.dart';
 import '../appearance/item_appearance.dart';
 
 /// One selectable category in the tree picker. Decoupled from any data model so
@@ -66,11 +68,13 @@ const String categoryTreeClearedValue = '';
 /// optional "No category" row for fields where a category is optional.
 ///
 /// Categories carry the user's chosen icon/color and arrive in the user's
-/// arranged order (API position order). Long-press dragging a row rearranges
-/// it among its siblings and persists via `PUT /categories/reorder`; the
-/// pinned "Tambah kategori" action ([quickAdd]) creates a category inline and
-/// selects it immediately. [onMutated] runs after either mutation succeeds so
-/// the calling screen can refresh its own category state.
+/// arranged order (API position order). The picker is **selection-only** — it
+/// does not reorder in place; a "Kelola kategori" button in the header opens
+/// the management screen ([CategoryTagManagementScreen]) for full CRUD +
+/// drag-to-reorder. The pinned "Tambah kategori" action ([quickAdd]) still
+/// creates a category inline and selects it immediately. [onMutated] runs after
+/// an inline create (and after returning from the management screen) so the
+/// calling screen can refresh its own category state.
 Future<String?> showCategoryTreePicker({
   required BuildContext context,
   required String title,
@@ -141,14 +145,11 @@ class _CategoryTreePickerSheetState
   String _query = '';
   final Set<String> _collapsed = <String>{};
 
-  /// Local working copy so drag-and-drop can rearrange optimistically.
-  late List<CategoryTreeEntry> _entries = List.of(widget.categories);
-
-  /// Flattened nodes from the last build, for translating reorder indices.
-  List<_FlatNode> _lastNodes = const [];
+  /// The categories this picker renders (reorder/CRUD live on the dedicated
+  /// management screen, reached via the header's "Kelola kategori" button).
+  late final List<CategoryTreeEntry> _entries = List.of(widget.categories);
 
   bool _showCreateForm = false;
-  bool _isReordering = false;
 
   @override
   Widget build(BuildContext context) {
@@ -161,8 +162,6 @@ class _CategoryTreePickerSheetState
     final nodes = normalizedQuery.isEmpty
         ? _buildTree()
         : _buildSearchResults(normalizedQuery);
-    _lastNodes = nodes;
-    final canReorder = normalizedQuery.isEmpty && !_isReordering;
 
     return SafeArea(
       child: Padding(
@@ -176,7 +175,26 @@ class _CategoryTreePickerSheetState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.title, style: textTheme.titleLarge),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(widget.title, style: textTheme.titleLarge),
+                ),
+                // Manage categories (full CRUD + drag-to-reorder) on a dedicated
+                // screen. The picker itself stays selection-only — no direct
+                // reorder here.
+                IconButton(
+                  key: const Key('category-picker-manage-button'),
+                  tooltip: 'Kelola kategori',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () async {
+                    await context.push(CategoryTagManagementScreen.path);
+                    await widget.onMutated?.call();
+                  },
+                  icon: Icon(Icons.settings_outlined, color: colors.inkMuted),
+                ),
+              ],
+            ),
             const SizedBox(height: AffluenaSpacing.space4),
             if (_showCreateForm)
               ConstrainedBox(
@@ -227,40 +245,34 @@ class _CategoryTreePickerSheetState
                           ),
                         ),
                       )
-                    : ReorderableListView(
+                    : ListView(
                         padding: const EdgeInsets.only(
                           bottom: AffluenaSpacing.space2,
                         ),
                         shrinkWrap: true,
-                        buildDefaultDragHandles: false,
-                        onReorderItem: _onReorder,
                         children: [
-                          for (final (index, node) in nodes.indexed)
+                          for (final node in nodes)
                             Padding(
                               key: ValueKey('picker-row-${node.entry.id}'),
                               padding: const EdgeInsets.only(
                                 bottom: AffluenaSpacing.space2,
                               ),
-                              child: _wrapDraggable(
-                                index: index,
-                                enabled: canReorder,
-                                child: _CategoryTreeTile(
-                                  node: node,
-                                  selected: node.entry.id == widget.selectedId,
-                                  onTap: () =>
-                                      Navigator.of(context).pop(node.entry.id),
-                                  onToggle: node.hasChildren
-                                      ? () => setState(() {
-                                          if (_collapsed.contains(
-                                            node.entry.id,
-                                          )) {
-                                            _collapsed.remove(node.entry.id);
-                                          } else {
-                                            _collapsed.add(node.entry.id);
-                                          }
-                                        })
-                                      : null,
-                                ),
+                              child: _CategoryTreeTile(
+                                node: node,
+                                selected: node.entry.id == widget.selectedId,
+                                onTap: () =>
+                                    Navigator.of(context).pop(node.entry.id),
+                                onToggle: node.hasChildren
+                                    ? () => setState(() {
+                                        if (_collapsed.contains(
+                                          node.entry.id,
+                                        )) {
+                                          _collapsed.remove(node.entry.id);
+                                        } else {
+                                          _collapsed.add(node.entry.id);
+                                        }
+                                      })
+                                    : null,
                               ),
                             ),
                         ],
@@ -279,102 +291,10 @@ class _CategoryTreePickerSheetState
     );
   }
 
-  Widget _wrapDraggable({
-    required int index,
-    required bool enabled,
-    required Widget child,
-  }) {
-    if (!enabled) return child;
-    return ReorderableDelayedDragStartListener(index: index, child: child);
-  }
-
   Future<void> _handleCreated(Category category) async {
     await widget.onMutated?.call();
     if (!mounted) return;
     Navigator.of(context).pop(category.id);
-  }
-
-  /// A category's effective parent for grouping: its parentId when the parent
-  /// is part of this picker's entries, otherwise null (rendered as a root).
-  String? _parentKeyOf(CategoryTreeEntry entry, Set<String> ids) {
-    final parentId = entry.parentId;
-    return (parentId != null && ids.contains(parentId)) ? parentId : null;
-  }
-
-  /// Translates a drop in the flattened tree into a move among the dragged
-  /// entry's siblings (same parent), then persists the full rearranged order.
-  ///
-  /// [newIndex] follows onReorderItem semantics: already adjusted for the
-  /// removal of the dragged row at [oldIndex].
-  void _onReorder(int oldIndex, int newIndex) {
-    if (oldIndex < 0 || oldIndex >= _lastNodes.length) return;
-    final dragged = _lastNodes[oldIndex].entry;
-    final ids = {for (final entry in _entries) entry.id};
-    final draggedParent = _parentKeyOf(dragged, ids);
-
-    final without = [..._lastNodes]..removeAt(oldIndex);
-    var siblingSlot = 0;
-    for (var i = 0; i < newIndex && i < without.length; i++) {
-      if (_parentKeyOf(without[i].entry, ids) == draggedParent) {
-        siblingSlot++;
-      }
-    }
-
-    _persistReorder(dragged, siblingSlot);
-  }
-
-  Future<void> _persistReorder(
-    CategoryTreeEntry dragged,
-    int siblingSlot,
-  ) async {
-    final previous = List.of(_entries);
-    final ids = {for (final entry in _entries) entry.id};
-
-    final childrenBy = <String?, List<CategoryTreeEntry>>{};
-    for (final entry in _entries) {
-      childrenBy
-          .putIfAbsent(_parentKeyOf(entry, ids), () => <CategoryTreeEntry>[])
-          .add(entry);
-    }
-    final group = childrenBy[_parentKeyOf(dragged, ids)] ?? [];
-    group.removeWhere((entry) => entry.id == dragged.id);
-    group.insert(siblingSlot.clamp(0, group.length), dragged);
-
-    // Flatten back to one canonical order: each parent directly followed by
-    // its subtree. This is the order sent to the API (index = new position).
-    final ordered = <CategoryTreeEntry>[];
-    final visited = <String>{};
-    void walk(String? parentKey) {
-      for (final entry
-          in childrenBy[parentKey] ?? const <CategoryTreeEntry>[]) {
-        if (!visited.add(entry.id)) continue;
-        ordered.add(entry);
-        walk(entry.id);
-      }
-    }
-
-    walk(null);
-
-    setState(() {
-      _entries = ordered;
-      _isReordering = true;
-    });
-    try {
-      await ref.read(categoryRepositoryProvider).reorderCategories([
-        for (final entry in ordered) entry.id,
-      ]);
-      await widget.onMutated?.call();
-      if (mounted) setState(() => _isReordering = false);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _entries = previous;
-        _isReordering = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Urutan kategori gagal disimpan.')),
-      );
-    }
   }
 
   List<_FlatNode> _buildSearchResults(String query) {

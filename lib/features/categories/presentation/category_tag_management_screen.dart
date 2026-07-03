@@ -197,10 +197,29 @@ class _CategoryTagManagementScreenState
             Padding(
               key: row.key,
               padding: EdgeInsets.only(bottom: row.bottomSpacing),
+              // A visible drag-handle affordance (rather than an invisible
+              // long-press): grab the ⠿ handle to reorder within a sibling
+              // group. Section headers and filtered views have no handle.
               child: (canReorder && row.category != null)
-                  ? ReorderableDelayedDragStartListener(
-                      index: index,
-                      child: row.child,
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(child: row.child),
+                        ReorderableDragStartListener(
+                          index: index,
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              left: AffluenaSpacing.space1,
+                            ),
+                            child: Icon(
+                              Icons.drag_indicator,
+                              size: 22,
+                              color: context.affluenaColors.inkMuted,
+                              semanticLabel: 'Seret untuk mengubah urutan',
+                            ),
+                          ),
+                        ),
+                      ],
                     )
                   : row.child,
             ),
