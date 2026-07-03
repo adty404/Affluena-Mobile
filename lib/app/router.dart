@@ -86,23 +86,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: AuthBootstrapScreen.path,
-        pageBuilder: _fadePage((_) => const AuthBootstrapScreen()),
+        pageBuilder: _noTransitionPage((_) => const AuthBootstrapScreen()),
       ),
       GoRoute(
         path: LoginScreen.path,
-        pageBuilder: _fadePage((_) => const LoginScreen()),
+        pageBuilder: _noTransitionPage((_) => const LoginScreen()),
       ),
       GoRoute(
         path: RegisterScreen.path,
-        pageBuilder: _fadePage((_) => const RegisterScreen()),
+        pageBuilder: _noTransitionPage((_) => const RegisterScreen()),
       ),
       GoRoute(
         path: ForgotPasswordScreen.path,
-        pageBuilder: _fadePage((_) => const ForgotPasswordScreen()),
+        pageBuilder: _noTransitionPage((_) => const ForgotPasswordScreen()),
       ),
       GoRoute(
         path: OnboardingScreen.path,
-        pageBuilder: _fadePage(
+        pageBuilder: _noTransitionPage(
           (state) => OnboardingScreen(
             replay: state.uri.queryParameters['replay'] == 'true',
           ),
@@ -110,7 +110,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: ResetPasswordScreen.path,
-        pageBuilder: _fadePage(
+        pageBuilder: _noTransitionPage(
           (state) => ResetPasswordScreen(
             token: state.uri.queryParameters['token'],
             email: state.extra is String ? state.extra as String : null,
@@ -126,45 +126,47 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // reached from the new shell.
       GoRoute(
         path: WalletsScreen.path,
-        pageBuilder: _fadePage((_) => const WalletsScreen()),
+        pageBuilder: _noTransitionPage((_) => const WalletsScreen()),
       ),
       GoRoute(
         path: WalletDetailScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) =>
               WalletDetailScreen(walletId: state.pathParameters['walletId']!),
         ),
       ),
       GoRoute(
         path: WalletSharingScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) =>
               WalletSharingScreen(walletId: state.pathParameters['walletId']!),
         ),
       ),
       GoRoute(
         path: QuickEntryScreen.path,
-        pageBuilder: _fadePage((_) => const QuickEntryScreen()),
+        pageBuilder: _noTransitionPage((_) => const QuickEntryScreen()),
       ),
       GoRoute(
         path: QuickEntryTemplatesScreen.path,
-        pageBuilder: _slidePage((_) => const QuickEntryTemplatesScreen()),
+        pageBuilder: _noTransitionPage(
+          (_) => const QuickEntryTemplatesScreen(),
+        ),
       ),
       GoRoute(
         path: TransactionsScreen.path,
-        pageBuilder: _fadePage((_) => const TransactionsScreen()),
+        pageBuilder: _noTransitionPage((_) => const TransactionsScreen()),
       ),
       GoRoute(
         path: SplitBillListScreen.path,
-        pageBuilder: _slidePage((_) => const SplitBillListScreen()),
+        pageBuilder: _noTransitionPage((_) => const SplitBillListScreen()),
       ),
       GoRoute(
         path: SplitBillScreen.path,
-        pageBuilder: _slidePage((_) => const SplitBillScreen()),
+        pageBuilder: _noTransitionPage((_) => const SplitBillScreen()),
       ),
       GoRoute(
         path: TransactionCreateScreen.path,
-        pageBuilder: _slidePage((_) => const TransactionCreateScreen()),
+        pageBuilder: _noTransitionPage((_) => const TransactionCreateScreen()),
       ),
       GoRoute(
         path: SettingsScreen.path,
@@ -174,45 +176,47 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: PartnerScreen.path,
-        pageBuilder: _slidePage((_) => const PartnerScreen()),
+        pageBuilder: _noTransitionPage((_) => const PartnerScreen()),
       ),
       GoRoute(
         path: SharedWithMeScreen.path,
-        pageBuilder: _slidePage((_) => const SharedWithMeScreen()),
+        pageBuilder: _noTransitionPage((_) => const SharedWithMeScreen()),
       ),
       GoRoute(
         path: BudgetScreen.path,
-        pageBuilder: _slidePage((_) => const BudgetScreen()),
+        pageBuilder: _noTransitionPage((_) => const BudgetScreen()),
       ),
       GoRoute(
         path: CategoryTagManagementScreen.path,
-        pageBuilder: _slidePage((_) => const CategoryTagManagementScreen()),
+        pageBuilder: _noTransitionPage(
+          (_) => const CategoryTagManagementScreen(),
+        ),
       ),
       GoRoute(
         path: DebtScreen.path,
-        pageBuilder: _slidePage((_) => const DebtScreen()),
+        pageBuilder: _noTransitionPage((_) => const DebtScreen()),
       ),
       GoRoute(
         path: DebtDetailScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) => DebtDetailScreen(debtId: state.pathParameters['debtId']!),
         ),
       ),
       GoRoute(
         path: TrackerScreen.path,
-        pageBuilder: _slidePage((_) => const TrackerScreen()),
+        pageBuilder: _noTransitionPage((_) => const TrackerScreen()),
       ),
       GoRoute(
         path: RecurringScreen.path,
-        pageBuilder: _slidePage((_) => const RecurringScreen()),
+        pageBuilder: _noTransitionPage((_) => const RecurringScreen()),
       ),
       GoRoute(
         path: GoalScreen.path,
-        pageBuilder: _slidePage((_) => const GoalScreen()),
+        pageBuilder: _noTransitionPage((_) => const GoalScreen()),
       ),
       GoRoute(
         path: InsightsScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) => InsightsScreen(
             initialTab: InsightsScreen.tabFromQuery(
               state.uri.queryParameters['tab'],
@@ -222,18 +226,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AuditLogScreen.path,
-        pageBuilder: _slidePage((_) => const AuditLogScreen()),
+        pageBuilder: _noTransitionPage((_) => const AuditLogScreen()),
       ),
       // Redesign surfaces. [RedesignShell] (/beranda) is the authenticated home;
       // the rooms/activity/insights standalone routes remain as deep-link
       // targets, and /rooms/:walletId is the room detail pushed from Home.
       GoRoute(
         path: RoomsHomeScreen.path,
-        pageBuilder: _fadePage((_) => const RoomsHomeScreen()),
+        pageBuilder: _noTransitionPage((_) => const RoomsHomeScreen()),
       ),
       GoRoute(
         path: RoomDetailScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) =>
               RoomDetailScreen(walletId: state.pathParameters['walletId']!),
         ),
@@ -241,45 +245,45 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Per-item detail screens opened from the Beranda dashboard cards.
       GoRoute(
         path: BudgetDetailScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) => BudgetDetailScreen(id: state.pathParameters['id']!),
         ),
       ),
       GoRoute(
         path: GoalDetailScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) => GoalDetailScreen(id: state.pathParameters['id']!),
         ),
       ),
       GoRoute(
         path: InstallmentDetailScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) => InstallmentDetailScreen(id: state.pathParameters['id']!),
         ),
       ),
       GoRoute(
         path: SubscriptionDetailScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) => SubscriptionDetailScreen(id: state.pathParameters['id']!),
         ),
       ),
       GoRoute(
         path: RecurringDetailScreen.path,
-        pageBuilder: _slidePage(
+        pageBuilder: _noTransitionPage(
           (state) => RecurringDetailScreen(id: state.pathParameters['id']!),
         ),
       ),
       GoRoute(
         path: ActivityFeedScreen.path,
-        pageBuilder: _slidePage((_) => const ActivityFeedScreen()),
+        pageBuilder: _noTransitionPage((_) => const ActivityFeedScreen()),
       ),
       GoRoute(
         path: SkyInsightsScreen.path,
-        pageBuilder: _slidePage((_) => const SkyInsightsScreen()),
+        pageBuilder: _noTransitionPage((_) => const SkyInsightsScreen()),
       ),
       GoRoute(
         path: RedesignShell.path,
-        pageBuilder: _fadePage((_) => const RedesignShell()),
+        pageBuilder: _noTransitionPage((_) => const RedesignShell()),
       ),
     ],
   );
@@ -303,21 +307,9 @@ class _RouterRefreshNotifier extends ChangeNotifier {
   }
 }
 
-Page<dynamic> Function(BuildContext, GoRouterState) _fadePage(
-  Widget Function(GoRouterState state) builder,
-) {
-  return (context, state) {
-    return CustomTransitionPage<void>(
-      key: state.pageKey,
-      child: builder(state),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(opacity: animation, child: child);
-      },
-    );
-  };
-}
-
-/// No push/pop animation at all — the target appears and disappears instantly.
+/// No push/pop animation at all — every route appears and disappears
+/// instantly. The app deliberately ships without page transitions (per user
+/// preference); all routes use this builder.
 Page<dynamic> Function(BuildContext, GoRouterState) _noTransitionPage(
   Widget Function(GoRouterState state) builder,
 ) {
@@ -329,40 +321,6 @@ Page<dynamic> Function(BuildContext, GoRouterState) _noTransitionPage(
       child: builder(state),
       transitionsBuilder: (context, animation, secondaryAnimation, child) =>
           child,
-    );
-  };
-}
-
-/// Forward/back slide for drill-in screens, giving a clear spatial sense of
-/// moving deeper and returning. Falls back to no animation under reduce-motion.
-Page<dynamic> Function(BuildContext, GoRouterState) _slidePage(
-  Widget Function(GoRouterState state) builder,
-) {
-  return (context, state) {
-    return CustomTransitionPage<void>(
-      key: state.pageKey,
-      child: builder(state),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
-          return child;
-        }
-        final position = animation.drive(
-          Tween(
-            begin: const Offset(1, 0),
-            end: Offset.zero,
-          ).chain(CurveTween(curve: Curves.easeOutCubic)),
-        );
-        final outgoing = secondaryAnimation.drive(
-          Tween(
-            begin: Offset.zero,
-            end: const Offset(-0.2, 0),
-          ).chain(CurveTween(curve: Curves.easeOutCubic)),
-        );
-        return SlideTransition(
-          position: outgoing,
-          child: SlideTransition(position: position, child: child),
-        );
-      },
     );
   };
 }

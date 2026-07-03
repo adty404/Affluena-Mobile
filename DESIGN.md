@@ -145,6 +145,12 @@ All spacing derives from a base of 4.
 
 ## 5. Components
 
+> **Navigation motion:** the app ships with **no page-route transitions** — every
+> `GoRoute` uses `_noTransitionPage` (`lib/app/router.dart`, zero forward/reverse
+> duration), so pushing/popping any screen is instant (per user preference). Do
+> **not** reintroduce `_fadePage`/`_slidePage`-style animated pages. In-widget
+> motion (button press, sheet slide-up, calendar month PageView) is unaffected.
+
 ### Affluena Card
 
 - **Structure**: tonal surface container with rounded corners, optional border, and child content.
