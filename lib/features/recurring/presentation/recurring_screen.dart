@@ -789,11 +789,6 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
       context: context,
       title: 'Kategori aturan berulang',
       selectedId: _category?.id,
-      quickAdd: CategoryQuickAdd(
-        type: _type == RecurringType.income
-            ? CategoryType.income
-            : CategoryType.expense,
-      ),
       onMutated: () => ref.read(recurringControllerProvider.notifier).load(),
       categories: [
         for (final category in widget.state.categories)

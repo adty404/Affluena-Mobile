@@ -1086,7 +1086,6 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
       context: context,
       title: 'Kategori pengeluaran',
       selectedId: _category?.id,
-      quickAdd: const CategoryQuickAdd(type: CategoryType.expense),
       onMutated: () => ref.read(trackerControllerProvider.notifier).load(),
       categories: [
         for (final category in categories)

@@ -305,7 +305,6 @@ class BerandaDashboardView extends ConsumerWidget {
         customBg: hasColor ? Colors.white.withValues(alpha: 0.2) : hue.iconBg,
         customBorder: Colors.transparent,
       ),
-      badge: const _Badge(label: 'LIHAT'),
       title: wallet.name,
       subtitle: ownerName != null
           ? 'dari $ownerName'

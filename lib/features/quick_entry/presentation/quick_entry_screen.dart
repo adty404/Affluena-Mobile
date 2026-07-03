@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../../core/formatters/tag_formatter.dart';
-import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -195,11 +194,6 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
       context: context,
       title: 'Pilih kategori',
       selectedId: _selectedCategoryId,
-      quickAdd: CategoryQuickAdd(
-        type: _type == TransactionType.income
-            ? CategoryType.income
-            : CategoryType.expense,
-      ),
       onMutated: () => ref.refresh(quickEntryLookupProvider.future),
       categories: [
         for (final category in categories)

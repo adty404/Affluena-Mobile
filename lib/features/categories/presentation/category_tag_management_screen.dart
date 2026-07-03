@@ -105,7 +105,7 @@ class _CategoryTagManagementScreenState
           onPressed: state.isSaving
               ? null
               : () => _showCategoryForm(context, ref, state: state),
-          icon: const Icon(Icons.account_tree_outlined),
+          icon: const Icon(Icons.add),
         ),
         const SizedBox(width: AffluenaSpacing.space2),
       ],
@@ -164,7 +164,7 @@ class _CategoryTagManagementScreenState
               Padding(
                 padding: const EdgeInsets.only(top: AffluenaSpacing.space1),
                 child: Text(
-                  'Tahan lalu geser kartu untuk mengatur urutan.',
+                  'Seret gagang di kiri kartu untuk mengatur urutan.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: context.affluenaColors.inkMuted,
                   ),
@@ -198,18 +198,17 @@ class _CategoryTagManagementScreenState
               key: row.key,
               padding: EdgeInsets.only(bottom: row.bottomSpacing),
               // A visible drag-handle affordance (rather than an invisible
-              // long-press): grab the ⠿ handle to reorder within a sibling
-              // group. Section headers and filtered views have no handle.
+              // long-press): grab the ⠿ handle on the left to reorder within a
+              // sibling group. Section headers and filtered views have no handle.
               child: (canReorder && row.category != null)
                   ? Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(child: row.child),
                         ReorderableDragStartListener(
                           index: index,
                           child: Padding(
                             padding: const EdgeInsets.only(
-                              left: AffluenaSpacing.space1,
+                              right: AffluenaSpacing.space1,
                             ),
                             child: Icon(
                               Icons.drag_indicator,
@@ -219,6 +218,7 @@ class _CategoryTagManagementScreenState
                             ),
                           ),
                         ),
+                        Expanded(child: row.child),
                       ],
                     )
                   : row.child,
@@ -334,7 +334,7 @@ class _CategoryTagManagementScreenState
           key: const ValueKey('category-empty-state'),
           bottomSpacing: 0,
           child: _EmptyManagementState(
-            icon: Icons.account_tree_outlined,
+            icon: Icons.category_outlined,
             title: isFiltering
                 ? 'Tidak ada kategori yang cocok'
                 : 'Belum ada kategori',

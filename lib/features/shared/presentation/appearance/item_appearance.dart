@@ -10,10 +10,15 @@ import '../../../categories/data/category_models.dart';
 /// surface must fall back to its default theming. Keep the palette in sync
 /// with the web catalog when it is added.
 
-/// Curated swatches that sit well within the "Sky & Denim" palette. Stored as
-/// uppercase `#RRGGBB` hex strings (the value sent to / received from the API).
+/// Curated swatches a user can paint an item with. Stored as uppercase
+/// `#RRGGBB` hex strings (the value sent to / received from the API). The first
+/// ten are the original set — never reorder or drop them, existing data maps to
+/// them; new swatches are only ever appended so old picks stay valid. Every
+/// swatch is dark enough to carry white text/icons on a solid card. Keep this
+/// list identical to the web catalog.
 const List<String> kItemColorPalette = <String>[
-  '#3E72B8', // denim (accent)
+  // Original ten (do not reorder / remove).
+  '#3E72B8', // denim
   '#2BB3A3', // teal
   '#2E8B57', // green
   '#E0A23B', // amber
@@ -23,6 +28,21 @@ const List<String> kItemColorPalette = <String>[
   '#C2588A', // pink
   '#5E6E80', // slate
   '#9E7B4F', // bronze
+  // Extended palette (appended 2026-07).
+  '#2E86C1', // sky blue
+  '#17A2B8', // cyan
+  '#16A085', // sea green
+  '#5CB85C', // leaf green
+  '#8BC34A', // lime
+  '#B8902E', // dark gold
+  '#D9822B', // orange
+  '#E67E22', // pumpkin
+  '#C0392B', // brick red
+  '#D6337A', // magenta
+  '#6A4CB3', // deep purple
+  '#795548', // brown
+  '#607D8B', // blue grey
+  '#455A64', // charcoal
 ];
 
 /// Parses a `#RRGGBB` (or `RRGGBB`) hex string into a [Color]. Returns null for
@@ -299,6 +319,144 @@ const List<CategoryIconOption> kCategoryIconCatalog = <CategoryIconOption>[
     label: 'Olahraga',
     icon: Icons.fitness_center_outlined,
   ),
+  // Extended catalog (appended 2026-07) — never reorder/rename ids above.
+  CategoryIconOption(
+    id: 'coffee',
+    label: 'Kopi & kafe',
+    icon: Icons.local_cafe_outlined,
+  ),
+  CategoryIconOption(
+    id: 'fastfood',
+    label: 'Jajan',
+    icon: Icons.fastfood_outlined,
+  ),
+  CategoryIconOption(
+    id: 'drinks',
+    label: 'Minuman',
+    icon: Icons.local_bar_outlined,
+  ),
+  CategoryIconOption(
+    id: 'fuel',
+    label: 'Bensin',
+    icon: Icons.local_gas_station_outlined,
+  ),
+  CategoryIconOption(
+    id: 'publictransport',
+    label: 'Transportasi umum',
+    icon: Icons.directions_bus_outlined,
+  ),
+  CategoryIconOption(
+    id: 'taxi',
+    label: 'Taksi & ojek',
+    icon: Icons.local_taxi_outlined,
+  ),
+  CategoryIconOption(
+    id: 'parking',
+    label: 'Parkir',
+    icon: Icons.local_parking_outlined,
+  ),
+  CategoryIconOption(
+    id: 'rent',
+    label: 'Sewa tempat',
+    icon: Icons.home_work_outlined,
+  ),
+  CategoryIconOption(
+    id: 'electricity',
+    label: 'Listrik',
+    icon: Icons.electric_bolt_outlined,
+  ),
+  CategoryIconOption(
+    id: 'water',
+    label: 'Air',
+    icon: Icons.water_drop_outlined,
+  ),
+  CategoryIconOption(
+    id: 'tv',
+    label: 'TV & streaming',
+    icon: Icons.live_tv_outlined,
+  ),
+  CategoryIconOption(
+    id: 'music',
+    label: 'Musik',
+    icon: Icons.music_note_outlined,
+  ),
+  CategoryIconOption(
+    id: 'games',
+    label: 'Game',
+    icon: Icons.sports_esports_outlined,
+  ),
+  CategoryIconOption(
+    id: 'beauty',
+    label: 'Perawatan diri',
+    icon: Icons.spa_outlined,
+  ),
+  CategoryIconOption(
+    id: 'haircut',
+    label: 'Salon & cukur',
+    icon: Icons.content_cut,
+  ),
+  CategoryIconOption(id: 'clothes', label: 'Pakaian', icon: Icons.checkroom),
+  CategoryIconOption(
+    id: 'laundry',
+    label: 'Laundry',
+    icon: Icons.local_laundry_service_outlined,
+  ),
+  CategoryIconOption(
+    id: 'pharmacy',
+    label: 'Apotek',
+    icon: Icons.local_pharmacy_outlined,
+  ),
+  CategoryIconOption(
+    id: 'insurance',
+    label: 'Asuransi',
+    icon: Icons.health_and_safety_outlined,
+  ),
+  CategoryIconOption(
+    id: 'tax',
+    label: 'Pajak',
+    icon: Icons.account_balance_outlined,
+  ),
+  CategoryIconOption(
+    id: 'donation',
+    label: 'Donasi',
+    icon: Icons.volunteer_activism_outlined,
+  ),
+  CategoryIconOption(
+    id: 'baby',
+    label: 'Bayi',
+    icon: Icons.child_friendly_outlined,
+  ),
+  CategoryIconOption(
+    id: 'tools',
+    label: 'Perkakas',
+    icon: Icons.build_outlined,
+  ),
+  CategoryIconOption(
+    id: 'camera',
+    label: 'Kamera & foto',
+    icon: Icons.photo_camera_outlined,
+  ),
+  CategoryIconOption(
+    id: 'celebration',
+    label: 'Perayaan',
+    icon: Icons.celebration_outlined,
+  ),
+  CategoryIconOption(
+    id: 'bonus',
+    label: 'Bonus',
+    icon: Icons.workspace_premium_outlined,
+  ),
+  CategoryIconOption(id: 'interest', label: 'Bunga', icon: Icons.percent),
+  CategoryIconOption(
+    id: 'rental_income',
+    label: 'Pemasukan sewa',
+    icon: Icons.real_estate_agent_outlined,
+  ),
+  CategoryIconOption(
+    id: 'refund',
+    label: 'Pengembalian dana',
+    icon: Icons.replay,
+  ),
   CategoryIconOption(
     id: 'misc',
     label: 'Lainnya',
@@ -336,6 +494,17 @@ const Map<String, IconData> kWalletIconCatalog = <String, IconData>{
   'home': Icons.home_outlined,
   'health': Icons.favorite_outline,
   'travel': Icons.flight_outlined,
+  // Extended catalog (appended 2026-07).
+  'crypto': Icons.currency_bitcoin,
+  'qris': Icons.qr_code_2,
+  'business': Icons.business_center_outlined,
+  'coins': Icons.monetization_on_outlined,
+  'vacation': Icons.beach_access_outlined,
+  'foreign': Icons.currency_exchange,
+  'stocks': Icons.candlestick_chart,
+  'gold': Icons.workspace_premium_outlined,
+  'joint': Icons.groups_outlined,
+  'emergency': Icons.emergency_outlined,
 };
 
 /// The glyph for a stored *entity* icon id (budgets, goals, installments,

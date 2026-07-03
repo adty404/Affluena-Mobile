@@ -44,6 +44,14 @@ class _WalletsContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The Dompet list mirrors Beranda's Dompet section: goal-backing wallets
+    // belong under Tabungan, and wallets shared TO you (viewer) live under
+    // "Dibagikan untukku" (SharedWithMeScreen). Exclude both so this screen
+    // only shows the wallets you actually own and spend from.
+    final visible = wallets
+        .where((w) => !w.isGoal && !w.isViewer)
+        .toList(growable: false);
+
     return DrillInScaffold(
       title: 'Dompet',
       actions: [
@@ -55,7 +63,7 @@ class _WalletsContent extends ConsumerWidget {
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
-          if (wallets.isEmpty) ...[
+          if (visible.isEmpty) ...[
             EmptyState(
               icon: Icons.account_balance_wallet_outlined,
               title: 'Belum ada dompet',
@@ -64,7 +72,7 @@ class _WalletsContent extends ConsumerWidget {
               onAction: () => _showWalletForm(context, ref),
             ),
           ] else ...[
-            _WalletsSummary(wallets: wallets),
+            _WalletsSummary(wallets: visible),
             const SizedBox(height: AffluenaSpacing.space6),
             const SectionHeader(title: 'Dompet kamu'),
             const SizedBox(height: AffluenaSpacing.space3),
@@ -72,7 +80,7 @@ class _WalletsContent extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
-              itemCount: wallets.length,
+              itemCount: visible.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 mainAxisSpacing: AffluenaSpacing.space3,
@@ -80,7 +88,7 @@ class _WalletsContent extends ConsumerWidget {
                 mainAxisExtent: 188,
               ),
               itemBuilder: (context, index) {
-                final wallet = wallets[index];
+                final wallet = visible[index];
                 return _WalletCard(
                   wallet: wallet,
                   onOpen: () =>
@@ -99,9 +107,9 @@ class _WalletsContent extends ConsumerWidget {
 }
 
 /// The wallets-screen hero: the combined total balance as the focal number,
-/// then a clear breakdown (total wallets · shared · private). Replaces the
-/// earlier two-metric card whose "Dibagikan: N dompet / Hanya pribadi" read as
-/// contradictory.
+/// then a clear breakdown (total wallets · shared · private) with a caption
+/// spelling out what "Bersama" means (wallets you've shared to a Pemantau),
+/// since sharing here is one-way read-only.
 class _WalletsSummary extends StatelessWidget {
   const _WalletsSummary({required this.wallets});
 
@@ -169,6 +177,17 @@ class _WalletsSummary extends StatelessWidget {
                 value: '$private',
               ),
             ],
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+          Text(
+            shared > 0
+                ? 'Bersama = dompet kamu yang dibagikan ke pemantau. Pribadi = hanya kamu yang lihat.'
+                : 'Semua dompet kamu masih pribadi. Bagikan salah satu ke pemantau lewat menu Berbagi Dompet.',
+            style: TextStyle(
+              fontSize: 11,
+              height: 1.35,
+              color: colors.inkMuted,
+            ),
           ),
         ],
       ),
@@ -671,11 +690,13 @@ bool _isShared(Wallet wallet) {
       (wallet.role != null && wallet.role != 'owner');
 }
 
+/// Short privacy tag for the wallet card subtitle — deliberately terse
+/// ("Bank · Bersama") so it never truncates in the narrow 2-column card. The
+/// full description, if any, shows on the wallet detail screen.
 String _walletDescription(Wallet wallet) {
-  if (wallet.isGoal) return 'Dompet target hanya-baca';
-  if (wallet.description.isNotEmpty) return wallet.description;
-  if (_isShared(wallet)) return 'Dompet bersama';
-  return 'Dompet pribadi';
+  if (wallet.isGoal) return 'Target';
+  if (_isShared(wallet)) return 'Bersama';
+  return 'Pribadi';
 }
 
 String _walletKey(Wallet wallet) {

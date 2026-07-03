@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
-import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -202,7 +201,6 @@ class _SplitBillParticipantSheetState
       context: context,
       title: 'Kategori pencairan',
       selectedId: _disbursementCategoryId,
-      quickAdd: const CategoryQuickAdd(type: CategoryType.expense),
       onMutated: () => ref.read(splitBillControllerProvider.notifier).load(),
       categories: [
         for (final category
@@ -220,7 +218,6 @@ class _SplitBillParticipantSheetState
       context: context,
       title: 'Kategori pembayaran',
       selectedId: _paymentCategoryId,
-      quickAdd: const CategoryQuickAdd(type: CategoryType.income),
       onMutated: () => ref.read(splitBillControllerProvider.notifier).load(),
       categories: [
         for (final category
