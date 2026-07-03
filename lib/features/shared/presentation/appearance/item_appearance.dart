@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/affluena_theme.dart';
+import '../../../categories/data/category_models.dart';
 
 /// Shared item-appearance catalog: the curated color palette a user can pick
 /// from when creating/editing a wallet, budget, goal, installment,
@@ -167,6 +168,235 @@ class ItemAccentIconTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AffluenaRadii.md),
       ),
       child: Icon(icon, size: 20, color: accent),
+    );
+  }
+}
+
+/// One entry in the category icon catalog: the semantic id persisted on the
+/// API, a short Indonesian label for pickers, and the Material glyph both
+/// clients render for that id.
+class CategoryIconOption {
+  const CategoryIconOption({
+    required this.id,
+    required this.label,
+    required this.icon,
+  });
+
+  final String id;
+  final String label;
+  final IconData icon;
+}
+
+/// The client-owned category icon catalog (semantic id -> Material icon).
+/// Ids are persisted as-is on the API (`icon` is a free-form string there), so
+/// never rename an id — add a new one instead. Keep in sync with the web
+/// catalog when it is added.
+const List<CategoryIconOption> kCategoryIconCatalog = <CategoryIconOption>[
+  CategoryIconOption(
+    id: 'food',
+    label: 'Makanan',
+    icon: Icons.restaurant_outlined,
+  ),
+  CategoryIconOption(
+    id: 'groceries',
+    label: 'Belanja harian',
+    icon: Icons.local_grocery_store_outlined,
+  ),
+  CategoryIconOption(
+    id: 'transport',
+    label: 'Transportasi',
+    icon: Icons.directions_car_outlined,
+  ),
+  CategoryIconOption(id: 'home', label: 'Rumah', icon: Icons.home_outlined),
+  CategoryIconOption(
+    id: 'bills',
+    label: 'Tagihan',
+    icon: Icons.receipt_long_outlined,
+  ),
+  CategoryIconOption(
+    id: 'shopping',
+    label: 'Belanja',
+    icon: Icons.shopping_bag_outlined,
+  ),
+  CategoryIconOption(
+    id: 'health',
+    label: 'Kesehatan',
+    icon: Icons.favorite_outline,
+  ),
+  CategoryIconOption(
+    id: 'education',
+    label: 'Pendidikan',
+    icon: Icons.school_outlined,
+  ),
+  CategoryIconOption(
+    id: 'entertainment',
+    label: 'Hiburan',
+    icon: Icons.movie_outlined,
+  ),
+  CategoryIconOption(
+    id: 'travel',
+    label: 'Perjalanan',
+    icon: Icons.flight_outlined,
+  ),
+  CategoryIconOption(id: 'pets', label: 'Peliharaan', icon: Icons.pets),
+  CategoryIconOption(
+    id: 'kids',
+    label: 'Anak',
+    icon: Icons.child_care_outlined,
+  ),
+  CategoryIconOption(id: 'work', label: 'Pekerjaan', icon: Icons.work_outline),
+  CategoryIconOption(
+    id: 'salary',
+    label: 'Gaji',
+    icon: Icons.payments_outlined,
+  ),
+  CategoryIconOption(
+    id: 'gift',
+    label: 'Hadiah',
+    icon: Icons.card_giftcard_outlined,
+  ),
+  CategoryIconOption(
+    id: 'savings',
+    label: 'Tabungan',
+    icon: Icons.savings_outlined,
+  ),
+  CategoryIconOption(
+    id: 'investment',
+    label: 'Investasi',
+    icon: Icons.show_chart,
+  ),
+  CategoryIconOption(
+    id: 'phone',
+    label: 'Pulsa & internet',
+    icon: Icons.wifi_outlined,
+  ),
+  CategoryIconOption(
+    id: 'sports',
+    label: 'Olahraga',
+    icon: Icons.fitness_center_outlined,
+  ),
+  CategoryIconOption(
+    id: 'misc',
+    label: 'Lainnya',
+    icon: Icons.category_outlined,
+  ),
+];
+
+/// The catalog glyph for a stored semantic id, or null when the id is empty or
+/// unknown (e.g. saved by a newer client) so callers can fall back.
+IconData? categoryIconFor(String id) {
+  if (id.isEmpty) return null;
+  for (final option in kCategoryIconCatalog) {
+    if (option.id == id) return option.icon;
+  }
+  return null;
+}
+
+/// Resolves the glyph shown for [type] when a category has no chosen icon.
+IconData categoryTypeFallbackIcon(CategoryType type) {
+  return switch (type) {
+    CategoryType.income => Icons.trending_up,
+    CategoryType.expense => Icons.trending_down,
+  };
+}
+
+/// The glyph to render for [category]: its chosen catalog icon when set and
+/// known, otherwise the income/expense default glyph.
+IconData resolveCategoryIcon(Category category) {
+  return categoryIconFor(category.icon) ??
+      categoryTypeFallbackIcon(category.type);
+}
+
+/// An icon-picker grid over [kCategoryIconCatalog] plus a leading "default"
+/// option (no icon: the category keeps its income/expense glyph). Each cell is
+/// keyed `category-icon-<id>` (the default option is `category-icon-none`) so
+/// hermetic tests can target a specific choice. The selected cell renders in a
+/// filled accent state — tinted with [accentHex] when the user has picked a
+/// color, so the form previews the final appearance.
+class CategoryIconPickerGrid extends StatelessWidget {
+  const CategoryIconPickerGrid({
+    required this.selected,
+    required this.onChanged,
+    required this.fallbackIcon,
+    this.accentHex,
+    this.enabled = true,
+    super.key,
+  });
+
+  /// Currently selected semantic id (null or empty = default glyph).
+  final String? selected;
+  final ValueChanged<String?> onChanged;
+
+  /// Glyph rendered inside the leading "default" cell.
+  final IconData fallbackIcon;
+
+  /// The category's chosen color, used to tint the selected fill.
+  final String? accentHex;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.affluenaColors;
+    final custom = parseItemColor(accentHex ?? '');
+    final accent = custom ?? colors.ink;
+    // White is safe on every palette swatch; on the ink accent (which flips to
+    // white in dark mode) use the elevated surface for contrast instead.
+    final onAccent = custom != null ? Colors.white : colors.surfaceElevated;
+    final noneSelected = selected == null || selected!.isEmpty;
+
+    Widget cell({
+      required Key key,
+      required IconData icon,
+      required bool isSelected,
+      required VoidCallback onTap,
+      required String tooltip,
+    }) {
+      return Tooltip(
+        message: tooltip,
+        child: GestureDetector(
+          key: key,
+          onTap: enabled ? onTap : null,
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isSelected ? accent : colors.surfaceElevated,
+              borderRadius: BorderRadius.circular(AffluenaRadii.md),
+              border: Border.all(
+                color: isSelected ? accent : colors.borderSubtle,
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: isSelected ? onAccent : colors.inkMuted,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: AffluenaSpacing.space2,
+      runSpacing: AffluenaSpacing.space2,
+      children: [
+        cell(
+          key: const Key('category-icon-none'),
+          icon: fallbackIcon,
+          isSelected: noneSelected,
+          onTap: () => onChanged(null),
+          tooltip: 'Ikon bawaan',
+        ),
+        for (final option in kCategoryIconCatalog)
+          cell(
+            key: Key('category-icon-${option.id}'),
+            icon: option.icon,
+            isSelected: selected == option.id,
+            onTap: () => onChanged(option.id),
+            tooltip: option.label,
+          ),
+      ],
     );
   }
 }

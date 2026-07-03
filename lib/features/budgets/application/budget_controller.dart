@@ -43,12 +43,7 @@ class BudgetController extends Notifier<BudgetState> {
           .getAlerts(month: targetMonth);
       final categoriesFuture = ref
           .read(categoryRepositoryProvider)
-          .listCategories(
-            type: CategoryType.expense,
-            limit: 100,
-            offset: 0,
-            sort: 'name_asc',
-          );
+          .listCategories(type: CategoryType.expense, limit: 100, offset: 0);
 
       final budgetResponse = await budgetsFuture;
       final reportResponse = await reportFuture;

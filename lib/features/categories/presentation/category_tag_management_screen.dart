@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_chip_bar.dart';
@@ -37,6 +40,11 @@ class _CategoryTagManagementScreenState
   /// Ids of parent categories whose subtree is collapsed. Defaults to expanded,
   /// so only explicitly-collapsed nodes live here.
   final Set<String> _collapsed = <String>{};
+
+  /// The category behind each reorderable row from the last build (null for
+  /// non-category rows like section headers), so [_onReorder] can translate a
+  /// drop index in the flattened list into a sibling position.
+  List<Category?> _rowCategories = const [];
 
   void _toggleCollapsed(String id) {
     setState(() {
@@ -75,6 +83,19 @@ class _CategoryTagManagementScreenState
         })
         .toList(growable: false);
 
+    final isFiltering = normalizedQuery.isNotEmpty || _typeFilter != null;
+    final rows = _buildRows(
+      context: context,
+      state: state,
+      controller: controller,
+      visibleCategories: visibleCategories,
+      isFiltering: isFiltering,
+    );
+    _rowCategories = [for (final row in rows) row.category];
+    // Rearranging only makes sense on the full hierarchy: a search/filtered
+    // list is a pruned view where sibling order is not visible.
+    final canReorder = !isFiltering && !state.isSaving;
+
     return DrillInScaffold(
       title: 'Kategori',
       actions: [
@@ -88,108 +109,227 @@ class _CategoryTagManagementScreenState
         ),
         const SizedBox(width: AffluenaSpacing.space2),
       ],
-      body: ListView(
+      body: ReorderableListView(
         padding: AffluenaInsets.screen,
-        children: [
-          TextField(
-            key: const Key('category-tag-search-field'),
-            autocorrect: false,
-            textInputAction: TextInputAction.search,
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.search),
-              labelText: 'Cari kategori',
+        buildDefaultDragHandles: false,
+        onReorderItem: _onReorder,
+        header: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              key: const Key('category-tag-search-field'),
+              autocorrect: false,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                labelText: 'Cari kategori',
+              ),
+              onChanged: (value) => setState(() => _query = value),
             ),
-            onChanged: (value) => setState(() => _query = value),
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          AffluenaChipBar(
-            chips: [
-              AffluenaChoiceChip(
-                label: 'Semua',
-                selected: _typeFilter == null,
-                onSelected: () => setState(() => _typeFilter = null),
-              ),
-              AffluenaChoiceChip(
-                label: 'Pengeluaran',
-                selected: _typeFilter == CategoryType.expense,
-                onSelected: () =>
-                    setState(() => _typeFilter = CategoryType.expense),
-              ),
-              AffluenaChoiceChip(
-                label: 'Pemasukan',
-                selected: _typeFilter == CategoryType.income,
-                onSelected: () =>
-                    setState(() => _typeFilter = CategoryType.income),
+            const SizedBox(height: AffluenaSpacing.space3),
+            AffluenaChipBar(
+              chips: [
+                AffluenaChoiceChip(
+                  label: 'Semua',
+                  selected: _typeFilter == null,
+                  onSelected: () => setState(() => _typeFilter = null),
+                ),
+                AffluenaChoiceChip(
+                  label: 'Pengeluaran',
+                  selected: _typeFilter == CategoryType.expense,
+                  onSelected: () =>
+                      setState(() => _typeFilter = CategoryType.expense),
+                ),
+                AffluenaChoiceChip(
+                  label: 'Pemasukan',
+                  selected: _typeFilter == CategoryType.income,
+                  onSelected: () =>
+                      setState(() => _typeFilter = CategoryType.income),
+                ),
+              ],
+            ),
+            if (state.actionError != null) ...[
+              const SizedBox(height: AffluenaSpacing.space4),
+              AffluenaBanner.error(
+                state.actionError!,
+                onRetry: controller.load,
               ),
             ],
-          ),
-          if (state.actionError != null) ...[
-            const SizedBox(height: AffluenaSpacing.space4),
-            AffluenaBanner.error(state.actionError!, onRetry: controller.load),
-          ],
-          const SizedBox(height: AffluenaSpacing.space6),
-          SectionHeader(
-            title: 'Kategori',
-            actionLabel: '${visibleCategories.length} ditampilkan',
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          ..._buildCategoriesSection(
-            context: context,
-            state: state,
-            controller: controller,
-            visibleCategories: visibleCategories,
-            normalizedQuery: normalizedQuery,
-          ),
-          if (state.hasMoreCategories &&
-              normalizedQuery.isEmpty &&
-              _typeFilter == null) ...[
-            const SizedBox(height: AffluenaSpacing.space3),
-            OutlinedButton(
-              key: const Key('category-load-more-button'),
-              onPressed: state.isLoadingMoreCategories
-                  ? null
-                  : controller.loadMoreCategories,
-              child: Text(
-                state.isLoadingMoreCategories
-                    ? 'Memuat...'
-                    : 'Muat lebih banyak (${state.categories.length} dari ${state.categoryTotal})',
-              ),
+            const SizedBox(height: AffluenaSpacing.space6),
+            SectionHeader(
+              title: 'Kategori',
+              actionLabel: '${visibleCategories.length} ditampilkan',
             ),
+            if (!isFiltering && visibleCategories.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: AffluenaSpacing.space1),
+                child: Text(
+                  'Tahan lalu geser kartu untuk mengatur urutan.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.affluenaColors.inkMuted,
+                  ),
+                ),
+              ),
+            const SizedBox(height: AffluenaSpacing.space3),
           ],
+        ),
+        footer:
+            (state.hasMoreCategories &&
+                normalizedQuery.isEmpty &&
+                _typeFilter == null)
+            ? Padding(
+                padding: const EdgeInsets.only(top: AffluenaSpacing.space3),
+                child: OutlinedButton(
+                  key: const Key('category-load-more-button'),
+                  onPressed: state.isLoadingMoreCategories
+                      ? null
+                      : controller.loadMoreCategories,
+                  child: Text(
+                    state.isLoadingMoreCategories
+                        ? 'Memuat...'
+                        : 'Muat lebih banyak (${state.categories.length} dari ${state.categoryTotal})',
+                  ),
+                ),
+              )
+            : null,
+        children: [
+          for (final (index, row) in rows.indexed)
+            Padding(
+              key: row.key,
+              padding: EdgeInsets.only(bottom: row.bottomSpacing),
+              child: (canReorder && row.category != null)
+                  ? ReorderableDelayedDragStartListener(
+                      index: index,
+                      child: row.child,
+                    )
+                  : row.child,
+            ),
         ],
       ),
     );
   }
 
-  /// Renders the categories block. When the user is searching or filtering by a
+  /// Translates a drop in the flattened list into a move among the dragged
+  /// category's own siblings (same parent, same type): the new sibling slot is
+  /// the number of same-group rows remaining above the drop point. Drops
+  /// outside the sibling range clamp to the group's start/end, so a category
+  /// can never be re-parented or change type by dragging.
+  ///
+  /// [newIndex] follows onReorderItem semantics: already adjusted for the
+  /// removal of the dragged row at [oldIndex].
+  void _onReorder(int oldIndex, int newIndex) {
+    if (oldIndex < 0 || oldIndex >= _rowCategories.length) return;
+    final dragged = _rowCategories[oldIndex];
+    if (dragged == null) return;
+
+    final state = ref.read(categoryTagManagementControllerProvider);
+    final loadedIds = {for (final c in state.categories) c.id};
+    final draggedParent = _parentKey(dragged, loadedIds);
+
+    final without = [..._rowCategories]..removeAt(oldIndex);
+    var siblingSlot = 0;
+    for (var i = 0; i < newIndex && i < without.length; i++) {
+      final candidate = without[i];
+      if (candidate != null &&
+          candidate.type == dragged.type &&
+          _parentKey(candidate, loadedIds) == draggedParent) {
+        siblingSlot++;
+      }
+    }
+
+    unawaited(_persistReorder(dragged, siblingSlot));
+  }
+
+  /// Moves [dragged] to [siblingSlot] within its sibling group, flattens the
+  /// whole loaded hierarchy back into one canonical order (income then expense,
+  /// each parent directly followed by its subtree), and persists it. The
+  /// controller applies the new order optimistically and reverts on failure.
+  Future<void> _persistReorder(Category dragged, int siblingSlot) async {
+    final controller = ref.read(
+      categoryTagManagementControllerProvider.notifier,
+    );
+    final categories = ref
+        .read(categoryTagManagementControllerProvider)
+        .categories;
+    final loadedIds = {for (final c in categories) c.id};
+
+    final childrenOf = <(CategoryType, String?), List<Category>>{};
+    for (final category in categories) {
+      childrenOf
+          .putIfAbsent((
+            category.type,
+            _parentKey(category, loadedIds),
+          ), () => <Category>[])
+          .add(category);
+    }
+
+    final group =
+        childrenOf[(dragged.type, _parentKey(dragged, loadedIds))] ??
+        <Category>[];
+    group.removeWhere((category) => category.id == dragged.id);
+    group.insert(siblingSlot.clamp(0, group.length), dragged);
+
+    final ordered = <Category>[];
+    final visited = <String>{};
+    void walk(CategoryType type, String? parentKey) {
+      for (final category
+          in childrenOf[(type, parentKey)] ?? const <Category>[]) {
+        if (!visited.add(category.id)) continue;
+        ordered.add(category);
+        walk(type, category.id);
+      }
+    }
+
+    for (final type in const [CategoryType.income, CategoryType.expense]) {
+      walk(type, null);
+    }
+
+    final persisted = await controller.reorderCategories(ordered);
+    if (!persisted && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Urutan kategori gagal disimpan.')),
+      );
+    }
+  }
+
+  /// A category's effective parent for grouping: its parentId when that parent
+  /// is part of the loaded list, otherwise null (rendered as a root).
+  static String? _parentKey(Category category, Set<String> loadedIds) {
+    final parentId = category.parentId;
+    return (parentId != null && loadedIds.contains(parentId)) ? parentId : null;
+  }
+
+  /// Builds the reorderable rows. When the user is searching or filtering by a
   /// single type, the hierarchy is hard to scan, so we fall back to a flat,
   /// pruned list. Otherwise we draw the full Income/Expense hierarchy trees.
-  List<Widget> _buildCategoriesSection({
+  List<_CategoryListRow> _buildRows({
     required BuildContext context,
     required CategoryTagManagementState state,
     required CategoryTagManagementController controller,
     required List<Category> visibleCategories,
-    required String normalizedQuery,
+    required bool isFiltering,
   }) {
-    final isFiltering = normalizedQuery.isNotEmpty || _typeFilter != null;
-
     if (visibleCategories.isEmpty) {
       return [
-        _EmptyManagementState(
-          icon: Icons.account_tree_outlined,
-          title: isFiltering
-              ? 'Tidak ada kategori yang cocok'
-              : 'Belum ada kategori',
-          message: isFiltering
-              ? 'Coba kata kunci atau filter lain untuk menemukan kategori.'
-              : 'Kelompokkan pengeluaran dan pemasukan kamu ke dalam hierarki. '
-                    'Kategori bisa bertingkat hingga 3 level — induk, '
-                    'subkategorinya, dan subkategori dari subkategori itu. '
-                    'Buat yang pertama untuk memulai.',
-          actionLabel: isFiltering ? null : 'Tambah kategori',
-          onAction: isFiltering
-              ? null
-              : () => _showCategoryForm(context, ref, state: state),
+        _CategoryListRow(
+          key: const ValueKey('category-empty-state'),
+          bottomSpacing: 0,
+          child: _EmptyManagementState(
+            icon: Icons.account_tree_outlined,
+            title: isFiltering
+                ? 'Tidak ada kategori yang cocok'
+                : 'Belum ada kategori',
+            message: isFiltering
+                ? 'Coba kata kunci atau filter lain untuk menemukan kategori.'
+                : 'Kelompokkan pengeluaran dan pemasukan kamu ke dalam hierarki. '
+                      'Kategori bisa bertingkat hingga 3 level — induk, '
+                      'subkategorinya, dan subkategori dari subkategori itu. '
+                      'Buat yang pertama untuk memulai.',
+            actionLabel: isFiltering ? null : 'Tambah kategori',
+            onAction: isFiltering
+                ? null
+                : () => _showCategoryForm(context, ref, state: state),
+          ),
         ),
       ];
     }
@@ -197,63 +337,56 @@ class _CategoryTagManagementScreenState
     // Filtering/searching: a flat, depth-aware list is more useful than a
     // partial tree (matches may be scattered across branches).
     if (isFiltering) {
-      final widgets = <Widget>[];
-      for (final category in visibleCategories) {
-        widgets.add(
-          _CategoryTreeNode(
+      return [
+        for (final category in visibleCategories)
+          _CategoryListRow(
+            key: ValueKey('category-row-${category.id}'),
             category: category,
-            depth: 0,
-            isLast: true,
-            hasChildren: false,
-            childCount: 0,
-            collapsed: false,
-            showConnectors: false,
-            parentName: state.categoryName(category.parentId),
-            canAddChild: state.canParent(category),
-            onToggle: null,
-            onAddChild: state.canParent(category)
-                ? () => _showCategoryForm(
-                    context,
-                    ref,
-                    state: state,
-                    presetParent: category,
-                  )
-                : null,
-            onEdit: () => _showCategoryForm(
-              context,
-              ref,
-              state: state,
+            bottomSpacing: AffluenaSpacing.space3,
+            child: _CategoryTreeNode(
               category: category,
+              depth: 0,
+              isLast: true,
+              hasChildren: false,
+              childCount: 0,
+              collapsed: false,
+              showConnectors: false,
+              parentName: state.categoryName(category.parentId),
+              canAddChild: state.canParent(category),
+              onToggle: null,
+              onAddChild: state.canParent(category)
+                  ? () => _showCategoryForm(
+                      context,
+                      ref,
+                      state: state,
+                      presetParent: category,
+                    )
+                  : null,
+              onEdit: () => _showCategoryForm(
+                context,
+                ref,
+                state: state,
+                category: category,
+              ),
+              onDelete: () =>
+                  _confirmDeleteCategory(context, controller, category),
             ),
-            onDelete: () =>
-                _confirmDeleteCategory(context, controller, category),
           ),
-        );
-        widgets.add(const SizedBox(height: AffluenaSpacing.space3));
-      }
-      return widgets;
+      ];
     }
 
     // Full hierarchy: group by type, then render each section as a tree.
-    final byType = <CategoryType, List<Category>>{
-      CategoryType.income: const [],
-      CategoryType.expense: const [],
-    };
-    for (final type in CategoryType.values) {
-      byType[type] = visibleCategories
+    final rows = <_CategoryListRow>[];
+    for (final type in const [CategoryType.income, CategoryType.expense]) {
+      final categories = visibleCategories
           .where((c) => c.type == type)
           .toList(growable: false);
-    }
-
-    final widgets = <Widget>[];
-    for (final type in const [CategoryType.income, CategoryType.expense]) {
-      final categories = byType[type]!;
       if (categories.isEmpty) continue;
-      if (widgets.isNotEmpty) {
-        widgets.add(const SizedBox(height: AffluenaSpacing.space5));
+      if (rows.isNotEmpty) {
+        rows.last = rows.last.withBottomSpacing(AffluenaSpacing.space5);
       }
-      widgets.addAll(
-        _buildTypeTree(
+      rows.addAll(
+        _buildTypeTreeRows(
           context: context,
           state: state,
           controller: controller,
@@ -262,10 +395,10 @@ class _CategoryTagManagementScreenState
         ),
       );
     }
-    return widgets;
+    return rows;
   }
 
-  List<Widget> _buildTypeTree({
+  List<_CategoryListRow> _buildTypeTreeRows({
     required BuildContext context,
     required CategoryTagManagementState state,
     required CategoryTagManagementController controller,
@@ -287,7 +420,17 @@ class _CategoryTagManagementScreenState
     final roots = childrenOf[null] ?? const <Category>[];
     final total = categories.length;
 
-    final rows = <Widget>[];
+    final rows = <_CategoryListRow>[
+      _CategoryListRow(
+        key: ValueKey('category-section-${type.apiValue}'),
+        bottomSpacing: AffluenaSpacing.space3,
+        child: _TreeSectionHeader(
+          type: type,
+          parentCount: roots.length,
+          total: total,
+        ),
+      ),
+    ];
 
     void addNode(Category category, int depth, bool isLast) {
       final children = childrenOf[category.id] ?? const <Category>[];
@@ -297,31 +440,40 @@ class _CategoryTagManagementScreenState
       final canAddChild = state.canParent(category);
 
       rows.add(
-        _CategoryTreeNode(
+        _CategoryListRow(
+          key: ValueKey('category-row-${category.id}'),
           category: category,
-          depth: depth,
-          isLast: isLast,
-          hasChildren: hasChildren,
-          childCount: children.length,
-          collapsed: collapsed,
-          showConnectors: depth > 0,
-          parentName: state.categoryName(category.parentId),
-          canAddChild: canAddChild,
-          onToggle: hasChildren ? () => _toggleCollapsed(category.id) : null,
-          onAddChild: canAddChild
-              ? () => _showCategoryForm(
-                  context,
-                  ref,
-                  state: state,
-                  presetParent: category,
-                )
-              : null,
-          onEdit: () =>
-              _showCategoryForm(context, ref, state: state, category: category),
-          onDelete: () => _confirmDeleteCategory(context, controller, category),
+          bottomSpacing: AffluenaSpacing.space2,
+          child: _CategoryTreeNode(
+            category: category,
+            depth: depth,
+            isLast: isLast,
+            hasChildren: hasChildren,
+            childCount: children.length,
+            collapsed: collapsed,
+            showConnectors: depth > 0,
+            parentName: state.categoryName(category.parentId),
+            canAddChild: canAddChild,
+            onToggle: hasChildren ? () => _toggleCollapsed(category.id) : null,
+            onAddChild: canAddChild
+                ? () => _showCategoryForm(
+                    context,
+                    ref,
+                    state: state,
+                    presetParent: category,
+                  )
+                : null,
+            onEdit: () => _showCategoryForm(
+              context,
+              ref,
+              state: state,
+              category: category,
+            ),
+            onDelete: () =>
+                _confirmDeleteCategory(context, controller, category),
+          ),
         ),
       );
-      rows.add(const SizedBox(height: AffluenaSpacing.space2));
 
       if (hasChildren && !collapsed) {
         for (var i = 0; i < children.length; i++) {
@@ -334,10 +486,31 @@ class _CategoryTagManagementScreenState
       addNode(roots[i], 0, i == roots.length - 1);
     }
 
-    return [
-      _TreeSectionHeader(type: type, parentCount: roots.length, total: total),
-      const SizedBox(height: AffluenaSpacing.space3),
-      ...rows,
-    ];
+    return rows;
   }
+}
+
+/// One row of the reorderable category list: the widget, its key, the category
+/// it represents (null for section headers/empty state), and the gap below it
+/// (folded into the row because a ReorderableListView cannot hold bare
+/// spacer children).
+class _CategoryListRow {
+  const _CategoryListRow({
+    required this.key,
+    required this.child,
+    required this.bottomSpacing,
+    this.category,
+  });
+
+  final Key key;
+  final Widget child;
+  final double bottomSpacing;
+  final Category? category;
+
+  _CategoryListRow withBottomSpacing(double spacing) => _CategoryListRow(
+    key: key,
+    category: category,
+    bottomSpacing: spacing,
+    child: child,
+  );
 }

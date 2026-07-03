@@ -1,20 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/affluena_theme.dart';
+import '../../../categories/data/category_models.dart';
+import '../../../categories/data/category_repository.dart';
+import '../appearance/item_appearance.dart';
 
 /// One selectable category in the tree picker. Decoupled from any data model so
 /// every screen (add transaction, quick-entry template, category parent picker)
-/// can reuse it by mapping its own categories to this shape.
+/// can reuse it by mapping its own categories to this shape — most callers use
+/// [CategoryTreeEntry.fromCategory].
 class CategoryTreeEntry {
   const CategoryTreeEntry({
     required this.id,
     required this.name,
     this.parentId,
+    this.icon = '',
+    this.color = '',
+    this.type,
   });
+
+  factory CategoryTreeEntry.fromCategory(Category category) {
+    return CategoryTreeEntry(
+      id: category.id,
+      name: category.name,
+      parentId: category.parentId,
+      icon: category.icon,
+      color: category.color,
+      type: category.type,
+    );
+  }
 
   final String id;
   final String name;
   final String? parentId;
+
+  /// Semantic icon id from the shared catalog ('' = none chosen).
+  final String icon;
+
+  /// `#RRGGBB` accent ('' = none chosen).
+  final String color;
+
+  /// Used for the fallback glyph; null when the caller has no type handy.
+  final CategoryType? type;
+}
+
+/// Enables the pinned "Tambah kategori" action inside the picker: a compact
+/// inline create form (name + icon/color) so the user never has to leave for
+/// the master screen. When [type] is set the new category adopts it silently;
+/// otherwise the form shows an expense/income toggle.
+class CategoryQuickAdd {
+  const CategoryQuickAdd({this.type});
+
+  final CategoryType? type;
 }
 
 /// Result sentinel for [showCategoryTreePicker].
@@ -26,6 +64,13 @@ const String categoryTreeClearedValue = '';
 /// A tree-aware category picker. Renders parents with indented children
 /// (categories are a hierarchy), supports collapse/expand and search, and an
 /// optional "No category" row for fields where a category is optional.
+///
+/// Categories carry the user's chosen icon/color and arrive in the user's
+/// arranged order (API position order). Long-press dragging a row rearranges
+/// it among its siblings and persists via `PUT /categories/reorder`; the
+/// pinned "Tambah kategori" action ([quickAdd]) creates a category inline and
+/// selects it immediately. [onMutated] runs after either mutation succeeds so
+/// the calling screen can refresh its own category state.
 Future<String?> showCategoryTreePicker({
   required BuildContext context,
   required String title,
@@ -33,6 +78,8 @@ Future<String?> showCategoryTreePicker({
   String? selectedId,
   bool allowNone = false,
   String noneLabel = 'Tanpa kategori',
+  CategoryQuickAdd? quickAdd,
+  Future<void> Function()? onMutated,
 }) {
   return showModalBottomSheet<String>(
     context: context,
@@ -45,17 +92,21 @@ Future<String?> showCategoryTreePicker({
       selectedId: selectedId,
       allowNone: allowNone,
       noneLabel: noneLabel,
+      quickAdd: quickAdd,
+      onMutated: onMutated,
     ),
   );
 }
 
-class _CategoryTreePickerSheet extends StatefulWidget {
+class _CategoryTreePickerSheet extends ConsumerStatefulWidget {
   const _CategoryTreePickerSheet({
     required this.title,
     required this.categories,
     required this.allowNone,
     required this.noneLabel,
     this.selectedId,
+    this.quickAdd,
+    this.onMutated,
   });
 
   final String title;
@@ -63,9 +114,11 @@ class _CategoryTreePickerSheet extends StatefulWidget {
   final String? selectedId;
   final bool allowNone;
   final String noneLabel;
+  final CategoryQuickAdd? quickAdd;
+  final Future<void> Function()? onMutated;
 
   @override
-  State<_CategoryTreePickerSheet> createState() =>
+  ConsumerState<_CategoryTreePickerSheet> createState() =>
       _CategoryTreePickerSheetState();
 }
 
@@ -83,9 +136,19 @@ class _FlatNode {
   final bool collapsed;
 }
 
-class _CategoryTreePickerSheetState extends State<_CategoryTreePickerSheet> {
+class _CategoryTreePickerSheetState
+    extends ConsumerState<_CategoryTreePickerSheet> {
   String _query = '';
   final Set<String> _collapsed = <String>{};
+
+  /// Local working copy so drag-and-drop can rearrange optimistically.
+  late List<CategoryTreeEntry> _entries = List.of(widget.categories);
+
+  /// Flattened nodes from the last build, for translating reorder indices.
+  List<_FlatNode> _lastNodes = const [];
+
+  bool _showCreateForm = false;
+  bool _isReordering = false;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +161,8 @@ class _CategoryTreePickerSheetState extends State<_CategoryTreePickerSheet> {
     final nodes = normalizedQuery.isEmpty
         ? _buildTree()
         : _buildSearchResults(normalizedQuery);
+    _lastNodes = nodes;
+    final canReorder = normalizedQuery.isEmpty && !_isReordering;
 
     return SafeArea(
       child: Padding(
@@ -113,77 +178,207 @@ class _CategoryTreePickerSheetState extends State<_CategoryTreePickerSheet> {
           children: [
             Text(widget.title, style: textTheme.titleLarge),
             const SizedBox(height: AffluenaSpacing.space4),
-            TextField(
-              key: const Key('category-tree-search-field'),
-              autocorrect: false,
-              textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Cari kategori',
+            if (_showCreateForm)
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxListHeight),
+                child: SingleChildScrollView(
+                  child: _InlineCategoryCreateForm(
+                    presetType: widget.quickAdd?.type,
+                    onCancel: () => setState(() => _showCreateForm = false),
+                    onCreated: _handleCreated,
+                  ),
+                ),
+              )
+            else ...[
+              TextField(
+                key: const Key('category-tree-search-field'),
+                autocorrect: false,
+                textInputAction: TextInputAction.search,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Cari kategori',
+                ),
+                onChanged: (value) => setState(() => _query = value),
               ),
-              onChanged: (value) => setState(() => _query = value),
-            ),
-            const SizedBox(height: AffluenaSpacing.space3),
-            if (widget.allowNone && normalizedQuery.isEmpty) ...[
-              _NoneTile(
-                label: widget.noneLabel,
-                selected: widget.selectedId == null || widget.selectedId == '',
-                onTap: () =>
-                    Navigator.of(context).pop(categoryTreeClearedValue),
-              ),
-              const SizedBox(height: AffluenaSpacing.space2),
-            ],
-            ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: maxListHeight),
-              child: nodes.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AffluenaSpacing.space5,
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Kategori tidak ditemukan.',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colors.inkMuted,
+              const SizedBox(height: AffluenaSpacing.space3),
+              if (widget.allowNone && normalizedQuery.isEmpty) ...[
+                _NoneTile(
+                  label: widget.noneLabel,
+                  selected:
+                      widget.selectedId == null || widget.selectedId == '',
+                  onTap: () =>
+                      Navigator.of(context).pop(categoryTreeClearedValue),
+                ),
+                const SizedBox(height: AffluenaSpacing.space2),
+              ],
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxListHeight),
+                child: nodes.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AffluenaSpacing.space5,
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Kategori tidak ditemukan.',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colors.inkMuted,
+                            ),
                           ),
                         ),
+                      )
+                    : ReorderableListView(
+                        padding: const EdgeInsets.only(
+                          bottom: AffluenaSpacing.space2,
+                        ),
+                        shrinkWrap: true,
+                        buildDefaultDragHandles: false,
+                        onReorderItem: _onReorder,
+                        children: [
+                          for (final (index, node) in nodes.indexed)
+                            Padding(
+                              key: ValueKey('picker-row-${node.entry.id}'),
+                              padding: const EdgeInsets.only(
+                                bottom: AffluenaSpacing.space2,
+                              ),
+                              child: _wrapDraggable(
+                                index: index,
+                                enabled: canReorder,
+                                child: _CategoryTreeTile(
+                                  node: node,
+                                  selected: node.entry.id == widget.selectedId,
+                                  onTap: () =>
+                                      Navigator.of(context).pop(node.entry.id),
+                                  onToggle: node.hasChildren
+                                      ? () => setState(() {
+                                          if (_collapsed.contains(
+                                            node.entry.id,
+                                          )) {
+                                            _collapsed.remove(node.entry.id);
+                                          } else {
+                                            _collapsed.add(node.entry.id);
+                                          }
+                                        })
+                                      : null,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.only(
-                        bottom: AffluenaSpacing.space2,
-                      ),
-                      shrinkWrap: true,
-                      itemCount: nodes.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AffluenaSpacing.space2),
-                      itemBuilder: (context, index) {
-                        final node = nodes[index];
-                        return _CategoryTreeTile(
-                          node: node,
-                          selected: node.entry.id == widget.selectedId,
-                          onTap: () => Navigator.of(context).pop(node.entry.id),
-                          onToggle: node.hasChildren
-                              ? () => setState(() {
-                                  if (_collapsed.contains(node.entry.id)) {
-                                    _collapsed.remove(node.entry.id);
-                                  } else {
-                                    _collapsed.add(node.entry.id);
-                                  }
-                                })
-                              : null,
-                        );
-                      },
-                    ),
-            ),
+              ),
+              if (widget.quickAdd != null) ...[
+                const SizedBox(height: AffluenaSpacing.space2),
+                _QuickAddTile(
+                  onTap: () => setState(() => _showCreateForm = true),
+                ),
+              ],
+            ],
           ],
         ),
       ),
     );
   }
 
+  Widget _wrapDraggable({
+    required int index,
+    required bool enabled,
+    required Widget child,
+  }) {
+    if (!enabled) return child;
+    return ReorderableDelayedDragStartListener(index: index, child: child);
+  }
+
+  Future<void> _handleCreated(Category category) async {
+    await widget.onMutated?.call();
+    if (!mounted) return;
+    Navigator.of(context).pop(category.id);
+  }
+
+  /// A category's effective parent for grouping: its parentId when the parent
+  /// is part of this picker's entries, otherwise null (rendered as a root).
+  String? _parentKeyOf(CategoryTreeEntry entry, Set<String> ids) {
+    final parentId = entry.parentId;
+    return (parentId != null && ids.contains(parentId)) ? parentId : null;
+  }
+
+  /// Translates a drop in the flattened tree into a move among the dragged
+  /// entry's siblings (same parent), then persists the full rearranged order.
+  ///
+  /// [newIndex] follows onReorderItem semantics: already adjusted for the
+  /// removal of the dragged row at [oldIndex].
+  void _onReorder(int oldIndex, int newIndex) {
+    if (oldIndex < 0 || oldIndex >= _lastNodes.length) return;
+    final dragged = _lastNodes[oldIndex].entry;
+    final ids = {for (final entry in _entries) entry.id};
+    final draggedParent = _parentKeyOf(dragged, ids);
+
+    final without = [..._lastNodes]..removeAt(oldIndex);
+    var siblingSlot = 0;
+    for (var i = 0; i < newIndex && i < without.length; i++) {
+      if (_parentKeyOf(without[i].entry, ids) == draggedParent) {
+        siblingSlot++;
+      }
+    }
+
+    _persistReorder(dragged, siblingSlot);
+  }
+
+  Future<void> _persistReorder(
+    CategoryTreeEntry dragged,
+    int siblingSlot,
+  ) async {
+    final previous = List.of(_entries);
+    final ids = {for (final entry in _entries) entry.id};
+
+    final childrenBy = <String?, List<CategoryTreeEntry>>{};
+    for (final entry in _entries) {
+      childrenBy
+          .putIfAbsent(_parentKeyOf(entry, ids), () => <CategoryTreeEntry>[])
+          .add(entry);
+    }
+    final group = childrenBy[_parentKeyOf(dragged, ids)] ?? [];
+    group.removeWhere((entry) => entry.id == dragged.id);
+    group.insert(siblingSlot.clamp(0, group.length), dragged);
+
+    // Flatten back to one canonical order: each parent directly followed by
+    // its subtree. This is the order sent to the API (index = new position).
+    final ordered = <CategoryTreeEntry>[];
+    final visited = <String>{};
+    void walk(String? parentKey) {
+      for (final entry
+          in childrenBy[parentKey] ?? const <CategoryTreeEntry>[]) {
+        if (!visited.add(entry.id)) continue;
+        ordered.add(entry);
+        walk(entry.id);
+      }
+    }
+
+    walk(null);
+
+    setState(() {
+      _entries = ordered;
+      _isReordering = true;
+    });
+    try {
+      await ref.read(categoryRepositoryProvider).reorderCategories([
+        for (final entry in ordered) entry.id,
+      ]);
+      await widget.onMutated?.call();
+      if (mounted) setState(() => _isReordering = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _entries = previous;
+        _isReordering = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Urutan kategori gagal disimpan.')),
+      );
+    }
+  }
+
   List<_FlatNode> _buildSearchResults(String query) {
-    return widget.categories
+    return _entries
         .where((c) => c.name.toLowerCase().contains(query))
         .map(
           (c) => _FlatNode(
@@ -197,10 +392,10 @@ class _CategoryTreePickerSheetState extends State<_CategoryTreePickerSheet> {
   }
 
   List<_FlatNode> _buildTree() {
-    final ids = {for (final c in widget.categories) c.id};
+    final ids = {for (final c in _entries) c.id};
     final childrenByParent = <String, List<CategoryTreeEntry>>{};
     final roots = <CategoryTreeEntry>[];
-    for (final c in widget.categories) {
+    for (final c in _entries) {
       final parent = c.parentId;
       if (parent == null || !ids.contains(parent)) {
         roots.add(c);
@@ -236,6 +431,212 @@ class _CategoryTreePickerSheetState extends State<_CategoryTreePickerSheet> {
   }
 }
 
+/// The pinned "Tambah kategori" action under the list: opens the compact
+/// inline create form without leaving the picker.
+class _QuickAddTile extends StatelessWidget {
+  const _QuickAddTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = context.affluenaColors;
+    final radius = BorderRadius.circular(AffluenaRadii.lg);
+
+    return Material(
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(color: colors.borderSubtle),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const Key('category-picker-add-button'),
+        onTap: onTap,
+        borderRadius: radius,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AffluenaSpacing.space3,
+              vertical: AffluenaSpacing.space2,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.add, size: 20, color: colors.forest),
+                const SizedBox(width: AffluenaSpacing.space3),
+                Expanded(
+                  child: Text(
+                    'Tambah kategori',
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact create form shown inside the picker: name, expense/income toggle
+/// (hidden when the picker context presets the type), and the shared icon +
+/// color pickers. Creates via the repository, then hands the fresh category
+/// back so the picker can select it immediately.
+class _InlineCategoryCreateForm extends ConsumerStatefulWidget {
+  const _InlineCategoryCreateForm({
+    required this.onCancel,
+    required this.onCreated,
+    this.presetType,
+  });
+
+  final CategoryType? presetType;
+  final VoidCallback onCancel;
+  final Future<void> Function(Category category) onCreated;
+
+  @override
+  ConsumerState<_InlineCategoryCreateForm> createState() =>
+      _InlineCategoryCreateFormState();
+}
+
+class _InlineCategoryCreateFormState
+    extends ConsumerState<_InlineCategoryCreateForm> {
+  final _nameController = TextEditingController();
+  late CategoryType _type = widget.presetType ?? CategoryType.expense;
+  String? _icon;
+  String? _color;
+  bool _isSaving = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final canSave = _nameController.text.trim().isNotEmpty && !_isSaving;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          key: const Key('category-picker-name-field'),
+          controller: _nameController,
+          autofocus: true,
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(
+            prefixIcon: Icon(Icons.category_outlined),
+            labelText: 'Nama kategori',
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        if (widget.presetType == null) ...[
+          const SizedBox(height: AffluenaSpacing.space3),
+          SegmentedButton<CategoryType>(
+            segments: const [
+              ButtonSegment(
+                value: CategoryType.expense,
+                icon: Icon(Icons.trending_down),
+                label: Text('Pengeluaran'),
+              ),
+              ButtonSegment(
+                value: CategoryType.income,
+                icon: Icon(Icons.trending_up),
+                label: Text('Pemasukan'),
+              ),
+            ],
+            selected: {_type},
+            onSelectionChanged: _isSaving
+                ? null
+                : (selection) => setState(() => _type = selection.single),
+          ),
+        ],
+        const SizedBox(height: AffluenaSpacing.space4),
+        Text('Ikon', style: textTheme.labelLarge),
+        const SizedBox(height: AffluenaSpacing.space2),
+        CategoryIconPickerGrid(
+          selected: _icon,
+          accentHex: _color,
+          enabled: !_isSaving,
+          fallbackIcon: categoryTypeFallbackIcon(_type),
+          onChanged: (value) => setState(() => _icon = value),
+        ),
+        const SizedBox(height: AffluenaSpacing.space4),
+        Text('Warna ikon', style: textTheme.labelLarge),
+        const SizedBox(height: AffluenaSpacing.space2),
+        ItemColorPickerRow(
+          entity: 'category',
+          selected: _color,
+          enabled: !_isSaving,
+          onChanged: (value) => setState(() => _color = value),
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: AffluenaSpacing.space3),
+          Text(
+            _error!,
+            style: textTheme.bodySmall?.copyWith(
+              color: context.affluenaColors.coral,
+            ),
+          ),
+        ],
+        const SizedBox(height: AffluenaSpacing.space4),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _isSaving ? null : widget.onCancel,
+                child: const Text('Batal'),
+              ),
+            ),
+            const SizedBox(width: AffluenaSpacing.space3),
+            Expanded(
+              child: FilledButton(
+                key: const Key('category-picker-save-button'),
+                onPressed: canSave ? _save : null,
+                child: Text(_isSaving ? 'Menyimpan...' : 'Simpan'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      _isSaving = true;
+      _error = null;
+    });
+    try {
+      final created = await ref
+          .read(categoryRepositoryProvider)
+          .createCategory(
+            CategoryRequest(
+              name: _nameController.text.trim(),
+              type: _type,
+              icon: _icon ?? '',
+              color: _color ?? '',
+            ),
+          );
+      await widget.onCreated(created);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSaving = false;
+        _error = 'Kategori gagal dibuat.';
+      });
+    }
+  }
+}
+
 class _CategoryTreeTile extends StatelessWidget {
   const _CategoryTreeTile({
     required this.node,
@@ -255,6 +656,15 @@ class _CategoryTreeTile extends StatelessWidget {
     final colors = context.affluenaColors;
     final radius = BorderRadius.circular(AffluenaRadii.lg);
     final indent = node.depth * AffluenaSpacing.space4;
+    final entry = node.entry;
+    // Categories with a chosen appearance get a tinted icon chip; untouched
+    // ones keep the original minimal row so the list stays calm.
+    final hasAppearance = entry.icon.isNotEmpty || entry.color.isNotEmpty;
+    final chipIcon =
+        categoryIconFor(entry.icon) ??
+        (entry.type != null
+            ? categoryTypeFallbackIcon(entry.type!)
+            : Icons.category_outlined);
 
     return Semantics(
       selected: selected,
@@ -282,7 +692,15 @@ class _CategoryTreeTile extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  if (node.depth > 0) ...[
+                  if (hasAppearance) ...[
+                    ItemAccentIconTile(
+                      icon: chipIcon,
+                      colorHex: entry.color,
+                      fallback: colors.forest,
+                      fallbackBackground: colors.forestSoft,
+                    ),
+                    const SizedBox(width: AffluenaSpacing.space3),
+                  ] else if (node.depth > 0) ...[
                     Icon(
                       Icons.subdirectory_arrow_right,
                       size: 16,
@@ -292,7 +710,7 @@ class _CategoryTreeTile extends StatelessWidget {
                   ],
                   Expanded(
                     child: Text(
-                      node.entry.name,
+                      entry.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: node.depth == 0

@@ -102,7 +102,9 @@ Reached from the rooms home and from **Lainnya → Pengaturan**:
   (deep-link reachable).
 - **Quick entry** + templates (tree-aware 3-level category picker), **budgets**,
   **goals**, **debts**, **recurring**, **trackers** (installments/subscriptions),
-  **categories** (3-level), **insights/reports**, **audit log**, **notifications/rules**.
+  **categories** (3-level, per-category icon + color, drag-and-drop ordering that
+  every picker respects; pickers also reorder in place and add a category inline),
+  **insights/reports**, **audit log**, **notifications/rules**.
 - **Settings** — account, password, sessions, device lock, appearance/theme.
 
 ## Layout

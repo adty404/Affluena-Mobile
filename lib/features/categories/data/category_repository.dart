@@ -24,6 +24,10 @@ abstract interface class CategoryRepository {
   Future<Category> updateCategory(String id, CategoryRequest request);
 
   Future<void> deleteCategory(String id);
+
+  /// Persists the user-arranged order: each id's `position` becomes its array
+  /// index. Ids omitted from [ids] keep their current position.
+  Future<void> reorderCategories(List<String> ids);
 }
 
 class DioCategoryRepository implements CategoryRepository {
@@ -77,6 +81,11 @@ class DioCategoryRepository implements CategoryRepository {
   @override
   Future<void> deleteCategory(String id) async {
     await _dio.delete<void>('/categories/$id');
+  }
+
+  @override
+  Future<void> reorderCategories(List<String> ids) async {
+    await _dio.put<void>('/categories/reorder', data: {'ids': ids});
   }
 }
 

@@ -84,6 +84,7 @@ void main() {
           return _jsonResponse(switch ((options.method, options.path)) {
             ('GET', '/categories/category-food') => _categoryJson,
             ('DELETE', '/categories/category-food') => null,
+            ('PUT', '/categories/reorder') => null,
             _ => throw StateError('${options.method} ${options.path}'),
           });
         }),
@@ -101,6 +102,7 @@ void main() {
 
       final category = await categories.getCategory('category-food');
       await categories.deleteCategory('category-food');
+      await categories.reorderCategories(['category-food', 'category-coffee']);
       final tag = await tags.getTag('tag-lunch');
       await tags.deleteTag('tag-lunch');
 
@@ -109,9 +111,14 @@ void main() {
       expect(requests.map((request) => '${request.method} ${request.path}'), [
         'GET /categories/category-food',
         'DELETE /categories/category-food',
+        'PUT /categories/reorder',
         'GET /tags/tag-lunch',
         'DELETE /tags/tag-lunch',
       ]);
+      // Reorder body: position = array index, exactly as the contract states.
+      expect(requests[2].jsonBody, {
+        'ids': ['category-food', 'category-coffee'],
+      });
     });
 
     test('transaction repository covers split bill', () async {

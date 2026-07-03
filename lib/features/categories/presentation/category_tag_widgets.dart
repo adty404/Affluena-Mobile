@@ -151,6 +151,13 @@ class _CategoryTreeNode extends StatelessWidget {
           )
         : const SizedBox(width: 44);
 
+    // The chip carries the category's chosen icon in its chosen color; without
+    // either it keeps the old folder/branch glyph and neutral theming so
+    // untouched categories render exactly as before.
+    final chipIcon =
+        categoryIconFor(category.icon) ??
+        (isRoot ? Icons.folder_outlined : Icons.subdirectory_arrow_right);
+
     return AffluenaCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AffluenaSpacing.space3,
@@ -159,19 +166,13 @@ class _CategoryTreeNode extends StatelessWidget {
       child: Row(
         children: [
           chevron,
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: isRoot ? colors.forestSoft : colors.surfaceTintSoft,
-              borderRadius: BorderRadius.circular(AffluenaRadii.md),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AffluenaSpacing.space2),
-              child: Icon(
-                isRoot ? Icons.folder_outlined : Icons.subdirectory_arrow_right,
-                color: isRoot ? colors.forest : colors.inkMuted,
-                size: 18,
-              ),
-            ),
+          ItemAccentIconTile(
+            icon: chipIcon,
+            colorHex: category.color,
+            fallback: isRoot ? colors.forest : colors.inkMuted,
+            fallbackBackground: isRoot
+                ? colors.forestSoft
+                : colors.surfaceTintSoft,
           ),
           const SizedBox(width: AffluenaSpacing.space3),
           Expanded(

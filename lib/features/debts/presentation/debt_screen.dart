@@ -9,6 +9,7 @@ import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
@@ -593,6 +594,9 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                   icon: Icons.category_outlined,
                   onTap: () => _selectCategory(
                     title: 'Kategori awal',
+                    type: _type == DebtType.payable
+                        ? CategoryType.income
+                        : CategoryType.expense,
                     options: widget.state.disbursementCategories(_type),
                     selected: _disbursementCategory,
                     onSelected: (category) =>
@@ -609,6 +613,9 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                   icon: Icons.payments_outlined,
                   onTap: () => _selectCategory(
                     title: 'Kategori pembayaran',
+                    type: _type == DebtType.payable
+                        ? CategoryType.expense
+                        : CategoryType.income,
                     options: widget.state.paymentCategories(_type),
                     selected: _paymentCategory,
                     onSelected: (category) =>
@@ -705,25 +712,32 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
 
   Future<void> _selectCategory({
     required String title,
+    required CategoryType type,
     required List<Category> options,
     required Category? selected,
     required ValueChanged<Category> onSelected,
   }) async {
-    final category = await showLookupSelectorSheet<Category>(
+    // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    final selectedId = await showCategoryTreePicker(
       context: context,
       title: title,
-      searchHint: 'Cari kategori',
-      selectedValue: selected,
-      options: [
+      selectedId: selected?.id,
+      quickAdd: CategoryQuickAdd(type: type),
+      onMutated: () => ref.read(debtControllerProvider.notifier).load(),
+      categories: [
         for (final category in options)
-          LookupSelectorOption<Category>(
-            value: category,
-            label: category.name,
-            subtitle: category.type.apiValue,
-            icon: Icons.category_outlined,
-          ),
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
+    if (!mounted || selectedId == null || selectedId.isEmpty) return;
+    // Resolve against the live controller state: a category created inline
+    // from the picker only exists there, not in the snapshot the sheet holds.
+    final state = ref.read(debtControllerProvider);
+    final category = [
+      ...options,
+      ...state.incomeCategories,
+      ...state.expenseCategories,
+    ].where((candidate) => candidate.id == selectedId).firstOrNull;
     if (category == null) return;
     onSelected(category);
   }

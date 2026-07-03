@@ -751,21 +751,26 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
       context: context,
       title: 'Kategori aturan berulang',
       selectedId: _category?.id,
+      quickAdd: CategoryQuickAdd(
+        type: _type == RecurringType.income
+            ? CategoryType.income
+            : CategoryType.expense,
+      ),
+      onMutated: () => ref.read(recurringControllerProvider.notifier).load(),
       categories: [
         for (final category in widget.state.categories)
-          CategoryTreeEntry(
-            id: category.id,
-            name: category.name,
-            parentId: category.parentId,
-          ),
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
     if (selectedId == null || selectedId.isEmpty) return;
-    setState(
-      () => _category = widget.state.categories.firstWhere(
-        (category) => category.id == selectedId,
-      ),
-    );
+    // Resolve against the live controller state: a category created inline
+    // from the picker only exists there, not in the snapshot the sheet holds.
+    final selected = [
+      ...widget.state.categories,
+      ...ref.read(recurringControllerProvider).categories,
+    ].where((category) => category.id == selectedId).firstOrNull;
+    if (selected == null) return;
+    setState(() => _category = selected);
   }
 
   Future<void> _save() async {

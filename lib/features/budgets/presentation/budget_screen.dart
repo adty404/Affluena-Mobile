@@ -100,6 +100,9 @@ class BudgetScreen extends ConsumerWidget {
                   budget: budget,
                   report: state.reportFor(budget),
                   categoryName: state.categoryName(budget.categoryId),
+                  category: state.categories
+                      .where((category) => category.id == budget.categoryId)
+                      .firstOrNull,
                   onEdit: () => _showBudgetForm(
                     context,
                     ref,
@@ -305,12 +308,17 @@ class _BudgetCard extends StatelessWidget {
     required this.categoryName,
     required this.onEdit,
     required this.onDelete,
+    this.category,
     this.report,
   });
 
   final BudgetSummary budget;
   final BudgetReportItem? report;
   final String categoryName;
+
+  /// The budgeted category, when loaded — its chosen icon/color take over the
+  /// generic pie glyph so the row matches the category everywhere else.
+  final Category? category;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -331,11 +339,18 @@ class _BudgetCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              // The item's chosen colour accents the icon tile; without one it
-              // keeps the neutral forest theming.
+              // The category's chosen icon wins over the generic pie glyph;
+              // the budget's own colour still wins over the category's. With
+              // neither, the row keeps the neutral forest theming.
               ItemAccentIconTile(
-                icon: Icons.pie_chart_outline,
-                colorHex: budget.color,
+                icon:
+                    (category != null
+                        ? categoryIconFor(category!.icon)
+                        : null) ??
+                    Icons.pie_chart_outline,
+                colorHex: budget.color.isNotEmpty
+                    ? budget.color
+                    : (category?.color ?? ''),
                 fallback: colors.forest,
                 fallbackBackground: colors.forestSoft,
               ),
@@ -680,21 +695,23 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
       context: context,
       title: 'Kategori anggaran',
       selectedId: _category?.id,
+      quickAdd: const CategoryQuickAdd(type: CategoryType.expense),
+      onMutated: () => ref.read(budgetControllerProvider.notifier).load(),
       categories: [
         for (final category in widget.state.categories)
-          CategoryTreeEntry(
-            id: category.id,
-            name: category.name,
-            parentId: category.parentId,
-          ),
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
     if (selectedId == null || selectedId.isEmpty) return;
-    setState(
-      () => _category = widget.state.categories.firstWhere(
-        (category) => category.id == selectedId,
-      ),
-    );
+    // Resolve against the live controller state: a category created inline
+    // from the picker only exists there, not in the snapshot the sheet holds.
+    final categories = ref.read(budgetControllerProvider).categories;
+    final selected = [
+      ...widget.state.categories,
+      ...categories,
+    ].where((category) => category.id == selectedId).firstOrNull;
+    if (selected == null) return;
+    setState(() => _category = selected);
   }
 
   Future<void> _save() async {

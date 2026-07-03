@@ -40,7 +40,7 @@ class RecurringController extends Notifier<RecurringState> {
           .listWallets(limit: 100, offset: 0, sort: 'name_asc');
       final categoriesFuture = ref
           .read(categoryRepositoryProvider)
-          .listCategories(limit: 100, offset: 0, sort: 'name_asc');
+          .listCategories(limit: 100, offset: 0);
 
       final rulesResponse = await rulesFuture;
       final walletsResponse = await walletsFuture;

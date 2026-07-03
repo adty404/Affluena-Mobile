@@ -3,6 +3,7 @@ part of 'split_bill_screen.dart';
 class _SplitBillInfoSection extends StatelessWidget {
   const _SplitBillInfoSection({
     required this.state,
+    required this.onCategoriesMutated,
     required this.walletId,
     required this.categoryId,
     required this.selectedTagId,
@@ -18,6 +19,10 @@ class _SplitBillInfoSection extends StatelessWidget {
   });
 
   final SplitBillState state;
+
+  /// Refreshes the split-bill lookups after the picker creates or reorders a
+  /// category inline, so the fresh category resolves by name immediately.
+  final Future<void> Function() onCategoriesMutated;
   final String? walletId;
   final String? categoryId;
   final String? selectedTagId;
@@ -128,13 +133,11 @@ class _SplitBillInfoSection extends StatelessWidget {
       context: context,
       title: 'Kategori tagihan',
       selectedId: categoryId,
+      quickAdd: const CategoryQuickAdd(type: CategoryType.expense),
+      onMutated: onCategoriesMutated,
       categories: [
         for (final category in state.expenseCategories)
-          CategoryTreeEntry(
-            id: category.id,
-            name: category.name,
-            parentId: category.parentId,
-          ),
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
     if (context.mounted && selected != null && selected.isNotEmpty) {

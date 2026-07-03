@@ -46,7 +46,6 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
             type: CategoryType.expense,
             limit: quickEntryTemplatePageSize,
             offset: 0,
-            sort: 'name_asc',
           );
       final incomeCategoryFuture = ref
           .read(categoryRepositoryProvider)
@@ -54,7 +53,6 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
             type: CategoryType.income,
             limit: quickEntryTemplatePageSize,
             offset: 0,
-            sort: 'name_asc',
           );
       final tagFuture = ref
           .read(tagRepositoryProvider)

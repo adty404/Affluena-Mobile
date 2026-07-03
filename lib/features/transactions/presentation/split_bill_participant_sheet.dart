@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
+import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
@@ -44,18 +46,18 @@ Future<SplitBillParticipantDraft?> showSplitBillParticipantSheet({
   );
 }
 
-class _SplitBillParticipantSheet extends StatefulWidget {
+class _SplitBillParticipantSheet extends ConsumerStatefulWidget {
   const _SplitBillParticipantSheet({required this.state});
 
   final SplitBillState state;
 
   @override
-  State<_SplitBillParticipantSheet> createState() =>
+  ConsumerState<_SplitBillParticipantSheet> createState() =>
       _SplitBillParticipantSheetState();
 }
 
 class _SplitBillParticipantSheetState
-    extends State<_SplitBillParticipantSheet> {
+    extends ConsumerState<_SplitBillParticipantSheet> {
   late final TextEditingController _nameController;
   // Focus target for the amount field so the name field's "next" action lands
   // somewhere instead of stranding the keyboard focus.
@@ -83,6 +85,9 @@ class _SplitBillParticipantSheetState
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    // Watch the live controller state (not just the snapshot the sheet opened
+    // with) so a category created inline from the picker resolves immediately.
+    final state = ref.watch(splitBillControllerProvider);
     final amount = _amountMinor ?? 0;
     final canSave =
         _nameController.text.trim().isNotEmpty &&
@@ -148,13 +153,13 @@ class _SplitBillParticipantSheetState
                           'participant-disbursement-category-selector',
                         ),
                         label: 'Kategori pencairan',
-                        value: widget.state.expenseCategoryName(
+                        value: state.expenseCategoryName(
                           _disbursementCategoryId,
                         ),
                         isPlaceholder: _disbursementCategoryId == null,
                         icon: Icons.category_outlined,
-                        enabled: widget.state.expenseCategories.isNotEmpty,
-                        onTap: widget.state.expenseCategories.isEmpty
+                        enabled: state.expenseCategories.isNotEmpty,
+                        onTap: state.expenseCategories.isEmpty
                             ? null
                             : _selectDisbursementCategory,
                       ),
@@ -162,13 +167,11 @@ class _SplitBillParticipantSheetState
                       SelectorRow(
                         key: const Key('participant-payment-category-selector'),
                         label: 'Kategori pembayaran',
-                        value: widget.state.incomeCategoryName(
-                          _paymentCategoryId,
-                        ),
+                        value: state.incomeCategoryName(_paymentCategoryId),
                         isPlaceholder: _paymentCategoryId == null,
                         icon: Icons.savings_outlined,
-                        enabled: widget.state.incomeCategories.isNotEmpty,
-                        onTap: widget.state.incomeCategories.isEmpty
+                        enabled: state.incomeCategories.isNotEmpty,
+                        onTap: state.incomeCategories.isEmpty
                             ? null
                             : _selectPaymentCategory,
                       ),
@@ -199,13 +202,12 @@ class _SplitBillParticipantSheetState
       context: context,
       title: 'Kategori pencairan',
       selectedId: _disbursementCategoryId,
+      quickAdd: const CategoryQuickAdd(type: CategoryType.expense),
+      onMutated: () => ref.read(splitBillControllerProvider.notifier).load(),
       categories: [
-        for (final category in widget.state.expenseCategories)
-          CategoryTreeEntry(
-            id: category.id,
-            name: category.name,
-            parentId: category.parentId,
-          ),
+        for (final category
+            in ref.read(splitBillControllerProvider).expenseCategories)
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
     if (!mounted || selected == null || selected.isEmpty) return;
@@ -218,13 +220,12 @@ class _SplitBillParticipantSheetState
       context: context,
       title: 'Kategori pembayaran',
       selectedId: _paymentCategoryId,
+      quickAdd: const CategoryQuickAdd(type: CategoryType.income),
+      onMutated: () => ref.read(splitBillControllerProvider.notifier).load(),
       categories: [
-        for (final category in widget.state.incomeCategories)
-          CategoryTreeEntry(
-            id: category.id,
-            name: category.name,
-            parentId: category.parentId,
-          ),
+        for (final category
+            in ref.read(splitBillControllerProvider).incomeCategories)
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
     if (!mounted || selected == null || selected.isEmpty) return;

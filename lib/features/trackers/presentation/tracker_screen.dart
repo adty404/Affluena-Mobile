@@ -10,6 +10,7 @@ import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/date_picker_field.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
@@ -1035,21 +1036,25 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
   }
 
   Future<void> _selectCategory(List<Category> categories) async {
-    final selected = await showLookupSelectorSheet<Category>(
+    // Categories are a hierarchy: use the tree-aware picker, not a flat list.
+    final selectedId = await showCategoryTreePicker(
       context: context,
       title: 'Kategori pengeluaran',
-      searchHint: 'Cari kategori',
-      selectedValue: _category,
-      options: [
+      selectedId: _category?.id,
+      quickAdd: const CategoryQuickAdd(type: CategoryType.expense),
+      onMutated: () => ref.read(trackerControllerProvider.notifier).load(),
+      categories: [
         for (final category in categories)
-          LookupSelectorOption<Category>(
-            value: category,
-            label: category.name,
-            subtitle: category.type.apiValue,
-            icon: Icons.category_outlined,
-          ),
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
+    if (!mounted || selectedId == null || selectedId.isEmpty) return;
+    // Resolve against the live controller state: a category created inline
+    // from the picker only exists there, not in the snapshot the sheet holds.
+    final selected = [
+      ...categories,
+      ...ref.read(trackerControllerProvider).categories,
+    ].where((candidate) => candidate.id == selectedId).firstOrNull;
     if (selected == null) return;
     setState(() => _category = selected);
   }

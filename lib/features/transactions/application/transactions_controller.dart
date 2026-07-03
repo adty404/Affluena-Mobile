@@ -121,11 +121,7 @@ class TransactionsController extends Notifier<TransactionsState> {
           );
       final categoriesFuture = ref
           .read(categoryRepositoryProvider)
-          .listCategories(
-            limit: _transactionsLookupPageSize,
-            offset: 0,
-            sort: 'name_asc',
-          );
+          .listCategories(limit: _transactionsLookupPageSize, offset: 0);
       final tagsFuture = ref
           .read(tagRepositoryProvider)
           .listTags(
@@ -345,6 +341,17 @@ class TransactionsState {
       };
     }
     return categoryNames[transaction.categoryId] ?? 'Tanpa kategori';
+  }
+
+  /// The full category object behind [transaction], when loaded — used to
+  /// render the user's chosen category icon/color on tiles.
+  Category? categoryOf(Transaction transaction) {
+    final id = transaction.categoryId;
+    if (id == null) return null;
+    for (final category in categories) {
+      if (category.id == id) return category;
+    }
+    return null;
   }
 
   String filterDateLabel(DateTime date) => AffluenaDateFormatter.shortDate(

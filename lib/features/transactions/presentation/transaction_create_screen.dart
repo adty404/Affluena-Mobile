@@ -301,13 +301,12 @@ class _TransactionCreateScreenState
       context: context,
       title: 'Kategori',
       selectedId: _categoryId,
+      quickAdd: CategoryQuickAdd(type: _categoryType),
+      onMutated: () =>
+          ref.read(transactionCreateControllerProvider.notifier).load(),
       categories: [
         for (final category in categories)
-          CategoryTreeEntry(
-            id: category.id,
-            name: category.name,
-            parentId: category.parentId,
-          ),
+          CategoryTreeEntry.fromCategory(category),
       ],
     );
     if (!mounted || selected == null || selected.isEmpty) return;
