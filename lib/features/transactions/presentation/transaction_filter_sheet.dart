@@ -210,7 +210,6 @@ class _TransactionFilterSheetState
       noneLabel: 'Semua kategori',
       // No preset type: the filter spans both, so the inline form shows the
       // expense/income toggle.
-      quickAdd: const CategoryQuickAdd(),
       onMutated: () =>
           ref.read(transactionsControllerProvider.notifier).load(reset: true),
       categories: [

@@ -128,7 +128,6 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
       context: context,
       title: 'Kategori',
       selectedId: _categoryId,
-      quickAdd: CategoryQuickAdd(type: _categoryType),
       onMutated: () =>
           ref.read(transactionCreateControllerProvider.notifier).load(),
       categories: [

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/affluena_theme.dart';
 import '../../../categories/data/category_models.dart';
-import '../../../categories/data/category_repository.dart';
 import '../../../categories/presentation/category_tag_management_screen.dart';
 import '../appearance/item_appearance.dart';
 
@@ -47,16 +46,6 @@ class CategoryTreeEntry {
   final CategoryType? type;
 }
 
-/// Enables the pinned "Tambah kategori" action inside the picker: a compact
-/// inline create form (name + icon/color) so the user never has to leave for
-/// the master screen. When [type] is set the new category adopts it silently;
-/// otherwise the form shows an expense/income toggle.
-class CategoryQuickAdd {
-  const CategoryQuickAdd({this.type});
-
-  final CategoryType? type;
-}
-
 /// Result sentinel for [showCategoryTreePicker].
 /// - returns `null` when the user dismisses without choosing (no change)
 /// - returns an empty string when the user taps "No category" (clear)
@@ -69,12 +58,10 @@ const String categoryTreeClearedValue = '';
 ///
 /// Categories carry the user's chosen icon/color and arrive in the user's
 /// arranged order (API position order). The picker is **selection-only** — it
-/// does not reorder in place; a "Kelola kategori" button in the header opens
-/// the management screen ([CategoryTagManagementScreen]) for full CRUD +
-/// drag-to-reorder. The pinned "Tambah kategori" action ([quickAdd]) still
-/// creates a category inline and selects it immediately. [onMutated] runs after
-/// an inline create (and after returning from the management screen) so the
-/// calling screen can refresh its own category state.
+/// neither reorders nor creates in place; a "Kelola kategori" button in the
+/// header opens the management screen ([CategoryTagManagementScreen]) for full
+/// CRUD + drag-to-reorder. [onMutated] runs after returning from that screen so
+/// the calling screen can refresh its own category state.
 Future<String?> showCategoryTreePicker({
   required BuildContext context,
   required String title,
@@ -82,7 +69,6 @@ Future<String?> showCategoryTreePicker({
   String? selectedId,
   bool allowNone = false,
   String noneLabel = 'Tanpa kategori',
-  CategoryQuickAdd? quickAdd,
   Future<void> Function()? onMutated,
 }) {
   return showModalBottomSheet<String>(
@@ -96,7 +82,6 @@ Future<String?> showCategoryTreePicker({
       selectedId: selectedId,
       allowNone: allowNone,
       noneLabel: noneLabel,
-      quickAdd: quickAdd,
       onMutated: onMutated,
     ),
   );
@@ -109,7 +94,6 @@ class _CategoryTreePickerSheet extends ConsumerStatefulWidget {
     required this.allowNone,
     required this.noneLabel,
     this.selectedId,
-    this.quickAdd,
     this.onMutated,
   });
 
@@ -118,7 +102,6 @@ class _CategoryTreePickerSheet extends ConsumerStatefulWidget {
   final String? selectedId;
   final bool allowNone;
   final String noneLabel;
-  final CategoryQuickAdd? quickAdd;
   final Future<void> Function()? onMutated;
 
   @override
@@ -148,8 +131,6 @@ class _CategoryTreePickerSheetState
   /// The categories this picker renders (reorder/CRUD live on the dedicated
   /// management screen, reached via the header's "Kelola kategori" button).
   late final List<CategoryTreeEntry> _entries = List.of(widget.categories);
-
-  bool _showCreateForm = false;
 
   @override
   Widget build(BuildContext context) {
@@ -196,105 +177,77 @@ class _CategoryTreePickerSheetState
               ],
             ),
             const SizedBox(height: AffluenaSpacing.space4),
-            if (_showCreateForm)
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: maxListHeight),
-                child: SingleChildScrollView(
-                  child: _InlineCategoryCreateForm(
-                    presetType: widget.quickAdd?.type,
-                    onCancel: () => setState(() => _showCreateForm = false),
-                    onCreated: _handleCreated,
-                  ),
-                ),
-              )
-            else ...[
-              TextField(
-                key: const Key('category-tree-search-field'),
-                autocorrect: false,
-                textInputAction: TextInputAction.search,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  hintText: 'Cari kategori',
-                ),
-                onChanged: (value) => setState(() => _query = value),
+            TextField(
+              key: const Key('category-tree-search-field'),
+              autocorrect: false,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                hintText: 'Cari kategori',
               ),
-              const SizedBox(height: AffluenaSpacing.space3),
-              if (widget.allowNone && normalizedQuery.isEmpty) ...[
-                _NoneTile(
-                  label: widget.noneLabel,
-                  selected:
-                      widget.selectedId == null || widget.selectedId == '',
-                  onTap: () =>
-                      Navigator.of(context).pop(categoryTreeClearedValue),
-                ),
-                const SizedBox(height: AffluenaSpacing.space2),
-              ],
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: maxListHeight),
-                child: nodes.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AffluenaSpacing.space5,
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Kategori tidak ditemukan.',
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colors.inkMuted,
-                            ),
+              onChanged: (value) => setState(() => _query = value),
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+            if (widget.allowNone && normalizedQuery.isEmpty) ...[
+              _NoneTile(
+                label: widget.noneLabel,
+                selected: widget.selectedId == null || widget.selectedId == '',
+                onTap: () =>
+                    Navigator.of(context).pop(categoryTreeClearedValue),
+              ),
+              const SizedBox(height: AffluenaSpacing.space2),
+            ],
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxListHeight),
+              child: nodes.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AffluenaSpacing.space5,
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Kategori tidak ditemukan.',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.inkMuted,
                           ),
                         ),
-                      )
-                    : ListView(
-                        padding: const EdgeInsets.only(
-                          bottom: AffluenaSpacing.space2,
-                        ),
-                        shrinkWrap: true,
-                        children: [
-                          for (final node in nodes)
-                            Padding(
-                              key: ValueKey('picker-row-${node.entry.id}'),
-                              padding: const EdgeInsets.only(
-                                bottom: AffluenaSpacing.space2,
-                              ),
-                              child: _CategoryTreeTile(
-                                node: node,
-                                selected: node.entry.id == widget.selectedId,
-                                onTap: () =>
-                                    Navigator.of(context).pop(node.entry.id),
-                                onToggle: node.hasChildren
-                                    ? () => setState(() {
-                                        if (_collapsed.contains(
-                                          node.entry.id,
-                                        )) {
-                                          _collapsed.remove(node.entry.id);
-                                        } else {
-                                          _collapsed.add(node.entry.id);
-                                        }
-                                      })
-                                    : null,
-                              ),
-                            ),
-                        ],
                       ),
-              ),
-              if (widget.quickAdd != null) ...[
-                const SizedBox(height: AffluenaSpacing.space2),
-                _QuickAddTile(
-                  onTap: () => setState(() => _showCreateForm = true),
-                ),
-              ],
-            ],
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.only(
+                        bottom: AffluenaSpacing.space2,
+                      ),
+                      shrinkWrap: true,
+                      children: [
+                        for (final node in nodes)
+                          Padding(
+                            key: ValueKey('picker-row-${node.entry.id}'),
+                            padding: const EdgeInsets.only(
+                              bottom: AffluenaSpacing.space2,
+                            ),
+                            child: _CategoryTreeTile(
+                              node: node,
+                              selected: node.entry.id == widget.selectedId,
+                              onTap: () =>
+                                  Navigator.of(context).pop(node.entry.id),
+                              onToggle: node.hasChildren
+                                  ? () => setState(() {
+                                      if (_collapsed.contains(node.entry.id)) {
+                                        _collapsed.remove(node.entry.id);
+                                      } else {
+                                        _collapsed.add(node.entry.id);
+                                      }
+                                    })
+                                  : null,
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _handleCreated(Category category) async {
-    await widget.onMutated?.call();
-    if (!mounted) return;
-    Navigator.of(context).pop(category.id);
   }
 
   List<_FlatNode> _buildSearchResults(String query) {
@@ -348,212 +301,6 @@ class _CategoryTreePickerSheetState
       walk(root, 0);
     }
     return flat;
-  }
-}
-
-/// The pinned "Tambah kategori" action under the list: opens the compact
-/// inline create form without leaving the picker.
-class _QuickAddTile extends StatelessWidget {
-  const _QuickAddTile({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = context.affluenaColors;
-    final radius = BorderRadius.circular(AffluenaRadii.lg);
-
-    return Material(
-      color: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: radius,
-        side: BorderSide(color: colors.borderSubtle),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: const Key('category-picker-add-button'),
-        onTap: onTap,
-        borderRadius: radius,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 52),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AffluenaSpacing.space3,
-              vertical: AffluenaSpacing.space2,
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.add, size: 20, color: colors.forest),
-                const SizedBox(width: AffluenaSpacing.space3),
-                Expanded(
-                  child: Text(
-                    'Tambah kategori',
-                    style: textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Compact create form shown inside the picker: name, expense/income toggle
-/// (hidden when the picker context presets the type), and the shared icon +
-/// color pickers. Creates via the repository, then hands the fresh category
-/// back so the picker can select it immediately.
-class _InlineCategoryCreateForm extends ConsumerStatefulWidget {
-  const _InlineCategoryCreateForm({
-    required this.onCancel,
-    required this.onCreated,
-    this.presetType,
-  });
-
-  final CategoryType? presetType;
-  final VoidCallback onCancel;
-  final Future<void> Function(Category category) onCreated;
-
-  @override
-  ConsumerState<_InlineCategoryCreateForm> createState() =>
-      _InlineCategoryCreateFormState();
-}
-
-class _InlineCategoryCreateFormState
-    extends ConsumerState<_InlineCategoryCreateForm> {
-  final _nameController = TextEditingController();
-  late CategoryType _type = widget.presetType ?? CategoryType.expense;
-  String? _icon;
-  String? _color;
-  bool _isSaving = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final canSave = _nameController.text.trim().isNotEmpty && !_isSaving;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          key: const Key('category-picker-name-field'),
-          controller: _nameController,
-          autofocus: true,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.category_outlined),
-            labelText: 'Nama kategori',
-          ),
-          onChanged: (_) => setState(() {}),
-        ),
-        if (widget.presetType == null) ...[
-          const SizedBox(height: AffluenaSpacing.space3),
-          SegmentedButton<CategoryType>(
-            segments: const [
-              ButtonSegment(
-                value: CategoryType.expense,
-                icon: Icon(Icons.trending_down),
-                label: Text('Pengeluaran'),
-              ),
-              ButtonSegment(
-                value: CategoryType.income,
-                icon: Icon(Icons.trending_up),
-                label: Text('Pemasukan'),
-              ),
-            ],
-            selected: {_type},
-            onSelectionChanged: _isSaving
-                ? null
-                : (selection) => setState(() => _type = selection.single),
-          ),
-        ],
-        const SizedBox(height: AffluenaSpacing.space4),
-        Text('Ikon', style: textTheme.labelLarge),
-        const SizedBox(height: AffluenaSpacing.space2),
-        CategoryIconPickerGrid(
-          selected: _icon,
-          accentHex: _color,
-          enabled: !_isSaving,
-          fallbackIcon: categoryTypeFallbackIcon(_type),
-          onChanged: (value) => setState(() => _icon = value),
-        ),
-        const SizedBox(height: AffluenaSpacing.space4),
-        Text('Warna ikon', style: textTheme.labelLarge),
-        const SizedBox(height: AffluenaSpacing.space2),
-        ItemColorPickerRow(
-          entity: 'category',
-          selected: _color,
-          enabled: !_isSaving,
-          onChanged: (value) => setState(() => _color = value),
-        ),
-        if (_error != null) ...[
-          const SizedBox(height: AffluenaSpacing.space3),
-          Text(
-            _error!,
-            style: textTheme.bodySmall?.copyWith(
-              color: context.affluenaColors.coral,
-            ),
-          ),
-        ],
-        const SizedBox(height: AffluenaSpacing.space4),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: _isSaving ? null : widget.onCancel,
-                child: const Text('Batal'),
-              ),
-            ),
-            const SizedBox(width: AffluenaSpacing.space3),
-            Expanded(
-              child: FilledButton(
-                key: const Key('category-picker-save-button'),
-                onPressed: canSave ? _save : null,
-                child: Text(_isSaving ? 'Menyimpan...' : 'Simpan'),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Future<void> _save() async {
-    setState(() {
-      _isSaving = true;
-      _error = null;
-    });
-    try {
-      final created = await ref
-          .read(categoryRepositoryProvider)
-          .createCategory(
-            CategoryRequest(
-              name: _nameController.text.trim(),
-              type: _type,
-              icon: _icon ?? '',
-              color: _color ?? '',
-            ),
-          );
-      await widget.onCreated(created);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _isSaving = false;
-        _error = 'Kategori gagal dibuat.';
-      });
-    }
   }
 }
 

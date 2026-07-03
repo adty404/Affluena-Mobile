@@ -85,16 +85,19 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   pie glyph, wallets keep `resolveWalletIcon`. See DESIGN.md "Item Appearance".
 - **Category appearance & ordering**: categories carry client-owned `icon` (semantic id → catalog in
   `lib/features/shared/presentation/appearance/item_appearance.dart`, `resolveCategoryIcon`) and
-  `color` (`#RRGGBB` from the shared 10-swatch `kItemColorPalette`), plus a server-side `position`
-  (the user's arranged order). **Don't pass `sort` when listing categories** — the API default is
-  position ASC and every list/picker must respect it. **Reorder lives only on the master Kategori
-  screen** (`CategoryTagManagementScreen`): each row has a visible `Icons.drag_indicator` handle
-  (`ReorderableDragStartListener`, immediate drag) that rearranges within a sibling group and
-  persists the full flattened id list via `PUT /categories/reorder` (optimistic + revert on failure).
-  The shared `showCategoryTreePicker` is **selection-only** — no in-place reorder; its header has a
-  "Kelola kategori" gear (`category-picker-manage-button`) that pushes the master screen for CRUD +
-  reorder. The picker's pinned "Tambah kategori" action still creates a category inline (`quickAdd:`
-  preset type, `onMutated:` caller refresh hook) and selects it immediately.
+  `color` (`#RRGGBB` from the shared **24-swatch** `kItemColorPalette` — first 10 are the original
+  set, never reordered; new swatches only appended so stored picks stay valid), plus a server-side
+  `position` (the user's arranged order). **Don't pass `sort` when listing categories** — the API
+  default is position ASC and every list/picker must respect it. **Reorder lives only on the master
+  Kategori screen** (`CategoryTagManagementScreen`): each row has a visible `Icons.drag_indicator`
+  handle **on the left** (`ReorderableDragStartListener`, immediate drag) that rearranges within a
+  sibling group and persists the full flattened id list via `PUT /categories/reorder` (optimistic +
+  revert on failure). The master screen's add button is a plain **`Icons.add`** (no tree glyph); its
+  create/edit form shows the expense/income toggle **only on create** — a category's type is fixed
+  once it exists (editing changes name/icon/color/parent only). The shared `showCategoryTreePicker`
+  is **selection-only** — no in-place reorder and no inline create; its header has a "Kelola kategori"
+  gear (`category-picker-manage-button`) that pushes the master screen for all CRUD + reorder, and
+  `onMutated:` refreshes the caller after returning.
 - **Transaction-history rows show the category's icon+color everywhere**: every surface that lists
   transactions renders the transaction's category chosen icon in its chosen color on a soft tinted
   leading tile — the main ledger, the **Aktivitas** feed, the **Kalender** day sheet, **room/wallet

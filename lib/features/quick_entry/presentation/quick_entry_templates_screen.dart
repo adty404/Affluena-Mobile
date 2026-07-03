@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../../core/formatters/tag_formatter.dart';
-import '../../categories/data/category_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_chip_bar.dart';
@@ -862,11 +861,6 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
       context: context,
       title: 'Kategori template',
       selectedId: _categoryId,
-      quickAdd: CategoryQuickAdd(
-        type: _type == TransactionType.income
-            ? CategoryType.income
-            : CategoryType.expense,
-      ),
       onMutated: () =>
           ref.read(quickEntryTemplatesControllerProvider.notifier).load(),
       categories: [

@@ -722,7 +722,6 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
       context: context,
       title: title,
       selectedId: selected?.id,
-      quickAdd: CategoryQuickAdd(type: type),
       onMutated: () => ref.read(debtControllerProvider.notifier).load(),
       categories: [
         for (final category in options)

@@ -133,7 +133,6 @@ class _SplitBillInfoSection extends StatelessWidget {
       context: context,
       title: 'Kategori tagihan',
       selectedId: categoryId,
-      quickAdd: const CategoryQuickAdd(type: CategoryType.expense),
       onMutated: onCategoriesMutated,
       categories: [
         for (final category in state.expenseCategories)

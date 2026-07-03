@@ -485,7 +485,7 @@ class _EmptyBudgetState extends StatelessWidget {
             FilledButton.icon(
               key: const Key('budget-empty-add-category-button'),
               onPressed: onAddCategory,
-              icon: const Icon(Icons.account_tree_outlined),
+              icon: const Icon(Icons.add),
               label: const Text('Tambah kategori pengeluaran'),
             ),
         ],
@@ -735,7 +735,6 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
       context: context,
       title: 'Kategori anggaran',
       selectedId: _category?.id,
-      quickAdd: const CategoryQuickAdd(type: CategoryType.expense),
       onMutated: () => ref.read(budgetControllerProvider.notifier).load(),
       categories: [
         for (final category in widget.state.categories)

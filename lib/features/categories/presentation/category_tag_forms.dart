@@ -104,37 +104,38 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
                 // The next control is a segmented button/picker that never
                 // receives keyboard focus, so "next" would strand the focus.
                 textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.category_outlined),
-                  labelText: 'Nama kategori',
-                ),
+                decoration: const InputDecoration(labelText: 'Nama kategori'),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AffluenaSpacing.space4),
-              SegmentedButton<CategoryType>(
-                segments: const [
-                  ButtonSegment(
-                    value: CategoryType.expense,
-                    icon: Icon(Icons.trending_down),
-                    label: Text('Pengeluaran'),
-                  ),
-                  ButtonSegment(
-                    value: CategoryType.income,
-                    icon: Icon(Icons.trending_up),
-                    label: Text('Pemasukan'),
-                  ),
-                ],
-                selected: {_type},
-                onSelectionChanged: state.isSaving
-                    ? null
-                    : (selection) {
-                        setState(() {
-                          _type = selection.single;
-                          if (_parent?.type != _type) _parent = null;
-                        });
-                      },
-              ),
-              const SizedBox(height: AffluenaSpacing.space4),
+              // Type is fixed once a category exists (changing it would strand
+              // its transactions/budgets), so the toggle only shows on create.
+              if (!_isEditing) ...[
+                SegmentedButton<CategoryType>(
+                  segments: const [
+                    ButtonSegment(
+                      value: CategoryType.expense,
+                      icon: Icon(Icons.trending_down),
+                      label: Text('Pengeluaran'),
+                    ),
+                    ButtonSegment(
+                      value: CategoryType.income,
+                      icon: Icon(Icons.trending_up),
+                      label: Text('Pemasukan'),
+                    ),
+                  ],
+                  selected: {_type},
+                  onSelectionChanged: state.isSaving
+                      ? null
+                      : (selection) {
+                          setState(() {
+                            _type = selection.single;
+                            if (_parent?.type != _type) _parent = null;
+                          });
+                        },
+                ),
+                const SizedBox(height: AffluenaSpacing.space4),
+              ],
               Text('Ikon', style: textTheme.labelLarge),
               const SizedBox(height: AffluenaSpacing.space2),
               CategoryIconPickerGrid(
@@ -157,7 +158,7 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
               SelectorRow(
                 label: 'Kategori induk',
                 value: selectedParent?.name ?? 'Tanpa induk',
-                icon: Icons.account_tree_outlined,
+                icon: Icons.folder_outlined,
                 enabled: !state.isSaving,
                 onTap: () => _selectParent(parentOptions, selectedParent),
               ),
