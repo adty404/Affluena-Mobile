@@ -7,6 +7,27 @@ import '../../transactions/application/transactions_controller.dart';
 import '../../wallets/application/wallet_detail_controller.dart';
 import '../../wallets/application/wallets_controller.dart';
 
+/// Every provider whose data depends on wallet balances (but NOT the
+/// transaction ledger itself). Single source of truth shared by both the [Ref]
+/// and [WidgetRef] extensions so the two lists can never drift apart and
+/// reintroduce stale-balance bugs.
+///
+/// Family providers (e.g. [walletDetailProvider]) are listed once — invalidating
+/// a family without an argument refreshes every currently-alive instance. The
+/// element type is inferred as `ProviderOrFamily` (not publicly exported, so it
+/// can't be spelled here); every entry is a valid argument to `invalidate`.
+final _balanceProviders = [
+  walletListProvider,
+  walletDetailProvider,
+  walletAnalyticsProvider,
+  dashboardCashflowTrendProvider,
+  dashboardExpenseDistributionProvider,
+  dashboardForecastProvider,
+  budgetControllerProvider,
+  // The calendar month grid + any open day sheet re-aggregate from the ledger.
+  calendarMonthProvider,
+];
+
 /// Invalidates every provider whose data depends on wallet balances or the
 /// transaction ledger.
 ///
@@ -21,17 +42,9 @@ extension FinancialRefresh on Ref {
   /// own list via load(); invalidating its own provider here would dispose the
   /// controller mid-mutation.
   void invalidateBalances() {
-    invalidate(walletListProvider);
-    // Family providers — invalidating without an argument refreshes every
-    // currently-alive instance.
-    invalidate(walletDetailProvider);
-    invalidate(walletAnalyticsProvider);
-    invalidate(dashboardCashflowTrendProvider);
-    invalidate(dashboardExpenseDistributionProvider);
-    invalidate(dashboardForecastProvider);
-    invalidate(budgetControllerProvider);
-    // The calendar month grid + any open day sheet re-aggregate from the ledger.
-    invalidate(calendarMonthProvider);
+    for (final provider in _balanceProviders) {
+      invalidate(provider);
+    }
   }
 
   /// Balances + the transaction list. Use this from controllers OTHER than the
@@ -47,14 +60,9 @@ extension FinancialRefresh on Ref {
 /// wallet balance-adjust sheet) rather than going through a controller.
 extension FinancialRefreshWidget on WidgetRef {
   void invalidateBalances() {
-    invalidate(walletListProvider);
-    invalidate(walletDetailProvider);
-    invalidate(walletAnalyticsProvider);
-    invalidate(dashboardCashflowTrendProvider);
-    invalidate(dashboardExpenseDistributionProvider);
-    invalidate(dashboardForecastProvider);
-    invalidate(budgetControllerProvider);
-    invalidate(calendarMonthProvider);
+    for (final provider in _balanceProviders) {
+      invalidate(provider);
+    }
   }
 
   void invalidateFinancialData() {
