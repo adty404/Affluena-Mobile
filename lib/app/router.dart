@@ -168,7 +168,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: SettingsScreen.path,
-        pageBuilder: _fadePage((_) => const SettingsScreen()),
+        // No transition: opening "Lainnya" → Pengaturan (and going back) is
+        // instant, per user preference — the animated fade felt intrusive here.
+        pageBuilder: _noTransitionPage((_) => const SettingsScreen()),
       ),
       GoRoute(
         path: PartnerScreen.path,
@@ -311,6 +313,22 @@ Page<dynamic> Function(BuildContext, GoRouterState) _fadePage(
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(opacity: animation, child: child);
       },
+    );
+  };
+}
+
+/// No push/pop animation at all — the target appears and disappears instantly.
+Page<dynamic> Function(BuildContext, GoRouterState) _noTransitionPage(
+  Widget Function(GoRouterState state) builder,
+) {
+  return (context, state) {
+    return CustomTransitionPage<void>(
+      key: state.pageKey,
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+      child: builder(state),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+          child,
     );
   };
 }
