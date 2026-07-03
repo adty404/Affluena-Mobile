@@ -55,29 +55,48 @@ class CategoryBreakdown {
   final int incomeTotalMinor;
 }
 
-/// Current-month category breakdown for the Wawasan headline chart.
+/// An inclusive local date range for a category breakdown. Both ends are
+/// whole LOCAL days (time-of-day ignored). Value-equal so it can key a
+/// `FutureProvider.family` without spawning a fresh fetch on every rebuild.
+@immutable
+class DateRange {
+  DateRange({required DateTime from, required DateTime to})
+    : from = DateTime(from.year, from.month, from.day),
+      to = DateTime(to.year, to.month, to.day);
+
+  /// Inclusive first local day.
+  final DateTime from;
+
+  /// Inclusive last local day.
+  final DateTime to;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DateRange && other.from == from && other.to == to;
+
+  @override
+  int get hashCode => Object.hash(from, to);
+}
+
+/// Category breakdown for an arbitrary [DateRange], for the Wawasan chart.
 ///
 /// The API has no income-distribution endpoint, so BOTH breakdowns are computed
-/// client-side, mirroring [calendarMonthProvider]: fetch the current month's
+/// client-side, mirroring [calendarMonthProvider]: fetch the range's
 /// transactions (window widened a day on each edge because the `from`/`to`
 /// params are date-typed while bucketing is by LOCAL day), drop days outside the
-/// month, then group by `categoryId` — summing `amountMinor` separately for
+/// range, then group by `categoryId` — summing `amountMinor` separately for
 /// income vs expense and ignoring transfers/adjustments. Each bucket is joined
 /// to the category catalog for its name/icon/color; a missing or unknown
 /// category falls into a neutral "Tanpa kategori" bucket.
 ///
 /// Hermetic-test-friendly: reads only [transactionRepositoryProvider] and
 /// [categoryTagManagementControllerProvider], both overridable.
-final currentMonthCategoryBreakdownProvider =
-    FutureProvider.autoDispose<CategoryBreakdown>((ref) async {
+final categoryBreakdownProvider = FutureProvider.autoDispose
+    .family<CategoryBreakdown, DateRange>((ref, range) async {
       final repo = ref.watch(transactionRepositoryProvider);
       // Ensure the category catalog is loaded so buckets resolve their
       // name/icon/color; the controller auto-loads on build.
       final categoryState = ref.watch(categoryTagManagementControllerProvider);
-
-      final now = DateTime.now();
-      final year = now.year;
-      final month = now.month;
 
       String isoDate(DateTime d) {
         final m = d.month.toString().padLeft(2, '0');
@@ -85,8 +104,8 @@ final currentMonthCategoryBreakdownProvider =
         return '${d.year}-$m-${day}T00:00:00Z';
       }
 
-      final from = DateTime(year, month, 1).subtract(const Duration(days: 1));
-      final to = DateTime(year, month + 1, 2);
+      final windowFrom = range.from.subtract(const Duration(days: 1));
+      final windowTo = range.to.add(const Duration(days: 2));
 
       const pageSize = 200;
       const maxTransactions = 5000;
@@ -94,8 +113,8 @@ final currentMonthCategoryBreakdownProvider =
       var offset = 0;
       while (true) {
         final page = await repo.listTransactions(
-          from: isoDate(from),
-          to: isoDate(to),
+          from: isoDate(windowFrom),
+          to: isoDate(windowTo),
           limit: pageSize,
           offset: offset,
           sort: 'transaction_at_desc',
@@ -119,7 +138,8 @@ final currentMonthCategoryBreakdownProvider =
 
       for (final tx in all) {
         final day = AffluenaDateFormatter.localDay(tx.transactionAt);
-        if (day.year != year || day.month != month) continue;
+        // Inclusive [from, to] on whole local days.
+        if (day.isBefore(range.from) || day.isAfter(range.to)) continue;
         final key = (tx.categoryId == null || tx.categoryId!.isEmpty)
             ? uncategorizedKey
             : tx.categoryId!;
@@ -163,6 +183,18 @@ final currentMonthCategoryBreakdownProvider =
         expenseTotalMinor: expenseTotal,
         incomeTotalMinor: incomeTotal,
       );
+    });
+
+/// The current calendar month's breakdown — the default Wawasan view and the
+/// shape the provider test pins. Delegates to [categoryBreakdownProvider].
+final currentMonthCategoryBreakdownProvider =
+    FutureProvider.autoDispose<CategoryBreakdown>((ref) {
+      final now = DateTime.now();
+      final range = DateRange(
+        from: DateTime(now.year, now.month, 1),
+        to: DateTime(now.year, now.month + 1, 0),
+      );
+      return ref.watch(categoryBreakdownProvider(range).future);
     });
 
 /// Builds a [CategorySlice] for one aggregated bucket, resolving the category

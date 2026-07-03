@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
@@ -40,7 +41,6 @@ class SkyInsightsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trend = ref.watch(dashboardCashflowTrendProvider);
-    final distribution = ref.watch(dashboardExpenseDistributionProvider);
     final forecast = ref.watch(dashboardForecastProvider);
 
     return RefreshIndicator(
@@ -77,25 +77,6 @@ class SkyInsightsView extends ConsumerWidget {
             ),
           ),
           _SkyCard(
-            title: 'Ke mana uang pergi',
-            child: distribution.when(
-              loading: () => _loader(context),
-              error: (_, _) => _error(
-                onRetry: () =>
-                    ref.invalidate(dashboardExpenseDistributionProvider),
-              ),
-              data: (response) => response.distribution.isEmpty
-                  ? _empty(icon: Icons.donut_small_outlined)
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final item in response.distribution.take(6))
-                          _DistributionRow(item: item),
-                      ],
-                    ),
-            ),
-          ),
-          _SkyCard(
             title: 'Perkiraan bulan ini',
             child: forecast.when(
               loading: () => _loader(context),
@@ -113,14 +94,13 @@ class SkyInsightsView extends ConsumerWidget {
   /// Pull-to-refresh: re-fetch all three analytics in parallel. Each card
   /// renders its own error + retry, so failures never throw out of here.
   Future<void> _refresh(WidgetRef ref) async {
-    ref.invalidate(currentMonthCategoryBreakdownProvider);
+    // The breakdown card owns its own (period-keyed) provider instance and
+    // re-reads on refresh; invalidate the whole family so any period reloads.
+    ref.invalidate(categoryBreakdownProvider);
     ref.invalidate(dashboardCashflowTrendProvider);
-    ref.invalidate(dashboardExpenseDistributionProvider);
     ref.invalidate(dashboardForecastProvider);
     await Future.wait([
-      _awaitQuietly(ref.read(currentMonthCategoryBreakdownProvider.future)),
       _awaitQuietly(ref.read(dashboardCashflowTrendProvider.future)),
-      _awaitQuietly(ref.read(dashboardExpenseDistributionProvider.future)),
       _awaitQuietly(ref.read(dashboardForecastProvider.future)),
     ]);
   }
@@ -165,10 +145,114 @@ class _CategoryBreakdownCard extends ConsumerStatefulWidget {
 class _CategoryBreakdownCardState
     extends ConsumerState<_CategoryBreakdownCard> {
   CategoryType _type = CategoryType.expense;
+  _InsightPeriod _period = _InsightPeriod.month;
+  late DateTime _anchor;
+  DateRange? _customRange;
+
+  @override
+  void initState() {
+    super.initState();
+    _anchor = DateTime.now();
+  }
+
+  static DateTime _day(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  /// The concrete inclusive date range for the selected period + anchor.
+  DateRange get _range {
+    final a = _day(_anchor);
+    switch (_period) {
+      case _InsightPeriod.day:
+        return DateRange(from: a, to: a);
+      case _InsightPeriod.week:
+        final start = a.subtract(Duration(days: a.weekday - 1)); // Monday-first
+        return DateRange(from: start, to: start.add(const Duration(days: 6)));
+      case _InsightPeriod.month:
+        return DateRange(
+          from: DateTime(a.year, a.month, 1),
+          to: DateTime(a.year, a.month + 1, 0),
+        );
+      case _InsightPeriod.quarter:
+        final startMonth = ((a.month - 1) ~/ 3) * 3 + 1;
+        return DateRange(
+          from: DateTime(a.year, startMonth, 1),
+          to: DateTime(a.year, startMonth + 3, 0),
+        );
+      case _InsightPeriod.year:
+        return DateRange(
+          from: DateTime(a.year, 1, 1),
+          to: DateTime(a.year, 12, 31),
+        );
+      case _InsightPeriod.all:
+        return DateRange(from: DateTime(2000, 1, 1), to: _day(DateTime.now()));
+      case _InsightPeriod.custom:
+        return _customRange ?? DateRange(from: a, to: a);
+    }
+  }
+
+  /// The anchor shifted one period forward (+1) or back (-1).
+  DateTime _shifted(int dir) {
+    final a = _anchor;
+    return switch (_period) {
+      _InsightPeriod.day => a.add(Duration(days: dir)),
+      _InsightPeriod.week => a.add(Duration(days: 7 * dir)),
+      _InsightPeriod.month => DateTime(a.year, a.month + dir, 1),
+      _InsightPeriod.quarter => DateTime(a.year, a.month + 3 * dir, 1),
+      _InsightPeriod.year => DateTime(a.year + dir, 1, 1),
+      _InsightPeriod.all || _InsightPeriod.custom => a,
+    };
+  }
+
+  bool get _canNavigate =>
+      _period != _InsightPeriod.all && _period != _InsightPeriod.custom;
+
+  /// Never page into the future — disable "next" once the range reaches today.
+  bool get _canGoForward =>
+      _canNavigate && _range.to.isBefore(_day(DateTime.now()));
+
+  String _rangeLabel() {
+    final range = _range;
+    String d(DateTime x) => DateFormat('d MMM', 'id_ID').format(x);
+    return switch (_period) {
+      _InsightPeriod.day => DateFormat(
+        'EEEE, d MMM y',
+        'id_ID',
+      ).format(range.from),
+      _InsightPeriod.week => '${d(range.from)} – ${d(range.to)}',
+      _InsightPeriod.month => DateFormat('MMMM y', 'id_ID').format(range.from),
+      _InsightPeriod.quarter =>
+        'Kuartal ${((range.from.month - 1) ~/ 3) + 1} ${range.from.year}',
+      _InsightPeriod.year => '${range.from.year}',
+      _InsightPeriod.all => 'Sepanjang waktu',
+      _InsightPeriod.custom =>
+        '${d(range.from)} – ${DateFormat('d MMM y', 'id_ID').format(range.to)}',
+    };
+  }
+
+  Future<void> _pickCustomRange() async {
+    final now = DateTime.now();
+    final existing = _customRange;
+    final initial = existing != null
+        ? DateTimeRange(start: existing.from, end: existing.to)
+        : DateTimeRange(
+            start: DateTime(now.year, now.month, 1),
+            end: _day(now),
+          );
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(now.year + 1, 12, 31),
+      initialDateRange: initial,
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _period = _InsightPeriod.custom;
+      _customRange = DateRange(from: picked.start, to: picked.end);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final breakdown = ref.watch(currentMonthCategoryBreakdownProvider);
+    final breakdown = ref.watch(categoryBreakdownProvider(_range));
     final isExpense = _type == CategoryType.expense;
 
     return Container(
@@ -183,12 +267,36 @@ class _CategoryBreakdownCardState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Ke mana uang bulan ini?',
+            'Ke mana uang?',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: context.sky.ink,
             ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+          _PeriodChips(
+            selected: _period,
+            onSelected: (p) {
+              if (p == _InsightPeriod.custom) {
+                _pickCustomRange();
+                return;
+              }
+              setState(() => _period = p);
+            },
+          ),
+          const SizedBox(height: AffluenaSpacing.space2),
+          _PeriodNavBar(
+            label: _rangeLabel(),
+            onPrev: _canNavigate
+                ? () => setState(() => _anchor = _shifted(-1))
+                : null,
+            onNext: _canGoForward
+                ? () => setState(() => _anchor = _shifted(1))
+                : null,
+            onTapLabel: _period == _InsightPeriod.custom
+                ? _pickCustomRange
+                : null,
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           SkySegmentedToggle<CategoryType>(
@@ -206,8 +314,7 @@ class _CategoryBreakdownCardState
           breakdown.when(
             loading: () => SkyInsightsView._loader(context),
             error: (_, _) => SkyInsightsView._error(
-              onRetry: () =>
-                  ref.invalidate(currentMonthCategoryBreakdownProvider),
+              onRetry: () => ref.invalidate(categoryBreakdownProvider(_range)),
             ),
             data: (data) {
               final slices = isExpense
@@ -265,11 +372,152 @@ class _CategoryBreakdownCardState
 
   Widget _empty({required bool isExpense}) => EmptyState(
     icon: isExpense ? Icons.trending_down : Icons.trending_up,
-    title: isExpense
-        ? 'Belum ada pengeluaran bulan ini'
-        : 'Belum ada pemasukan bulan ini',
-    subtitle: 'Catat transaksi dulu untuk melihat rinciannya.',
+    title: isExpense ? 'Belum ada pengeluaran' : 'Belum ada pemasukan',
+    subtitle: 'Tidak ada transaksi pada periode ini.',
   );
+}
+
+/// The periods the Wawasan breakdown can be scoped to.
+enum _InsightPeriod { day, week, month, quarter, year, all, custom }
+
+/// A horizontally-scrollable row of period chips (Hari … Semua, Atur).
+class _PeriodChips extends StatelessWidget {
+  const _PeriodChips({required this.selected, required this.onSelected});
+
+  final _InsightPeriod selected;
+  final ValueChanged<_InsightPeriod> onSelected;
+
+  static const _labels = <_InsightPeriod, String>{
+    _InsightPeriod.day: 'Hari',
+    _InsightPeriod.week: 'Minggu',
+    _InsightPeriod.month: 'Bulan',
+    _InsightPeriod.quarter: 'Kuartal',
+    _InsightPeriod.year: 'Tahun',
+    _InsightPeriod.all: 'Semua',
+    _InsightPeriod.custom: 'Atur',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final sky = context.sky;
+    // A non-lazy Row (not ListView) so every chip is built even when scrolled
+    // off-screen — the pager relies on all periods being findable/tappable.
+    return SizedBox(
+      height: 32,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (final period in _InsightPeriod.values) ...[
+              GestureDetector(
+                key: Key('insight-period-${period.name}'),
+                onTap: () => onSelected(period),
+                child: Container(
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: period == selected ? sky.accent : sky.sheet,
+                    borderRadius: BorderRadius.circular(AffluenaRadii.pill),
+                    border: Border.all(
+                      color: period == selected ? sky.accent : sky.line,
+                    ),
+                  ),
+                  child: Text(
+                    _labels[period]!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: period == selected ? sky.onAccent : sky.muted,
+                    ),
+                  ),
+                ),
+              ),
+              if (period != _InsightPeriod.values.last)
+                const SizedBox(width: 6),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The prev/next pager around the current period's label. Arrows are disabled
+/// when they don't apply (no going into the future; "Semua"/"Atur" don't page);
+/// for a custom range, tapping the label re-opens the range picker.
+class _PeriodNavBar extends StatelessWidget {
+  const _PeriodNavBar({
+    required this.label,
+    this.onPrev,
+    this.onNext,
+    this.onTapLabel,
+  });
+
+  final String label;
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+  final VoidCallback? onTapLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final sky = context.sky;
+    return Row(
+      children: [
+        _NavArrow(icon: Icons.chevron_left, onTap: onPrev),
+        Expanded(
+          child: GestureDetector(
+            onTap: onTapLabel,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: sky.ink,
+                    ),
+                  ),
+                ),
+                if (onTapLabel != null) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.edit_calendar_outlined,
+                    size: 15,
+                    color: sky.muted,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        _NavArrow(icon: Icons.chevron_right, onTap: onNext),
+      ],
+    );
+  }
+}
+
+class _NavArrow extends StatelessWidget {
+  const _NavArrow({required this.icon, this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final sky = context.sky;
+    return IconButton(
+      onPressed: onTap,
+      visualDensity: VisualDensity.compact,
+      iconSize: 20,
+      icon: Icon(icon, color: onTap != null ? sky.ink : sky.line),
+    );
+  }
 }
 
 /// One ranked category row: a colored icon tile, the name + amount, and a
@@ -351,65 +599,6 @@ class _CategorySliceRow extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DistributionRow extends StatelessWidget {
-  const _DistributionRow({required this.item});
-
-  final ExpenseDistribution item;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  item.categoryName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: context.sky.ink,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${item.percentage.round()}%',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: context.sky.faint,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-              const Spacer(),
-              Text(
-                MoneyFormatter.idr(item.amountMinor),
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: context.sky.ink,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          SkyProgressBar(
-            value: (item.percentage / 100).clamp(0, 1).toDouble(),
-            height: 8,
           ),
         ],
       ),

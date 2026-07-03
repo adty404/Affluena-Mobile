@@ -51,18 +51,22 @@ void main() {
         findsOneWidget,
       );
 
-      // Tapping it opens the tree picker (identified by its search field).
+      // Tapping it opens the tree picker (search is now behind a header icon;
+      // the manage gear is always present, so use it to detect the sheet).
       await tester.tap(selector);
       await tester.pumpAndSettle();
       expect(
-        find.byKey(const Key('category-tree-search-field')),
+        find.byKey(const Key('category-picker-manage-button')),
         findsOneWidget,
       );
 
       // Pick the nested child; the picker pops and the selector updates.
       await tester.tap(find.text('Groceries'));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('category-tree-search-field')), findsNothing);
+      expect(
+        find.byKey(const Key('category-picker-manage-button')),
+        findsNothing,
+      );
       expect(
         find.descendant(of: selector, matching: find.text('Groceries')),
         findsOneWidget,

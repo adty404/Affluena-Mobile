@@ -175,18 +175,14 @@ void main() {
     await _pump(tester);
 
     expect(find.text('Wawasan'), findsOneWidget);
-    expect(find.text('Ke mana uang bulan ini?'), findsOneWidget);
+    expect(find.text('Ke mana uang?'), findsOneWidget);
     expect(find.text('Arus kas'), findsOneWidget);
-    expect(find.text('Ke mana uang pergi'), findsOneWidget);
     expect(find.text('Perkiraan bulan ini'), findsOneWidget);
   });
 
-  testWidgets('shows distribution category and forecast status', (
-    tester,
-  ) async {
+  testWidgets('shows the forecast status', (tester) async {
     await _pump(tester);
 
-    expect(find.text('Makan & Minum'), findsOneWidget);
     expect(find.text('Rp 3.200.000'), findsOneWidget); // forecasted expense
     expect(find.text('Aman, di bawah budget'), findsOneWidget); // safe status
   });
@@ -231,7 +227,7 @@ void main() {
       ],
     );
 
-    expect(find.text('Belum ada pengeluaran bulan ini'), findsOneWidget);
+    expect(find.text('Belum ada pengeluaran'), findsOneWidget);
 
     await tester.tap(find.text('Pemasukan'));
     await tester.pumpAndSettle();

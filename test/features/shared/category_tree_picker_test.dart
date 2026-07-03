@@ -83,6 +83,12 @@ void main() {
     await tester.tap(find.text('Buka picker'));
     await tester.pumpAndSettle();
 
+    // Search is hidden behind a header icon until tapped.
+    expect(find.byKey(const Key('category-tree-search-field')), findsNothing);
+    await tester.tap(find.byKey(const Key('category-picker-search-button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('category-tree-search-field')), findsOneWidget);
+
     await tester.enterText(
       find.byKey(const Key('category-tree-search-field')),
       'trans',

@@ -20,6 +20,8 @@ class _TransactionEditFields extends StatelessWidget {
     required this.onWalletChanged,
     required this.onToWalletChanged,
     required this.onSelectCategory,
+    required this.transactionAtLabel,
+    required this.onSelectDateTime,
     required this.onSave,
   });
 
@@ -41,6 +43,11 @@ class _TransactionEditFields extends StatelessWidget {
   final ValueChanged<String?> onWalletChanged;
   final ValueChanged<String?> onToWalletChanged;
   final VoidCallback onSelectCategory;
+
+  /// Formatted current date+time and the callback that opens the date/time
+  /// pickers so the transaction can be re-stamped.
+  final String transactionAtLabel;
+  final VoidCallback onSelectDateTime;
   final VoidCallback onSave;
 
   @override
@@ -100,6 +107,15 @@ class _TransactionEditFields extends StatelessWidget {
             onTap: isSaving ? null : onSelectCategory,
           ),
         ],
+        const SizedBox(height: AffluenaSpacing.space3),
+        SelectorRow(
+          key: const Key('transaction-edit-datetime-selector'),
+          label: 'Tanggal & waktu',
+          value: transactionAtLabel,
+          icon: Icons.event_outlined,
+          enabled: !isSaving,
+          onTap: isSaving ? null : onSelectDateTime,
+        ),
         const SizedBox(height: AffluenaSpacing.space3),
         TextField(
           key: const Key('transaction-edit-note-field'),
