@@ -6,7 +6,6 @@ import 'package:affluena_mobile/features/categories/presentation/category_tag_ma
 import 'package:affluena_mobile/features/shared/presentation/appearance/item_appearance.dart';
 import 'package:affluena_mobile/features/tags/data/tag_models.dart';
 import 'package:affluena_mobile/features/tags/data/tag_repository.dart';
-import 'package:flutter/gestures.dart' show kLongPressTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -256,22 +255,35 @@ extension on WidgetTester {
     await pumpAndSettle();
   }
 
-  /// Simulates the long-press drag that ReorderableDelayedDragStartListener
-  /// expects: press [from], hold past the long-press timeout, drag to just
-  /// above [to], and release.
+  /// Simulates dragging the visible drag-handle (Icons.drag_indicator) of the
+  /// [from] row to just above [to]. The handle uses ReorderableDragStartListener
+  /// (immediate drag), so no long-press hold is needed — the drag starts on the
+  /// handle belonging to [from] (the handle whose vertical center is nearest the
+  /// row).
   Future<void> longPressDragCategory({
     required Finder from,
     required Finder to,
   }) async {
-    final start = getCenter(from);
+    final fromY = getCenter(from).dy;
+    final handles = find.byIcon(Icons.drag_indicator);
+    final count = handles.evaluate().length;
+    var start = getCenter(from);
+    var best = double.infinity;
+    for (var i = 0; i < count; i++) {
+      final c = getCenter(handles.at(i));
+      if ((c.dy - fromY).abs() < best) {
+        best = (c.dy - fromY).abs();
+        start = c;
+      }
+    }
     final target = getTopLeft(to) - const Offset(0, 24);
     final gesture = await startGesture(start);
-    await pump(kLongPressTimeout + const Duration(milliseconds: 100));
+    await pump(const Duration(milliseconds: 20));
     // Move in steps so the drag recognizer tracks the pointer.
-    final delta = Offset(0, (target.dy - start.dy) / 4);
-    for (var i = 0; i < 4; i++) {
+    final delta = Offset(0, (target.dy - start.dy) / 6);
+    for (var i = 0; i < 6; i++) {
       await gesture.moveBy(delta);
-      await pump(const Duration(milliseconds: 50));
+      await pump(const Duration(milliseconds: 40));
     }
     await gesture.up();
     await pumpAndSettle();

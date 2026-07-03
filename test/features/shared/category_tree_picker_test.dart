@@ -40,6 +40,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Food & Dining'), findsOneWidget);
 
+    // The picker is selection-only: no direct reorder, but a "Kelola kategori"
+    // button in the header opens the management screen (CRUD + reorder).
+    expect(
+      find.byKey(const Key('category-picker-manage-button')),
+      findsOneWidget,
+    );
+
     // The pinned action opens the compact inline create form.
     await tester.tap(find.byKey(const Key('category-picker-add-button')));
     await tester.pumpAndSettle();
