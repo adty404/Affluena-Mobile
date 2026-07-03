@@ -181,11 +181,15 @@ All spacing derives from a base of 4.
   - **Aktivitas feed** (`redesign/activity_feed_screen.dart`) — leading slot is
     the category tile; the "kamu" ownership signal lives in the meta line.
   - **Calendar day sheet** (`calendar/calendar_screen.dart`) — `TransactionTile`
-    fed the category icon+color. Tapping any day opens this sheet; it has a
-    **"Tambah"** button that opens quick-add pre-set to that date, and each row
-    is **tappable to edit** (opens the transaction detail sheet). The sheet
+    fed the category icon+color. Tapping any day opens this sheet. Header layout:
+    a drag handle, the day title on its own line, a tidy **3-column
+    masuk/keluar/selisih** summary (the same `_SummaryColumn`/`_SummaryDivider`
+    the month header uses, so the amounts never collide), then a **full-width
+    "Tambah transaksi"** button that opens quick-add pre-set to that date; each
+    row is **tappable to edit** (opens the transaction detail sheet). The sheet
     watches `calendarMonthProvider`, and `invalidateBalances()` invalidates that
-    provider, so add/edit/delete refresh the day + grid live.
+    provider, so add/edit/delete refresh the day + grid live. Locked by
+    `test/goldens/calendar_day_sheet_golden_test.dart`.
   - **Room (wallet) detail** (`redesign/room_detail_screen.dart`).
   - **Budget detail transaction list** (`budgets/budget_detail_screen.dart`) —
     every row is the budget's category, so it renders that category's icon+color

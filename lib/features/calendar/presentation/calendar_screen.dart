@@ -7,7 +7,6 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/application/category_tag_management_controller.dart';
 import '../../redesign/presentation/sky_quick_add_sheet.dart';
-import '../../shared/presentation/widgets/empty_state.dart';
 import '../../shared/presentation/widgets/error_state.dart';
 import '../../shared/presentation/widgets/transaction_tile.dart';
 import '../../transactions/application/transactions_controller.dart';
@@ -625,6 +624,7 @@ void _showDaySheet(BuildContext context, DateTime month, int day) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    showDragHandle: true,
     builder: (context) =>
         _DayTransactionsSheet(day: DateTime(month.year, month.month, day)),
   );
@@ -663,57 +663,101 @@ class _DayTransactionsSheet extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AffluenaSpacing.space5,
-          AffluenaSpacing.space4,
+          AffluenaSpacing.space2,
           AffluenaSpacing.space5,
           AffluenaSpacing.space4,
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * 0.75,
+            maxHeight: MediaQuery.sizeOf(context).height * 0.8,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      AffluenaDateFormatter.dayHeader(day),
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: context.sky.ink,
-                      ),
-                    ),
-                  ),
-                  FilledButton.icon(
-                    key: const Key('calendar-day-add'),
-                    onPressed: () => showSkyQuickAddSheet(context, date: day),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Tambah'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: context.sky.accent,
-                      foregroundColor: context.sky.onAccent,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
+              // Clean title on its own line — no button crowding it.
               Text(
-                '${MoneyFormatter.signedIdr(incomeMinor)} masuk · '
-                '${MoneyFormatter.signedIdr(-expenseMinor)} keluar · '
-                'selisih ${MoneyFormatter.signedIdr(netMinor)}',
-                style: TextStyle(fontSize: 12, color: context.sky.muted),
+                AffluenaDateFormatter.dayHeader(day),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                  color: context.sky.ink,
+                ),
               ),
               const SizedBox(height: AffluenaSpacing.space3),
+              // The same tidy 3-column summary the month header uses, so the
+              // amounts never collide on one cramped line.
+              IntrinsicHeight(
+                child: Row(
+                  children: [
+                    _SummaryColumn(
+                      label: 'Masuk',
+                      value: MoneyFormatter.signedIdr(incomeMinor),
+                      color: context.sky.income,
+                    ),
+                    const _SummaryDivider(),
+                    _SummaryColumn(
+                      label: 'Keluar',
+                      value: MoneyFormatter.signedIdr(-expenseMinor),
+                      color: context.sky.danger,
+                    ),
+                    const _SummaryDivider(),
+                    _SummaryColumn(
+                      label: 'Selisih',
+                      value: MoneyFormatter.signedIdr(netMinor),
+                      color: context.sky.ink,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              // Prominent, unmistakable full-width add action.
+              FilledButton.icon(
+                key: const Key('calendar-day-add'),
+                onPressed: () => showSkyQuickAddSheet(context, date: day),
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('Tambah transaksi'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: context.sky.accent,
+                  foregroundColor: context.sky.onAccent,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AffluenaRadii.control),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AffluenaSpacing.space4),
+              if (txns.isNotEmpty) ...[
+                Text(
+                  'Transaksi',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                    color: context.sky.faint,
+                  ),
+                ),
+                const SizedBox(height: AffluenaSpacing.space2),
+              ],
               Flexible(
                 child: txns.isEmpty
-                    ? EmptyState.compact(
-                        icon: Icons.receipt_long_outlined,
-                        title: 'Belum ada transaksi di tanggal ini.',
-                        onTap: () => showSkyQuickAddSheet(context, date: day),
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AffluenaSpacing.space6,
+                        ),
+                        child: Text(
+                          'Belum ada transaksi di tanggal ini.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.sky.muted,
+                          ),
+                        ),
                       )
                     : ListView.builder(
                         shrinkWrap: true,
