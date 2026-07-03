@@ -210,28 +210,43 @@ class _GoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
+    // A valid user-chosen goal color paints the whole row SOLID (the same
+    // treatment as Beranda's dashboard cards): white text, white icon on a
+    // translucent tile, white progress on a translucent track, onColor status
+    // pills. Without one, the color only accents the icon tile as before.
+    final custom = parseItemColor(goal.color);
+    final hasColor = custom != null;
+    final icon = resolveEntityIcon(goal.icon, Icons.savings_outlined);
 
     return AffluenaCard(
+      backgroundColor: hasColor ? custom : null,
+      borderColor: hasColor ? custom : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // The item's chosen colour accents the icon tile; without one it
-              // keeps the neutral forest theming.
-              ItemAccentIconTile(
-                icon: Icons.savings_outlined,
-                colorHex: goal.color,
-                fallback: colors.forest,
-                fallbackBackground: colors.forestSoft,
-              ),
+              if (hasColor)
+                ItemOnColorIconTile(icon: icon)
+              else
+                ItemAccentIconTile(
+                  icon: icon,
+                  colorHex: goal.color,
+                  fallback: colors.forest,
+                  fallbackBackground: colors.forestSoft,
+                ),
               const SizedBox(width: AffluenaSpacing.space3),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(goal.name, style: textTheme.titleMedium),
+                    Text(
+                      goal.name,
+                      style: hasColor
+                          ? textTheme.titleMedium?.copyWith(color: Colors.white)
+                          : textTheme.titleMedium,
+                    ),
                     const SizedBox(height: AffluenaSpacing.space2),
                     Wrap(
                       spacing: AffluenaSpacing.space2,
@@ -240,10 +255,12 @@ class _GoalCard extends StatelessWidget {
                         StatusBadge.forStatus(
                           goal.status.apiValue,
                           label: goal.status.label,
+                          onColor: hasColor,
                         ),
                         StatusBadge(
                           label: '${goal.members.length} anggota',
                           tone: StatusTone.neutral,
+                          onColor: hasColor,
                         ),
                       ],
                     ),
@@ -254,6 +271,7 @@ class _GoalCard extends StatelessWidget {
                 goal: goal,
                 onEdit: onEdit,
                 onTransition: onTransition,
+                onColor: hasColor,
               ),
             ],
           ),
@@ -263,31 +281,41 @@ class _GoalCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: goal.progressPercent / 100,
               minHeight: 10,
-              color: colors.success,
-              backgroundColor: colors.surfaceTintSoft,
+              color: hasColor ? Colors.white : colors.success,
+              backgroundColor: hasColor
+                  ? Colors.white.withValues(alpha: 0.25)
+                  : colors.surfaceTintSoft,
             ),
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
             MoneyFormatter.idr(goal.collectedAmountMinor),
-            style: textTheme.headlineSmall,
+            style: hasColor
+                ? textTheme.headlineSmall?.copyWith(color: Colors.white)
+                : textTheme.headlineSmall,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             '${goal.progressPercent}% tersimpan',
-            style: textTheme.bodySmall,
+            style: hasColor
+                ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                : textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             'Target ${MoneyFormatter.idr(goal.targetAmountMinor)}',
-            style: textTheme.bodySmall,
+            style: hasColor
+                ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                : textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             goal.deadline == null
                 ? 'Tanpa tenggat'
                 : 'Tenggat ${AffluenaDateFormatter.shortDate(goal.deadline!)}',
-            style: textTheme.bodySmall,
+            style: hasColor
+                ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                : textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
           GoalMembersSection(
@@ -295,6 +323,7 @@ class _GoalCard extends StatelessWidget {
             currentUserId: currentUserId,
             busy: busy,
             onRespond: onRespond,
+            onColor: hasColor,
           ),
           const SizedBox(height: AffluenaSpacing.space4),
           Row(
@@ -325,16 +354,22 @@ class _GoalOverflowMenu extends StatelessWidget {
     required this.goal,
     required this.onEdit,
     required this.onTransition,
+    this.onColor = false,
   });
 
   final Goal goal;
   final VoidCallback onEdit;
   final void Function(GoalStatus status) onTransition;
 
+  /// Renders the trigger icon white when the row is painted in the goal's
+  /// own color.
+  final bool onColor;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.affluenaColors;
     return PopupMenuButton<String>(
+      iconColor: onColor ? Colors.white : null,
       onSelected: (value) {
         switch (value) {
           case 'edit':

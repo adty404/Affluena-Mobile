@@ -75,6 +75,14 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   short date throws and blanks the screen.
 - **Tests are hermetic**: full-app tests use `authTestApp`/`pumpAuthTestApp` (overrides every repo
   with fakes). `redesign_shell_test` uses its own `ProviderScope` and stubs controllers directly.
+- **Item appearance (color/icon)**: wallets, budgets, goals, installments, subscriptions, and
+  recurring rules carry optional `color` (`#RRGGBB`) + `icon` (semantic id — never persist
+  `IconData`). A valid color renders the item's card **solid** (bg+border = color, white text,
+  white icon on a white-20% tile, white progress on white-25% track, `StatusBadge(onColor: true)`
+  pills; over-budget danger fill still wins) on Beranda AND every domain list screen. Icons resolve
+  via `resolveEntityIcon`/`entityIconFor` in `item_appearance.dart` — the union of the category +
+  wallet catalogs, category winning on an id clash; budgets prefer budget.icon → category icon →
+  pie glyph, wallets keep `resolveWalletIcon`. See DESIGN.md "Item Appearance".
 - **Category appearance & ordering**: categories carry client-owned `icon` (semantic id → catalog in
   `lib/features/shared/presentation/appearance/item_appearance.dart`, `resolveCategoryIcon`) and
   `color` (`#RRGGBB` from the shared 10-swatch `kItemColorPalette`), plus a server-side `position`

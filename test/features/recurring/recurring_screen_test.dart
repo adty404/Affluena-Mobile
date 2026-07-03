@@ -163,6 +163,39 @@ void main() {
     expect(find.text('Rent'), findsOneWidget);
     expect(find.text('Pilih kategori'), findsNothing);
   });
+
+  testWidgets('rule with a chosen color renders a solid colored card', (
+    tester,
+  ) async {
+    final repository = TestRecurringRepository(rules: const [coloredRule]);
+
+    await tester.pumpWidget(recurringTestApp(repository));
+    await tester.pumpRecurringState();
+
+    await tester.scrollUntilVisible(
+      find.text('Monthly rent'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    // The colored rule paints its whole row solid with a white title — the
+    // same treatment as Beranda's dashboard cards.
+    const teal = Color(0xFF2BB3A3);
+    expect(_solidCard(teal), findsOneWidget);
+    final title = tester.widget<Text>(find.text('Monthly rent'));
+    expect(title.style?.color, Colors.white);
+  });
+}
+
+/// Finds a card painted solid in [color] (the AffluenaCard DecoratedBox whose
+/// BoxDecoration carries the item's chosen color as its fill).
+Finder _solidCard(Color color) {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is DecoratedBox &&
+        widget.decoration is BoxDecoration &&
+        (widget.decoration as BoxDecoration).color == color,
+  );
 }
 
 extension on WidgetTester {
@@ -407,6 +440,29 @@ const rentCategory = Category(
   userId: 'user-1',
   name: 'Rent',
   type: CategoryType.expense,
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+/// [seedRule] with a user-chosen color, so its row renders the solid colored
+/// treatment.
+const coloredRule = RecurringRule(
+  id: 'rule-1',
+  userId: 'user-1',
+  name: 'Monthly rent',
+  type: RecurringType.expense,
+  walletId: 'wallet-main',
+  toWalletId: null,
+  categoryId: 'category-rent',
+  amountMinor: 2500000,
+  frequency: RecurringFrequency.monthly,
+  intervalCount: 1,
+  nextRunAt: '2026-07-01T00:00:00Z',
+  endAt: null,
+  lastRunAt: null,
+  status: RecurringStatus.active,
+  note: 'Apartment',
+  color: '#2BB3A3',
   createdAt: '2026-06-01T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
 );

@@ -332,7 +332,8 @@ class _InstallmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _TrackerCard(
       title: item.name,
-      icon: Icons.receipt_long_outlined,
+      // The installment's own icon wins over the generic receipt glyph.
+      icon: resolveEntityIcon(item.icon, Icons.receipt_long_outlined),
       colorHex: item.color,
       statusApiValue: item.status.apiValue,
       statusLabel: item.status.label,
@@ -389,7 +390,8 @@ class _SubscriptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _TrackerCard(
       title: item.name,
-      icon: Icons.autorenew,
+      // The subscription's own icon wins over the generic renew glyph.
+      icon: resolveEntityIcon(item.icon, Icons.autorenew),
       colorHex: item.color,
       statusApiValue: item.status.apiValue,
       statusLabel: item.status.label,
@@ -465,25 +467,46 @@ class _TrackerCard extends StatelessWidget {
       'cancelled' || 'canceled' => colors.inkMuted,
       _ => colors.success,
     };
+    // A valid user-chosen item color paints the whole row SOLID (the same
+    // treatment as Beranda's dashboard cards): white text, white icon on a
+    // translucent tile, white progress on a translucent track, onColor status
+    // pill. Without one, the color only accents the icon tile as before.
+    final custom = parseItemColor(colorHex);
+    final hasColor = custom != null;
 
     return AffluenaCard(
+      backgroundColor: hasColor ? custom : null,
+      borderColor: hasColor ? custom : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              // The item's chosen colour accents the icon tile; without one it
-              // keeps the neutral forest theming.
-              ItemAccentIconTile(
-                icon: icon,
-                colorHex: colorHex,
-                fallback: colors.forest,
-                fallbackBackground: colors.forestSoft,
-              ),
+              if (hasColor)
+                ItemOnColorIconTile(icon: icon)
+              else
+                ItemAccentIconTile(
+                  icon: icon,
+                  colorHex: colorHex,
+                  fallback: colors.forest,
+                  fallbackBackground: colors.forestSoft,
+                ),
               const SizedBox(width: AffluenaSpacing.space3),
-              Expanded(child: Text(title, style: textTheme.titleMedium)),
-              StatusBadge.forStatus(statusApiValue, label: statusLabel),
+              Expanded(
+                child: Text(
+                  title,
+                  style: hasColor
+                      ? textTheme.titleMedium?.copyWith(color: Colors.white)
+                      : textTheme.titleMedium,
+                ),
+              ),
+              StatusBadge.forStatus(
+                statusApiValue,
+                label: statusLabel,
+                onColor: hasColor,
+              ),
               PopupMenuButton<int>(
+                iconColor: hasColor ? Colors.white : null,
                 onSelected: (index) => menuItems[index].onTap(),
                 itemBuilder: (context) => [
                   for (var i = 0; i < menuItems.length; i++)
@@ -504,18 +527,40 @@ class _TrackerCard extends StatelessWidget {
           SkyProgressBar(
             value: progress,
             height: 10,
-            fillColor: progressColor,
-            trackColor: colors.surfaceTintSoft,
+            fillColor: hasColor ? Colors.white : progressColor,
+            trackColor: hasColor
+                ? Colors.white.withValues(alpha: 0.25)
+                : colors.surfaceTintSoft,
           ),
           const SizedBox(height: AffluenaSpacing.space3),
-          Text(amount, style: textTheme.headlineSmall),
+          Text(
+            amount,
+            style: hasColor
+                ? textTheme.headlineSmall?.copyWith(color: Colors.white)
+                : textTheme.headlineSmall,
+          ),
           const SizedBox(height: AffluenaSpacing.space1),
-          Text(meta, style: textTheme.bodySmall),
+          Text(
+            meta,
+            style: hasColor
+                ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                : textTheme.bodySmall,
+          ),
           const SizedBox(height: AffluenaSpacing.space1),
-          Text(detail, style: textTheme.bodySmall),
+          Text(
+            detail,
+            style: hasColor
+                ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                : textTheme.bodySmall,
+          ),
           if (note.isNotEmpty) ...[
             const SizedBox(height: AffluenaSpacing.space2),
-            Text(note, style: textTheme.bodySmall),
+            Text(
+              note,
+              style: hasColor
+                  ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                  : textTheme.bodySmall,
+            ),
           ],
           if (onAction != null && actionLabel != null) ...[
             const SizedBox(height: AffluenaSpacing.space4),

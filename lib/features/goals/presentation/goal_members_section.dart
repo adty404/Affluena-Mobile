@@ -13,6 +13,7 @@ class GoalMembersSection extends StatelessWidget {
     required this.currentUserId,
     required this.busy,
     required this.onRespond,
+    this.onColor = false,
     super.key,
   });
 
@@ -20,6 +21,11 @@ class GoalMembersSection extends StatelessWidget {
   final String? currentUserId;
   final bool busy;
   final void Function(GoalMember member, GoalMemberStatus status) onRespond;
+
+  /// True when the enclosing card is painted in the goal's own color (the
+  /// solid list-card treatment): the bare empty-state text switches to white70
+  /// for contrast. Member rows keep their own surface and stay unchanged.
+  final bool onColor;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +35,9 @@ class GoalMembersSection extends StatelessWidget {
     if (members.isEmpty) {
       return Text(
         'Baru kamu sejauh ini. Undang orang lain untuk menabung bersama.',
-        style: textTheme.bodySmall?.copyWith(color: colors.inkMuted),
+        style: textTheme.bodySmall?.copyWith(
+          color: onColor ? Colors.white70 : colors.inkMuted,
+        ),
       );
     }
 

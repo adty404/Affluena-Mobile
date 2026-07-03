@@ -327,37 +327,62 @@ class _BudgetCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
     final percent = (budget.usagePercent / 100).clamp(0.0, 1.0);
-    final (statusColor, statusTone, statusLabel) = budget.usagePercent >= 100
+    final over = budget.usagePercent >= 100;
+    final (statusColor, statusTone, statusLabel) = over
         ? (colors.coral, StatusTone.danger, 'Lewat batas')
         : budget.usagePercent >= 80
         ? (colors.amber, StatusTone.warning, 'Mendekati batas')
         : (colors.success, StatusTone.success, 'Aman');
+    // A valid user-chosen budget color paints the whole row SOLID (the same
+    // treatment as Beranda's dashboard cards): white text, white icon on a
+    // translucent tile, white progress on a translucent track — over-budget
+    // danger still wins on the fill. Without one, the category's color keeps
+    // accenting just the icon tile, exactly as before.
+    final custom = parseItemColor(budget.color);
+    final hasColor = custom != null;
+    // The budget's own icon wins over its category's icon, which wins over
+    // the generic pie glyph.
+    final icon = resolveEntityIcon(
+      budget.icon,
+      (category != null ? categoryIconFor(category!.icon) : null) ??
+          Icons.pie_chart_outline,
+    );
 
     return AffluenaCard(
+      backgroundColor: hasColor ? custom : null,
+      borderColor: hasColor ? custom : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              // The category's chosen icon wins over the generic pie glyph;
-              // the budget's own colour still wins over the category's. With
-              // neither, the row keeps the neutral forest theming.
-              ItemAccentIconTile(
-                icon:
-                    (category != null
-                        ? categoryIconFor(category!.icon)
-                        : null) ??
-                    Icons.pie_chart_outline,
-                colorHex: budget.color.isNotEmpty
-                    ? budget.color
-                    : (category?.color ?? ''),
-                fallback: colors.forest,
-                fallbackBackground: colors.forestSoft,
-              ),
+              if (hasColor)
+                ItemOnColorIconTile(icon: icon)
+              else
+                ItemAccentIconTile(
+                  icon: icon,
+                  colorHex: budget.color.isNotEmpty
+                      ? budget.color
+                      : (category?.color ?? ''),
+                  fallback: colors.forest,
+                  fallbackBackground: colors.forestSoft,
+                ),
               const SizedBox(width: AffluenaSpacing.space3),
-              Expanded(child: Text(categoryName, style: textTheme.titleMedium)),
-              StatusBadge(label: statusLabel, tone: statusTone),
+              Expanded(
+                child: Text(
+                  categoryName,
+                  style: hasColor
+                      ? textTheme.titleMedium?.copyWith(color: Colors.white)
+                      : textTheme.titleMedium,
+                ),
+              ),
+              StatusBadge(
+                label: statusLabel,
+                tone: statusTone,
+                onColor: hasColor,
+              ),
               PopupMenuButton<String>(
+                iconColor: hasColor ? Colors.white : null,
                 onSelected: (value) {
                   if (value == 'edit') onEdit();
                   if (value == 'delete') onDelete();
@@ -373,27 +398,42 @@ class _BudgetCard extends StatelessWidget {
           SkyProgressBar(
             value: percent,
             height: 10,
-            fillColor: statusColor,
-            trackColor: colors.surfaceTintSoft,
+            fillColor: hasColor
+                ? (over ? statusColor : Colors.white)
+                : statusColor,
+            trackColor: hasColor
+                ? Colors.white.withValues(alpha: 0.25)
+                : colors.surfaceTintSoft,
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           Text(
             '${budget.usagePercent.round()}% terpakai',
-            style: textTheme.bodyLarge?.copyWith(color: statusColor),
+            style: textTheme.bodyLarge?.copyWith(
+              color: hasColor ? Colors.white : statusColor,
+            ),
           ),
           const SizedBox(height: AffluenaSpacing.space1),
           Text(
             '${MoneyFormatter.idr(budget.spentMinor)} terpakai dari ${MoneyFormatter.idr(budget.limitMinor)}',
-            style: textTheme.bodySmall,
+            style: hasColor
+                ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                : textTheme.bodySmall,
           ),
           const SizedBox(height: AffluenaSpacing.space2),
           Text(
             '${MoneyFormatter.idr(budget.remainingMinor)} tersisa',
-            style: textTheme.bodyLarge,
+            style: hasColor
+                ? textTheme.bodyLarge?.copyWith(color: Colors.white)
+                : textTheme.bodyLarge,
           ),
           if (report?.recommendation.isNotEmpty == true) ...[
             const SizedBox(height: AffluenaSpacing.space2),
-            Text(report!.recommendation, style: textTheme.bodySmall),
+            Text(
+              report!.recommendation,
+              style: hasColor
+                  ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                  : textTheme.bodySmall,
+            ),
           ],
         ],
       ),

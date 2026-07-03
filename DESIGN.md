@@ -259,8 +259,10 @@ All spacing derives from a base of 4.
 ### Item Appearance (icon & color)
 
 - **Palette**: the shared 10-swatch `kItemColorPalette` (`#RRGGBB`, stored as-is on the API) with a leading "no color" option; used by wallets, budgets, goals, trackers, recurring rules, and categories via `ItemColorPickerRow` (keys `<entity>-color-<hex>`).
+- **Solid colored cards**: an item with a valid chosen color renders its card **solid** in that color — on Beranda's dashboard grid *and* on the domain list screens (Dompet, Anggaran, Tabungan, Cicilan/Langganan, Berulang). Treatment: bg + border = the color; white title/value; white70 secondary text; white icon on a white-20% tile (`ItemOnColorIconTile`); white progress fill on a white-25% track; status pills switch to the `StatusBadge(onColor: true)` white-on-white-20% variant. Semantic danger still wins: an over-budget progress fill stays coral. The income-green recurring amount yields to white. Items without a color (or with an unparseable legacy value) keep their default theming, the color only accenting the icon tile.
 - **Category icons**: `kCategoryIconCatalog` maps ~20 semantic ids (food, transport, home, health, salary, travel, savings, …) to Material glyphs; `CategoryIconPickerGrid` renders the picker (keys `category-icon-<id>`, selected cell fills with the chosen accent). Unknown/empty ids fall back to the income/expense trend glyph via `resolveCategoryIcon`.
-- **Rules**: never rename a catalog id (values persist server-side); the icon catalog and palette are client-owned and must stay in sync with the web app.
+- **Entity icons**: `entityIconFor(id)` resolves any entity's stored icon id against the **union** of `kCategoryIconCatalog` + `kWalletIconCatalog` (both live in `item_appearance.dart`; the category catalog wins on an id clash, e.g. `investment`); `resolveEntityIcon(id, fallback)` keeps each surface's default glyph when the id is unset/unknown. Budgets prefer `budget.icon` → the category's icon → the pie glyph; wallets keep `resolveWalletIcon` (id → per-type default).
+- **Rules**: never rename a catalog id and never persist `IconData` (semantic ids persist server-side); the icon catalogs and palette are client-owned and must stay in sync with the web app.
 
 ## 6. Motion & Interaction
 

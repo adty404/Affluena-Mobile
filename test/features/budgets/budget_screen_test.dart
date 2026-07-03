@@ -103,6 +103,43 @@ void main() {
     expect(repository.createdRequests.single.limitMinor, 900000);
     expect(repository.createdRequests.single.color, '#2E8B57');
   });
+
+  testWidgets('budget with a chosen color renders a solid colored card', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      budgetTestApp(
+        budgetRepository: TestBudgetRepository(
+          budgets: const [coloredFoodBudget],
+        ),
+      ),
+    );
+    await tester.pumpBudgetState();
+
+    await tester.scrollUntilVisible(
+      find.text('Food & Dining'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    // The colored budget paints its whole row solid with a white title — the
+    // same treatment as Beranda's dashboard cards.
+    const purple = Color(0xFF7C5BC2);
+    expect(_solidCard(purple), findsOneWidget);
+    final title = tester.widget<Text>(find.text('Food & Dining'));
+    expect(title.style?.color, Colors.white);
+  });
+}
+
+/// Finds a card painted solid in [color] (the AffluenaCard DecoratedBox whose
+/// BoxDecoration carries the item's chosen color as its fill).
+Finder _solidCard(Color color) {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is DecoratedBox &&
+        widget.decoration is BoxDecoration &&
+        (widget.decoration as BoxDecoration).color == color,
+  );
 }
 
 extension on WidgetTester {
@@ -275,6 +312,22 @@ const foodBudget = BudgetSummary(
   spentMinor: 1275000,
   remainingMinor: 225000,
   usagePercent: 85,
+  createdAt: '2026-06-01T00:00:00Z',
+  updatedAt: '2026-06-01T00:00:00Z',
+);
+
+/// [foodBudget] with a user-chosen color, so its row renders the solid
+/// colored treatment.
+const coloredFoodBudget = BudgetSummary(
+  id: 'budget-food',
+  userId: 'user-1',
+  categoryId: 'category-food',
+  month: '2026-06',
+  limitMinor: 1500000,
+  spentMinor: 1275000,
+  remainingMinor: 225000,
+  usagePercent: 85,
+  color: '#7C5BC2',
   createdAt: '2026-06-01T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
 );
