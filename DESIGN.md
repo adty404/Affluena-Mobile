@@ -195,7 +195,19 @@ All spacing derives from a base of 4.
     (`transactions/presentation/transaction_activity_row.dart`), reused by the
     Wawasan per-category screen; its **title falls back to the category name**
     (then the type label) when the transaction has no note — a note-less
-    expense reads "Makanan", not "Pengeluaran".
+    expense reads "Makanan", not "Pengeluaran". The feed has a **search field**
+    (`activity-search-field`, client-side case-insensitive `contains` over
+    note / wallet / category — the same semantics as the ledger's
+    `visibleTransactions`) and a **`Icons.tune` filter button**
+    (`activity-filter-button`) that reuses the ledger's
+    `showTransactionFilterSheet(initialFilters:, includeTag: false)` for
+    **date / kategori / dompet** (no Tag) applied **server-side** through
+    `recentActivityProvider`, now an **`autoDispose.family` keyed on
+    `ActivityQuery`** (`{walletId, categoryId, from, to}`); active filters show
+    as an `AffluenaChipBar` with an "Atur ulang" chip
+    (`activity-clear-filters`), and a filter/search that matches nothing shows a
+    distinct "Tidak ada transaksi yang cocok" empty state (separate from the
+    unfiltered "Belum ada transaksi").
   - **Wawasan per-category transactions** (`redesign/sky_category_transactions_screen.dart`)
     — the list opened by tapping a Wawasan breakdown category row, rendered with
     the same `TransactionActivityRow` day-grouped over the full period range.

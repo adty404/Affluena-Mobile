@@ -115,6 +115,18 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   `TransactionActivityRow` (`transactions/presentation/transaction_activity_row.dart`); its row
   **title falls back to the category name** (then the type label) when a transaction has no note — so
   a note-less expense reads "Makanan", not "Pengeluaran".
+- **The Aktivitas feed has search + date/kategori/dompet filters**: a client-side **search field**
+  (`activity-search-field`, case-insensitive `contains` over note / wallet / category — same
+  semantics as the ledger's `visibleTransactions`) and a `Icons.tune` **filter button**
+  (`activity-filter-button`) that reuses the ledger's `showTransactionFilterSheet` with the new
+  `initialFilters:` (seed from the feed's own filters, decoupled from the ledger state) +
+  `includeTag: false` (hides the Tag row — Aktivitas filters by date/category/wallet only). The
+  filters apply **server-side**: `recentActivityProvider` is now a
+  **`FutureProvider.autoDispose.family`** keyed on `ActivityQuery`
+  (`{walletId, categoryId, from, to}` — a record, so the key is value-stable); the all-null query is
+  the default unfiltered feed. Active filters show as an `AffluenaChipBar` with an "Atur ulang" chip
+  (`activity-clear-filters`); a search/filter that matches nothing shows a distinct "Tidak ada
+  transaksi yang cocok" empty state, separate from the unfiltered "Belum ada transaksi".
 - **Every transaction row is tappable → the detail sheet**: tapping a transaction anywhere it's
   listed opens `showTransactionDetail(context, ref, txState, tx)` (view / edit / delete) — the ledger,
   Aktivitas, the Kalender day sheet, **room/wallet detail**, the **budget detail** list, and the
@@ -126,8 +138,9 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   change its date & time** (the edit form has a `Tanggal & waktu` selector wiring `showDatePicker` +
   `showTimePicker` into `transactionAt`).
 - **`invalidateBalances()` also refreshes the standalone transaction-list surfaces** the main ledger
-  controller doesn't own — the cross-wallet **Aktivitas** feed (`recentActivityProvider`), each
-  **room/wallet detail** list (`walletTransactionsProvider`), the **budget-detail "Transaksi"** list
+  controller doesn't own — the cross-wallet **Aktivitas** feed (`recentActivityProvider`, an
+  `autoDispose.family` over `ActivityQuery` — listed bare so every alive keyed instance refreshes),
+  each **room/wallet detail** list (`walletTransactionsProvider`), the **budget-detail "Transaksi"** list
   (`categoryTransactionsProvider`, a `(categoryId, monthIso)` family), the **Wawasan breakdown**
   (`categoryBreakdownProvider`), the **Wawasan per-category transactions** list
   (`categoryTransactionsInRangeProvider`, a `(categoryId, DateRange)` family — the screen a tapped

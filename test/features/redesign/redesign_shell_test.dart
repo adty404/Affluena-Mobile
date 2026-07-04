@@ -150,7 +150,7 @@ Future<void> _pump(WidgetTester tester) async {
         transactionsControllerProvider.overrideWith(
           _StubTransactionsController.new,
         ),
-        recentActivityProvider.overrideWith((ref) async => const [_txn]),
+        recentActivityProvider.overrideWith((ref, q) async => const [_txn]),
         dashboardCashflowTrendProvider.overrideWith((ref) async => _trend),
         dashboardExpenseDistributionProvider.overrideWith(
           (ref) async => _distribution,
