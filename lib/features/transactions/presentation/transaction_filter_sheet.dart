@@ -9,26 +9,50 @@ import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../application/transactions_controller.dart';
 
-/// Opens the filter sheet seeded with the current filters. Returns the new
-/// [TransactionFilters] to apply, or null if the user dismissed without
-/// applying. The sheet stays open on validation issues and only pops on apply.
+/// Opens the filter sheet seeded with [initialFilters] (or [state.filters] when
+/// null). Returns the new [TransactionFilters] to apply, or null if the user
+/// dismissed without applying. The sheet stays open on validation issues and
+/// only pops on apply.
+///
+/// Reused by the Aktivitas feed, which passes its own filter record as
+/// [initialFilters] (not coupled to the ledger's own filter state) and
+/// [includeTag] `false` to hide the Tag selector — the Aktivitas filter is
+/// date/category/wallet only.
 Future<TransactionFilters?> showTransactionFilterSheet({
   required BuildContext context,
   required TransactionsState state,
+  TransactionFilters? initialFilters,
+  bool includeTag = true,
 }) {
   return showModalBottomSheet<TransactionFilters>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     useSafeArea: true,
-    builder: (context) => _TransactionFilterSheet(state: state),
+    builder: (context) => _TransactionFilterSheet(
+      state: state,
+      initialFilters: initialFilters,
+      includeTag: includeTag,
+    ),
   );
 }
 
 class _TransactionFilterSheet extends ConsumerStatefulWidget {
-  const _TransactionFilterSheet({required this.state});
+  const _TransactionFilterSheet({
+    required this.state,
+    this.initialFilters,
+    this.includeTag = true,
+  });
 
   final TransactionsState state;
+
+  /// The filters to seed the sheet with. When null, the sheet seeds from
+  /// [state.filters] (the ledger's own live filters).
+  final TransactionFilters? initialFilters;
+
+  /// Whether to show the Tag selector. Aktivitas passes false — its filter is
+  /// date/category/wallet only, so no `tagId` is ever emitted.
+  final bool includeTag;
 
   @override
   ConsumerState<_TransactionFilterSheet> createState() =>
@@ -47,7 +71,7 @@ class _TransactionFilterSheetState
   @override
   void initState() {
     super.initState();
-    final filters = widget.state.filters;
+    final filters = widget.initialFilters ?? widget.state.filters;
     _walletId = filters.walletId;
     _categoryId = filters.categoryId;
     _tagId = filters.tagId;
@@ -99,17 +123,19 @@ class _TransactionFilterSheetState
                 enabled: state.categories.isNotEmpty,
                 onTap: state.categories.isEmpty ? null : _selectCategory,
               ),
-              const Divider(height: 1),
-              SelectorRow(
-                key: const Key('filter-tag-selector'),
-                label: 'Tag',
-                value: _tagId == null
-                    ? 'Semua tag'
-                    : tagLabel(state.tagName(_tagId!)),
-                icon: Icons.sell_outlined,
-                enabled: state.tags.isNotEmpty,
-                onTap: state.tags.isEmpty ? null : _selectTag,
-              ),
+              if (widget.includeTag) ...[
+                const Divider(height: 1),
+                SelectorRow(
+                  key: const Key('filter-tag-selector'),
+                  label: 'Tag',
+                  value: _tagId == null
+                      ? 'Semua tag'
+                      : tagLabel(state.tagName(_tagId!)),
+                  icon: Icons.sell_outlined,
+                  enabled: state.tags.isNotEmpty,
+                  onTap: state.tags.isEmpty ? null : _selectTag,
+                ),
+              ],
               const Divider(height: 1),
               const SizedBox(height: AffluenaSpacing.space2),
               DatePickerField(
@@ -172,7 +198,7 @@ class _TransactionFilterSheetState
   bool get _hasAnySelection =>
       _walletId != null ||
       _categoryId != null ||
-      _tagId != null ||
+      (widget.includeTag && _tagId != null) ||
       _from != null ||
       _to != null;
 
@@ -267,10 +293,13 @@ class _TransactionFilterSheetState
     }
     Navigator.of(context).pop(
       TransactionFilters(
-        type: widget.state.filters.type,
+        // Preserve the type from the seed filters (Aktivitas seeds a null type;
+        // the ledger keeps its own segmented-control type unchanged).
+        type: (widget.initialFilters ?? widget.state.filters).type,
         walletId: _walletId,
         categoryId: _categoryId,
-        tagId: _tagId,
+        // Never emit a tag when the Tag selector is hidden (Aktivitas).
+        tagId: widget.includeTag ? _tagId : null,
         from: _from,
         to: _to,
       ),

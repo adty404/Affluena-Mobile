@@ -36,7 +36,9 @@ final _balanceProviders = [
   // Standalone transaction-list surfaces the main ledger controller doesn't own:
   // the cross-wallet Aktivitas feed and each room/wallet detail's list. Without
   // these, a quick-add (or any non-ledger mutation) leaves them showing a stale
-  // list even though balances updated.
+  // list even though balances updated. The Aktivitas feed is now an
+  // autoDispose.family keyed on the feed's date/category/wallet filter — listing
+  // the family base invalidates every currently-alive keyed instance.
   recentActivityProvider,
   walletTransactionsProvider,
   // The budget-detail "Transaksi" list (per category+month). A FutureProvider
