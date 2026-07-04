@@ -267,14 +267,16 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
   ) {
     final query = _searchQuery.trim().toLowerCase();
     if (query.isEmpty) return txns;
-    return txns.where((tx) {
-      final note = tx.note.toLowerCase();
-      final wallet = (walletNames[tx.walletId] ?? '').toLowerCase();
-      final category = txState.categoryName(tx).toLowerCase();
-      return note.contains(query) ||
-          wallet.contains(query) ||
-          category.contains(query);
-    }).toList(growable: false);
+    return txns
+        .where((tx) {
+          final note = tx.note.toLowerCase();
+          final wallet = (walletNames[tx.walletId] ?? '').toLowerCase();
+          final category = txState.categoryName(tx).toLowerCase();
+          return note.contains(query) ||
+              wallet.contains(query) ||
+              category.contains(query);
+        })
+        .toList(growable: false);
   }
 
   Future<void> _openFilters(
@@ -360,7 +362,8 @@ class _ActiveFilterChips extends StatelessWidget {
       if (filters.walletId != null) txState.walletName(filters.walletId!),
       if (filters.categoryId != null)
         (txState.categoryNames[filters.categoryId] ?? 'Kategori'),
-      if (filters.from != null) 'Dari ${txState.filterDateLabel(filters.from!)}',
+      if (filters.from != null)
+        'Dari ${txState.filterDateLabel(filters.from!)}',
       if (filters.to != null) 'Sampai ${txState.filterDateLabel(filters.to!)}',
     ];
 

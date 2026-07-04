@@ -68,7 +68,8 @@ class SkyCategoryTransactionsScreen extends ConsumerWidget {
             ? EmptyState(
                 icon: Icons.receipt_long_outlined,
                 title: 'Belum ada transaksi',
-                subtitle: 'Tidak ada transaksi di kategori ini pada '
+                subtitle:
+                    'Tidak ada transaksi di kategori ini pada '
                     '$periodLabel.',
               )
             : _CategoryTxList(
@@ -77,7 +78,8 @@ class SkyCategoryTransactionsScreen extends ConsumerWidget {
                 walletNames: walletNames,
                 meId: meId,
                 txState: txState,
-                onOpen: (tx) => showTransactionDetail(context, ref, txState, tx),
+                onOpen: (tx) =>
+                    showTransactionDetail(context, ref, txState, tx),
               ),
       ),
     );

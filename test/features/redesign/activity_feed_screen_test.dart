@@ -126,7 +126,11 @@ class _RecordingRepository implements TransactionRepository {
     }).toList();
     return TransactionListResponse(
       transactions: rows,
-      pagination: Pagination(total: rows.length, limit: limit ?? 100, offset: 0),
+      pagination: Pagination(
+        total: rows.length,
+        limit: limit ?? 100,
+        offset: 0,
+      ),
     );
   }
 
