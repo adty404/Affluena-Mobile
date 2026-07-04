@@ -14,6 +14,7 @@ import '../../shared/presentation/widgets/empty_state.dart';
 import '../../shared/presentation/widgets/error_state.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../../shared/presentation/widgets/sky_segmented_toggle.dart';
+import 'sky_category_transactions_screen.dart';
 
 /// Redesign Tahap 6 — Insights: the heavy analytics (cashflow trend, expense
 /// distribution, forecast) deliberately kept OFF the Home so the rooms screen
@@ -267,7 +268,7 @@ class _CategoryBreakdownCardState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Ke mana uang?',
+            'Ke mana perginya uangmu?',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -330,6 +331,8 @@ class _CategoryBreakdownCardState
                       slices: slices,
                       total: total,
                       isExpense: isExpense,
+                      range: _range,
+                      periodLabel: _rangeLabel(),
                     );
               if (!data.truncated) return body;
               return Column(
@@ -352,6 +355,8 @@ class _CategoryBreakdownCardState
     required List<CategorySlice> slices,
     required int total,
     required bool isExpense,
+    required DateRange range,
+    required String periodLabel,
   }) {
     final totalColor = isExpense ? context.sky.danger : context.sky.income;
     return Column(
@@ -373,7 +378,25 @@ class _CategoryBreakdownCardState
         ),
         const SizedBox(height: AffluenaSpacing.space3),
         for (final slice in slices)
-          _CategorySliceRow(slice: slice, barColor: totalColor),
+          _CategorySliceRow(
+            slice: slice,
+            barColor: totalColor,
+            // The "Tanpa kategori" bucket (no id) has no dedicated screen, so
+            // it stays non-tappable; every real category drills into its
+            // transactions for the current period.
+            onTap: slice.categoryId == null
+                ? null
+                : () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => SkyCategoryTransactionsScreen(
+                        categoryId: slice.categoryId!,
+                        categoryName: slice.name,
+                        range: range,
+                        periodLabel: periodLabel,
+                      ),
+                    ),
+                  ),
+          ),
       ],
     );
   }
@@ -568,17 +591,25 @@ class _NavArrow extends StatelessWidget {
 /// color when set, else the type's semantic color (danger/income) so a slice
 /// without a color still reads clearly.
 class _CategorySliceRow extends StatelessWidget {
-  const _CategorySliceRow({required this.slice, required this.barColor});
+  const _CategorySliceRow({
+    required this.slice,
+    required this.barColor,
+    this.onTap,
+  });
 
   final CategorySlice slice;
 
   /// The type's semantic color, used when the category has no chosen color.
   final Color barColor;
 
+  /// Drills into this category's transactions for the period. Null for the
+  /// non-tappable "Tanpa kategori" bucket.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final accent = slice.color ?? barColor;
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -644,6 +675,18 @@ class _CategorySliceRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+    if (onTap == null) return row;
+    // Add a subtle rounded ripple without restyling the row — keep the existing
+    // padding/layout so tappable and non-tappable rows read identically.
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AffluenaRadii.md),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AffluenaRadii.md),
+        child: row,
       ),
     );
   }

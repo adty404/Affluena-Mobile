@@ -111,9 +111,14 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   `transactionIconColor` delegate to it); transfers keep the swap glyph, uncolored income/expense
   fall back to default theming. Surfaces without a `TransactionsState` watch
   `categoryTagManagementControllerProvider` for the category catalog. See DESIGN.md "Transaction Row".
+  The **Aktivitas feed** and the **Wawasan per-category** screen share the public
+  `TransactionActivityRow` (`transactions/presentation/transaction_activity_row.dart`); its row
+  **title falls back to the category name** (then the type label) when a transaction has no note — so
+  a note-less expense reads "Makanan", not "Pengeluaran".
 - **Every transaction row is tappable → the detail sheet**: tapping a transaction anywhere it's
   listed opens `showTransactionDetail(context, ref, txState, tx)` (view / edit / delete) — the ledger,
-  Aktivitas, the Kalender day sheet, **room/wallet detail**, and the **budget detail** list. Surfaces
+  Aktivitas, the Kalender day sheet, **room/wallet detail**, the **budget detail** list, and the
+  **Wawasan per-category transactions** screen. Surfaces
   outside the global ledger (room detail, budget detail, calendar) pass
   `ref.read(transactionsControllerProvider)` as `txState` (it powers name resolution + edit/delete)
   even though their rows come from a feature-local provider. The detail sheet is a polished hero
@@ -124,7 +129,9 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   controller doesn't own — the cross-wallet **Aktivitas** feed (`recentActivityProvider`), each
   **room/wallet detail** list (`walletTransactionsProvider`), the **budget-detail "Transaksi"** list
   (`categoryTransactionsProvider`, a `(categoryId, monthIso)` family), the **Wawasan breakdown**
-  (`categoryBreakdownProvider`), and the legacy **Laporan** controller (`insightsControllerProvider`)
+  (`categoryBreakdownProvider`), the **Wawasan per-category transactions** list
+  (`categoryTransactionsInRangeProvider`, a `(categoryId, DateRange)` family — the screen a tapped
+  breakdown row opens), and the legacy **Laporan** controller (`insightsControllerProvider`)
   are all in the shared `_balanceProviders` set (`shared/application/financial_refresh.dart`).
   Without this a quick-add (or any non-ledger mutation) moved balances but left those surfaces stale.
   (The quick-entry screen now calls `invalidateFinancialData()` for the same reason.)
