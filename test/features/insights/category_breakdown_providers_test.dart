@@ -353,58 +353,59 @@ void main() {
   });
 
   group('categoryTransactionsInRangeProvider', () {
-    test('passes categoryId to the repo and filters to the local-day range', () async {
-      final repo = _CapturingTransactionRepository([
-        // Inside the range.
-        _tx(
-          id: 'in1',
-          type: TransactionType.expense,
-          amountMinor: 45000,
-          transactionAt: '2026-06-20T09:00:00Z',
-          categoryId: 'c-food',
-        ),
-        _tx(
-          id: 'in2',
-          type: TransactionType.expense,
-          amountMinor: 30000,
-          transactionAt: '2026-06-10T02:00:00Z',
-          categoryId: 'c-food',
-        ),
-        // Pulled in by the widened API window (from-1 day = 31 May) but its
-        // LOCAL day still falls on 31 May regardless of timezone, OUTSIDE the
-        // inclusive June range → must be dropped by the local-day filter.
-        _tx(
-          id: 'before',
-          type: TransactionType.expense,
-          amountMinor: 99000,
-          transactionAt: '2026-05-31T00:00:00Z',
-          categoryId: 'c-food',
-        ),
-      ]);
+    test(
+      'passes categoryId to the repo and filters to the local-day range',
+      () async {
+        final repo = _CapturingTransactionRepository([
+          // Inside the range.
+          _tx(
+            id: 'in1',
+            type: TransactionType.expense,
+            amountMinor: 45000,
+            transactionAt: '2026-06-20T09:00:00Z',
+            categoryId: 'c-food',
+          ),
+          _tx(
+            id: 'in2',
+            type: TransactionType.expense,
+            amountMinor: 30000,
+            transactionAt: '2026-06-10T02:00:00Z',
+            categoryId: 'c-food',
+          ),
+          // Pulled in by the widened API window (from-1 day = 31 May) but its
+          // LOCAL day still falls on 31 May regardless of timezone, OUTSIDE the
+          // inclusive June range → must be dropped by the local-day filter.
+          _tx(
+            id: 'before',
+            type: TransactionType.expense,
+            amountMinor: 99000,
+            transactionAt: '2026-05-31T00:00:00Z',
+            categoryId: 'c-food',
+          ),
+        ]);
 
-      final container = ProviderContainer(
-        overrides: [
-          transactionRepositoryProvider.overrideWithValue(repo),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [transactionRepositoryProvider.overrideWithValue(repo)],
+        );
+        addTearDown(container.dispose);
 
-      final range = DateRange(
-        from: DateTime(2026, 6, 1),
-        to: DateTime(2026, 6, 30),
-      );
-      final txns = await container.read(
-        categoryTransactionsInRangeProvider((
-          categoryId: 'c-food',
-          range: range,
-        )).future,
-      );
+        final range = DateRange(
+          from: DateTime(2026, 6, 1),
+          to: DateTime(2026, 6, 30),
+        );
+        final txns = await container.read(
+          categoryTransactionsInRangeProvider((
+            categoryId: 'c-food',
+            range: range,
+          )).future,
+        );
 
-      // The server was asked to filter by category.
-      expect(repo.lastCategoryId, 'c-food');
-      // Only the two in-range rows survive; the 31 May row is filtered out.
-      expect(txns.map((t) => t.id), ['in1', 'in2']);
-    });
+        // The server was asked to filter by category.
+        expect(repo.lastCategoryId, 'c-food');
+        // Only the two in-range rows survive; the 31 May row is filtered out.
+        expect(txns.map((t) => t.id), ['in1', 'in2']);
+      },
+    );
   });
 }
 
