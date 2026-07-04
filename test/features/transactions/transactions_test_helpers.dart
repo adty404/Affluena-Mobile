@@ -121,6 +121,7 @@ class RecordingTransactionRepository implements TransactionMutationRepository {
   final deletedIds = <String>[];
   final updatedIds = <String>[];
   final updatedRequests = <TransactionRequest>[];
+  final createdRequests = <TransactionRequest>[];
 
   @override
   Future<TransactionListResponse> listTransactions({
@@ -161,7 +162,20 @@ class RecordingTransactionRepository implements TransactionMutationRepository {
 
   @override
   Future<Transaction> createTransaction(TransactionRequest request) async {
-    return _transactions.first;
+    createdRequests.add(request);
+    // Synthesize the created row from the request so this works even when the
+    // repository was seeded with an empty transaction list (the create screen
+    // only needs a success result, not a specific row).
+    return transactionFixture(
+      id: 'transaction-created',
+      type: request.type,
+      walletId: request.walletId,
+      toWalletId: request.toWalletId,
+      categoryId: request.categoryId,
+      amountMinor: request.amountMinor,
+      note: request.note ?? '',
+      transactionAt: request.transactionAt,
+    );
   }
 
   @override
