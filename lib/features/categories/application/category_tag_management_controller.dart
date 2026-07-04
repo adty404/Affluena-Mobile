@@ -307,6 +307,40 @@ class CategoryTagManagementState {
   /// allowed level cannot take children.
   bool canParent(Category parent) => depthOf(parent) < maxCategoryDepth;
 
+  /// Height of the subtree rooted at [category], counting [category] itself as
+  /// 1 (a leaf is 1). Used when re-parenting an existing category: moving it
+  /// under a deeper parent must not push its deepest descendant past
+  /// [maxCategoryDepth]. Cycle-guarded against inconsistent data.
+  int subtreeHeight(Category category) {
+    var height = 1;
+    for (final child in categories) {
+      if (child.parentId != category.id) continue;
+      // Guard against a self/cycle edge that would recurse forever.
+      if (child.id == category.id) continue;
+      final childHeight = _subtreeHeight(child, {category.id});
+      if (childHeight + 1 > height) height = childHeight + 1;
+    }
+    return height;
+  }
+
+  int _subtreeHeight(Category node, Set<String> seen) {
+    if (!seen.add(node.id)) return 1;
+    var height = 1;
+    for (final child in categories) {
+      if (child.parentId != node.id) continue;
+      final childHeight = _subtreeHeight(child, seen);
+      if (childHeight + 1 > height) height = childHeight + 1;
+    }
+    return height;
+  }
+
+  /// Whether [parent] can accept [child] (an existing category being
+  /// re-parented) without pushing [child]'s deepest descendant past
+  /// [maxCategoryDepth]. On create (no existing subtree) this reduces to
+  /// [canParent] since a new category has height 1.
+  bool canReparent(Category parent, Category child) =>
+      depthOf(parent) + subtreeHeight(child) <= maxCategoryDepth;
+
   CategoryTagManagementState copyWith({
     List<Category>? categories,
     List<Tag>? tags,

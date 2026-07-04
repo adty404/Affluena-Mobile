@@ -47,12 +47,18 @@ class CategoryBreakdown {
     required this.incomeByCategory,
     required this.expenseTotalMinor,
     required this.incomeTotalMinor,
+    this.truncated = false,
   });
 
   final List<CategorySlice> expenseByCategory;
   final List<CategorySlice> incomeByCategory;
   final int expenseTotalMinor;
   final int incomeTotalMinor;
+
+  /// True when the range held more transactions than the per-fetch cap, so the
+  /// oldest rows were dropped and the totals under-report. The UI surfaces a
+  /// notice so a large-range total isn't silently wrong.
+  final bool truncated;
 }
 
 /// An inclusive local date range for a category breakdown. Both ends are
@@ -111,6 +117,7 @@ final categoryBreakdownProvider = FutureProvider.autoDispose
       const maxTransactions = 5000;
       final all = <Transaction>[];
       var offset = 0;
+      var truncated = false;
       while (true) {
         final page = await repo.listTransactions(
           from: isoDate(windowFrom),
@@ -121,9 +128,13 @@ final categoryBreakdownProvider = FutureProvider.autoDispose
         );
         all.addAll(page.transactions);
         offset += page.transactions.length;
-        if (page.transactions.isEmpty ||
-            offset >= page.pagination.total ||
-            offset >= maxTransactions) {
+        if (page.transactions.isEmpty || offset >= page.pagination.total) {
+          break;
+        }
+        if (offset >= maxTransactions) {
+          // We hit the cap with more rows still on the server — the totals below
+          // will under-report. Flag it so the UI can warn the user.
+          truncated = offset < page.pagination.total;
           break;
         }
       }
@@ -182,6 +193,7 @@ final categoryBreakdownProvider = FutureProvider.autoDispose
         incomeByCategory: slices(incomeByKey, incomeTotal),
         expenseTotalMinor: expenseTotal,
         incomeTotalMinor: incomeTotal,
+        truncated: truncated,
       );
     });
 

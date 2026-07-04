@@ -34,6 +34,10 @@ class InsightsController extends Notifier<InsightsState> {
 
   Future<void> load() async {
     state = state.copyWith(
+      // Recompute the current month at load time — the controller isn't
+      // autoDispose, so a process that survives midnight would otherwise keep
+      // reporting/exporting the month captured at build().
+      month: _currentMonth(),
       isLoading: true,
       loadError: null,
       actionMessage: null,
@@ -62,7 +66,9 @@ class InsightsController extends Notifier<InsightsState> {
 
   Future<void> setReportKind(ReportKind kind) async {
     if (kind == state.reportKind) return;
+    final month = _currentMonth();
     state = state.copyWith(
+      month: month,
       reportKind: kind,
       isReportLoading: true,
       actionMessage: null,
@@ -70,7 +76,7 @@ class InsightsController extends Notifier<InsightsState> {
     try {
       final report = await ref
           .read(insightsRepositoryProvider)
-          .getReport(kind: kind, month: state.month);
+          .getReport(kind: kind, month: month);
       state = state.copyWith(isReportLoading: false, report: report);
     } catch (_) {
       state = state.copyWith(
@@ -94,7 +100,9 @@ class InsightsController extends Notifier<InsightsState> {
   /// export-job history is refreshed regardless (the job is created server-side
   /// the moment the export runs).
   Future<void> exportCsv() async {
+    final month = _currentMonth();
     state = state.copyWith(
+      month: month,
       isSaving: true,
       actionError: null,
       actionMessage: null,
@@ -103,7 +111,7 @@ class InsightsController extends Notifier<InsightsState> {
     final repository = ref.read(insightsRepositoryProvider);
     late final CsvExportResult result;
     try {
-      result = await repository.exportCsv(_monthExportRequest(state.month));
+      result = await repository.exportCsv(_monthExportRequest(month));
     } catch (_) {
       state = state.copyWith(
         isSaving: false,
@@ -205,6 +213,8 @@ class InsightsController extends Notifier<InsightsState> {
     NotificationRuleUpdate update,
   ) async {
     state = state.copyWith(
+      // _fetchSections below reads state.month; keep it current across midnight.
+      month: _currentMonth(),
       isSaving: true,
       actionError: null,
       actionMessage: null,

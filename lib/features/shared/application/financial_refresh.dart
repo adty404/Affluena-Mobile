@@ -1,8 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../budgets/application/budget_controller.dart';
+import '../../budgets/presentation/budget_detail_screen.dart';
 import '../../calendar/application/calendar_providers.dart';
 import '../../dashboard/application/dashboard_home_controller.dart';
+import '../../insights/application/category_breakdown_providers.dart';
+import '../../insights/application/insights_controller.dart';
 import '../../redesign/presentation/activity_feed_screen.dart';
 import '../../redesign/presentation/room_detail_screen.dart';
 import '../../transactions/application/transactions_controller.dart';
@@ -36,6 +39,16 @@ final _balanceProviders = [
   // list even though balances updated.
   recentActivityProvider,
   walletTransactionsProvider,
+  // The budget-detail "Transaksi" list (per category+month). A FutureProvider
+  // family — listing it bare refreshes every currently-alive keyed instance.
+  categoryTransactionsProvider,
+  // The Wawasan "Ke mana uang?" breakdown chart (autoDispose.family). No-op
+  // when the tab is closed; refreshes the live instance while it's mounted.
+  categoryBreakdownProvider,
+  // The legacy Laporan/Wawasan controller (non-autoDispose Notifier). It never
+  // auto-refreshed on a money move, so it went stale across reopen; invalidating
+  // re-runs its Future.microtask(load).
+  insightsControllerProvider,
 ];
 
 /// Invalidates every provider whose data depends on wallet balances or the

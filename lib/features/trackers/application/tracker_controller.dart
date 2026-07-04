@@ -329,13 +329,35 @@ bool _subscriptionDueSoon(Subscription item) {
 bool _installmentDueSoon(Installment item) {
   if (!item.canPay) return false;
   final today = DateTime.now();
-  final due = DateTime(today.year, today.month, item.dueDay);
+  final todayMidnight = DateTime(today.year, today.month, today.day);
+  // This month's occurrence, with the due day clamped to the month's length so
+  // a dueDay of 31 in a short month doesn't overflow into the next month.
+  var due = _installmentOccurrence(today.year, today.month, item.dueDay);
+  // If this month's occurrence already passed, roll to next month's (wrapping
+  // December → January) — the installment isn't overdue-forever, it recurs.
+  if (due.isBefore(todayMidnight)) {
+    final nextMonth = today.month == 12 ? 1 : today.month + 1;
+    final nextYear = today.month == 12 ? today.year + 1 : today.year;
+    due = _installmentOccurrence(nextYear, nextMonth, item.dueDay);
+  }
   return _withinSevenDays(due);
 }
 
+/// The installment's due date in [year]/[month], with [dueDay] clamped to the
+/// month's last day (mirrors `installment_detail_screen.dart`'s schedule build).
+DateTime _installmentOccurrence(int year, int month, int dueDay) {
+  final lastDay = DateTime(year, month + 1, 0).day;
+  return DateTime(year, month, dueDay.clamp(1, lastDay));
+}
+
 bool _withinSevenDays(DateTime date) {
+  // Normalize to a whole LOCAL day: subscription dates arrive as RFC3339 'Z'
+  // instants, so comparing them raw against local-midnight bounds is off by one
+  // in +07:00 (WIB). toLocal() then date-only keeps the window correct.
+  final local = date.toLocal();
+  final d = DateTime(local.year, local.month, local.day);
   final today = DateTime.now();
   final start = DateTime(today.year, today.month, today.day);
   final end = DateTime(today.year, today.month, today.day + 7);
-  return !date.isBefore(start) && !date.isAfter(end);
+  return !d.isBefore(start) && !d.isAfter(end);
 }

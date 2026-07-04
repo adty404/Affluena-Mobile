@@ -61,13 +61,15 @@ class BerandaDashboardView extends ConsumerWidget {
     final recurringState = ref.watch(recurringControllerProvider);
 
     final partnerState = ref.watch(partnerControllerProvider);
-    final viewableOwnerIds = partnerState.viewableOwnerIds;
     final sharerName = <String, String>{
       for (final link in partnerState.links)
         if (link.isIncoming && link.isJoined) link.userId: link.displayName,
     };
-    bool isPartnerWallet(Wallet w) =>
-        w.role == 'viewer' && viewableOwnerIds.contains(w.userId);
+    // Classify purely by role, matching WalletsScreen (`!w.isViewer`). Depending
+    // on the partner state's viewableOwnerIds here misclassifies a viewer wallet
+    // as "spending" whenever that state lags, leaking its balance into the Total
+    // saldo hero. The sharerName lookup below degrades to a blank label instead.
+    bool isPartnerWallet(Wallet w) => w.isViewer;
 
     final wallets = walletsAsync.asData?.value ?? const <Wallet>[];
     final partnerWallets = wallets

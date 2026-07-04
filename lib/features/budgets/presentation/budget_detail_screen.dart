@@ -20,14 +20,45 @@ import '../../transactions/presentation/transaction_display.dart';
 import '../application/budget_controller.dart';
 import '../data/budget_models.dart';
 
-/// Transactions in a budget's category (most recent first), for the detail
-/// screen's "Transaksi" list.
+/// Key for [categoryTransactionsProvider]: the budget's category plus the
+/// calendar month (`YYYY-MM`) the detail hero is scoped to. Value-equal so the
+/// family reuses a fetch across rebuilds instead of respawning one.
+typedef CategoryTransactionsKey = ({String categoryId, String monthIso});
+
+/// Transactions in a budget's category for a single month (most recent first),
+/// for the detail screen's "Transaksi" list. Scoped to the same month as the
+/// hero — an unbounded list would pull in cross-month rows and make the
+/// "Transaksi · N" count disagree with the month's spend.
 final categoryTransactionsProvider =
-    FutureProvider.family<List<Transaction>, String>((ref, categoryId) async {
+    FutureProvider.family<List<Transaction>, CategoryTransactionsKey>((
+      ref,
+      key,
+    ) async {
+      String isoDate(DateTime date) {
+        final month = date.month.toString().padLeft(2, '0');
+        final day = date.day.toString().padLeft(2, '0');
+        return '${date.year}-$month-${day}T00:00:00Z';
+      }
+
+      // Derive the [from, to) month bounds from the 'YYYY-MM' prefix. `to` is
+      // the first day of the next month (exclusive), matching how the ledger
+      // bounds a month.
+      final parts = key.monthIso.split('-');
+      final year = int.tryParse(parts.first);
+      final month = parts.length > 1 ? int.tryParse(parts[1]) : null;
+      String? from;
+      String? to;
+      if (year != null && month != null) {
+        from = isoDate(DateTime(year, month, 1));
+        to = isoDate(DateTime(year, month + 1, 1));
+      }
+
       final response = await ref
           .watch(transactionRepositoryProvider)
           .listTransactions(
-            categoryId: categoryId,
+            categoryId: key.categoryId,
+            from: from,
+            to: to,
             limit: 50,
             sort: 'transaction_at_desc',
           );
@@ -87,7 +118,10 @@ class BudgetDetailScreen extends ConsumerWidget {
         ? AffluenaDateFormatter.monthLabel(monthDate)
         : '';
     final transactions = ref.watch(
-      categoryTransactionsProvider(current.categoryId),
+      categoryTransactionsProvider((
+        categoryId: current.categoryId,
+        monthIso: monthIso,
+      )),
     );
     // Every transaction here shares the budget's category, so resolve its
     // chosen icon + color once and render it on each row (consistent with the

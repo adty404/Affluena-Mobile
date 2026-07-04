@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -13,7 +14,6 @@ import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/wallet_detail_controller.dart';
 import '../application/wallet_members_controller.dart';
-import '../application/wallets_controller.dart';
 import '../data/wallet_models.dart';
 import '../data/wallet_repository.dart';
 import 'wallet_adjust_sheet.dart';
@@ -518,9 +518,10 @@ class _DeleteWalletDialogState extends ConsumerState<_DeleteWalletDialog> {
 
     try {
       await ref.read(walletRepositoryProvider).deleteWallet(widget.wallet.id);
-      ref
-        ..invalidate(walletListProvider)
-        ..invalidate(walletDetailProvider(widget.wallet.id));
+      // Deleting a wallet removes its rows from the ledger, Aktivitas, calendar,
+      // dashboard, and budgets — not just the wallet list/detail. Refresh every
+      // money surface so nothing keeps showing the deleted wallet's transactions.
+      ref.invalidateFinancialData();
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (_) {

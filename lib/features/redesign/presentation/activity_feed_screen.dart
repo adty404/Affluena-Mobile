@@ -17,13 +17,25 @@ import '../../transactions/presentation/transaction_display.dart';
 import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
 
-/// Recent transactions across ALL wallets, newest first. A standalone provider
+/// Recent transactions across MY wallets, newest first. A standalone provider
 /// so the redesign Activity never clobbers the legacy Transactions tab filter.
+///
+/// Wallets shared TO me (role 'viewer') are excluded, mirroring the main
+/// ledger's [TransactionsState.visibleTransactions]: those rows are read-only
+/// and belong to someone else, so surfacing them here would leak another
+/// person's activity into my feed.
 final recentActivityProvider = FutureProvider<List<Transaction>>((ref) async {
   final response = await ref
       .watch(transactionRepositoryProvider)
       .listTransactions(limit: 100, offset: 0, sort: 'transaction_at_desc');
-  return response.transactions;
+  final wallets = await ref.watch(walletListProvider.future);
+  final viewerWalletIds = {
+    for (final w in wallets)
+      if (w.isViewer) w.id,
+  };
+  return response.transactions
+      .where((t) => !viewerWalletIds.contains(t.walletId))
+      .toList();
 });
 
 /// Redesign Tahap 5 — the cross-wallet merged Activity timeline: day-grouped,
@@ -142,11 +154,36 @@ class _Feed extends StatelessWidget {
   final TransactionsState txState;
   final ValueChanged<Transaction> onOpen;
 
+  /// The page cap the feed fetches; a full page means older rows exist.
+  static const _fetchLimit = 100;
+
+  /// When [txns] fills the fetch cap, its oldest day-group may be incomplete
+  /// (rows spilled onto the next, unfetched page). Return the list without that
+  /// last (oldest) day so a partial day never shows as complete. Below the cap
+  /// the list is whole and returned unchanged.
+  static List<Transaction> _dropTruncatedOldestDay(List<Transaction> txns) {
+    if (txns.length < _fetchLimit) return txns;
+    final oldestDay = AffluenaDateFormatter.localDay(txns.last.transactionAt);
+    final trimmed = txns
+        .where(
+          (tx) => AffluenaDateFormatter.localDay(tx.transactionAt) != oldestDay,
+        )
+        .toList(growable: false);
+    // Guard: if EVERY row falls on the same day, keep the list rather than
+    // render nothing.
+    return trimmed.isEmpty ? txns : trimmed;
+  }
+
   @override
   Widget build(BuildContext context) {
+    // The feed fetches at most 100 rows with no pagination. When it comes back
+    // full the oldest day is likely incomplete, so drop that final day-group
+    // (and its header) rather than render a truncated day as if it were whole.
+    final visible = _dropTruncatedOldestDay(txns);
+
     final rows = <Widget>[];
     DateTime? currentDay;
-    for (final tx in txns) {
+    for (final tx in visible) {
       final day = AffluenaDateFormatter.localDay(tx.transactionAt);
       if (currentDay == null || day != currentDay) {
         currentDay = day;

@@ -186,6 +186,11 @@ All spacing derives from a base of 4.
   - **Main ledger** (`transactions_screen.dart` via `TransactionTile`).
   - **Aktivitas feed** (`redesign/activity_feed_screen.dart`) — leading slot is
     the category tile; the "kamu" ownership signal lives in the meta line.
+    `recentActivityProvider` **excludes rows from wallets shared TO me**
+    (role `viewer`), mirroring the main ledger's `visibleTransactions` — the
+    feed is *my* activity, not another person's. The feed fetches at most 100
+    rows with no pagination, so when it comes back full the **oldest day-group
+    (and header) is dropped** rather than shown as a complete day.
   - **Calendar day sheet** (`calendar/calendar_screen.dart`) — `TransactionTile`
     fed the category icon+color. Tapping any day opens this sheet. Header layout:
     a drag handle, the day title on its own line, a tidy **3-column
@@ -201,7 +206,12 @@ All spacing derives from a base of 4.
     every row is the budget's category, so it renders that category's icon+color
     (falling back to the budget's own color when the category has none).
   - **Transaction detail sheet** (`transactions/transaction_detail_sheet.dart`) —
-    header shows the category icon+color beside the title.
+    header shows the category icon+color beside the title. Edit/delete are shown
+    only when the viewer is the creator **and** the wallet is writable
+    (`showTransactionDetail(..., canWrite:)`, default `true`); on a read-only
+    (shared-to-me) wallet the sheet shows an info banner instead. Room detail
+    threads `detail.wallet.canWrite`; the global-ledger/Aktivitas/calendar/
+    budget-detail callers list only writable wallets so they keep the default.
   Surfaces without a `TransactionsState` in scope watch
   `categoryTagManagementControllerProvider` for the category catalog (overridable
   in hermetic tests).
@@ -335,7 +345,7 @@ source of truth, but for colour the Tinta table in §2 wins.
 2. **Beranda** — the 6-section dashboard (Dompet → Anggaran → Tabungan → Cicilan → Langganan → Berulang).
 3. **Detail — Dompet · Anggaran · Tabungan** — wallet detail (members + access), budget detail (progress + transactions), savings-goal detail ("Liburan Bali": progress + deposits).
 4. **Detail — Cicilan · Langganan · Berulang** — installment detail (schedule), subscription detail (history, pause/pay), recurring detail ("Transfer ke Tabungan").
-5. **Quick-add · Aktivitas · Wawasan** — the "Catat cepat" sheet (templates + keypad), the activity feed, the insights/charts screen. The Wawasan screen (`SkyInsightsView`) leads with a **"Ke mana uang?"** category-breakdown card scoped by a **period selector** — chips for **Hari / Minggu / Bulan / Kuartal / Tahun / Semua** plus **Atur** (custom `showDateRangePicker` range) — with a prev/next pager (disabled from paging into the future; "Semua"/"Atur" don't page). Under it: a `SkySegmentedToggle` (**Pengeluaran** / **Pemasukan**) over a **ranked horizontal-bar list** — each row is the category's chosen icon (in its colour on a soft tile) + name + amount + a colour-proportion bar + %, with the selected type's total shown above. Both breakdowns are computed **client-side** from the range's transactions (the API has no income-distribution endpoint) via `categoryBreakdownProvider(DateRange)`, joined to the category catalog for icon/colour; uncategorized money falls into a neutral "Tanpa kategori" bucket. Below it sit the cashflow-trend and forecast cards (the old standalone "Ke mana uang pergi" expense-distribution card was removed as a duplicate of the breakdown).
+5. **Quick-add · Aktivitas · Wawasan** — the "Catat cepat" sheet (templates + keypad), the activity feed, the insights/charts screen. The Wawasan screen (`SkyInsightsView`) leads with a **"Ke mana uang?"** category-breakdown card scoped by a **period selector** — chips for **Hari / Minggu / Bulan / Kuartal / Tahun / Semua** plus **Atur** (custom `showDateRangePicker` range) — with a prev/next pager (disabled from paging into the future; "Semua"/"Atur" don't page). Under it: a `SkySegmentedToggle` (**Pengeluaran** / **Pemasukan**) over a **ranked horizontal-bar list** — each row is the category's chosen icon (in its colour on a soft tile) + name + amount + a colour-proportion bar + %, with the selected type's total shown above. Both breakdowns are computed **client-side** from the range's transactions (the API has no income-distribution endpoint) via `categoryBreakdownProvider(DateRange)`, joined to the category catalog for icon/colour; uncategorized money falls into a neutral "Tanpa kategori" bucket. The client pages up to **5.000 transactions**; a range larger than that sets `CategoryBreakdown.truncated`, and the card shows a small amber notice ("Menampilkan 5.000 transaksi terbaru — total mungkin tidak lengkap") so the total isn't silently under-reported. Below it sit the cashflow-trend and forecast cards (the old standalone "Ke mana uang pergi" expense-distribution card was removed as a duplicate of the breakdown).
 6. **Pengaturan** — Lainnya (settings hub), Keamanan (password, device lock, active sessions), Kategori (category hierarchy).
 7. **State & aksi** — empty, loading (skeleton), error, a confirmation modal, and a dark-mode sample.
 

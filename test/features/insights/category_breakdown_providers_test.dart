@@ -79,6 +79,55 @@ class _FakeTransactionRepository extends Fake implements TransactionRepository {
   }
 }
 
+/// A repository that reports a [total] larger than what it will ever hand back,
+/// paging [pageSize] rows per offset. Every returned row is an in-current-month
+/// expense so they all count toward the breakdown. Used to exercise the 5.000
+/// transaction cap / truncation flag.
+class _PaginatingTransactionRepository extends Fake
+    implements TransactionRepository {
+  _PaginatingTransactionRepository({required this.total});
+
+  final int total;
+  static const pageSize = 200;
+
+  @override
+  Future<TransactionListResponse> listTransactions({
+    TransactionType? type,
+    String? walletId,
+    String? categoryId,
+    String? tagId,
+    String? from,
+    String? to,
+    int? limit,
+    int? offset,
+    String? sort,
+  }) async {
+    final start = offset ?? 0;
+    final now = DateTime.now();
+    final at =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-15T04:00:00Z';
+    final count = (start + pageSize <= total) ? pageSize : (total - start);
+    final page = [
+      for (var i = 0; i < count && i < pageSize; i++)
+        _tx(
+          id: 'e${start + i}',
+          type: TransactionType.expense,
+          amountMinor: 1000,
+          transactionAt: at,
+          categoryId: 'c-food',
+        ),
+    ];
+    return TransactionListResponse(
+      transactions: page,
+      pagination: Pagination(
+        total: total,
+        limit: limit ?? pageSize,
+        offset: start,
+      ),
+    );
+  }
+}
+
 Transaction _tx({
   required String id,
   required TransactionType type,
@@ -254,6 +303,52 @@ void main() {
       expect(AffluenaDateFormatter.localDay(outMonth).month, isNot(now.month));
       expect(data.expenseTotalMinor, 100000);
       expect(data.expenseByCategory.single.amountMinor, 100000);
+    });
+
+    test(
+      'flags truncated when the range exceeds the 5.000 fetch cap',
+      () async {
+        // 6.000 rows on the server → the pager stops at 5.000 and marks the
+        // result truncated so the UI can warn the total is incomplete.
+        final repo = _PaginatingTransactionRepository(total: 6000);
+        final container = ProviderContainer(
+          overrides: [
+            transactionRepositoryProvider.overrideWithValue(repo),
+            categoryTagManagementControllerProvider.overrideWith(
+              _StubCategoriesController.new,
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final data = await container.read(
+          currentMonthCategoryBreakdownProvider.future,
+        );
+
+        expect(data.truncated, isTrue);
+        // Exactly the cap's worth of rows were summed (5.000 × Rp1.000).
+        expect(data.expenseTotalMinor, 5000 * 1000);
+      },
+    );
+
+    test('does not flag truncated when the range fits under the cap', () async {
+      final repo = _PaginatingTransactionRepository(total: 300);
+      final container = ProviderContainer(
+        overrides: [
+          transactionRepositoryProvider.overrideWithValue(repo),
+          categoryTagManagementControllerProvider.overrideWith(
+            _StubCategoriesController.new,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final data = await container.read(
+        currentMonthCategoryBreakdownProvider.future,
+      );
+
+      expect(data.truncated, isFalse);
+      expect(data.expenseTotalMinor, 300 * 1000);
     });
   });
 }
