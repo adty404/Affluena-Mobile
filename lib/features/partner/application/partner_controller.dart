@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_error.dart';
 import '../../../core/state/copy_with_sentinel.dart';
+import '../../shared/application/financial_refresh.dart';
+import '../../wallets/application/wallets_controller.dart';
 import '../data/partner_models.dart';
 import '../data/partner_repository.dart';
 
@@ -141,6 +143,13 @@ class PartnerController extends Notifier<PartnerState> {
     state = state.copyWith(isSaving: true, actionError: null);
     try {
       await action();
+      // Responding to / revoking a share changes which wallets are visible to
+      // whom, so refresh the wallet list + every balance surface. This keeps
+      // the partner list and the wallet "Dibagikan untukku" list from drifting
+      // (the mirror of wallet_members_controller reloading the partner list).
+      ref
+        ..invalidate(walletListProvider)
+        ..invalidateBalances();
       state = state.copyWith(isSaving: false);
       await load();
       return true;

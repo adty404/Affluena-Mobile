@@ -225,8 +225,12 @@ bool _isUpcoming(RecurringRule rule) {
   if (rule.status != RecurringStatus.active) return false;
   final nextRun = DateTime.tryParse(rule.nextRunAt);
   if (nextRun == null) return false;
+  // nextRunAt is an RFC3339 'Z' instant; normalize to a whole LOCAL day before
+  // comparing against local-midnight bounds, or it's off by one in WIB.
+  final local = nextRun.toLocal();
+  final runDay = DateTime(local.year, local.month, local.day);
   final today = DateTime.now();
   final start = DateTime(today.year, today.month, today.day);
   final end = DateTime(today.year, today.month, today.day + 7);
-  return !nextRun.isBefore(start) && !nextRun.isAfter(end);
+  return !runDay.isBefore(start) && !runDay.isAfter(end);
 }

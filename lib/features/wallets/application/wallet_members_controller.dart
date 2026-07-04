@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_error.dart';
+import '../../partner/application/partner_controller.dart';
 import '../data/wallet_models.dart';
 import '../data/wallet_repository.dart';
 import 'wallet_detail_controller.dart';
@@ -73,6 +74,11 @@ class WalletMembersController extends Notifier<WalletMembersActionState> {
       ref
         ..invalidate(walletDetailProvider(_walletId))
         ..invalidate(walletListProvider);
+      // Accepting/rejecting a wallet invite also changes the "Dibagikan
+      // untukku"/SharedWithMe list, which is driven by the partner controller.
+      // Reload it so an accepted shared wallet appears immediately instead of
+      // staying hidden until the next full refresh.
+      ref.read(partnerControllerProvider.notifier).load();
       state = const WalletMembersActionState();
       return true;
     } catch (error) {

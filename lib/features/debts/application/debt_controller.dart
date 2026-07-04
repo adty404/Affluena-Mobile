@@ -10,6 +10,7 @@ import '../../wallets/data/wallet_models.dart';
 import '../../wallets/data/wallet_repository.dart';
 import '../data/debt_models.dart';
 import '../data/debt_repository.dart';
+import 'debt_detail_controller.dart';
 
 const debtPageSize = 20;
 
@@ -120,6 +121,9 @@ class DebtController extends Notifier<DebtState> {
     try {
       await ref.read(debtRepositoryProvider).updateDebt(debt.id, request);
       ref.invalidateFinancialData();
+      // The debt detail (remaining + payment timeline) is a non-autoDispose
+      // family the balance set deliberately doesn't cover; refresh it directly.
+      ref.invalidate(debtDetailProvider(debt.id));
       state = state.copyWith(isSaving: false);
       await load();
     } catch (_) {
@@ -135,6 +139,9 @@ class DebtController extends Notifier<DebtState> {
     try {
       await ref.read(debtRepositoryProvider).payDebt(debt.id, request);
       ref.invalidateFinancialData();
+      // The debt detail (remaining + payment timeline) is a non-autoDispose
+      // family the balance set deliberately doesn't cover; refresh it directly.
+      ref.invalidate(debtDetailProvider(debt.id));
       state = state.copyWith(isSaving: false);
       await load();
     } catch (_) {

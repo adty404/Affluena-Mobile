@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../../core/formatters/tag_formatter.dart';
+import '../../shared/application/financial_refresh.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
@@ -15,7 +16,6 @@ import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
 import '../../tags/data/tag_models.dart';
-import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
 import '../../transactions/data/transaction_repository.dart';
 import '../../wallets/presentation/wallet_format.dart';
@@ -302,7 +302,9 @@ class _QuickEntryScreenState extends ConsumerState<QuickEntryScreen> {
   }
 
   void _invalidateMoneySurfaces() {
-    ref.invalidate(transactionsControllerProvider);
+    // Refresh the ledger + every balance/analytics/budget/calendar/Aktivitas
+    // surface — a quick-add (manual or template) moves money everywhere.
+    ref.invalidateFinancialData();
   }
 }
 

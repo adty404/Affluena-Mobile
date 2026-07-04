@@ -323,14 +323,22 @@ class _CategoryBreakdownCardState
               final total = isExpense
                   ? data.expenseTotalMinor
                   : data.incomeTotalMinor;
-              if (slices.isEmpty) {
-                return _empty(isExpense: isExpense);
-              }
-              return _content(
-                context: context,
-                slices: slices,
-                total: total,
-                isExpense: isExpense,
+              final body = slices.isEmpty
+                  ? _empty(isExpense: isExpense)
+                  : _content(
+                      context: context,
+                      slices: slices,
+                      total: total,
+                      isExpense: isExpense,
+                    );
+              if (!data.truncated) return body;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _TruncationNotice(),
+                  const SizedBox(height: AffluenaSpacing.space3),
+                  body,
+                ],
               );
             },
           ),
@@ -375,6 +383,41 @@ class _CategoryBreakdownCardState
     title: isExpense ? 'Belum ada pengeluaran' : 'Belum ada pemasukan',
     subtitle: 'Tidak ada transaksi pada periode ini.',
   );
+}
+
+/// Shown when the breakdown hit its 5.000-transaction fetch cap, so the totals
+/// below are computed from only the newest rows and may under-report.
+class _TruncationNotice extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final amber = context.affluenaColors.amber;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: amber.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: amber.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, size: 15, color: amber),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Menampilkan 5.000 transaksi terbaru — total mungkin tidak '
+              'lengkap.',
+              style: TextStyle(
+                fontSize: 11.5,
+                height: 1.35,
+                color: context.sky.ink,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// The periods the Wawasan breakdown can be scoped to.

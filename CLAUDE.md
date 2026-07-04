@@ -121,10 +121,13 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   change its date & time** (the edit form has a `Tanggal & waktu` selector wiring `showDatePicker` +
   `showTimePicker` into `transactionAt`).
 - **`invalidateBalances()` also refreshes the standalone transaction-list surfaces** the main ledger
-  controller doesn't own — the cross-wallet **Aktivitas** feed (`recentActivityProvider`) and each
-  **room/wallet detail** list (`walletTransactionsProvider`) are in the shared `_balanceProviders`
-  set (`shared/application/financial_refresh.dart`). Without this a quick-add (or any non-ledger
-  mutation) moved balances but left those feeds showing a stale list.
+  controller doesn't own — the cross-wallet **Aktivitas** feed (`recentActivityProvider`), each
+  **room/wallet detail** list (`walletTransactionsProvider`), the **budget-detail "Transaksi"** list
+  (`categoryTransactionsProvider`, a `(categoryId, monthIso)` family), the **Wawasan breakdown**
+  (`categoryBreakdownProvider`), and the legacy **Laporan** controller (`insightsControllerProvider`)
+  are all in the shared `_balanceProviders` set (`shared/application/financial_refresh.dart`).
+  Without this a quick-add (or any non-ledger mutation) moved balances but left those surfaces stale.
+  (The quick-entry screen now calls `invalidateFinancialData()` for the same reason.)
 - **Calendar day sheet is add/edit-capable**: tapping any day in the Kalender grid opens a sheet with
   a **"Tambah"** button (`showSkyQuickAddSheet(context, date: day)` — quick-add gained a `date` param
   that stamps the transaction on that day, keeping the wall-clock time) and **tap-to-edit** rows

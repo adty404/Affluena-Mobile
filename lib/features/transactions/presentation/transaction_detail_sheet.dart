@@ -15,8 +15,9 @@ void showTransactionDetail(
   BuildContext context,
   WidgetRef ref,
   TransactionsState state,
-  Transaction transaction,
-) {
+  Transaction transaction, {
+  bool canWrite = true,
+}) {
   final currentUserId = ref.read(authControllerProvider).user?.id;
   showModalBottomSheet<void>(
     context: context,
@@ -27,6 +28,7 @@ void showTransactionDetail(
         state: state,
         transaction: transaction,
         currentUserId: currentUserId,
+        canWrite: canWrite,
       );
     },
   );
@@ -37,11 +39,17 @@ class _TransactionDetailSheet extends ConsumerWidget {
     required this.state,
     required this.transaction,
     required this.currentUserId,
+    required this.canWrite,
   });
 
   final TransactionsState state;
   final Transaction transaction;
   final String? currentUserId;
+
+  /// Whether the transaction's wallet is writable by the current user. A
+  /// demoted-to-viewer author still "created" the row but can no longer edit or
+  /// delete it, so edit/delete stay hidden on a read-only wallet.
+  final bool canWrite;
 
   bool get _isCreator =>
       currentUserId != null && currentUserId == transaction.userId;
@@ -155,13 +163,15 @@ class _TransactionDetailSheet extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
-              if (_isCreator)
+              if (_isCreator && canWrite)
                 _CreatorActions(state: state, transaction: transaction)
               else
                 AffluenaBanner(
-                  message:
-                      'Hanya orang yang membuat transaksi ini yang dapat '
-                      'mengubah atau menghapusnya.',
+                  message: !canWrite
+                      ? 'Dompet ini dibagikan untukmu sebagai hanya-baca, jadi '
+                            'transaksinya tidak bisa diubah atau dihapus.'
+                      : 'Hanya orang yang membuat transaksi ini yang dapat '
+                            'mengubah atau menghapusnya.',
                   tone: AffluenaBannerTone.info,
                 ),
             ],

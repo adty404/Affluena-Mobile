@@ -189,14 +189,20 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
   }
 
   List<Category> _parentOptions(CategoryTagManagementState state) {
+    final edited = widget.category;
     return state.categories
         .where(
           (category) =>
               category.type == _type &&
-              category.id != widget.category?.id &&
-              // Enforce the 3-level hierarchy client-side: a category already at
-              // the deepest allowed level cannot accept new children.
-              state.canParent(category),
+              category.id != edited?.id &&
+              // Enforce the 3-level hierarchy client-side. On create, a new
+              // category has height 1 so this is just "parent isn't at the
+              // deepest level". On edit, also account for the edited category's
+              // OWN descendants: a candidate that would push a grandchild to
+              // level 4 is excluded (the server would reject it anyway).
+              (edited == null
+                  ? state.canParent(category)
+                  : state.canReparent(category, edited)),
         )
         .toList(growable: false);
   }

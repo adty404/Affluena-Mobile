@@ -89,6 +89,11 @@ class TransactionsController extends Notifier<TransactionsState> {
     if (state.isLoading || state.isLoadingMore) return;
 
     final offset = reset ? 0 : state.transactions.length;
+    // How many rows the user can actually SEE before this page (viewer-wallet
+    // rows are filtered out of visibleTransactions). Used to detect a page that
+    // added only hidden rows so a "Muat lebih banyak" tap always surfaces new
+    // visible rows instead of appending nothing.
+    final visibleBefore = reset ? 0 : state.visibleTransactions.length;
     state = state.copyWith(
       isLoading: reset,
       isLoadingMore: !reset,
@@ -166,6 +171,17 @@ class TransactionsController extends Notifier<TransactionsState> {
         },
         tagNames: {for (final tag in tagResponse.tags) tag.id: tag.name},
       );
+
+      // If this "load more" page contained ONLY viewer-wallet rows (which the UI
+      // hides), the visible list didn't grow — the tap would look like a no-op.
+      // Keep fetching until a page surfaces a new visible row, we run out of
+      // rows on the server, or a page comes back empty (loop guard).
+      if (!reset &&
+          state.visibleTransactions.length == visibleBefore &&
+          transactionResponse.transactions.isNotEmpty &&
+          state.transactions.length < state.total) {
+        await load(reset: false);
+      }
     } catch (_) {
       state = state.copyWith(
         isLoading: false,

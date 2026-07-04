@@ -191,7 +191,7 @@ class _RoomDetailContent extends ConsumerWidget {
                   'Belum ada transaksi di dompet ini.',
                   style: TextStyle(fontSize: 13, color: context.sky.faint),
                 )
-              : _TransactionList(txns: txns),
+              : _TransactionList(txns: txns, canWrite: wallet.canWrite),
         ),
       ],
     );
@@ -199,9 +199,13 @@ class _RoomDetailContent extends ConsumerWidget {
 }
 
 class _TransactionList extends ConsumerWidget {
-  const _TransactionList({required this.txns});
+  const _TransactionList({required this.txns, required this.canWrite});
 
   final List<Transaction> txns;
+
+  /// Whether this wallet is writable — threaded to the detail sheet so a
+  /// read-only (shared-to-me) wallet never offers edit/delete.
+  final bool canWrite;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -240,12 +244,14 @@ class _TransactionList extends ConsumerWidget {
               : categories.categoryById(tx.categoryId!),
           // Tapping opens the same detail sheet as Aktivitas. The global
           // ledger state powers name resolution + edit/delete without coupling
-          // this room to the main transactions filter.
+          // this room to the main transactions filter. On a read-only wallet
+          // the sheet hides edit/delete even for the row's author.
           onTap: () => showTransactionDetail(
             context,
             ref,
             ref.read(transactionsControllerProvider),
             tx,
+            canWrite: canWrite,
           ),
         ),
       );
