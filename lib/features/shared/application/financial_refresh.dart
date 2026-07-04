@@ -42,9 +42,12 @@ final _balanceProviders = [
   // The budget-detail "Transaksi" list (per category+month). A FutureProvider
   // family — listing it bare refreshes every currently-alive keyed instance.
   categoryTransactionsProvider,
-  // The Wawasan "Ke mana uang?" breakdown chart (autoDispose.family). No-op
-  // when the tab is closed; refreshes the live instance while it's mounted.
+  // The Wawasan "Ke mana perginya uangmu?" breakdown chart (autoDispose.family).
+  // No-op when the tab is closed; refreshes the live instance while it's mounted.
   categoryBreakdownProvider,
+  // The Wawasan per-category transactions screen (autoDispose.family) opened by
+  // tapping a breakdown row — same lifecycle: refreshes only its live instance.
+  categoryTransactionsInRangeProvider,
   // The legacy Laporan/Wawasan controller (non-autoDispose Notifier). It never
   // auto-refreshed on a money move, so it went stale across reopen; invalidating
   // re-runs its Future.microtask(load).

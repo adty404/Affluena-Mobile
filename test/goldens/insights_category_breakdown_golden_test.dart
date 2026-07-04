@@ -14,7 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Golden (design-snapshot) of the Wawasan headline "Ke mana uang?"
+/// Golden (design-snapshot) of the Wawasan headline "Ke mana perginya uangmu?"
 /// category-breakdown card: the period chips, the pager, the segmented toggle,
 /// the total, and the ranked category rows (icon tile + name + amount +
 /// proportion bar + %). Scoped to the "Tahun" period so the pager label is a

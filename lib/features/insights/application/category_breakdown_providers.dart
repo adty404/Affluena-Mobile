@@ -209,6 +209,65 @@ final currentMonthCategoryBreakdownProvider =
       return ref.watch(categoryBreakdownProvider(range).future);
     });
 
+/// Key for [categoryTransactionsInRangeProvider]: one category plus an
+/// inclusive local [DateRange]. Both parts are value-equal (records compare by
+/// field; [DateRange] defines `==`/`hashCode`), so the family key is stable and
+/// won't respawn a fetch on every rebuild.
+typedef CategoryTxQuery = ({String categoryId, DateRange range});
+
+/// The raw transactions for ONE category within a [DateRange] (newest first),
+/// for the Wawasan "tap a category → its transactions" screen.
+///
+/// Mirrors [categoryBreakdownProvider]'s fetch exactly — the same widened API
+/// window (the `from`/`to` params are date-typed while bucketing is by LOCAL
+/// day), the same 200-per-page / 5.000-row cap, and the same inclusive
+/// local-day filter — but passes `categoryId` so the server pre-filters, and
+/// returns the filtered list instead of aggregating it.
+///
+/// Hermetic-test-friendly: reads only [transactionRepositoryProvider].
+final categoryTransactionsInRangeProvider = FutureProvider.autoDispose
+    .family<List<Transaction>, CategoryTxQuery>((ref, query) async {
+      final repo = ref.watch(transactionRepositoryProvider);
+      final range = query.range;
+
+      String isoDate(DateTime d) {
+        final m = d.month.toString().padLeft(2, '0');
+        final day = d.day.toString().padLeft(2, '0');
+        return '${d.year}-$m-${day}T00:00:00Z';
+      }
+
+      final windowFrom = range.from.subtract(const Duration(days: 1));
+      final windowTo = range.to.add(const Duration(days: 2));
+
+      const pageSize = 200;
+      const maxTransactions = 5000;
+      final all = <Transaction>[];
+      var offset = 0;
+      while (true) {
+        final page = await repo.listTransactions(
+          categoryId: query.categoryId,
+          from: isoDate(windowFrom),
+          to: isoDate(windowTo),
+          limit: pageSize,
+          offset: offset,
+          sort: 'transaction_at_desc',
+        );
+        all.addAll(page.transactions);
+        offset += page.transactions.length;
+        if (page.transactions.isEmpty || offset >= page.pagination.total) {
+          break;
+        }
+        if (offset >= maxTransactions) break;
+      }
+
+      // Keep only rows whose LOCAL day falls in the inclusive [from, to] range;
+      // the fetch already sorts newest-first (transaction_at_desc).
+      return all.where((tx) {
+        final day = AffluenaDateFormatter.localDay(tx.transactionAt);
+        return !day.isBefore(range.from) && !day.isAfter(range.to);
+      }).toList();
+    });
+
 /// Builds a [CategorySlice] for one aggregated bucket, resolving the category
 /// catalog for its name/icon/color (or the neutral uncategorized fallback).
 CategorySlice _sliceFor({

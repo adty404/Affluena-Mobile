@@ -175,7 +175,7 @@ void main() {
     await _pump(tester);
 
     expect(find.text('Wawasan'), findsOneWidget);
-    expect(find.text('Ke mana uang?'), findsOneWidget);
+    expect(find.text('Ke mana perginya uangmu?'), findsOneWidget);
     expect(find.text('Arus kas'), findsOneWidget);
     expect(find.text('Perkiraan bulan ini'), findsOneWidget);
   });
