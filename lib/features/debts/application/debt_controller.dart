@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/calc/due_window.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
@@ -282,7 +283,8 @@ bool _isDueSoon(Debt debt) {
   }
   final dueDate = DateTime.tryParse(debt.dueDate!);
   if (dueDate == null) return false;
-  final today = DateTime.now();
-  final end = DateTime(today.year, today.month, today.day + 7);
-  return !dueDate.isAfter(end);
+  // Shared local-day window: the old raw-instant comparison excluded debts
+  // due exactly 7 days out in WIB and, with no lower bound, kept counting
+  // overdue debts forever.
+  return withinSevenDays(dueDate);
 }

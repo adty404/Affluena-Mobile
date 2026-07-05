@@ -95,6 +95,8 @@ class _QuickEntryTemplatesScreenState
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
               labelText: 'Cari template',
+              // Matches the actual search haystack in _filteredTemplates.
+              hintText: 'Nama, dompet, kategori, atau tag',
             ),
             onChanged: (value) => setState(() => _query = value),
           ),
@@ -636,6 +638,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.bolt_outlined),
                           labelText: 'Nama template',
+                          hintText: 'cth: Kopi pagi',
                         ),
                         onChanged: (_) => setState(() {}),
                       ),
@@ -643,6 +646,8 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                       MoneyInput(
                         key: const Key('template-amount-field'),
                         label: 'Jumlah',
+                        // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                        hint: '25.000',
                         initialValue: _amountMinor,
                         enabled: !state.isSaving,
                         focusNode: _amountFocus,
@@ -762,6 +767,7 @@ class _TemplateFormSheetState extends ConsumerState<_TemplateFormSheet> {
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.notes_outlined),
                           labelText: 'Catatan bawaan',
+                          hintText: 'Kopi di kantor',
                         ),
                       ),
                       const SizedBox(height: AffluenaSpacing.space5),
@@ -991,6 +997,7 @@ class _ExecuteTemplateSheetState extends ConsumerState<_ExecuteTemplateSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Ganti catatan',
+                  hintText: 'cth: Kopi sore',
                 ),
               ),
               if (state.actionError != null) ...[
