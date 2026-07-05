@@ -27,6 +27,12 @@ final _balanceProviders = [
   walletListProvider,
   walletDetailProvider,
   walletAnalyticsProvider,
+  // Beranda's summary (Ringkasan + "Jatuh tempo terdekat"). Its refresh also
+  // re-hands the fresh dues to the device NotificationScheduler (debounced),
+  // so a money move that pays off a due re-plans the local reminders too.
+  dashboardSummaryProvider,
+  // Beranda's 12-month net-worth sparkline source.
+  berandaCashflowTrendProvider,
   dashboardCashflowTrendProvider,
   dashboardExpenseDistributionProvider,
   dashboardForecastProvider,

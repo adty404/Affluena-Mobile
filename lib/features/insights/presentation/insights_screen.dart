@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../notifications/presentation/device_notifications_card.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_chip_bar.dart';
@@ -412,16 +413,30 @@ class _RulesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.rules.isEmpty) {
-      return const _EmptyState(
-        icon: Icons.tune_outlined,
-        title: 'Belum ada aturan notifikasi',
-        body: 'Preferensi notifikasi akan muncul saat nilai bawaan dibuat.',
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Android permission row for the local due reminders; renders
+          // nothing on unsupported platforms.
+          DeviceNotificationsCard(),
+          SizedBox(height: AffluenaSpacing.space3),
+          _EmptyState(
+            icon: Icons.tune_outlined,
+            title: 'Belum ada aturan notifikasi',
+            body: 'Preferensi notifikasi akan muncul saat nilai bawaan dibuat.',
+          ),
+        ],
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Android permission row for the local due reminders (renders nothing
+        // on unsupported platforms). The reminders themselves are gated by the
+        // same rules listed below — see NotificationScheduler.
+        const DeviceNotificationsCard(),
+        const SizedBox(height: AffluenaSpacing.space3),
         const SectionHeader(title: 'Aturan notifikasi'),
         const SizedBox(height: AffluenaSpacing.space3),
         for (final rule in state.rules) ...[

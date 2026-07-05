@@ -213,6 +213,7 @@ class LookupTransactionRepository implements TransactionRepository {
     String? tagId,
     String? from,
     String? to,
+    String? search,
     int? limit,
     int? offset,
     String? sort,

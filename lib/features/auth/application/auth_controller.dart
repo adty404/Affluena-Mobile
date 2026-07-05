@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_error.dart';
 import '../../../core/storage/secure_token_store.dart';
+import '../../notifications/application/notification_scheduler.dart';
 import '../data/auth_models.dart';
 import '../data/auth_repository.dart';
 
@@ -139,6 +142,10 @@ class AuthController extends Notifier<AuthState> {
       state = AuthState.authenticated(currentUser, isSubmitting: true);
     }
     await ref.read(secureTokenStoreProvider).clear();
+    // Armed device reminders carry this account's amounts and counterparty
+    // names; wipe them fire-and-forget (purely local, no network) so they
+    // can't keep firing for days after logout.
+    unawaited(ref.read(notificationSchedulerProvider).clear());
     state = const AuthState.unauthenticated(message: 'Kamu telah keluar.');
   }
 
@@ -160,6 +167,9 @@ class AuthController extends Notifier<AuthState> {
       state = AuthState.authenticated(user);
     } catch (error) {
       await tokenStore.clear();
+      // The stored session is being discarded — clear its device reminders
+      // too (same rationale as logout).
+      unawaited(ref.read(notificationSchedulerProvider).clear());
       state = AuthState.unauthenticated(
         message: _restoreSessionMessage(error),
         messageTone: AuthMessageTone.error,
