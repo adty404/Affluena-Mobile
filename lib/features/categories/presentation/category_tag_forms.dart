@@ -272,6 +272,7 @@ Future<void> _confirmDeleteCategory(
     title: 'Hapus kategori?',
     message: 'Hapus ${category.name} dari hierarki kategori kamu?',
     confirmLabel: 'Hapus kategori',
+    danger: true,
   );
   if (confirmed) {
     await controller.deleteCategory(category);

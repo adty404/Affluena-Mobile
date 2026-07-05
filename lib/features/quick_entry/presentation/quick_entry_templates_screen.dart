@@ -1041,6 +1041,7 @@ Future<void> _confirmDeleteTemplate(
     title: 'Hapus template?',
     message: 'Hapus ${template.name} dari template catat cepat?',
     confirmLabel: 'Hapus template',
+    danger: true,
   );
   if (confirmed) {
     await controller.deleteTemplate(template);

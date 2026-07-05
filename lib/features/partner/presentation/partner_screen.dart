@@ -52,6 +52,7 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
       message:
           '${link.displayName} tidak akan bisa lagi melihat dompetmu. Lanjutkan?',
       confirmLabel: 'Hapus',
+      danger: true,
     );
     if (ok && mounted) {
       await ref.read(partnerControllerProvider.notifier).revoke(link.id);

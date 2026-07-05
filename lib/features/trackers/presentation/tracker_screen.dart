@@ -1286,6 +1286,9 @@ Future<void> _confirm(
     message: body,
     confirmLabel: actionLabel,
     cancelLabel: 'Pertahankan',
+    // Every tracker confirm is destructive (cancel/delete an installment or
+    // subscription); payments confirm via the payment sheet instead.
+    danger: true,
   );
   if (confirmed) {
     await onConfirm();
@@ -1312,7 +1315,10 @@ int _intValue(String value) {
 
 DateTime? _parseDate(String? value) {
   if (value == null || value.isEmpty) return null;
-  return DateTime.tryParse(value)?.toLocal();
+  // Parse the calendar-date prefix only: stored API DATE values are RFC3339
+  // UTC-midnight instants, and converting those to local time would shift the
+  // day for negative UTC offsets. The prefix IS the stored calendar date.
+  return DateTime.tryParse(AffluenaDateFormatter.apiDate(value));
 }
 
 String? _formatDate(DateTime? value) {

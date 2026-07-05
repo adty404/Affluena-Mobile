@@ -790,6 +790,7 @@ Future<void> _confirmDelete(
     title: 'Hapus anggaran?',
     message: 'Ini menghapus anggaran kategori untuk bulan ini.',
     confirmLabel: 'Hapus',
+    danger: true,
   );
   if (confirmed) {
     await controller.deleteBudget(budget);

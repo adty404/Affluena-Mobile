@@ -97,9 +97,9 @@ void main() {
     await tester.tap(find.text('Hapus transaksi'));
     await tester.pumpAndSettle();
 
-    // Delete now routes through a coral confirmation dialog before mutating.
+    // Delete routes through the shared coral skyConfirm sheet before mutating.
     expect(find.text('Hapus transaksi ini?'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('transaction-delete-confirm')));
+    await tester.tap(find.byKey(const Key('sky-confirm-accept')));
     await tester.pumpAndSettle();
 
     expect(repository.deletedIds, [groceriesTransaction.id]);
@@ -131,7 +131,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Hapus transaksi'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('transaction-delete-confirm')));
+    await tester.tap(find.byKey(const Key('sky-confirm-accept')));
     await tester.pumpAndSettle();
 
     expect(find.text('Groceries at Indomaret'), findsNothing);
@@ -161,7 +161,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Hapus transaksi'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('transaction-delete-confirm')));
+    await tester.tap(find.byKey(const Key('sky-confirm-accept')));
     await tester.pumpAndSettle();
 
     expect(repository.deletedIds, [groceriesTransaction.id]);

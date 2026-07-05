@@ -11,6 +11,7 @@ import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/wallet_detail_controller.dart';
 import '../application/wallet_members_controller.dart';
@@ -167,7 +168,7 @@ class _WalletDetailContent extends ConsumerWidget {
                     title: 'Hapus dompet',
                     value: 'Perlu konfirmasi',
                     isDestructive: true,
-                    onTap: () => _confirmDelete(context, wallet),
+                    onTap: () => _confirmDelete(context, ref, wallet),
                   ),
                 ],
               ],
@@ -453,83 +454,39 @@ class _ActionRow extends StatelessWidget {
   }
 }
 
-Future<void> _confirmDelete(BuildContext context, Wallet wallet) async {
-  final deleted = await showDialog<bool>(
-    context: context,
-    builder: (context) => _DeleteWalletDialog(wallet: wallet),
+Future<void> _confirmDelete(
+  BuildContext context,
+  WidgetRef ref,
+  Wallet wallet,
+) async {
+  final confirmed = await skyConfirm(
+    context,
+    title: 'Hapus ${wallet.name}?',
+    message:
+        'Ini menghapus dompet secara permanen. Tindakan ini tidak dapat '
+        'dibatalkan.',
+    confirmLabel: 'Hapus',
+    danger: true,
+    icon: Icons.delete_outline,
   );
+  if (!confirmed || !context.mounted) return;
+
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    await ref.read(walletRepositoryProvider).deleteWallet(wallet.id);
+  } catch (_) {
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Dompet tidak dapat dihapus.')),
+    );
+    return;
+  }
+  // Deleting a wallet removes its rows from the ledger, Aktivitas, calendar,
+  // dashboard, and budgets — not just the wallet list/detail. Refresh every
+  // money surface so nothing keeps showing the deleted wallet's transactions.
+  ref.invalidateFinancialData();
   // The wallet is gone — leave its (now stale) detail screen and return to the
   // previous screen (the wallets list).
-  if (deleted == true && context.mounted) {
+  if (context.mounted) {
     context.pop();
-  }
-}
-
-class _DeleteWalletDialog extends ConsumerStatefulWidget {
-  const _DeleteWalletDialog({required this.wallet});
-
-  final Wallet wallet;
-
-  @override
-  ConsumerState<_DeleteWalletDialog> createState() =>
-      _DeleteWalletDialogState();
-}
-
-class _DeleteWalletDialogState extends ConsumerState<_DeleteWalletDialog> {
-  String? _error;
-  bool _isDeleting = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.affluenaColors;
-
-    return AlertDialog(
-      title: Text('Hapus ${widget.wallet.name}?'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Ini akan menghapus dompet setelah dikonfirmasi.'),
-          if (_error != null) ...[
-            const SizedBox(height: AffluenaSpacing.space3),
-            AffluenaBanner.error(_error!),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isDeleting ? null : () => Navigator.of(context).pop(),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: colors.coral),
-          onPressed: _isDeleting ? null : _delete,
-          child: Text(_isDeleting ? 'Menghapus…' : 'Hapus'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _delete() async {
-    setState(() {
-      _isDeleting = true;
-      _error = null;
-    });
-
-    try {
-      await ref.read(walletRepositoryProvider).deleteWallet(widget.wallet.id);
-      // Deleting a wallet removes its rows from the ledger, Aktivitas, calendar,
-      // dashboard, and budgets — not just the wallet list/detail. Refresh every
-      // money surface so nothing keeps showing the deleted wallet's transactions.
-      ref.invalidateFinancialData();
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _isDeleting = false;
-        _error = 'Dompet tidak dapat dihapus.';
-      });
-    }
   }
 }

@@ -17,6 +17,7 @@ import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/debt_controller.dart';
@@ -923,28 +924,16 @@ Future<void> _confirmCancel(
   DebtController controller,
   Debt debt,
 ) async {
-  final colors = context.affluenaColors;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Batalkan utang?'),
-      content: const Text(
+  final confirmed = await skyConfirm(
+    context,
+    title: 'Batalkan utang?',
+    message:
         'Ini tetap menyimpan jejak audit dan menandai utang sebagai dibatalkan.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Pertahankan'),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: colors.coral),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Batalkan utang'),
-        ),
-      ],
-    ),
+    confirmLabel: 'Batalkan utang',
+    cancelLabel: 'Pertahankan',
+    danger: true,
   );
-  if (confirmed == true) {
+  if (confirmed) {
     await controller.cancelDebt(debt);
   }
 }
