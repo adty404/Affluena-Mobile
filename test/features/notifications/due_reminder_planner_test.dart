@@ -148,7 +148,9 @@ void main() {
       expect(titles, contains('iPhone 15 jatuh tempo 3 hari lagi'));
       expect(titles, contains('Utang ke Andi jatuh tempo 3 hari lagi'));
       expect(titles, contains('Piutang dari Sari jatuh tempo besok'));
-      final installment = planned.firstWhere((p) => p.title.startsWith('iPhone'));
+      final installment = planned.firstWhere(
+        (p) => p.title.startsWith('iPhone'),
+      );
       expect(installment.body, contains('Rp 1.200.000'));
       final receivable = planned.firstWhere(
         (p) => p.title.startsWith('Piutang'),

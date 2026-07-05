@@ -82,33 +82,132 @@ class SkyDetailHero extends StatelessWidget {
   }
 }
 
-/// A simple confirm dialog for a detail-screen action (pay / run). Returns
-/// `true` when the user confirms.
+/// The app-wide confirmation surface: a Tinta-style modal bottom sheet
+/// (rounded top + drag handle from the app's sheet theme) with a soft-tinted
+/// leading icon tile, a heavy title, a muted message, and stacked full-width
+/// confirm-over-cancel actions. Returns `true` when the user confirms;
+/// dismissing the sheet counts as cancel.
+///
+/// Pass [danger] for destructive confirmations (delete / cancel / revoke /
+/// sign-out): the icon tile and the confirm button switch to the coral danger
+/// colour. [icon] overrides the default glyph (a question mark, or a warning
+/// triangle when [danger]). Every confirmation in the app must route through
+/// this — never hand-roll an `AlertDialog` confirm.
 Future<bool> skyConfirm(
   BuildContext context, {
   required String title,
   required String message,
   String confirmLabel = 'Lanjut',
   String cancelLabel = 'Batal',
+  bool danger = false,
+  IconData? icon,
 }) async {
-  final ok = await showDialog<bool>(
+  final ok = await showModalBottomSheet<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(cancelLabel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(confirmLabel),
-        ),
-      ],
+    useSafeArea: true,
+    // Size to the content (short viewports would otherwise clamp the sheet to
+    // a fraction of the screen and overflow); the body scrolls as a fallback.
+    isScrollControlled: true,
+    builder: (context) => _SkyConfirmSheet(
+      title: title,
+      message: message,
+      confirmLabel: confirmLabel,
+      cancelLabel: cancelLabel,
+      danger: danger,
+      icon: icon,
     ),
   );
   return ok ?? false;
+}
+
+class _SkyConfirmSheet extends StatelessWidget {
+  const _SkyConfirmSheet({
+    required this.title,
+    required this.message,
+    required this.confirmLabel,
+    required this.cancelLabel,
+    required this.danger,
+    required this.icon,
+  });
+
+  final String title;
+  final String message;
+  final String confirmLabel;
+  final String cancelLabel;
+  final bool danger;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final sky = context.sky;
+    final tone = danger ? sky.danger : sky.accent;
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          AffluenaSpacing.space5,
+          AffluenaSpacing.space2,
+          AffluenaSpacing.space5,
+          AffluenaSpacing.space5,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: tone.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(AffluenaRadii.lg),
+              ),
+              child: Icon(
+                icon ??
+                    (danger ? Icons.warning_amber_rounded : Icons.help_outline),
+                size: 24,
+                color: tone,
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space4),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: sky.ink,
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space2),
+            Text(
+              message,
+              style: TextStyle(fontSize: 14, height: 1.4, color: sky.muted),
+            ),
+            const SizedBox(height: AffluenaSpacing.space6),
+            FilledButton(
+              key: const Key('sky-confirm-accept'),
+              // The danger fill keeps the theme's foreground (never a
+              // hardcoded white — that would break dark mode).
+              style: danger
+                  ? FilledButton.styleFrom(backgroundColor: sky.danger)
+                  : null,
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(confirmLabel),
+            ),
+            const SizedBox(height: AffluenaSpacing.space2),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                key: const Key('sky-confirm-cancel'),
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(cancelLabel),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// Loading / not-found body for a detail screen while the owning controller is

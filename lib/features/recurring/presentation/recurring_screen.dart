@@ -18,6 +18,7 @@ import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/recurring_controller.dart';
@@ -610,6 +611,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.label_outline),
                   labelText: 'Nama',
+                  hintText: 'cth: Bayar kos',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -645,6 +647,8 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
               MoneyInput(
                 key: const Key('recurring-amount-field'),
                 label: 'Jumlah',
+                // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                hint: '750.000',
                 initialValue: _amountMinor,
                 onChanged: (value) => setState(() => _amountMinor = value),
               ),
@@ -676,6 +680,12 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.timelapse_outlined),
                   labelText: 'Jumlah interval',
+                  // The field is prefilled so the hint rarely shows — the
+                  // helper carries the meaning (rebuilds via setState when
+                  // the frequency changes).
+                  hintText: 'cth: 1',
+                  helperText:
+                      'cth: 2 = tiap 2 ${_frequency.label.toLowerCase()}',
                   errorText: _intervalError,
                 ),
                 onChanged: (_) => setState(() {}),
@@ -740,6 +750,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Catatan',
+                  hintText: 'cth: Transfer otomatis awal bulan',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
@@ -846,26 +857,15 @@ Future<void> _confirm(
   required String actionLabel,
   required Future<void> Function() onConfirm,
 }) async {
-  final colors = context.affluenaColors;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(body),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Pertahankan'),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: colors.coral),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(actionLabel),
-        ),
-      ],
-    ),
+  final confirmed = await skyConfirm(
+    context,
+    title: title,
+    message: body,
+    confirmLabel: actionLabel,
+    cancelLabel: 'Pertahankan',
+    danger: true,
   );
-  if (confirmed == true) await onConfirm();
+  if (confirmed) await onConfirm();
 }
 
 T? _findById<T>(List<T> items, String? id) {

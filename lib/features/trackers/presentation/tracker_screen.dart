@@ -869,9 +869,13 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
               const SizedBox(height: AffluenaSpacing.space3),
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.label_outline),
+                // Non-const: the hint follows the active tab.
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.label_outline),
                   labelText: 'Nama',
+                  hintText: _tab == TrackerTab.installments
+                      ? 'cth: Cicilan motor'
+                      : 'cth: Netflix',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -882,6 +886,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.badge_outlined),
                     labelText: 'Detail akun',
+                    hintText: 'cth: nama@email.com',
                   ),
                 ),
               ],
@@ -908,6 +913,8 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                 label: _tab == TrackerTab.installments
                     ? 'Total jumlah'
                     : 'Jumlah',
+                // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                hint: _tab == TrackerTab.installments ? '12.000.000' : '54.000',
                 initialValue: _amountMinor,
                 onChanged: (value) => setState(() => _amountMinor = value),
               ),
@@ -915,6 +922,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                 const SizedBox(height: AffluenaSpacing.space2),
                 MoneyInput(
                   label: 'Jumlah bulanan',
+                  hint: '1.000.000',
                   initialValue: _monthlyMinor,
                   onChanged: (value) => setState(() => _monthlyMinor = value),
                 ),
@@ -926,6 +934,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.timelapse_outlined),
                     labelText: 'Tenor (bulan)',
+                    hintText: 'cth: 12',
                     errorText: _tenorError,
                   ),
                   onChanged: (_) => setState(() {}),
@@ -1045,6 +1054,7 @@ class _TrackerFormSheetState extends ConsumerState<_TrackerFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Catatan',
+                  hintText: 'cth: Autodebet tiap tanggal 5',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
@@ -1242,6 +1252,8 @@ class _TrackerPaymentSheetState extends ConsumerState<_TrackerPaymentSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Catatan',
+                  hintText: 'cth: Bayar lewat transfer',
+                  helperText: 'Opsional',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
@@ -1286,6 +1298,9 @@ Future<void> _confirm(
     message: body,
     confirmLabel: actionLabel,
     cancelLabel: 'Pertahankan',
+    // Every tracker confirm is destructive (cancel/delete an installment or
+    // subscription); payments confirm via the payment sheet instead.
+    danger: true,
   );
   if (confirmed) {
     await onConfirm();
@@ -1312,7 +1327,10 @@ int _intValue(String value) {
 
 DateTime? _parseDate(String? value) {
   if (value == null || value.isEmpty) return null;
-  return DateTime.tryParse(value)?.toLocal();
+  // Parse the calendar-date prefix only: stored API DATE values are RFC3339
+  // UTC-midnight instants, and converting those to local time would shift the
+  // day for negative UTC offsets. The prefix IS the stored calendar date.
+  return DateTime.tryParse(AffluenaDateFormatter.apiDate(value));
 }
 
 String? _formatDate(DateTime? value) {

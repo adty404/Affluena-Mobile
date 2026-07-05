@@ -68,24 +68,36 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     });
   }
 
+  /// The screen title for [tab], matching the Pengaturan entry names — the
+  /// bottom-nav "Wawasan" is a different screen (SkyInsightsView), so this
+  /// one must be called what the settings row that opened it promised.
+  static String _titleFor(InsightTab tab) {
+    return switch (tab) {
+      InsightTab.reports || InsightTab.exports => 'Laporan',
+      InsightTab.alerts || InsightTab.activity => 'Peringatan & Aktivitas',
+      InsightTab.rules => 'Aturan notifikasi',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(insightsControllerProvider);
     final controller = ref.read(insightsControllerProvider.notifier);
 
     if (state.isLoading && state.report.metrics.isEmpty) {
-      return const _InsightsLoading();
+      return _InsightsLoading(title: _titleFor(widget.initialTab));
     }
 
     if (state.loadError != null && state.report.metrics.isEmpty) {
       return _InsightsError(
+        title: _titleFor(widget.initialTab),
         message: state.loadError!,
         onRetry: controller.load,
       );
     }
 
     return DrillInScaffold(
-      title: 'Wawasan',
+      title: _titleFor(state.selectedTab),
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -705,12 +717,14 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _InsightsLoading extends StatelessWidget {
-  const _InsightsLoading();
+  const _InsightsLoading({this.title = 'Laporan'});
+
+  final String title;
 
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Wawasan',
+      title: title,
       body: ListView(
         padding: AffluenaInsets.screen,
         children: [
@@ -814,15 +828,20 @@ class _ReportSkeleton extends StatelessWidget {
 }
 
 class _InsightsError extends StatelessWidget {
-  const _InsightsError({required this.message, required this.onRetry});
+  const _InsightsError({
+    required this.message,
+    required this.onRetry,
+    this.title = 'Laporan',
+  });
 
   final String message;
   final VoidCallback onRetry;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
     return DrillInScaffold(
-      title: 'Wawasan',
+      title: title,
       body: Padding(
         padding: const EdgeInsets.all(AffluenaSpacing.space5),
         child: Column(

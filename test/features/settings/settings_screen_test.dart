@@ -171,14 +171,14 @@ void main() {
 
     expect(authRepository.revokedSessionIds, isEmpty);
     expect(find.text('Cabut sesi ini?'), findsOneWidget);
-    // The seeded session is not the current device, so the confirm dialog warns
+    // The seeded session is not the current device, so the confirm sheet warns
     // that the other device will be signed out.
     expect(
       find.textContaining('Perangkat itu akan dikeluarkan'),
       findsOneWidget,
     );
 
-    await tester.tap(find.byKey(const Key('settings-confirm-revoke-button')));
+    await tester.tap(find.byKey(const Key('sky-confirm-accept')));
     await tester.pumpAndSettle();
 
     expect(authRepository.revokedSessionIds, [seededAuthSession.id]);

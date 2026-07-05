@@ -78,7 +78,11 @@ class _WalletInviteSheetState extends ConsumerState<_WalletInviteSheet> {
               const SizedBox(height: AffluenaSpacing.space4),
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Alamat email'),
+                // Same example address as the Berbagi Dompet invite field.
+                decoration: const InputDecoration(
+                  labelText: 'Alamat email',
+                  hintText: 'email@contoh.com',
+                ),
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.done,
                 enabled: !_isSaving,

@@ -12,6 +12,7 @@ import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/section_header.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/goal_controller.dart';
 import '../data/goal_models.dart';
@@ -97,37 +98,21 @@ class GoalScreen extends ConsumerWidget {
     Goal goal,
     GoalStatus status,
   ) async {
-    final colors = context.affluenaColors;
     final isCancel = status == GoalStatus.cancelled;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          isCancel ? 'Batalkan target ini?' : 'Tandai target tercapai?',
-        ),
-        content: Text(
-          isCancel
-              ? 'Membatalkan menghentikan pelacakan progres untuk "${goal.name}". '
-                    'Dana yang terkumpul tetap di dompet target.'
-              : 'Ini menandai "${goal.name}" sebagai tercapai. Kamu masih bisa '
-                    'melihatnya di daftarmu.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Tetap aktif'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: isCancel
-                ? FilledButton.styleFrom(backgroundColor: colors.coral)
-                : null,
-            child: Text(isCancel ? 'Batalkan target' : 'Tandai tercapai'),
-          ),
-        ],
-      ),
+    final confirmed = await skyConfirm(
+      context,
+      title: isCancel ? 'Batalkan target ini?' : 'Tandai target tercapai?',
+      message: isCancel
+          ? 'Membatalkan menghentikan pelacakan progres untuk "${goal.name}". '
+                'Dana yang terkumpul tetap di dompet target.'
+          : 'Ini menandai "${goal.name}" sebagai tercapai. Kamu masih bisa '
+                'melihatnya di daftarmu.',
+      confirmLabel: isCancel ? 'Batalkan target' : 'Tandai tercapai',
+      cancelLabel: 'Tetap aktif',
+      danger: isCancel,
+      icon: isCancel ? null : Icons.flag_outlined,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await ref
         .read(goalControllerProvider.notifier)
         .transitionStatus(goal, status);

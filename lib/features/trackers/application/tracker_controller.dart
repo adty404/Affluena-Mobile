@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/calc/due_window.dart';
+import '../../../core/formatters/date_formatter.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
@@ -125,7 +127,9 @@ class TrackerController extends Notifier<TrackerState> {
         monthlyAmountMinor: installment.monthlyAmountMinor,
         tenorMonths: installment.tenorMonths,
         remainingMonths: installment.remainingMonths,
-        startDate: installment.startDate,
+        // The stored value is a full RFC3339 timestamp, but start_date is a
+        // strict date-only API field — re-sending it raw 400s.
+        startDate: AffluenaDateFormatter.apiDate(installment.startDate),
         dueDay: installment.dueDay,
         status: InstallmentStatus.cancelled,
         note: installment.note,
@@ -195,7 +199,10 @@ class TrackerController extends Notifier<TrackerState> {
         categoryId: subscription.categoryId,
         amountMinor: subscription.amountMinor,
         billingCycle: subscription.billingCycle,
-        nextDueDate: subscription.nextDueDate,
+        // The stored value is a full RFC3339 timestamp, but next_due_date is a
+        // strict date-only API field — re-sending it raw 400s and the pause/
+        // resume button silently does nothing.
+        nextDueDate: AffluenaDateFormatter.apiDate(subscription.nextDueDate),
         status: status,
         note: subscription.note,
         // Re-send the stored appearance so the status change preserves it.
@@ -323,7 +330,7 @@ bool _subscriptionDueSoon(Subscription item) {
   if (!item.canPay) return false;
   final due = DateTime.tryParse(item.nextDueDate);
   if (due == null) return false;
-  return _withinSevenDays(due);
+  return withinSevenDays(due);
 }
 
 bool _installmentDueSoon(Installment item) {
@@ -340,7 +347,7 @@ bool _installmentDueSoon(Installment item) {
     final nextYear = today.month == 12 ? today.year + 1 : today.year;
     due = _installmentOccurrence(nextYear, nextMonth, item.dueDay);
   }
-  return _withinSevenDays(due);
+  return withinSevenDays(due);
 }
 
 /// The installment's due date in [year]/[month], with [dueDay] clamped to the
@@ -348,16 +355,4 @@ bool _installmentDueSoon(Installment item) {
 DateTime _installmentOccurrence(int year, int month, int dueDay) {
   final lastDay = DateTime(year, month + 1, 0).day;
   return DateTime(year, month, dueDay.clamp(1, lastDay));
-}
-
-bool _withinSevenDays(DateTime date) {
-  // Normalize to a whole LOCAL day: subscription dates arrive as RFC3339 'Z'
-  // instants, so comparing them raw against local-midnight bounds is off by one
-  // in +07:00 (WIB). toLocal() then date-only keeps the window correct.
-  final local = date.toLocal();
-  final d = DateTime(local.year, local.month, local.day);
-  final today = DateTime.now();
-  final start = DateTime(today.year, today.month, today.day);
-  final end = DateTime(today.year, today.month, today.day + 7);
-  return !d.isBefore(start) && !d.isAfter(end);
 }

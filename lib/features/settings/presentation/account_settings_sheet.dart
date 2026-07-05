@@ -62,6 +62,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
               textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Nama',
+                hintText: 'Budi Santoso',
                 prefixIcon: Icon(Icons.person_outline),
               ),
               autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -77,6 +78,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
               textInputAction: TextInputAction.done,
               decoration: const InputDecoration(
                 labelText: 'URL avatar',
+                hintText: 'https://contoh.com/foto.jpg',
                 prefixIcon: Icon(Icons.image_outlined),
               ),
               autovalidateMode: AutovalidateMode.onUserInteraction,

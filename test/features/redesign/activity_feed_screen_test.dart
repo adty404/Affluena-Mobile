@@ -4,6 +4,7 @@ import 'package:affluena_mobile/features/auth/data/auth_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/redesign/presentation/activity_feed_screen.dart';
 import 'package:affluena_mobile/features/shared/presentation/appearance/item_appearance.dart';
+import 'package:affluena_mobile/features/shared/presentation/widgets/affluena_choice_chip.dart';
 import 'package:affluena_mobile/features/transactions/application/transactions_controller.dart';
 import 'package:affluena_mobile/features/transactions/data/split_bill_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
@@ -250,7 +251,6 @@ Future<void> _pumpWithRepo(
   }
 }
 
-
 /// Search hides behind the Aktivitas header icon — expand it before typing.
 Future<void> _openSearch(WidgetTester tester) async {
   await tester.tap(find.byKey(const Key('activity-search-button')));
@@ -387,55 +387,53 @@ void main() {
     expect(find.text('Top-up'), findsOneWidget);
   });
 
-  testWidgets(
-    'a note-less transfer stays findable by its visible type label',
-    (tester) async {
-      final repo = _RecordingRepository();
-      await _pumpWithRepo(tester, repo);
-      // The transfer renders with its type-label title.
-      expect(find.text('Transfer'), findsOneWidget);
+  testWidgets('a note-less transfer stays findable by its visible type label', (
+    tester,
+  ) async {
+    final repo = _RecordingRepository();
+    await _pumpWithRepo(tester, repo);
+    // The transfer renders with its type-label title.
+    expect(find.text('Transfer'), findsOneWidget);
 
-      await _openSearch(tester);
-      await tester.enterText(
-        find.byKey(const Key('activity-search-field')),
-        'transfer',
-      );
-      await tester.pump(const Duration(milliseconds: 400));
-      for (var i = 0; i < 4; i++) {
-        await tester.pump(const Duration(milliseconds: 10));
-      }
+    await _openSearch(tester);
+    await tester.enterText(
+      find.byKey(const Key('activity-search-field')),
+      'transfer',
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 10));
+    }
 
-      // The server search matches nothing (it only sees note/category/wallet
-      // names), but the client-side title-parity pass unions the row back in
-      // — same behavior as the ledger tab's client search.
-      expect(find.text('Transfer'), findsOneWidget);
-      expect(find.text('Top-up'), findsNothing);
-      expect(find.text('Nonton berdua'), findsNothing);
-    },
-  );
+    // The server search matches nothing (it only sees note/category/wallet
+    // names), but the client-side title-parity pass unions the row back in
+    // — same behavior as the ledger tab's client search.
+    expect(find.text('Transfer'), findsOneWidget);
+    expect(find.text('Top-up'), findsNothing);
+    expect(find.text('Nonton berdua'), findsNothing);
+  });
 
-  testWidgets(
-    'the search query is capped at the API\'s 100-character limit',
-    (tester) async {
-      final repo = _RecordingRepository();
-      await _pumpWithRepo(tester, repo);
+  testWidgets('the search query is capped at the API\'s 100-character limit', (
+    tester,
+  ) async {
+    final repo = _RecordingRepository();
+    await _pumpWithRepo(tester, repo);
 
-      await _openSearch(tester);
-      await tester.enterText(
-        find.byKey(const Key('activity-search-field')),
-        'a' * 150,
-      );
-      await tester.pump(const Duration(milliseconds: 400));
-      for (var i = 0; i < 4; i++) {
-        await tester.pump(const Duration(milliseconds: 10));
-      }
+    await _openSearch(tester);
+    await tester.enterText(
+      find.byKey(const Key('activity-search-field')),
+      'a' * 150,
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 10));
+    }
 
-      // The API 400s on >100 runes; the field/debounce clamp means the
-      // provider can never send such a query.
-      expect(repo.lastSearch, isNotNull);
-      expect(repo.lastSearch!.runes.length, 100);
-    },
-  );
+    // The API 400s on >100 runes; the field/debounce clamp means the
+    // provider can never send such a query.
+    expect(repo.lastSearch, isNotNull);
+    expect(repo.lastSearch!.runes.length, 100);
+  });
 
   testWidgets(
     'backspacing a no-match search to empty never flashes the onboarding '
@@ -557,4 +555,39 @@ void main() {
       expect(find.text('Top-up'), findsOneWidget);
     },
   );
+
+  testWidgets('tapping an active-filter chip removes only that filter', (
+    tester,
+  ) async {
+    final repo = _RecordingRepository();
+    await _pumpWithRepo(tester, repo);
+
+    // Apply BOTH a wallet and a category filter through the sheet.
+    await tester.tap(find.byKey(const Key('activity-filter-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-wallet-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('GoPay').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-category-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Makanan').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-apply-button')));
+    await tester.pumpAndSettle();
+
+    expect(repo.lastWalletId, 'w1');
+    expect(repo.lastCategoryId, 'c-food');
+
+    // Tapping the wallet chip removes exactly the wallet filter — the
+    // category filter (and its chip) must survive.
+    await tester.tap(find.widgetWithText(AffluenaChoiceChip, 'GoPay'));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 10));
+    }
+    expect(repo.lastWalletId, isNull);
+    expect(repo.lastCategoryId, 'c-food');
+    expect(find.widgetWithText(AffluenaChoiceChip, 'Makanan'), findsOneWidget);
+    expect(find.byKey(const Key('activity-clear-filters')), findsOneWidget);
+  });
 }

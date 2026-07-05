@@ -85,10 +85,12 @@ class SubscriptionDetailScreen extends ConsumerWidget {
                   confirmLabel: 'Bayar',
                 );
                 if (ok && context.mounted) {
+                  final messenger = ScaffoldMessenger.of(context);
                   await controller.paySubscription(
                     current,
                     const TrackerPaymentRequest(),
                   );
+                  _showActionError(ref, messenger);
                 }
               },
               icon: const Icon(Icons.check_circle_outline),
@@ -98,20 +100,28 @@ class SubscriptionDetailScreen extends ConsumerWidget {
           if (current.status == SubscriptionStatus.active) ...[
             const SizedBox(height: AffluenaSpacing.space3),
             OutlinedButton.icon(
-              onPressed: () => controller.setSubscriptionStatus(
-                current,
-                SubscriptionStatus.paused,
-              ),
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                await controller.setSubscriptionStatus(
+                  current,
+                  SubscriptionStatus.paused,
+                );
+                _showActionError(ref, messenger);
+              },
               icon: const Icon(Icons.pause_circle_outline),
               label: const Text('Jeda langganan'),
             ),
           ] else if (current.status == SubscriptionStatus.paused) ...[
             const SizedBox(height: AffluenaSpacing.space3),
             OutlinedButton.icon(
-              onPressed: () => controller.setSubscriptionStatus(
-                current,
-                SubscriptionStatus.active,
-              ),
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                await controller.setSubscriptionStatus(
+                  current,
+                  SubscriptionStatus.active,
+                );
+                _showActionError(ref, messenger);
+              },
               icon: const Icon(Icons.play_circle_outline),
               label: const Text('Lanjutkan langganan'),
             ),
@@ -150,6 +160,15 @@ class SubscriptionDetailScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Surfaces a swallowed save failure: [TrackerController]'s `_save` folds
+  /// errors into `state.actionError` instead of throwing, and this screen has
+  /// no inline banner — without a SnackBar the tapped action looks dead.
+  void _showActionError(WidgetRef ref, ScaffoldMessengerState messenger) {
+    final error = ref.read(trackerControllerProvider).actionError;
+    if (error == null) return;
+    messenger.showSnackBar(SnackBar(content: Text(error)));
   }
 
   List<DateTime> _upcomingBills(Subscription item, {int count = 4}) {

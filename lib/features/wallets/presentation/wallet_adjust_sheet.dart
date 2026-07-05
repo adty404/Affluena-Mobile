@@ -76,6 +76,8 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
             MoneyInput(
               key: const Key('wallet-adjust-amount-field'),
               label: 'Saldo baru',
+              // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+              hint: '1.250.000',
               helperText:
                   'Masukkan saldo target — selisihnya dicatat sebagai '
                   'penyesuaian.',
@@ -114,6 +116,7 @@ class _WalletAdjustSheetState extends ConsumerState<_WalletAdjustSheet> {
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.notes_outlined),
                 labelText: 'Catatan',
+                hintText: 'cth: Selisih saldo ATM',
                 helperText: 'Opsional',
               ),
             ),

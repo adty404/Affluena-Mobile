@@ -6,6 +6,7 @@ import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/appearance/item_appearance.dart';
+import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
@@ -92,6 +93,17 @@ class GoalDetailScreen extends ConsumerWidget {
               ),
             ],
           ),
+          // Action failures (e.g. a shared-goal invite response) are folded
+          // into state.actionError by the controller; without this banner a
+          // failed Terima/Tolak looks like a dead button.
+          if (state.actionError != null) ...[
+            const SizedBox(height: AffluenaSpacing.space4),
+            AffluenaBanner.error(
+              state.actionError!,
+              onRetry: () =>
+                  ref.read(goalControllerProvider.notifier).clearActionError(),
+            ),
+          ],
           if (current.isActive) ...[
             const SizedBox(height: AffluenaSpacing.space6),
             FilledButton.icon(

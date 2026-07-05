@@ -434,13 +434,16 @@ ExportCsvRequest _monthExportRequest(String month) {
   final parts = month.split('-');
   final year = int.parse(parts[0]);
   final monthNumber = int.parse(parts[1]);
-  final from = DateTime.utc(year, monthNumber);
-  final to = DateTime.utc(
-    year,
-    monthNumber + 1,
-  ).subtract(const Duration(milliseconds: 1));
+  // LOCAL month edges: the user exports their calendar month, so UTC edges
+  // would drop 00:00–06:59 local transactions on the 1st (WIB) and leak the
+  // next month's in. `.toUtc()` BEFORE `toIso8601String()` is load-bearing —
+  // a local DateTime's ISO string carries no offset suffix and the API 400s
+  // on it. The server's `to` bound is exclusive (`transaction_at < to`), so
+  // the next month's first instant is the correct upper edge.
+  final from = DateTime(year, monthNumber);
+  final toExclusive = DateTime(year, monthNumber + 1);
   return ExportCsvRequest(
-    from: from.toIso8601String(),
-    to: to.toIso8601String(),
+    from: from.toUtc().toIso8601String(),
+    to: toExclusive.toUtc().toIso8601String(),
   );
 }

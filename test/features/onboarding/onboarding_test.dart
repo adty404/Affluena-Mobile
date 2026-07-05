@@ -29,7 +29,7 @@ void main() {
 
     // The first-run gate routes to the onboarding screen, never to login.
     expect(find.byType(OnboardingScreen), findsOneWidget);
-    expect(find.text('Atur uang berdua, tenang.'), findsOneWidget);
+    expect(find.text('Atur uangmu, tenang.'), findsOneWidget);
     expect(find.byKey(const Key('onboarding-primary-button')), findsOneWidget);
     expect(find.text('Lanjut'), findsOneWidget);
     expect(find.byKey(const Key('login-email-field')), findsNothing);

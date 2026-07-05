@@ -52,9 +52,38 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
       message:
           '${link.displayName} tidak akan bisa lagi melihat dompetmu. Lanjutkan?',
       confirmLabel: 'Hapus',
+      danger: true,
     );
     if (ok && mounted) {
-      await ref.read(partnerControllerProvider.notifier).revoke(link.id);
+      // actionError renders inside _InviteCard, which disappears at the share
+      // limit — surface revoke failures on their own channel instead.
+      final messenger = ScaffoldMessenger.of(context);
+      final revoked = await ref
+          .read(partnerControllerProvider.notifier)
+          .revoke(link.id);
+      if (!revoked && mounted) {
+        // Keep state.actionError for invite failures only: without this the
+        // revoke failure would misattribute itself to the email field.
+        ref.read(partnerControllerProvider.notifier).clearActionError();
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Pemantau gagal dihapus. Coba lagi.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _respond(PartnerLink link, String status) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await ref
+        .read(partnerControllerProvider.notifier)
+        .respond(link.id, status);
+    if (!ok && mounted) {
+      // Same channel split as _revoke: incoming-invite failures belong in a
+      // SnackBar, not the invite card's inline error slot.
+      ref.read(partnerControllerProvider.notifier).clearActionError();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Undangan gagal diproses. Coba lagi.')),
+      );
     }
   }
 
@@ -102,12 +131,8 @@ class _PartnerScreenState extends ConsumerState<PartnerScreen> {
                 child: _IncomingRow(
                   link: link,
                   busy: state.isSaving,
-                  onAccept: () => ref
-                      .read(partnerControllerProvider.notifier)
-                      .respond(link.id, 'joined'),
-                  onReject: () => ref
-                      .read(partnerControllerProvider.notifier)
-                      .respond(link.id, 'rejected'),
+                  onAccept: () => _respond(link, 'joined'),
+                  onReject: () => _respond(link, 'rejected'),
                 ),
               ),
           ],

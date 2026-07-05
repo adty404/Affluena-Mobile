@@ -122,7 +122,9 @@ class _CategoryTagManagementScreenState
               textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.search),
-                labelText: 'Cari kategori',
+                // hintText (not labelText) so it reads as a search box —
+                // identical to the shared category picker's field.
+                hintText: 'Cari kategori',
               ),
               onChanged: (value) => setState(() => _query = value),
             ),

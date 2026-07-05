@@ -273,8 +273,16 @@ All spacing derives from a base of 4.
 
 - **Structure**: text field with an `Rp` prefix that groups thousands (`Rp 1.234.567`) as the user types.
 - **Usage**: every money amount field. Stores and reports an integer in minor units; users never read or type a bare unformatted integer. For balance adjustments an Increase/Decrease control supplies the sign.
+- **Hints**: pass `hint:` as **bare id_ID-grouped digits** (`'50.000'`, `'10.000.000'`) — the widget hardcodes the `Rp ` prefix, so a `cth:` prefix would render "Rp cth: 50.000". A descriptive sentence hint (e.g. `'Saldo dompet saat ini'`) is allowed where a numeric example adds nothing.
 - **States**: default, focused, disabled, error (validator).
 - **Accessibility**: numeric keyboard; the grouped value is plain text.
+
+### Form Field Hints
+
+- **Rule**: every form text field carries an Indonesian `hintText` placeholder so an empty form teaches its own format. No bare labels without a hint.
+- **Copy conventions**: free-text fields use a `cth:`-prefixed example (`'cth: Makan siang'`, `'cth: Bayar kos'`); name-like/category fields use a bare example (`'Makanan'`, `'Budi Santoso'`); emails use `'nama@email.com'` / `'email@contoh.com'`; numeric non-money fields show the expected shape (`'cth: 12'`, `'1-31'`); **MoneyInput hints are bare grouped digits** (see Money Input). Passwords describe the requirement (`'Minimal 8 karakter'`); persistent guidance stays in `helperText` — the hint disappears on typing.
+- **Search fields** use `hintText` (never `labelText`) so they read as search boxes (`'Cari kategori'`).
+- **Implementation**: plain-string hints keep `const InputDecoration`s const; drop `const` only when the hint is computed (e.g. tab-dependent examples).
 
 ### Date Picker Field
 
@@ -304,6 +312,15 @@ All spacing derives from a base of 4.
 - **Variants**: success, warning, danger, neutral (plus a `forStatus()` mapper for backend status strings).
 - **Usage**: lifecycle/status pills (active, paused, partial, paid_off, cancelled, joined, rejected, …). Active and Cancelled must look different.
 - **Accessibility**: status is carried by the label text, not color alone.
+
+### Confirmation Sheet (`skyConfirm`)
+
+- **Structure**: the app-wide confirmation surface — a modal bottom sheet (rounded `radiusSheet` top + drag handle from the sheet theme) with a soft-tinted 48px leading icon tile, a w700 title, a muted 1.4-line-height message, then a **full-width `FilledButton` confirm** (key `sky-confirm-accept`) stacked over a **full-width `TextButton` cancel** (key `sky-confirm-cancel`). `useSafeArea`, content scrolls on short viewports.
+- **Variants**: default (accent tile, question glyph, themed confirm button) and **danger** (`danger: true` — coral tile with a warning glyph and a coral confirm fill) for destructive actions: delete, cancel-a-record, revoke, sign-out. An optional `icon:` overrides the glyph (e.g. `delete_outline`).
+- **Usage**: `skyConfirm(context, title:, message:, confirmLabel:, cancelLabel:, danger:, icon:)` → `Future<bool>`; dismissing the sheet counts as cancel. **Every two-action confirmation routes through it** — payments/runs (non-danger), deletes and cancels (danger). Never hand-roll an `AlertDialog` confirm; single-OK info dialogs and rich summary sheets (e.g. the split-bill recap) are not confirmations.
+- **States**: default, danger.
+- **Tokens**: colours via `context.sky.*` (the danger fill keeps the theme's foreground — never hardcoded white), spacing/radii via `AffluenaSpacing`/`AffluenaRadii`.
+- **Accessibility**: the action semantics live in the button labels, not colour alone; the message is body text at muted contrast with the title carrying the question.
 
 ### Category Tree Picker
 
@@ -367,7 +384,7 @@ source of truth, but for colour the Tinta table in §2 wins.
 4. **Detail — Cicilan · Langganan · Berulang** — installment detail (schedule), subscription detail (history, pause/pay), recurring detail ("Transfer ke Tabungan").
 5. **Quick-add · Aktivitas · Wawasan** — the "Catat cepat" sheet (templates + keypad), the activity feed, the insights/charts screen. The Wawasan screen (`SkyInsightsView`) leads with a **"Ke mana perginya uangmu?"** category-breakdown card scoped by a **period selector** — chips for **Hari / Minggu / Bulan / Kuartal / Tahun / Semua** plus **Atur** (custom `showDateRangePicker` range) — with a prev/next pager (disabled from paging into the future; "Semua"/"Atur" don't page). Under it: a `SkySegmentedToggle` (**Pengeluaran** / **Pemasukan**) over a **ranked horizontal-bar list** — each row is the category's chosen icon (in its colour on a soft tile) + name + amount + a colour-proportion bar + %, with the selected type's total shown above. Both breakdowns are computed **client-side** from the range's transactions (the API has no income-distribution endpoint) via `categoryBreakdownProvider(DateRange)`, joined to the category catalog for icon/colour; uncategorized money falls into a neutral "Tanpa kategori" bucket. The client pages up to **5.000 transactions**; a range larger than that sets `CategoryBreakdown.truncated`, and the card shows a small amber notice ("Menampilkan 5.000 transaksi terbaru — total mungkin tidak lengkap") so the total isn't silently under-reported. **Each real category row is tappable** (a subtle ripple) → `SkyCategoryTransactionsScreen`, a `DrillInScaffold` list of that one category's transactions **scoped to the same period** (`categoryTransactionsInRangeProvider((categoryId, DateRange))` — the same widened-window / 5.000-cap fetch as the breakdown, but `categoryId`-filtered server-side and returned raw newest-first): header = the category name + the period label subtitle, body = the full range day-grouped into `TransactionActivityRow`s, each tapping through to the shared detail sheet. The "Tanpa kategori" bucket (no id) stays non-tappable. Below it sit the cashflow-trend and forecast cards (the old standalone "Ke mana uang pergi" expense-distribution card was removed as a duplicate of the breakdown).
 6. **Pengaturan** — Lainnya (settings hub), Keamanan (password, device lock, active sessions), Kategori (category hierarchy).
-7. **State & aksi** — empty, loading (skeleton), error, a confirmation modal, and a dark-mode sample.
+7. **State & aksi** — empty, loading (skeleton), error, the confirmation sheet (`skyConfirm`, see §5 — the mockup still shows the retired centered modal), and a dark-mode sample.
 
 When a screen's visual changes, update **both** the HTML guide and the relevant
 spec section above so the two never drift.

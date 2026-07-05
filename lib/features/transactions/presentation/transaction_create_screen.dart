@@ -113,6 +113,8 @@ class _TransactionCreateScreenState
                 MoneyInput(
                   key: const Key('transaction-create-amount-field'),
                   label: 'Jumlah',
+                  // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                  hint: '50.000',
                   initialValue: _amountMinor,
                   enabled: !state.isSaving,
                   onChanged: (value) => setState(() {
@@ -174,6 +176,7 @@ class _TransactionCreateScreenState
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.notes_outlined),
                     labelText: 'Catatan (opsional)',
+                    hintText: 'cth: Makan siang',
                   ),
                   onChanged: (_) => _clearErrors(),
                 ),

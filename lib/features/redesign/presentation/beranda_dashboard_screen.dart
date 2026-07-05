@@ -318,10 +318,7 @@ class BerandaDashboardView extends ConsumerWidget {
       _CardGrid(
         children: [
           _SavingsRateTile(summary: summary),
-          _NetWorthTrendCard(
-            series: series,
-            loading: trendAsync.isLoading,
-          ),
+          _NetWorthTrendCard(series: series, loading: trendAsync.isLoading),
         ],
       ),
       const SizedBox(height: AffluenaSpacing.space6),
@@ -1253,10 +1250,7 @@ class _DueRow extends StatelessWidget {
                         : '$label · $dateLabel',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.sky.muted,
-                    ),
+                    style: TextStyle(fontSize: 11, color: context.sky.muted),
                   ),
                 ],
               ),

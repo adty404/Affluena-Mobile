@@ -17,6 +17,7 @@ import '../../shared/presentation/widgets/metric_tile.dart';
 import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../shared/presentation/widgets/selector_row.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/debt_controller.dart';
@@ -569,6 +570,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.person_outline),
                   labelText: 'Pihak terkait',
+                  hintText: 'cth: Budi atau Bank ABC',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -626,6 +628,8 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 MoneyInput(
                   key: const Key('debt-amount-field'),
                   label: 'Jumlah pokok',
+                  // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                  hint: '1.000.000',
                   initialValue: _amountMinor,
                   onChanged: (value) => setState(() => _amountMinor = value),
                 ),
@@ -675,6 +679,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Catatan',
+                  hintText: 'cth: Pinjaman modal usaha',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
@@ -851,6 +856,8 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
               MoneyInput(
                 key: const Key('debt-payment-amount-field'),
                 label: 'Jumlah pembayaran',
+                // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                hint: '500.000',
                 initialValue: _amountMinor,
                 onChanged: (value) => setState(() => _amountMinor = value),
                 // Runs the validator while typing; without this the validator
@@ -883,6 +890,7 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Catatan',
+                  hintText: 'cth: Cicilan pertama',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
@@ -923,28 +931,16 @@ Future<void> _confirmCancel(
   DebtController controller,
   Debt debt,
 ) async {
-  final colors = context.affluenaColors;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Batalkan utang?'),
-      content: const Text(
+  final confirmed = await skyConfirm(
+    context,
+    title: 'Batalkan utang?',
+    message:
         'Ini tetap menyimpan jejak audit dan menandai utang sebagai dibatalkan.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Pertahankan'),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: colors.coral),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Batalkan utang'),
-        ),
-      ],
-    ),
+    confirmLabel: 'Batalkan utang',
+    cancelLabel: 'Pertahankan',
+    danger: true,
   );
-  if (confirmed == true) {
+  if (confirmed) {
     await controller.cancelDebt(debt);
   }
 }

@@ -37,7 +37,9 @@ void main() {
     await tester.pumpWidget(insightsTestApp(repository));
     await tester.pumpInsightsState();
 
-    expect(find.text('Wawasan'), findsOneWidget);
+    // The pushed screen is titled after its active tab (the bottom-nav
+    // "Wawasan" is a different screen).
+    expect(find.text('Laporan'), findsWidgets);
     expect(find.text('Overview balance'), findsOneWidget);
     expect(find.text('Rp 4.000.000'), findsOneWidget);
     expect(find.text('79%'), findsOneWidget);
@@ -67,6 +69,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.exportRequests, hasLength(1));
+    // The window is the user's LOCAL calendar month converted to UTC on the
+    // wire (an offset-less local ISO string would 400), with an exclusive
+    // upper edge at the next month's first instant — computed the same way
+    // here so the assertion holds in any machine timezone.
+    final now = DateTime.now();
+    expect(
+      repository.exportRequests.single.from,
+      DateTime(now.year, now.month).toUtc().toIso8601String(),
+    );
+    expect(
+      repository.exportRequests.single.to,
+      DateTime(now.year, now.month + 1).toUtc().toIso8601String(),
+    );
     expect(find.text('Ekspor CSV dibagikan.'), findsOneWidget);
   });
 

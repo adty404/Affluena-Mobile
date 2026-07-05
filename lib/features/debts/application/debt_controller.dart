@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/calc/due_window.dart';
+import '../../../core/formatters/date_formatter.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
@@ -157,7 +159,12 @@ class DebtController extends Notifier<DebtState> {
       debt,
       DebtUpdateRequest(
         counterpartyName: debt.counterpartyName,
-        dueDate: debt.dueDate,
+        // due_date is a date-only API field; never re-send the stored RFC3339
+        // timestamp raw (the debt handler happens to tolerate it today, but
+        // the date-only wire format is the contract).
+        dueDate: debt.dueDate == null
+            ? null
+            : AffluenaDateFormatter.apiDate(debt.dueDate!),
         status: DebtStatus.cancelled,
         note: debt.note,
       ),
@@ -276,7 +283,8 @@ bool _isDueSoon(Debt debt) {
   }
   final dueDate = DateTime.tryParse(debt.dueDate!);
   if (dueDate == null) return false;
-  final today = DateTime.now();
-  final end = DateTime(today.year, today.month, today.day + 7);
-  return !dueDate.isAfter(end);
+  // Shared local-day window: the old raw-instant comparison excluded debts
+  // due exactly 7 days out in WIB and, with no lower bound, kept counting
+  // overdue debts forever.
+  return withinSevenDays(dueDate);
 }

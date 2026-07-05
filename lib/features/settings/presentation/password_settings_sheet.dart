@@ -65,6 +65,7 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
               onChanged: (_) => _clearError(),
               decoration: const InputDecoration(
                 labelText: 'Kata sandi saat ini',
+                hintText: 'Masukkan kata sandimu saat ini',
                 prefixIcon: Icon(Icons.lock_outline),
               ),
             ),
@@ -79,6 +80,8 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
               onChanged: (_) => _clearError(),
               decoration: const InputDecoration(
                 labelText: 'Kata sandi baru',
+                // The helper already carries the 8-character rule.
+                hintText: 'Buat kata sandi baru',
                 helperText: 'Minimal 8 karakter.',
                 prefixIcon: Icon(Icons.lock_reset_outlined),
               ),
@@ -96,6 +99,7 @@ class _PasswordSheetState extends ConsumerState<_PasswordSheet> {
               onFieldSubmitted: (_) => _save(),
               decoration: const InputDecoration(
                 labelText: 'Konfirmasi kata sandi baru',
+                hintText: 'Ulangi kata sandi baru',
                 prefixIcon: Icon(Icons.lock_outline),
               ),
             ),

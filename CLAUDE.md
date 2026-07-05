@@ -26,6 +26,7 @@ the pixel-level **`design/affluena-design-guide.html`** (open in a browser — v
 ```bash
 fvm install 3.44.2 && fvm flutter pub get      # one-time setup
 fvm flutter analyze                             # lint/type gate (CI runs this)
+fvm dart format lib test                        # CI also gates on formatting (--set-exit-if-changed) — run before pushing
 fvm flutter test --exclude-tags golden          # unit/widget tests (CI runs this)
 fvm flutter test                                # includes goldens — macOS only, must use fvm's 3.44.2
 bash scripts/build_apk.sh                        # sideload APK (bakes the API URL via --dart-define)
@@ -68,6 +69,11 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   `sky_detail.dart` (`SkyDetailHero/Card/Row/StatusPill/Placeholder` + `skyConfirm`),
   `SkyProgressBar`, `SkySegmentedToggle`. **Chip rows use `AffluenaChipBar` (single-line, scrollable)
   wrapping `AffluenaChoiceChip`** — never a ragged `Wrap` of Material `ChoiceChip`s.
+- **`skyConfirm` is THE app-wide confirmation surface** — a Tinta modal bottom sheet (soft-tinted
+  icon tile, w700 title, muted message, full-width confirm over cancel; keys `sky-confirm-accept` /
+  `sky-confirm-cancel`). Pass `danger: true` for destructive confirms (delete / cancel / revoke /
+  sign-out — coral tile + coral confirm button) and optionally `icon:` to override the glyph. Never
+  hand-roll an `AlertDialog` confirmation; info-only dialogs (single OK) are out of scope.
 
 ## Conventions & gotchas
 
@@ -76,6 +82,13 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
 - **API dates are full RFC3339 timestamps even for `DATE` columns** — a budget's `month` arrives as
   `"2026-06-01T00:00:00Z"`, not `"2026-06"`. Parse defensively (take the `YYYY-MM` prefix); assuming a
   short date throws and blanks the screen.
+- **Never re-send a stored RFC3339 value into a date-only API field.** The write side of the rule
+  above: fields like a subscription's `next_due_date`, an installment's `start_date`, and a debt's
+  `due_date` expect `YYYY-MM-DD`, and the tracker endpoints **400** on a full timestamp (this made
+  "Jeda langganan" silently do nothing). Any request builder that round-trips a stored date must
+  normalize it through `AffluenaDateFormatter.apiDate` (prefix-based — no timezone conversion, so
+  the calendar day never shifts). Timestamp fields (`transaction_at`, `paid_at`, `next_run_at`,
+  `opened_at`, goal `deadline`) stay full RFC3339.
 - **Tests are hermetic**: full-app tests use `authTestApp`/`pumpAuthTestApp` (overrides every repo
   with fakes). `redesign_shell_test` uses its own `ProviderScope` and stubs controllers directly.
 - **Item appearance (color/icon)**: wallets, budgets, goals, installments, subscriptions, and
@@ -200,6 +213,15 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   read-only); the wallets others share to you show under Beranda's "Dibagikan untukku" section /
   `SharedWithMeScreen` (rendered as full cards mirroring Beranda's, **no "LIHAT" badge**). Endpoints
   are `/api/v1/partners` (historical) — see the API repo's contract.
+- **Only the invitee can answer a wallet invitation**: the API rejects a respond on someone else's
+  membership, so `WalletMembersSection` renders Terima/Tolak **only on the signed-in user's own
+  pending row** (`member.userId == authControllerProvider.user?.id`); anyone else's pending row
+  shows the neutral "Undangan untuk <email> menunggu jawaban mereka." line instead — never render
+  buttons the API will always reject.
+- **Every form text field carries an Indonesian `hintText`** (see DESIGN.md "Form Field Hints"):
+  `cth:`-prefixed examples for free-text, bare examples for name-like fields, and **bare id_ID-
+  grouped digits for `MoneyInput` hints** (the widget hardcodes the `Rp ` prefix — `cth:` inside it
+  would render "Rp cth: 50.000"). Plain-string hints keep `const InputDecoration`s const.
 - **`WalletsScreen` = your own spending wallets only**: it excludes goal-backing wallets (`isGoal` —
   they live under Tabungan) and wallets shared TO you (`isViewer` — they live under "Dibagikan
   untukku"), mirroring Beranda's Dompet section. Because sharing is one-way read-only, "Bersama" in

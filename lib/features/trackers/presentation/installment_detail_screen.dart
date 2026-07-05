@@ -98,9 +98,16 @@ class InstallmentDetailScreen extends ConsumerWidget {
                   confirmLabel: 'Bayar',
                 );
                 if (ok && context.mounted) {
+                  final messenger = ScaffoldMessenger.of(context);
                   await ref
                       .read(trackerControllerProvider.notifier)
                       .payInstallment(current, const TrackerPaymentRequest());
+                  // `_save` folds failures into state.actionError instead of
+                  // throwing; without this the tapped action looks dead.
+                  final error = ref.read(trackerControllerProvider).actionError;
+                  if (error != null) {
+                    messenger.showSnackBar(SnackBar(content: Text(error)));
+                  }
                 }
               },
               icon: const Icon(Icons.check_circle_outline),

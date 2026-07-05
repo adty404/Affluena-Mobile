@@ -18,14 +18,34 @@ class OnboardingController extends Notifier<bool?> {
   }
 
   Future<void> _restore() async {
-    state = await ref
-        .read(onboardingPreferencesRepositoryProvider)
-        .isCompleted();
+    // _restore is fired unawaited from build(): if reading the persisted flag
+    // threw, state would stay null forever and the router would pin the app
+    // on the bootstrap splash. Unreadable prefs = treat as first-run; the
+    // flag self-heals on the next successful complete().
+    try {
+      state = await ref
+          .read(onboardingPreferencesRepositoryProvider)
+          .isCompleted();
+    } catch (_) {
+      state = false;
+    }
   }
 
-  /// Marks onboarding complete and persists it.
+  /// Marks onboarding complete and persists it. The state flip is optimistic
+  /// and the persist is guarded: callers fire this unawaited, so a storage
+  /// failure must never surface as an unobserved async error (worst case the
+  /// user sees onboarding once more on the next cold start).
   Future<void> complete() async {
     state = true;
-    await ref.read(onboardingPreferencesRepositoryProvider).setCompleted();
+    try {
+      await ref.read(onboardingPreferencesRepositoryProvider).setCompleted();
+    } catch (_) {
+      // Best-effort retry; if this also fails the flag simply stays unset.
+      try {
+        await ref.read(onboardingPreferencesRepositoryProvider).setCompleted();
+      } catch (_) {
+        // Swallow: onboarding may replay on next launch, nothing worse.
+      }
+    }
   }
 }

@@ -78,6 +78,8 @@ class _SplitBillInfoSection extends StatelessWidget {
               MoneyInput(
                 key: const Key('split-total-amount-field'),
                 label: 'Total tagihan',
+                // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                hint: '300.000',
                 initialValue: totalAmountMinor,
                 enabled: !state.isSaving,
                 onChanged: onAmountChanged,
@@ -98,6 +100,7 @@ class _SplitBillInfoSection extends StatelessWidget {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Catatan',
+                  hintText: 'cth: Makan malam bareng',
                 ),
                 onChanged: (_) => onTextChanged(),
               ),

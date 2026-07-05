@@ -72,6 +72,7 @@ class _GoalInviteSheetState extends ConsumerState<_GoalInviteSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.mail_outline),
                   labelText: 'Email (Wajib)',
+                  hintText: 'nama@email.com',
                 ),
                 // Surface the blocker under the field as the user types
                 // instead of only after a failed save.

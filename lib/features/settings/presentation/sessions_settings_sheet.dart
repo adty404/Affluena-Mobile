@@ -5,6 +5,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../auth/data/auth_models.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/settings_controller.dart';
 import 'settings_sheet_widgets.dart';
@@ -83,36 +84,22 @@ class _SessionsSheetState extends ConsumerState<_SessionsSheet> {
   }
 
   Future<void> _confirmRevoke(AuthSessionRecord session) async {
-    final colors = context.affluenaColors;
     final isCurrent = isCurrentSession(
       session,
       ref.read(currentSessionTokenSuffixProvider).asData?.value,
     );
-    final shouldRevoke = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cabut sesi ini?'),
-        content: Text(
-          isCurrent
-              ? 'Ini adalah sesi di perangkat ini. Mencabutnya akan '
-                    'mengeluarkanmu dari sini.'
-              : 'Perangkat itu akan dikeluarkan dan perlu masuk lagi.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            key: const Key('settings-confirm-revoke-button'),
-            style: FilledButton.styleFrom(backgroundColor: colors.coral),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Cabut sesi'),
-          ),
-        ],
-      ),
+    final shouldRevoke = await skyConfirm(
+      context,
+      title: 'Cabut sesi ini?',
+      message: isCurrent
+          ? 'Ini adalah sesi di perangkat ini. Mencabutnya akan '
+                'mengeluarkanmu dari sini.'
+          : 'Perangkat itu akan dikeluarkan dan perlu masuk lagi.',
+      confirmLabel: 'Cabut sesi',
+      danger: true,
+      icon: Icons.logout,
     );
-    if (shouldRevoke != true) return;
+    if (!shouldRevoke || !mounted) return;
     setState(() {
       _message = null;
       _revokingSessionId = session.id;

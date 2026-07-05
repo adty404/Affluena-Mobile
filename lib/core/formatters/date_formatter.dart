@@ -49,6 +49,26 @@ abstract final class AffluenaDateFormatter {
     return _monthKey.format(date);
   }
 
+  /// Normalizes a stored API date string to the `YYYY-MM-DD` wire format that
+  /// the API's **date-only** fields require (e.g. a subscription's
+  /// `next_due_date`, an installment's `start_date`).
+  ///
+  /// The API serializes DATE columns as full RFC3339 UTC-midnight timestamps
+  /// (`"2026-07-19T00:00:00Z"`); re-sending that value verbatim into a strict
+  /// date-only field is rejected with a 400. This takes the calendar-date
+  /// prefix of the string WITHOUT any timezone conversion (the prefix *is* the
+  /// stored calendar date — converting to local time could shift the day).
+  /// Already-short (`"2026-07-19"`) values pass through unchanged, and
+  /// anything that doesn't parse as a date is returned as-is so the API stays
+  /// the validator of last resort.
+  static String apiDate(String value) {
+    final trimmed = value.trim();
+    if (DateTime.tryParse(trimmed) == null) return trimmed;
+    return _dateOnlyPrefix.firstMatch(trimmed)?.group(0) ?? trimmed;
+  }
+
+  static final RegExp _dateOnlyPrefix = RegExp(r'^\d{4}-\d{2}-\d{2}');
+
   /// Human-readable month, e.g. "Jun 2026".
   static String monthLabel(DateTime date) {
     return _monthLabel.format(date);

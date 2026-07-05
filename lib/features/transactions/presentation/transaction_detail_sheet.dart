@@ -6,6 +6,7 @@ import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
+import '../../shared/presentation/widgets/sky_detail.dart';
 import '../application/transactions_controller.dart';
 import '../data/transaction_models.dart';
 import 'transaction_display.dart';
@@ -252,12 +253,18 @@ class _CreatorActions extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) =>
-          _DeleteConfirmationDialog(transaction: transaction, state: state),
+    final confirmed = await skyConfirm(
+      context,
+      title: 'Hapus transaksi ini?',
+      message:
+          'Ini menghapus permanen "${transactionTitle(state, transaction)}" '
+          'dan membatalkan pengaruhnya pada saldo dompetmu. Tindakan ini tidak '
+          'bisa dibatalkan.',
+      confirmLabel: 'Hapus',
+      danger: true,
+      icon: Icons.delete_outline,
     );
-    if (confirmed != true || !context.mounted) return;
+    if (!confirmed || !context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
@@ -270,42 +277,6 @@ class _CreatorActions extends ConsumerWidget {
           deleted ? 'Transaksi dihapus.' : 'Transaksi tidak dapat dihapus.',
         ),
       ),
-    );
-  }
-}
-
-class _DeleteConfirmationDialog extends StatelessWidget {
-  const _DeleteConfirmationDialog({
-    required this.transaction,
-    required this.state,
-  });
-
-  final Transaction transaction;
-  final TransactionsState state;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      icon: Icon(Icons.delete_outline, color: context.sky.danger),
-      title: const Text('Hapus transaksi ini?'),
-      content: Text(
-        'Ini menghapus permanen "${transactionTitle(state, transaction)}" '
-        'dan membatalkan pengaruhnya pada saldo dompetmu. Tindakan ini tidak '
-        'bisa dibatalkan.',
-      ),
-      actions: [
-        TextButton(
-          key: const Key('transaction-delete-cancel'),
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          key: const Key('transaction-delete-confirm'),
-          style: FilledButton.styleFrom(backgroundColor: context.sky.danger),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Hapus'),
-        ),
-      ],
     );
   }
 }

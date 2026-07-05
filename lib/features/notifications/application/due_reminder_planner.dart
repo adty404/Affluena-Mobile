@@ -129,12 +129,11 @@ List<PlannedReminder> planDueReminders({
   }
 
   planned.sort((a, b) => a.when.compareTo(b.when));
-  return planned.length <= cap
-      ? planned
-      : planned.sublist(0, cap);
+  return planned.length <= cap ? planned : planned.sublist(0, cap);
 }
 
-String _horizon(int daysLeft) => daysLeft == 1 ? 'besok' : '$daysLeft hari lagi';
+String _horizon(int daysLeft) =>
+    daysLeft == 1 ? 'besok' : '$daysLeft hari lagi';
 
 /// Parses the `YYYY-MM-DD` prefix of an API date defensively (the API sends
 /// full RFC3339 timestamps even for DATE columns; converting those to local
