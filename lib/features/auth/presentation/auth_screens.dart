@@ -79,6 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 fieldKey: const Key('login-email-field'),
                 controller: _emailController,
                 label: 'Email',
+                hint: 'nama@email.com',
                 icon: Icons.mail_outline,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
@@ -90,6 +91,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 fieldKey: const Key('login-password-field'),
                 controller: _passwordController,
                 label: 'Kata sandi',
+                hint: 'Kata sandi kamu',
                 icon: Icons.lock_outline,
                 obscure: true,
                 textInputAction: TextInputAction.done,
@@ -189,6 +191,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 fieldKey: const Key('register-email-field'),
                 controller: _emailController,
                 label: 'Email',
+                hint: 'nama@email.com',
                 icon: Icons.mail_outline,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
@@ -200,6 +203,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 fieldKey: const Key('register-password-field'),
                 controller: _passwordController,
                 label: 'Kata sandi',
+                hint: 'Minimal 8 karakter',
                 icon: Icons.lock_outline,
                 obscure: true,
                 textInputAction: TextInputAction.done,
@@ -290,6 +294,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             fieldKey: const Key('forgot-email-field'),
             controller: _emailController,
             label: 'Email',
+            hint: 'nama@email.com',
             icon: Icons.mail_outline,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
@@ -394,6 +399,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 fieldKey: const Key('reset-code-field'),
                 controller: _codeController,
                 label: 'Kode atur ulang',
+                hint: 'Tempel kode dari email',
                 icon: Icons.confirmation_number_outlined,
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
@@ -416,6 +422,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 fieldKey: const Key('reset-password-field'),
                 controller: _passwordController,
                 label: 'Kata sandi baru',
+                hint: 'Minimal 8 karakter',
                 icon: Icons.lock_reset_outlined,
                 obscure: true,
                 textInputAction: TextInputAction.next,
@@ -428,6 +435,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 fieldKey: const Key('reset-confirm-password-field'),
                 controller: _confirmController,
                 label: 'Konfirmasi kata sandi',
+                hint: 'Ulangi kata sandi baru',
                 icon: Icons.lock_outline,
                 obscure: true,
                 textInputAction: TextInputAction.done,
@@ -653,6 +661,7 @@ class _SkyField extends StatefulWidget {
     required this.label,
     required this.icon,
     this.fieldKey,
+    this.hint,
     this.keyboardType,
     this.textInputAction,
     this.autofillHints,
@@ -668,6 +677,9 @@ class _SkyField extends StatefulWidget {
   final TextEditingController controller;
   final String label;
   final IconData icon;
+
+  /// Placeholder shown while the field is empty (the theme styles it).
+  final String? hint;
   final Key? fieldKey;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
@@ -728,6 +740,7 @@ class _SkyFieldState extends State<_SkyField> {
             isDense: true,
             filled: true,
             fillColor: context.sky.surface,
+            hintText: widget.hint,
             helperText: widget.helperText,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AffluenaSpacing.space4,

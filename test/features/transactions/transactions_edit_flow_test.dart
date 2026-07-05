@@ -206,8 +206,16 @@ void main() {
       await tester.tap(find.text('Ubah transaksi'));
       await tester.pumpAndSettle();
 
-      // The positive-only MoneyInput shows the magnitude, not the signed value.
-      expect(find.text('50.000'), findsOneWidget);
+      // The positive-only MoneyInput shows the magnitude, not the signed
+      // value. Assert the editable value specifically — the field's hintText
+      // ('50.000') stays in the InputDecorator tree even when filled.
+      final amountEditable = tester.widget<EditableText>(
+        find.descendant(
+          of: find.byKey(const Key('transaction-edit-amount-field')),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(amountEditable.controller.text, '50.000');
 
       // Decrease is preselected for a negative adjustment.
       final decreaseChip = tester.widget<ChoiceChip>(
