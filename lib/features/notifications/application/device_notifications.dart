@@ -26,6 +26,18 @@ abstract interface class DeviceNotifications {
   /// Cancels every pending scheduled notification owned by the app.
   Future<void> cancelAll();
 
+  /// Ids of every scheduled notification currently pending on the device.
+  /// Best-effort: an empty list on unsupported platforms or plugin failure —
+  /// callers must then simply skip pruning, never treat it as "nothing armed"
+  /// worth re-arming from scratch.
+  Future<List<int>> listPendingIds();
+
+  /// Cancels just the given pending notification ids (a no-op for ids that
+  /// are not pending). Lets the scheduler prune stale reminders without the
+  /// cancel-all window in which a crash would leave nothing armed.
+  Future<void> cancelIds(List<int> ids);
+
   /// Arms one scheduled notification at [reminder.when] (local wall clock).
+  /// Scheduling an id that is already pending overwrites it in place.
   Future<void> schedule(PlannedReminder reminder);
 }

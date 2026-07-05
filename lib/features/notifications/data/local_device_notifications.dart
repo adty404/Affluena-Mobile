@@ -96,6 +96,31 @@ class LocalDeviceNotifications implements DeviceNotifications {
   }
 
   @override
+  Future<List<int>> listPendingIds() async {
+    if (!await _ensureReady()) return const [];
+    try {
+      final pending = await _plugin.pendingNotificationRequests();
+      return [for (final request in pending) request.id];
+    } catch (_) {
+      // Best-effort: an empty answer makes the scheduler skip pruning, which
+      // only leaves stale reminders for the next resync to clean up.
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> cancelIds(List<int> ids) async {
+    if (!await _ensureReady()) return;
+    for (final id in ids) {
+      try {
+        await _plugin.cancel(id: id);
+      } catch (_) {
+        // Best-effort.
+      }
+    }
+  }
+
+  @override
   Future<void> schedule(PlannedReminder reminder) async {
     if (!await _ensureReady()) return;
     try {

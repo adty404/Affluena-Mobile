@@ -48,4 +48,115 @@ void main() {
       expect(buildNetWorthSeries(-500, [0, 250]), [-750, -500]);
     });
   });
+
+  group('buildNetWorthSeries — earliest-wallet clamping', () {
+    // Reconstructed values without clamping: [500, 700, 1000].
+    const cashflows = [100, 200, 300];
+    const months = ['2026-04', '2026-05', '2026-06'];
+
+    test('drops points older than the earliest wallet creation month', () {
+      expect(
+        buildNetWorthSeries(
+          1000,
+          cashflows,
+          monthKeys: months,
+          earliestWalletCreatedAt: '2026-05-10T08:00:00Z',
+        ),
+        [700, 1000],
+      );
+    });
+
+    test('keeps the full series when the wallet predates the window', () {
+      expect(
+        buildNetWorthSeries(
+          1000,
+          cashflows,
+          monthKeys: months,
+          earliestWalletCreatedAt: '2025-01-01T00:00:00Z',
+        ),
+        [500, 700, 1000],
+      );
+    });
+
+    test('keeps only the anchor when every bucket predates the wallet', () {
+      // The current net worth itself is real even if the trend history is
+      // older than the first wallet.
+      expect(
+        buildNetWorthSeries(
+          1000,
+          cashflows,
+          monthKeys: months,
+          earliestWalletCreatedAt: '2026-07-01T00:00:00Z',
+        ),
+        [1000],
+      );
+    });
+
+    test('accepts RFC3339 month bucket labels (DATE-as-timestamp)', () {
+      expect(
+        buildNetWorthSeries(
+          1000,
+          cashflows,
+          monthKeys: const [
+            '2026-04-01T00:00:00Z',
+            '2026-05-01T00:00:00Z',
+            '2026-06-01T00:00:00Z',
+          ],
+          earliestWalletCreatedAt: '2026-05-10T08:00:00Z',
+        ),
+        [700, 1000],
+      );
+    });
+
+    test('skips clamping without month keys', () {
+      expect(
+        buildNetWorthSeries(
+          1000,
+          cashflows,
+          earliestWalletCreatedAt: '2026-05-10T08:00:00Z',
+        ),
+        [500, 700, 1000],
+      );
+    });
+
+    test('skips clamping without an earliest wallet date', () {
+      expect(
+        buildNetWorthSeries(1000, cashflows, monthKeys: months),
+        [500, 700, 1000],
+      );
+    });
+
+    test('fails open on mismatched month-key length', () {
+      expect(
+        buildNetWorthSeries(
+          1000,
+          cashflows,
+          monthKeys: const ['2026-05', '2026-06'],
+          earliestWalletCreatedAt: '2026-05-10T08:00:00Z',
+        ),
+        [500, 700, 1000],
+      );
+    });
+
+    test('fails open on malformed labels', () {
+      expect(
+        buildNetWorthSeries(
+          1000,
+          cashflows,
+          monthKeys: const ['garbage', '2026-05', '2026-06'],
+          earliestWalletCreatedAt: '2026-05-10T08:00:00Z',
+        ),
+        [500, 700, 1000],
+      );
+      expect(
+        buildNetWorthSeries(
+          1000,
+          cashflows,
+          monthKeys: months,
+          earliestWalletCreatedAt: 'not-a-date',
+        ),
+        [500, 700, 1000],
+      );
+    });
+  });
 }

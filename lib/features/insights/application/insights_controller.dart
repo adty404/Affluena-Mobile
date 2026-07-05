@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/formatters/date_formatter.dart';
 import '../../../core/state/copy_with_sentinel.dart';
+import '../../dashboard/application/dashboard_home_controller.dart';
+import '../../notifications/application/due_reminder_planner.dart';
+import '../../notifications/application/notification_scheduler.dart';
 import '../data/insight_models.dart';
 import '../data/insights_repository.dart';
 import 'csv_share_service.dart';
@@ -229,6 +232,17 @@ class InsightsController extends Notifier<InsightsState> {
         actionError: 'Aturan notifikasi tidak dapat diperbarui.',
       );
       return;
+    }
+
+    // A due-reminder toggle must reach the DEVICE scheduler too — otherwise
+    // already-armed H-3/H-1 notifications keep firing after turning the rule
+    // off (and turning it on arms nothing) until the next money mutation or
+    // cold start. The scheduler re-plans from its last summary; when it has
+    // none yet, refetching the summary triggers the same resync on success.
+    if (updated.ruleKey == kDueReminderRuleKey) {
+      if (!ref.read(notificationSchedulerProvider).resyncLatest()) {
+        ref.invalidate(dashboardSummaryProvider);
+      }
     }
 
     try {

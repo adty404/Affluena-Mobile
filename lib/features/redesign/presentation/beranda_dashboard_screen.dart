@@ -114,7 +114,7 @@ class BerandaDashboardView extends ConsumerWidget {
           // Ringkasan — savings rate + net-worth sparkline in one calm row.
           // Skeletons while the summary loads; hidden entirely on error (the
           // rest of Beranda still works, and Wawasan carries the analytics).
-          ..._ringkasan(context, summaryAsync, trendAsync),
+          ..._ringkasan(context, summaryAsync, trendAsync, wallets),
 
           // Jatuh tempo terdekat — the nearest 3 dues across subscriptions,
           // installments, and debts. Hidden entirely when there are none.
@@ -281,6 +281,7 @@ class BerandaDashboardView extends ConsumerWidget {
     BuildContext context,
     AsyncValue<DashboardSummary> summaryAsync,
     AsyncValue<CashflowTrendResponse> trendAsync,
+    List<Wallet> wallets,
   ) {
     final summary = summaryAsync.asData?.value;
     if (summary == null) {
@@ -292,11 +293,25 @@ class BerandaDashboardView extends ConsumerWidget {
     }
 
     final trend = trendAsync.asData?.value.trend;
+    // The reconstruction can't see wallet initial balances (they'd back-
+    // propagate into every older point), so the series is clamped to months
+    // where one of MY wallets actually existed — see [buildNetWorthSeries].
+    // Viewer wallets are someone else's money and don't bound my history.
+    String? earliestWalletCreatedAt;
+    for (final wallet in wallets) {
+      if (wallet.isViewer) continue;
+      if (earliestWalletCreatedAt == null ||
+          wallet.createdAt.compareTo(earliestWalletCreatedAt) < 0) {
+        earliestWalletCreatedAt = wallet.createdAt;
+      }
+    }
     final series = trend == null
         ? const <int>[]
         : buildNetWorthSeries(
             summary.netWorthMinor,
             [for (final point in trend) point.cashflowMinor],
+            monthKeys: [for (final point in trend) point.month],
+            earliestWalletCreatedAt: earliestWalletCreatedAt,
           );
 
     return [
@@ -333,21 +348,29 @@ class BerandaDashboardView extends ConsumerWidget {
           ),
         ),
       ),
-      Container(
+      // Material (not a plain Container) so each _DueRow's InkWell ripples on
+      // THIS surface instead of invisibly on the Scaffold underneath — the
+      // same pattern TransactionActivityRow uses. The clip keeps row ripples
+      // inside the rounded corners.
+      Material(
         key: const Key('beranda-due-section'),
-        decoration: BoxDecoration(
-          color: context.sky.surface,
-          border: Border.all(color: context.sky.line),
-          borderRadius: BorderRadius.circular(AffluenaRadii.control),
-        ),
-        child: Column(
-          children: [
-            for (var i = 0; i < dues.length; i++) ...[
-              if (i > 0)
-                Divider(height: 1, thickness: 1, color: context.sky.line),
-              _DueRow(entry: dues[i]),
+        color: context.sky.surface,
+        borderRadius: BorderRadius.circular(AffluenaRadii.control),
+        clipBehavior: Clip.antiAlias,
+        child: Ink(
+          decoration: BoxDecoration(
+            border: Border.all(color: context.sky.line),
+            borderRadius: BorderRadius.circular(AffluenaRadii.control),
+          ),
+          child: Column(
+            children: [
+              for (var i = 0; i < dues.length; i++) ...[
+                if (i > 0)
+                  Divider(height: 1, thickness: 1, color: context.sky.line),
+                _DueRow(entry: dues[i]),
+              ],
             ],
-          ],
+          ),
         ),
       ),
       const SizedBox(height: AffluenaSpacing.space6),
@@ -1028,19 +1051,32 @@ class _NetWorthTrendCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AffluenaSpacing.space2),
+            // Flexible + ellipsis on both labels: inside the half-width card
+            // a large system font scale (or a very long compact amount) must
+            // degrade to truncation, never a RenderFlex overflow.
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  _label(series.first),
-                  style: TextStyle(fontSize: 10, color: context.sky.faint),
+                Flexible(
+                  child: Text(
+                    _label(series.first),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 10, color: context.sky.faint),
+                  ),
                 ),
-                Text(
-                  _label(series.last),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: context.sky.ink,
+                const SizedBox(width: AffluenaSpacing.space2),
+                Flexible(
+                  child: Text(
+                    _label(series.last),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: context.sky.ink,
+                    ),
                   ),
                 ),
               ],
@@ -1085,16 +1121,21 @@ class _SparklinePainter extends CustomPainter {
     if (values.length < 2) return;
     final min = values.reduce((a, b) => a < b ? a : b);
     final max = values.reduce((a, b) => a > b ? a : b);
-    final span = (max - min) == 0 ? 1.0 : (max - min).toDouble();
+    final flat = max == min;
+    final span = (max - min).toDouble();
 
-    // 2px inset so the stroke + end dot never clip at the edges.
-    const inset = 2.0;
+    // Inset > the end-dot radius (2.4) + half the 1.8 stroke so neither the
+    // line nor the dot ever paints past the unclipped canvas at an extreme.
+    const inset = 3.4;
     final w = size.width - inset * 2;
     final h = size.height - inset * 2;
 
     Offset at(int i) {
       final x = inset + w * i / (values.length - 1);
-      final y = inset + h * (1 - (values[i] - min) / span);
+      // A flat series (all points equal) normalizes to 0.5 — the centered
+      // line the class doc promises — instead of pinning to the bottom edge.
+      final t = flat ? 0.5 : (values[i] - min) / span;
+      final y = inset + h * (1 - t);
       return Offset(x, y);
     }
 

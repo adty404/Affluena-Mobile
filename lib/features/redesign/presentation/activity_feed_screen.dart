@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
@@ -55,27 +56,71 @@ typedef ActivityQuery = ({
 /// person's activity into my feed.
 final recentActivityProvider = FutureProvider.autoDispose
     .family<List<Transaction>, ActivityQuery>((ref, q) async {
-      final response = await ref
-          .watch(transactionRepositoryProvider)
-          .listTransactions(
-            walletId: q.walletId,
-            categoryId: q.categoryId,
-            from: _iso(q.from),
-            to: _iso(q.to),
-            search: q.search,
-            limit: 100,
-            offset: 0,
-            sort: 'transaction_at_desc',
-          );
+      final repository = ref.watch(transactionRepositoryProvider);
+      final response = await repository.listTransactions(
+        walletId: q.walletId,
+        categoryId: q.categoryId,
+        from: _iso(q.from),
+        to: _iso(q.to),
+        search: q.search,
+        limit: 100,
+        offset: 0,
+        sort: 'transaction_at_desc',
+      );
+      var transactions = response.transactions;
+
+      // Parity with the RENDERED row titles: the API's `search=` matches the
+      // note, category name, and wallet name — but a note-less UNCATEGORIZED
+      // row is titled by its type label ("Transfer", "Pemasukan",
+      // "Pengeluaran", "Penyesuaian"; see [TransactionActivityRow]), which
+      // the server can't match. When the query could name such a label, also
+      // fetch the same window WITHOUT `search=` and union in the rows whose
+      // visible title matches — so what the feed shows stays findable, like
+      // the ledger's client-side search.
+      final query = q.search?.toLowerCase();
+      if (query != null && _matchesAnyTypeLabel(query)) {
+        final unsearched = await repository.listTransactions(
+          walletId: q.walletId,
+          categoryId: q.categoryId,
+          from: _iso(q.from),
+          to: _iso(q.to),
+          limit: 100,
+          offset: 0,
+          sort: 'transaction_at_desc',
+        );
+        final seen = {for (final t in transactions) t.id};
+        final extras = unsearched.transactions.where(
+          (t) =>
+              !seen.contains(t.id) &&
+              t.note.isEmpty &&
+              t.categoryId == null &&
+              transactionTypeLabel(t.type).toLowerCase().contains(query),
+        );
+        if (extras.isNotEmpty) {
+          transactions = [...transactions, ...extras]
+            ..sort((a, b) => b.transactionAt.compareTo(a.transactionAt));
+        }
+      }
+
       final wallets = await ref.watch(walletListProvider.future);
       final viewerWalletIds = {
         for (final w in wallets)
           if (w.isViewer) w.id,
       };
-      return response.transactions
+      return transactions
           .where((t) => !viewerWalletIds.contains(t.walletId))
           .toList();
     });
+
+/// Whether the (lowercased) query appears in any transaction-type label — the
+/// only case where the client-side title-parity pass above can add rows the
+/// server search missed, and so the only case worth the second fetch.
+bool _matchesAnyTypeLabel(String query) {
+  if (query.isEmpty) return false;
+  return TransactionType.values.any(
+    (type) => transactionTypeLabel(type).toLowerCase().contains(query),
+  );
+}
 
 /// Date-only ISO for the transactions API (`YYYY-MM-DDT00:00:00Z`), null-safe.
 /// Matches [TransactionsController]'s private `_isoDate` so the feed's filter
@@ -149,12 +194,36 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
     search: _debouncedQuery.isEmpty ? null : _debouncedQuery,
   );
 
+  /// The API rejects search queries over 100 runes with a 400; mirror the cap
+  /// client-side so a pasted wall of text can never error the whole feed.
+  /// Runes (code points), not [String.length] or graphemes, to match Go's
+  /// `utf8.RuneCountInString`.
+  static const _maxSearchRunes = 100;
+
   void _onSearchChanged(String value) {
+    // An emptied field behaves like the clear button: there is no keystroke
+    // traffic left to throttle, so skip the debounce. Waiting would render
+    // the stale no-match result against an empty live query — briefly showing
+    // the wrong "Belum ada transaksi" onboarding state to a user who has
+    // transactions.
+    if (value.trim().isEmpty) {
+      _searchTimer?.cancel();
+      setState(() {
+        _searchQuery = value;
+        _debouncedQuery = '';
+      });
+      return;
+    }
     setState(() => _searchQuery = value);
     _searchTimer?.cancel();
     _searchTimer = Timer(_searchDebounce, () {
       if (!mounted) return;
-      setState(() => _debouncedQuery = value.trim());
+      final trimmed = value.trim();
+      setState(() {
+        _debouncedQuery = String.fromCharCodes(
+          trimmed.runes.take(_maxSearchRunes),
+        );
+      });
     });
   }
 
@@ -205,9 +274,14 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
             controller: _searchController,
             autocorrect: false,
             textInputAction: TextInputAction.search,
+            // Silently cap at the API's 100-rune limit (no counter UI) so a
+            // pasted long string can't 400 the feed into the error state.
+            maxLength: _maxSearchRunes,
+            maxLengthEnforcement: MaxLengthEnforcement.enforced,
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search),
               hintText: 'Cari catatan, dompet, atau kategori',
+              counterText: '',
               suffixIcon: isSearching
                   ? IconButton(
                       key: const Key('activity-search-clear'),
@@ -260,8 +334,10 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
             data: (visible) {
               if (visible.isEmpty) {
                 // Distinguish a genuinely empty feed from one narrowed to
-                // nothing by the active search/filter.
-                if (isSearching || _filters.hasActiveFilters) {
+                // nothing by the active search/filter. Judged by the DEBOUNCED
+                // query — the one that produced THIS data — not the live field
+                // text, which can diverge inside the debounce window.
+                if (_debouncedQuery.isNotEmpty || _filters.hasActiveFilters) {
                   return EmptyState(
                     icon: Icons.search_off_outlined,
                     title: 'Tidak ada transaksi yang cocok',

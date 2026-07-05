@@ -63,6 +63,22 @@ const _bySarah = Transaction(
   updatedAt: '2026-06-20T08:00:00Z',
 );
 
+// A note-less, category-less transfer: its rendered row title is the type
+// label ("Transfer"), which the server-side `search=` can never match — the
+// client-side title-parity pass must keep it findable.
+const _transfer = Transaction(
+  id: 't3',
+  userId: 'u-me',
+  type: TransactionType.transfer,
+  walletId: 'w1',
+  amountMinor: 250000,
+  tagIds: [],
+  transactionAt: '2026-06-19T10:00:00Z',
+  note: '',
+  createdAt: '2026-06-19T10:00:00Z',
+  updatedAt: '2026-06-19T10:00:00Z',
+);
+
 // A category with a chosen icon (food -> restaurant) and color (green) so the
 // feed row must render that glyph in that color.
 const _foodColor = '#2E8B57';
@@ -129,7 +145,7 @@ class _RecordingRepository implements TransactionRepository {
     lastTo = to;
     lastSearch = search;
     final query = search?.toLowerCase();
-    final rows = <Transaction>[_byMe, _bySarah].where((t) {
+    final rows = <Transaction>[_byMe, _bySarah, _transfer].where((t) {
       if (walletId != null && t.walletId != walletId) return false;
       if (categoryId != null && t.categoryId != categoryId) return false;
       if (query != null && query.isNotEmpty) {
@@ -361,6 +377,89 @@ void main() {
     expect(repo.lastSearch, isNull);
     expect(find.text('Top-up'), findsOneWidget);
   });
+
+  testWidgets(
+    'a note-less transfer stays findable by its visible type label',
+    (tester) async {
+      final repo = _RecordingRepository();
+      await _pumpWithRepo(tester, repo);
+      // The transfer renders with its type-label title.
+      expect(find.text('Transfer'), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('activity-search-field')),
+        'transfer',
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+
+      // The server search matches nothing (it only sees note/category/wallet
+      // names), but the client-side title-parity pass unions the row back in
+      // — same behavior as the ledger tab's client search.
+      expect(find.text('Transfer'), findsOneWidget);
+      expect(find.text('Top-up'), findsNothing);
+      expect(find.text('Nonton berdua'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'the search query is capped at the API\'s 100-character limit',
+    (tester) async {
+      final repo = _RecordingRepository();
+      await _pumpWithRepo(tester, repo);
+
+      await tester.enterText(
+        find.byKey(const Key('activity-search-field')),
+        'a' * 150,
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+
+      // The API 400s on >100 runes; the field/debounce clamp means the
+      // provider can never send such a query.
+      expect(repo.lastSearch, isNotNull);
+      expect(repo.lastSearch!.runes.length, 100);
+    },
+  );
+
+  testWidgets(
+    'backspacing a no-match search to empty never flashes the onboarding '
+    'empty state',
+    (tester) async {
+      final repo = _RecordingRepository();
+      await _pumpWithRepo(tester, repo);
+
+      await tester.enterText(
+        find.byKey(const Key('activity-search-field')),
+        'zzz-nope',
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+      expect(find.text('Tidak ada transaksi yang cocok'), findsOneWidget);
+
+      // Backspace the query away (no clear-button tap): the empty field is
+      // applied instantly, so the genuinely-empty onboarding state must never
+      // show to a user who has transactions.
+      await tester.enterText(
+        find.byKey(const Key('activity-search-field')),
+        '',
+      );
+      await tester.pump();
+      expect(find.text('Belum ada transaksi'), findsNothing);
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+        expect(find.text('Belum ada transaksi'), findsNothing);
+      }
+      expect(repo.lastSearch, isNull);
+      expect(find.text('Top-up'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'applying a category filter passes the query to the repo and narrows rows',
