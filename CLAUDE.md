@@ -115,8 +115,11 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   `TransactionActivityRow` (`transactions/presentation/transaction_activity_row.dart`); its row
   **title falls back to the category name** (then the type label) when a transaction has no note — so
   a note-less expense reads "Makanan", not "Pengeluaran".
-- **The Aktivitas feed has search + date/kategori/dompet filters — ALL server-side**: the
-  **search field** (`activity-search-field`) debounces ~350ms into the API's `search=` param
+- **The Aktivitas feed has search + date/kategori/dompet filters — ALL server-side**: search
+  lives **behind a header icon** (`activity-search-button`, beside the filter button on the
+  "Aktivitas" title row — mirroring the category picker): tapping toggles the field
+  (`activity-search-field`, autofocus), collapsing clears the query instantly. The field
+  debounces ~350ms into the API's `search=` param
   (full-history, matches note + category name + wallet name server-side — no more 100-row
   client-side ceiling). Two client-side guards on top: the query is **capped at 100 characters**
   (the API 400s past 100 runes; field `maxLength` + a rune clamp on the debounced value, no counter

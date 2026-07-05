@@ -250,6 +250,13 @@ Future<void> _pumpWithRepo(
   }
 }
 
+
+/// Search hides behind the Aktivitas header icon — expand it before typing.
+Future<void> _openSearch(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('activity-search-button')));
+  await tester.pump();
+}
+
 void main() {
   testWidgets('renders the merged cross-wallet feed with signed amounts', (
     tester,
@@ -319,6 +326,7 @@ void main() {
       expect(find.text('Nonton berdua'), findsOneWidget);
       expect(repo.lastSearch, isNull);
 
+      await _openSearch(tester);
       await tester.enterText(
         find.byKey(const Key('activity-search-field')),
         'nonton',
@@ -355,6 +363,7 @@ void main() {
     final repo = _RecordingRepository();
     await _pumpWithRepo(tester, repo);
 
+    await _openSearch(tester);
     await tester.enterText(
       find.byKey(const Key('activity-search-field')),
       'zzz-nope',
@@ -386,6 +395,7 @@ void main() {
       // The transfer renders with its type-label title.
       expect(find.text('Transfer'), findsOneWidget);
 
+      await _openSearch(tester);
       await tester.enterText(
         find.byKey(const Key('activity-search-field')),
         'transfer',
@@ -410,6 +420,7 @@ void main() {
       final repo = _RecordingRepository();
       await _pumpWithRepo(tester, repo);
 
+      await _openSearch(tester);
       await tester.enterText(
         find.byKey(const Key('activity-search-field')),
         'a' * 150,
@@ -433,6 +444,7 @@ void main() {
       final repo = _RecordingRepository();
       await _pumpWithRepo(tester, repo);
 
+      await _openSearch(tester);
       await tester.enterText(
         find.byKey(const Key('activity-search-field')),
         'zzz-nope',
@@ -458,6 +470,44 @@ void main() {
       }
       expect(repo.lastSearch, isNull);
       expect(find.text('Top-up'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'search lives behind the header icon; collapsing clears the query',
+    (tester) async {
+      final repo = _RecordingRepository();
+      await _pumpWithRepo(tester, repo);
+
+      // Hidden by default — only the header icon shows.
+      expect(find.byKey(const Key('activity-search-field')), findsNothing);
+      expect(find.byKey(const Key('activity-search-button')), findsOneWidget);
+
+      // Expand, search, and narrow the rows.
+      await _openSearch(tester);
+      expect(find.byKey(const Key('activity-search-field')), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('activity-search-field')),
+        'nonton',
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+      expect(repo.lastSearch, 'nonton');
+      expect(find.text('Top-up'), findsNothing);
+
+      // Collapsing via the header icon clears the query instantly and
+      // restores the unsearched feed.
+      await tester.tap(find.byKey(const Key('activity-search-button')));
+      await tester.pump();
+      expect(find.byKey(const Key('activity-search-field')), findsNothing);
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+      expect(repo.lastSearch, isNull);
+      expect(find.text('Top-up'), findsOneWidget);
+      expect(find.text('Nonton berdua'), findsOneWidget);
     },
   );
 
