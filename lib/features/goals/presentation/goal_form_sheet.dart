@@ -88,6 +88,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.label_outline),
                   labelText: 'Nama',
+                  hintText: 'cth: Dana darurat',
                 ),
                 // Surface the blocker under the field as the user types
                 // instead of only after a failed save.
@@ -101,6 +102,8 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
               MoneyInput(
                 key: const Key('goal-target-field'),
                 label: 'Jumlah target',
+                // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                hint: '10.000.000',
                 initialValue: _targetMinor,
                 enabled: !_isSaving,
                 autovalidateMode: AutovalidateMode.onUserInteraction,

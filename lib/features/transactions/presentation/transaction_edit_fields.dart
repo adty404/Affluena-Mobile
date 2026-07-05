@@ -67,6 +67,8 @@ class _TransactionEditFields extends StatelessWidget {
         MoneyInput(
           key: const Key('transaction-edit-amount-field'),
           label: 'Jumlah',
+          // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+          hint: '50.000',
           initialValue: initialAmountMinor,
           enabled: !isSaving,
           onChanged: onAmountChanged,
@@ -121,7 +123,10 @@ class _TransactionEditFields extends StatelessWidget {
           key: const Key('transaction-edit-note-field'),
           controller: noteController,
           enabled: !isSaving,
-          decoration: const InputDecoration(labelText: 'Catatan'),
+          decoration: const InputDecoration(
+            labelText: 'Catatan',
+            hintText: 'cth: Makan siang',
+          ),
           textInputAction: TextInputAction.done,
           onChanged: (_) => onTextChanged(),
         ),

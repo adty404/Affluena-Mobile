@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/formatters/date_formatter.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
@@ -69,10 +68,8 @@ StatusTone walletShareTone(WalletShareStatus? status) {
   };
 }
 
-final DateFormat _monthLabel = DateFormat('MMMM yyyy');
-
-/// Formats an analytics month key (`YYYY-MM`) into a readable label such as
-/// "June 2026". Falls back to the raw value if it cannot be parsed.
+/// Formats an analytics month key (`YYYY-MM`) into a readable id_ID label
+/// such as "Juni 2026". Falls back to the raw value if it cannot be parsed.
 String walletMonthLabel(String monthKey) {
   final parts = monthKey.split('-');
   if (parts.length < 2) return monthKey;
@@ -81,12 +78,14 @@ String walletMonthLabel(String monthKey) {
   if (year == null || month == null || month < 1 || month > 12) {
     return monthKey;
   }
-  return _monthLabel.format(DateTime(year, month));
+  return AffluenaDateFormatter.monthLabelFull(DateTime(year, month));
 }
 
-/// Formats a [DateTime] into a readable month label such as "June 2026".
+/// Formats a [DateTime] into a readable id_ID month label such as "Juni 2026".
 String walletMonthLabelFromDate(DateTime month) {
-  return _monthLabel.format(DateTime(month.year, month.month));
+  return AffluenaDateFormatter.monthLabelFull(
+    DateTime(month.year, month.month),
+  );
 }
 
 /// Parses an analytics month key (`YYYY-MM`) into a [DateTime] at the first of

@@ -65,7 +65,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return _AuthShell(
       title: 'Masuk',
-      subtitle: 'Lanjutkan mengatur keuangan berdua.',
+      subtitle: 'Lanjutkan mengatur keuanganmu.',
       message: authState.message,
       messageTone: authState.messageTone,
       children: [
@@ -89,7 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _SkyField(
                 fieldKey: const Key('login-password-field'),
                 controller: _passwordController,
-                label: 'Password',
+                label: 'Kata sandi',
                 icon: Icons.lock_outline,
                 obscure: true,
                 textInputAction: TextInputAction.done,
@@ -109,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             onPressed: authState.isSubmitting
                 ? null
                 : () => context.go(ForgotPasswordScreen.path),
-            child: const Text('Lupa password?'),
+            child: const Text('Lupa kata sandi?'),
           ),
         ),
         const SizedBox(height: AffluenaSpacing.space2),
@@ -175,7 +175,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return _AuthShell(
       title: 'Buat akun',
-      subtitle: 'Mulai kelola uang bersama dalam sebentar.',
+      subtitle: 'Mulai kelola uangmu dalam sebentar.',
       message: authState.message,
       messageTone: authState.messageTone,
       children: [
@@ -199,7 +199,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               _SkyField(
                 fieldKey: const Key('register-password-field'),
                 controller: _passwordController,
-                label: 'Password',
+                label: 'Kata sandi',
                 icon: Icons.lock_outline,
                 obscure: true,
                 textInputAction: TextInputAction.done,

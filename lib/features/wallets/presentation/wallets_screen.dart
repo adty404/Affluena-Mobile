@@ -484,7 +484,12 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
               const SizedBox(height: AffluenaSpacing.space4),
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nama'),
+                // The hint only shows while the field is empty, so edit mode
+                // (prefilled) is unaffected.
+                decoration: const InputDecoration(
+                  labelText: 'Nama',
+                  hintText: 'cth: Rekening BCA',
+                ),
                 // The next control is a dropdown that never receives keyboard
                 // focus, so "next" would strand the focus; close instead.
                 textInputAction: TextInputAction.done,
@@ -516,6 +521,9 @@ class _WalletFormSheetState extends ConsumerState<_WalletFormSheet> {
                 const SizedBox(height: AffluenaSpacing.space3),
                 MoneyInput(
                   label: 'Saldo awal',
+                  // Descriptive (not a numeric example): the live Rp grouping
+                  // already shows the format while typing.
+                  hint: 'Saldo dompet saat ini',
                   initialValue: _initialBalanceMinor,
                   enabled: !_isSaving,
                   onChanged: (value) =>

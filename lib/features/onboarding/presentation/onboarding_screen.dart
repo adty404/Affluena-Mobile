@@ -19,22 +19,23 @@ class _Slide {
   final String title;
   final String body;
 
-  /// The first slide shows the shared-wallet hero (floating balance + avatars).
+  /// The first slide shows the balance hero (floating balance card + the
+  /// Pemantau avatars — sharing is one-way read-only, not a couples wallet).
   final bool couple;
 }
 
 const _slides = <_Slide>[
   _Slide(
     icon: Icons.account_balance_wallet_outlined,
-    title: 'Atur uang berdua, tenang.',
+    title: 'Atur uangmu, tenang.',
     body:
-        'Catat pengeluaran, bagi dompet, dan capai tujuan bareng pasangan '
-        'tanpa ribet.',
+        'Catat pengeluaran, kelola dompet, dan bagikan dompetmu untuk '
+        'dipantau (hanya-lihat) tanpa ribet.',
     couple: true,
   ),
   _Slide(
     icon: Icons.savings_outlined,
-    title: 'Anggaran & target bersama',
+    title: 'Anggaran & target pribadi',
     body:
         'Pantau anggaran, cicilan, dan langganan, lalu kembangkan tabungan '
         'menuju tiap target.',
@@ -42,9 +43,7 @@ const _slides = <_Slide>[
   _Slide(
     icon: Icons.lock_outline,
     title: 'Privat dan selalu sinkron',
-    body:
-        'Kunci aplikasi biometrik, jejak aktivitas lengkap, dan datamu '
-        'tersinkron di setiap perangkat.',
+    body: 'Jejak aktivitas lengkap dan datamu tersinkron di setiap perangkat.',
   ),
 ];
 
@@ -198,9 +197,9 @@ class _SlideView extends StatelessWidget {
   }
 }
 
-/// The Sky & Denim onboarding illustration: a soft ring holding a domain icon.
-/// The first ("couple") slide overlays a floating shared-balance card and the
-/// two partner avatars, matching the design guide.
+/// The onboarding illustration: a soft ring holding a domain icon. The first
+/// slide overlays a floating balance card and two avatars (you + a Pemantau
+/// who can view read-only), matching the design guide's layout.
 class _HeroArt extends StatelessWidget {
   const _HeroArt({required this.icon, required this.couple});
 
@@ -281,7 +280,7 @@ class _HeroArt extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Total bersama',
+                      'Total saldo',
                       style: TextStyle(fontSize: 10, color: context.sky.muted),
                     ),
                     const SizedBox(height: 2),

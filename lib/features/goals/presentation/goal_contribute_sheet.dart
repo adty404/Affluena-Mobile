@@ -111,6 +111,8 @@ class _GoalContributeSheetState extends ConsumerState<_GoalContributeSheet> {
         MoneyInput(
           key: const Key('goal-contribute-amount-field'),
           label: 'Jumlah',
+          // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+          hint: '250.000',
           initialValue: _amountMinor,
           enabled: !_isSaving,
           autofocus: true,

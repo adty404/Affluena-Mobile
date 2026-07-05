@@ -570,6 +570,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.person_outline),
                   labelText: 'Pihak terkait',
+                  hintText: 'cth: Budi atau Bank ABC',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -627,6 +628,8 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 MoneyInput(
                   key: const Key('debt-amount-field'),
                   label: 'Jumlah pokok',
+                  // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                  hint: '1.000.000',
                   initialValue: _amountMinor,
                   onChanged: (value) => setState(() => _amountMinor = value),
                 ),
@@ -676,6 +679,7 @@ class _DebtFormSheetState extends ConsumerState<_DebtFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Catatan',
+                  hintText: 'cth: Pinjaman modal usaha',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),
@@ -852,6 +856,8 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
               MoneyInput(
                 key: const Key('debt-payment-amount-field'),
                 label: 'Jumlah pembayaran',
+                // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                hint: '500.000',
                 initialValue: _amountMinor,
                 onChanged: (value) => setState(() => _amountMinor = value),
                 // Runs the validator while typing; without this the validator
@@ -884,6 +890,7 @@ class _PayDebtSheetState extends ConsumerState<_PayDebtSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Catatan',
+                  hintText: 'cth: Cicilan pertama',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),

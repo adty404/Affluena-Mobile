@@ -207,7 +207,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
             const SizedBox(height: AffluenaSpacing.space6),
-            const SectionHeader(title: 'Wawasan'),
+            // Not "Wawasan": that name belongs to the bottom-nav insights
+            // tab; this section hosts the Laporan/Peringatan/Aturan screens.
+            const SectionHeader(title: 'Laporan & Notifikasi'),
             const SizedBox(height: AffluenaSpacing.space3),
             AffluenaCard(
               child: Column(

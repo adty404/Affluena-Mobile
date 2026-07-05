@@ -122,6 +122,7 @@ class _SplitBillParticipantSheetState
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.person_outline),
                           labelText: 'Nama (Wajib)',
+                          hintText: 'cth: Budi',
                         ),
                         // Surface the blocker under the field as the user
                         // types instead of only after a failed save.
@@ -135,6 +136,8 @@ class _SplitBillParticipantSheetState
                       MoneyInput(
                         key: const Key('participant-amount-field'),
                         label: 'Jumlah bagian (Wajib)',
+                        // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                        hint: '75.000',
                         initialValue: _amountMinor,
                         focusNode: _amountFocus,
                         autovalidateMode: AutovalidateMode.onUserInteraction,

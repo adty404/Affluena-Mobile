@@ -25,11 +25,18 @@ class SettingsProfileCard extends StatelessWidget {
 
     final textTheme = Theme.of(context).textTheme;
     final colors = context.affluenaColors;
-    final displayName = user?.name.isNotEmpty == true ? user!.name : 'Affluena';
-    final email = user?.email ?? 'Sudah masuk';
-    final initial = displayName.trim().isEmpty
+    // A brand-new account has an empty name — never render the brand
+    // "Affluena" as if it were the user's name; show a muted placeholder and
+    // derive the avatar initial from the email's local part instead.
+    final hasName = user?.name.trim().isNotEmpty == true;
+    final displayName = hasName ? user!.name : 'Atur nama kamu';
+    final email = user?.email;
+    final initialSource = hasName
+        ? user!.name.trim()
+        : (email?.split('@').first ?? '');
+    final initial = initialSource.isEmpty
         ? 'A'
-        : displayName.trim().characters.first.toUpperCase();
+        : initialSource.characters.first.toUpperCase();
 
     return Semantics(
       container: true,
@@ -59,15 +66,21 @@ class SettingsProfileCard extends StatelessWidget {
                         displayName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: textTheme.titleMedium,
+                        style: hasName
+                            ? textTheme.titleMedium
+                            : textTheme.titleMedium?.copyWith(
+                                color: colors.inkMuted,
+                              ),
                       ),
-                      const SizedBox(height: AffluenaSpacing.space1),
-                      Text(
-                        email,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.bodySmall,
-                      ),
+                      if (email != null) ...[
+                        const SizedBox(height: AffluenaSpacing.space1),
+                        Text(
+                          email,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall,
+                        ),
+                      ],
                     ],
                   ),
                 ),

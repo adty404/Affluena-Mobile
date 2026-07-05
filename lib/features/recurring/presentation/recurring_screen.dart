@@ -611,6 +611,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.label_outline),
                   labelText: 'Nama',
+                  hintText: 'cth: Bayar kos',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -646,6 +647,8 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
               MoneyInput(
                 key: const Key('recurring-amount-field'),
                 label: 'Jumlah',
+                // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                hint: '750.000',
                 initialValue: _amountMinor,
                 onChanged: (value) => setState(() => _amountMinor = value),
               ),
@@ -677,6 +680,12 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.timelapse_outlined),
                   labelText: 'Jumlah interval',
+                  // The field is prefilled so the hint rarely shows — the
+                  // helper carries the meaning (rebuilds via setState when
+                  // the frequency changes).
+                  hintText: 'cth: 1',
+                  helperText:
+                      'cth: 2 = tiap 2 ${_frequency.label.toLowerCase()}',
                   errorText: _intervalError,
                 ),
                 onChanged: (_) => setState(() {}),
@@ -741,6 +750,7 @@ class _RecurringFormSheetState extends ConsumerState<_RecurringFormSheet> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.notes_outlined),
                   labelText: 'Catatan',
+                  hintText: 'cth: Transfer otomatis awal bulan',
                 ),
               ),
               const SizedBox(height: AffluenaSpacing.space5),

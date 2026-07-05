@@ -447,6 +447,8 @@ class _QuickEntryContent extends StatelessWidget {
                   MoneyInput(
                     key: const Key('quick-entry-amount-field'),
                     label: 'Jumlah',
+                    // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+                    hint: '50.000',
                     initialValue: amountMinor,
                     enabled: !isSaving,
                     onChanged: onAmountChanged,
@@ -523,6 +525,7 @@ class _QuickEntryContent extends StatelessWidget {
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.notes_outlined),
                       labelText: 'Catatan',
+                      hintText: 'cth: Kopi pagi',
                       helperText: 'Opsional',
                     ),
                     onChanged: (_) => onChanged(),

@@ -104,7 +104,10 @@ class _CategoryFormSheetState extends ConsumerState<_CategoryFormSheet> {
                 // The next control is a segmented button/picker that never
                 // receives keyboard focus, so "next" would strand the focus.
                 textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(labelText: 'Nama kategori'),
+                decoration: const InputDecoration(
+                  labelText: 'Nama kategori',
+                  hintText: 'Makanan',
+                ),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AffluenaSpacing.space4),

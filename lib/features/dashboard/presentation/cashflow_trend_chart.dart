@@ -157,19 +157,20 @@ class _CashflowTrendPainter extends CustomPainter {
 
   static String _monthLabel(String key) {
     // key is "yyyy-MM" for month buckets or "yyyy-MM-dd" for week buckets.
+    // id_ID abbreviations, kept as a const list (allocation-free in paint()).
     const months = [
       'Jan',
       'Feb',
       'Mar',
       'Apr',
-      'May',
+      'Mei',
       'Jun',
       'Jul',
-      'Aug',
+      'Agu',
       'Sep',
-      'Oct',
+      'Okt',
       'Nov',
-      'Dec',
+      'Des',
     ];
     final parts = key.split('-');
     if (parts.length < 2) return key;

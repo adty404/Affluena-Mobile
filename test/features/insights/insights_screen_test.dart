@@ -37,7 +37,9 @@ void main() {
     await tester.pumpWidget(insightsTestApp(repository));
     await tester.pumpInsightsState();
 
-    expect(find.text('Wawasan'), findsOneWidget);
+    // The pushed screen is titled after its active tab (the bottom-nav
+    // "Wawasan" is a different screen).
+    expect(find.text('Laporan'), findsWidgets);
     expect(find.text('Overview balance'), findsOneWidget);
     expect(find.text('Rp 4.000.000'), findsOneWidget);
     expect(find.text('79%'), findsOneWidget);
