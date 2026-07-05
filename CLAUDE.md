@@ -213,6 +213,15 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   read-only); the wallets others share to you show under Beranda's "Dibagikan untukku" section /
   `SharedWithMeScreen` (rendered as full cards mirroring Beranda's, **no "LIHAT" badge**). Endpoints
   are `/api/v1/partners` (historical) — see the API repo's contract.
+- **Only the invitee can answer a wallet invitation**: the API rejects a respond on someone else's
+  membership, so `WalletMembersSection` renders Terima/Tolak **only on the signed-in user's own
+  pending row** (`member.userId == authControllerProvider.user?.id`); anyone else's pending row
+  shows the neutral "Undangan untuk <email> menunggu jawaban mereka." line instead — never render
+  buttons the API will always reject.
+- **Every form text field carries an Indonesian `hintText`** (see DESIGN.md "Form Field Hints"):
+  `cth:`-prefixed examples for free-text, bare examples for name-like fields, and **bare id_ID-
+  grouped digits for `MoneyInput` hints** (the widget hardcodes the `Rp ` prefix — `cth:` inside it
+  would render "Rp cth: 50.000"). Plain-string hints keep `const InputDecoration`s const.
 - **`WalletsScreen` = your own spending wallets only**: it excludes goal-backing wallets (`isGoal` —
   they live under Tabungan) and wallets shared TO you (`isViewer` — they live under "Dibagikan
   untukku"), mirroring Beranda's Dompet section. Because sharing is one-way read-only, "Bersama" in

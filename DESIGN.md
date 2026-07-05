@@ -273,8 +273,16 @@ All spacing derives from a base of 4.
 
 - **Structure**: text field with an `Rp` prefix that groups thousands (`Rp 1.234.567`) as the user types.
 - **Usage**: every money amount field. Stores and reports an integer in minor units; users never read or type a bare unformatted integer. For balance adjustments an Increase/Decrease control supplies the sign.
+- **Hints**: pass `hint:` as **bare id_ID-grouped digits** (`'50.000'`, `'10.000.000'`) — the widget hardcodes the `Rp ` prefix, so a `cth:` prefix would render "Rp cth: 50.000". A descriptive sentence hint (e.g. `'Saldo dompet saat ini'`) is allowed where a numeric example adds nothing.
 - **States**: default, focused, disabled, error (validator).
 - **Accessibility**: numeric keyboard; the grouped value is plain text.
+
+### Form Field Hints
+
+- **Rule**: every form text field carries an Indonesian `hintText` placeholder so an empty form teaches its own format. No bare labels without a hint.
+- **Copy conventions**: free-text fields use a `cth:`-prefixed example (`'cth: Makan siang'`, `'cth: Bayar kos'`); name-like/category fields use a bare example (`'Makanan'`, `'Budi Santoso'`); emails use `'nama@email.com'` / `'email@contoh.com'`; numeric non-money fields show the expected shape (`'cth: 12'`, `'1-31'`); **MoneyInput hints are bare grouped digits** (see Money Input). Passwords describe the requirement (`'Minimal 8 karakter'`); persistent guidance stays in `helperText` — the hint disappears on typing.
+- **Search fields** use `hintText` (never `labelText`) so they read as search boxes (`'Cari kategori'`).
+- **Implementation**: plain-string hints keep `const InputDecoration`s const; drop `const` only when the hint is computed (e.g. tab-dependent examples).
 
 ### Date Picker Field
 
