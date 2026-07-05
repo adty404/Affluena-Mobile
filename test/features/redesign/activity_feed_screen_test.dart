@@ -250,7 +250,6 @@ Future<void> _pumpWithRepo(
   }
 }
 
-
 /// Search hides behind the Aktivitas header icon — expand it before typing.
 Future<void> _openSearch(WidgetTester tester) async {
   await tester.tap(find.byKey(const Key('activity-search-button')));
@@ -387,55 +386,53 @@ void main() {
     expect(find.text('Top-up'), findsOneWidget);
   });
 
-  testWidgets(
-    'a note-less transfer stays findable by its visible type label',
-    (tester) async {
-      final repo = _RecordingRepository();
-      await _pumpWithRepo(tester, repo);
-      // The transfer renders with its type-label title.
-      expect(find.text('Transfer'), findsOneWidget);
+  testWidgets('a note-less transfer stays findable by its visible type label', (
+    tester,
+  ) async {
+    final repo = _RecordingRepository();
+    await _pumpWithRepo(tester, repo);
+    // The transfer renders with its type-label title.
+    expect(find.text('Transfer'), findsOneWidget);
 
-      await _openSearch(tester);
-      await tester.enterText(
-        find.byKey(const Key('activity-search-field')),
-        'transfer',
-      );
-      await tester.pump(const Duration(milliseconds: 400));
-      for (var i = 0; i < 4; i++) {
-        await tester.pump(const Duration(milliseconds: 10));
-      }
+    await _openSearch(tester);
+    await tester.enterText(
+      find.byKey(const Key('activity-search-field')),
+      'transfer',
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 10));
+    }
 
-      // The server search matches nothing (it only sees note/category/wallet
-      // names), but the client-side title-parity pass unions the row back in
-      // — same behavior as the ledger tab's client search.
-      expect(find.text('Transfer'), findsOneWidget);
-      expect(find.text('Top-up'), findsNothing);
-      expect(find.text('Nonton berdua'), findsNothing);
-    },
-  );
+    // The server search matches nothing (it only sees note/category/wallet
+    // names), but the client-side title-parity pass unions the row back in
+    // — same behavior as the ledger tab's client search.
+    expect(find.text('Transfer'), findsOneWidget);
+    expect(find.text('Top-up'), findsNothing);
+    expect(find.text('Nonton berdua'), findsNothing);
+  });
 
-  testWidgets(
-    'the search query is capped at the API\'s 100-character limit',
-    (tester) async {
-      final repo = _RecordingRepository();
-      await _pumpWithRepo(tester, repo);
+  testWidgets('the search query is capped at the API\'s 100-character limit', (
+    tester,
+  ) async {
+    final repo = _RecordingRepository();
+    await _pumpWithRepo(tester, repo);
 
-      await _openSearch(tester);
-      await tester.enterText(
-        find.byKey(const Key('activity-search-field')),
-        'a' * 150,
-      );
-      await tester.pump(const Duration(milliseconds: 400));
-      for (var i = 0; i < 4; i++) {
-        await tester.pump(const Duration(milliseconds: 10));
-      }
+    await _openSearch(tester);
+    await tester.enterText(
+      find.byKey(const Key('activity-search-field')),
+      'a' * 150,
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 10));
+    }
 
-      // The API 400s on >100 runes; the field/debounce clamp means the
-      // provider can never send such a query.
-      expect(repo.lastSearch, isNotNull);
-      expect(repo.lastSearch!.runes.length, 100);
-    },
-  );
+    // The API 400s on >100 runes; the field/debounce clamp means the
+    // provider can never send such a query.
+    expect(repo.lastSearch, isNotNull);
+    expect(repo.lastSearch!.runes.length, 100);
+  });
 
   testWidgets(
     'backspacing a no-match search to empty never flashes the onboarding '

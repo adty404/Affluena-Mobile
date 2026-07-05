@@ -216,31 +216,34 @@ void main() {
   });
 
   group('NotificationScheduler.resyncNow', () {
-    test('arms the plan first, THEN prunes stale ids — never cancel-all', () async {
-      final device = FakeDeviceNotifications()..armed[_stale.id] = _stale;
-      final scheduler = NotificationScheduler(
-        device: device,
-        loadRules: () async => _rules(dueEnabled: true),
-      );
+    test(
+      'arms the plan first, THEN prunes stale ids — never cancel-all',
+      () async {
+        final device = FakeDeviceNotifications()..armed[_stale.id] = _stale;
+        final scheduler = NotificationScheduler(
+          device: device,
+          loadRules: () async => _rules(dueEnabled: true),
+        );
 
-      final now = DateTime(2026, 7, 5);
-      final summary = _summaryWith(subscriptions: [_sub('s1', '2026-07-10')]);
-      await withClock(Clock.fixed(now), () => scheduler.resyncNow(summary));
+        final now = DateTime(2026, 7, 5);
+        final summary = _summaryWith(subscriptions: [_sub('s1', '2026-07-10')]);
+        await withClock(Clock.fixed(now), () => scheduler.resyncNow(summary));
 
-      final expected = _plannedIds(summary, now);
-      expect(expected, hasLength(2)); // H-3 + H-1, both still in the future.
-      expect(device.armed.keys.toSet(), expected);
-      expect(device.cancelAllCalls, 0);
+        final expected = _plannedIds(summary, now);
+        expect(expected, hasLength(2)); // H-3 + H-1, both still in the future.
+        expect(device.armed.keys.toSet(), expected);
+        expect(device.cancelAllCalls, 0);
 
-      // Ordering: every arm happens before the prune pass, so a crash
-      // mid-resync leaves the old set or a superset — never nothing.
-      final lastSchedule = device.log.lastIndexWhere(
-        (entry) => entry.startsWith('schedule:'),
-      );
-      final pruneList = device.log.indexOf('listPendingIds');
-      expect(lastSchedule, lessThan(pruneList));
-      expect(device.log.last, 'cancelIds:${_stale.id}');
-    });
+        // Ordering: every arm happens before the prune pass, so a crash
+        // mid-resync leaves the old set or a superset — never nothing.
+        final lastSchedule = device.log.lastIndexWhere(
+          (entry) => entry.startsWith('schedule:'),
+        );
+        final pruneList = device.log.indexOf('listPendingIds');
+        expect(lastSchedule, lessThan(pruneList));
+        expect(device.log.last, 'cancelIds:${_stale.id}');
+      },
+    );
 
     test('a disabled due-reminder rule cancels all and arms nothing', () async {
       final device = FakeDeviceNotifications()..armed[_stale.id] = _stale;
@@ -261,24 +264,27 @@ void main() {
       expect(device.log.where((e) => e.startsWith('schedule:')), isEmpty);
     });
 
-    test('a rules-fetch failure keeps what is armed and arms nothing', () async {
-      final device = FakeDeviceNotifications()..armed[_stale.id] = _stale;
-      final scheduler = NotificationScheduler(
-        device: device,
-        loadRules: () async => throw StateError('rules down'),
-      );
+    test(
+      'a rules-fetch failure keeps what is armed and arms nothing',
+      () async {
+        final device = FakeDeviceNotifications()..armed[_stale.id] = _stale;
+        final scheduler = NotificationScheduler(
+          device: device,
+          loadRules: () async => throw StateError('rules down'),
+        );
 
-      await withClock(
-        Clock.fixed(DateTime(2026, 7, 5)),
-        () => scheduler.resyncNow(
-          _summaryWith(subscriptions: [_sub('s1', '2026-07-10')]),
-        ),
-      );
+        await withClock(
+          Clock.fixed(DateTime(2026, 7, 5)),
+          () => scheduler.resyncNow(
+            _summaryWith(subscriptions: [_sub('s1', '2026-07-10')]),
+          ),
+        );
 
-      expect(device.armed.keys, [_stale.id]);
-      expect(device.cancelAllCalls, 0);
-      expect(device.log, isEmpty);
-    });
+        expect(device.armed.keys, [_stale.id]);
+        expect(device.cancelAllCalls, 0);
+        expect(device.log, isEmpty);
+      },
+    );
 
     test('a superseded run can never clobber the fresh plan', () async {
       final device = FakeDeviceNotifications();
@@ -400,70 +406,76 @@ void main() {
   });
 
   group('AuthController + scheduler', () {
-    test('logout wipes armed device reminders without touching the network', () async {
-      final device = FakeDeviceNotifications()..armed[_stale.id] = _stale;
-      final scheduler = NotificationScheduler(
-        device: device,
-        loadRules: () async => throw StateError('network must not be needed'),
-      );
-      final container = ProviderContainer(
-        retry: noProviderRetry,
-        overrides: [
-          secureTokenStoreProvider.overrideWithValue(
-            authenticatedTokenStore(),
-          ),
-          authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
-          notificationSchedulerProvider.overrideWithValue(scheduler),
-        ],
-      );
-      addTearDown(container.dispose);
+    test(
+      'logout wipes armed device reminders without touching the network',
+      () async {
+        final device = FakeDeviceNotifications()..armed[_stale.id] = _stale;
+        final scheduler = NotificationScheduler(
+          device: device,
+          loadRules: () async => throw StateError('network must not be needed'),
+        );
+        final container = ProviderContainer(
+          retry: noProviderRetry,
+          overrides: [
+            secureTokenStoreProvider.overrideWithValue(
+              authenticatedTokenStore(),
+            ),
+            authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+            notificationSchedulerProvider.overrideWithValue(scheduler),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      await container.read(authControllerProvider.notifier).logout();
-      await scheduler.idle(); // clear() is fire-and-forget.
+        await container.read(authControllerProvider.notifier).logout();
+        await scheduler.idle(); // clear() is fire-and-forget.
 
-      expect(device.cancelAllCalls, 1);
-      expect(device.armed, isEmpty);
-    });
+        expect(device.cancelAllCalls, 1);
+        expect(device.armed, isEmpty);
+      },
+    );
 
-    test('a discarded (failing) restored session clears reminders too', () async {
-      final device = FakeDeviceNotifications()..armed[_stale.id] = _stale;
-      final scheduler = NotificationScheduler(
-        device: device,
-        loadRules: () async => _rules(dueEnabled: true),
-      );
-      final container = ProviderContainer(
-        retry: noProviderRetry,
-        overrides: [
-          secureTokenStoreProvider.overrideWithValue(
-            authenticatedTokenStore(),
-          ),
-          authRepositoryProvider.overrideWithValue(
-            FakeAuthRepository(meError: StateError('session dead')),
-          ),
-          notificationSchedulerProvider.overrideWithValue(scheduler),
-        ],
-      );
-      addTearDown(container.dispose);
+    test(
+      'a discarded (failing) restored session clears reminders too',
+      () async {
+        final device = FakeDeviceNotifications()..armed[_stale.id] = _stale;
+        final scheduler = NotificationScheduler(
+          device: device,
+          loadRules: () async => _rules(dueEnabled: true),
+        );
+        final container = ProviderContainer(
+          retry: noProviderRetry,
+          overrides: [
+            secureTokenStoreProvider.overrideWithValue(
+              authenticatedTokenStore(),
+            ),
+            authRepositoryProvider.overrideWithValue(
+              FakeAuthRepository(meError: StateError('session dead')),
+            ),
+            notificationSchedulerProvider.overrideWithValue(scheduler),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      // build() kicks off _restoreSession in a microtask; wait for it to land
-      // on unauthenticated.
-      container.read(authControllerProvider);
-      for (var i = 0; i < 10; i++) {
-        await Future<void>.delayed(Duration.zero);
-        if (container.read(authControllerProvider).status ==
-            AuthStatus.unauthenticated) {
-          break;
+        // build() kicks off _restoreSession in a microtask; wait for it to land
+        // on unauthenticated.
+        container.read(authControllerProvider);
+        for (var i = 0; i < 10; i++) {
+          await Future<void>.delayed(Duration.zero);
+          if (container.read(authControllerProvider).status ==
+              AuthStatus.unauthenticated) {
+            break;
+          }
         }
-      }
-      await scheduler.idle();
+        await scheduler.idle();
 
-      expect(
-        container.read(authControllerProvider).status,
-        AuthStatus.unauthenticated,
-      );
-      expect(device.cancelAllCalls, 1);
-      expect(device.armed, isEmpty);
-    });
+        expect(
+          container.read(authControllerProvider).status,
+          AuthStatus.unauthenticated,
+        );
+        expect(device.cancelAllCalls, 1);
+        expect(device.armed, isEmpty);
+      },
+    );
   });
 
   group('InsightsController.updateRule + scheduler', () {
@@ -492,47 +504,50 @@ void main() {
       return (container, device, scheduler);
     }
 
-    test('toggling OFF cancels armed reminders with nothing re-armed', () async {
-      final (container, device, scheduler) = setUpToggle(dueEnabled: true);
+    test(
+      'toggling OFF cancels armed reminders with nothing re-armed',
+      () async {
+        final (container, device, scheduler) = setUpToggle(dueEnabled: true);
 
-      // Seed: a summary resync armed the H-3/H-1 reminders while enabled.
-      await scheduler.resyncNow(summary);
-      expect(device.armed, hasLength(2));
-      device.log.clear();
+        // Seed: a summary resync armed the H-3/H-1 reminders while enabled.
+        await scheduler.resyncNow(summary);
+        expect(device.armed, hasLength(2));
+        device.log.clear();
 
-      await container
-          .read(insightsControllerProvider.notifier)
-          .updateRule(
-            _dueRule(enabled: true),
-            const NotificationRuleUpdate(enabled: false),
-          );
-      await scheduler.idle();
+        await container
+            .read(insightsControllerProvider.notifier)
+            .updateRule(
+              _dueRule(enabled: true),
+              const NotificationRuleUpdate(enabled: false),
+            );
+        await scheduler.idle();
 
-      expect(device.cancelAllCalls, 1);
-      expect(device.armed, isEmpty);
-      expect(device.log.where((e) => e.startsWith('schedule:')), isEmpty);
-    });
+        expect(device.cancelAllCalls, 1);
+        expect(device.armed, isEmpty);
+        expect(device.log.where((e) => e.startsWith('schedule:')), isEmpty);
+      },
+    );
 
-    test('toggling ON arms reminders without needing a money mutation', () async {
-      final (container, device, scheduler) = setUpToggle(dueEnabled: false);
+    test(
+      'toggling ON arms reminders without needing a money mutation',
+      () async {
+        final (container, device, scheduler) = setUpToggle(dueEnabled: false);
 
-      // Seed: the summary resync ran while the rule was off — nothing armed.
-      await scheduler.resyncNow(summary);
-      expect(device.armed, isEmpty);
+        // Seed: the summary resync ran while the rule was off — nothing armed.
+        await scheduler.resyncNow(summary);
+        expect(device.armed, isEmpty);
 
-      await container
-          .read(insightsControllerProvider.notifier)
-          .updateRule(
-            _dueRule(enabled: false),
-            const NotificationRuleUpdate(enabled: true),
-          );
-      await scheduler.idle();
+        await container
+            .read(insightsControllerProvider.notifier)
+            .updateRule(
+              _dueRule(enabled: false),
+              const NotificationRuleUpdate(enabled: true),
+            );
+        await scheduler.idle();
 
-      expect(
-        device.armed.keys.toSet(),
-        _plannedIds(summary, DateTime.now()),
-      );
-      expect(device.armed, hasLength(2));
-    });
+        expect(device.armed.keys.toSet(), _plannedIds(summary, DateTime.now()));
+        expect(device.armed, hasLength(2));
+      },
+    );
   });
 }

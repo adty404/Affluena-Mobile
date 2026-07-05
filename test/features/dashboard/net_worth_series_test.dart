@@ -120,10 +120,11 @@ void main() {
     });
 
     test('skips clamping without an earliest wallet date', () {
-      expect(
-        buildNetWorthSeries(1000, cashflows, monthKeys: months),
-        [500, 700, 1000],
-      );
+      expect(buildNetWorthSeries(1000, cashflows, monthKeys: months), [
+        500,
+        700,
+        1000,
+      ]);
     });
 
     test('fails open on mismatched month-key length', () {

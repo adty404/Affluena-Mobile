@@ -24,7 +24,8 @@ final deviceNotificationsProvider = Provider<DeviceNotifications>((ref) {
 final notificationSchedulerProvider = Provider<NotificationScheduler>((ref) {
   final scheduler = NotificationScheduler(
     device: ref.watch(deviceNotificationsProvider),
-    loadRules: () => ref.read(insightsRepositoryProvider).listNotificationRules(),
+    loadRules: () =>
+        ref.read(insightsRepositoryProvider).listNotificationRules(),
   );
   ref.onDispose(scheduler.dispose);
   return scheduler;
