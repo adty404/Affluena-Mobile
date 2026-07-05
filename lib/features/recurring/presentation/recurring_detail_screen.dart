@@ -72,20 +72,33 @@ class RecurringDetailScreen extends ConsumerWidget {
           if (current.canRun) ...[
             const SizedBox(height: AffluenaSpacing.space6),
             FilledButton.icon(
-              onPressed: () async {
-                final ok = await skyConfirm(
-                  context,
-                  title: 'Jalankan sekarang',
-                  message:
-                      'Catat ${current.type.label.toLowerCase()} ${MoneyFormatter.idr(current.amountMinor)} untuk ${current.name} sekarang?',
-                  confirmLabel: 'Jalankan',
-                );
-                if (ok && context.mounted) {
-                  await ref
-                      .read(recurringControllerProvider.notifier)
-                      .runRule(current);
-                }
-              },
+              // Gated on isSaving so a double tap can't book the transaction
+              // twice while a run is already in flight.
+              onPressed: state.isSaving
+                  ? null
+                  : () async {
+                      final ok = await skyConfirm(
+                        context,
+                        title: 'Jalankan sekarang',
+                        message:
+                            'Catat ${current.type.label.toLowerCase()} ${MoneyFormatter.idr(current.amountMinor)} untuk ${current.name} sekarang?',
+                        confirmLabel: 'Jalankan',
+                      );
+                      if (!ok || !context.mounted) return;
+                      final messenger = ScaffoldMessenger.of(context);
+                      await ref
+                          .read(recurringControllerProvider.notifier)
+                          .runRule(current);
+                      // The controller folds failures into state.actionError;
+                      // without feedback the user believes the transaction was
+                      // booked. Surface both outcomes.
+                      final err = ref
+                          .read(recurringControllerProvider)
+                          .actionError;
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(err ?? 'Transaksi dicatat.')),
+                      );
+                    },
               icon: const Icon(Icons.play_arrow_outlined),
               label: const Text('Jalankan sekarang'),
             ),

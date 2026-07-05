@@ -338,6 +338,7 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
               filters: _filters,
               txState: txState,
               onClear: _clearFilters,
+              onFiltersChanged: (next) => setState(() => _filters = next),
             ),
           ],
           const SizedBox(height: AffluenaSpacing.space4),
@@ -462,32 +463,56 @@ class _FilterButton extends StatelessWidget {
 
 /// A scrollable chip strip summarising the active server-side filters (wallet /
 /// category / date range) with an "Atur ulang" chip to clear them all.
+/// Tapping an individual chip removes exactly that filter.
 class _ActiveFilterChips extends StatelessWidget {
   const _ActiveFilterChips({
     required this.filters,
     required this.txState,
     required this.onClear,
+    required this.onFiltersChanged,
   });
 
   final TransactionFilters filters;
   final TransactionsState txState;
   final VoidCallback onClear;
 
+  /// Fired with the filter set minus the tapped chip's own filter
+  /// (copyWith's kUnchanged sentinel supports the explicit null).
+  final ValueChanged<TransactionFilters> onFiltersChanged;
+
   @override
   Widget build(BuildContext context) {
-    final labels = <String>[
-      if (filters.walletId != null) txState.walletName(filters.walletId!),
+    final chips = <({String label, TransactionFilters next})>[
+      if (filters.walletId != null)
+        (
+          label: txState.walletName(filters.walletId!),
+          next: filters.copyWith(walletId: null),
+        ),
       if (filters.categoryId != null)
-        (txState.categoryNames[filters.categoryId] ?? 'Kategori'),
+        (
+          label: txState.categoryNames[filters.categoryId] ?? 'Kategori',
+          next: filters.copyWith(categoryId: null),
+        ),
       if (filters.from != null)
-        'Dari ${txState.filterDateLabel(filters.from!)}',
-      if (filters.to != null) 'Sampai ${txState.filterDateLabel(filters.to!)}',
+        (
+          label: 'Dari ${txState.filterDateLabel(filters.from!)}',
+          next: filters.copyWith(from: null),
+        ),
+      if (filters.to != null)
+        (
+          label: 'Sampai ${txState.filterDateLabel(filters.to!)}',
+          next: filters.copyWith(to: null),
+        ),
     ];
 
     return AffluenaChipBar(
       chips: [
-        for (final label in labels)
-          AffluenaChoiceChip(label: label, selected: true, onSelected: () {}),
+        for (final chip in chips)
+          AffluenaChoiceChip(
+            label: chip.label,
+            selected: true,
+            onSelected: () => onFiltersChanged(chip.next),
+          ),
         AffluenaChoiceChip(
           key: const Key('activity-clear-filters'),
           label: 'Atur ulang',

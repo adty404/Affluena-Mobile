@@ -2,7 +2,6 @@ import 'package:affluena_mobile/app/provider_retry.dart';
 import 'package:affluena_mobile/app/theme/affluena_theme.dart';
 import 'package:affluena_mobile/features/auth/application/auth_controller.dart';
 import 'package:affluena_mobile/features/auth/data/auth_models.dart';
-import 'package:affluena_mobile/features/shared/presentation/widgets/affluena_card.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:affluena_mobile/features/wallets/data/wallet_repository.dart';
 import 'package:affluena_mobile/features/wallets/presentation/wallet_detail_screen.dart';
@@ -153,6 +152,8 @@ void main() {
       find.text('Kamu punya undangan yang menunggu untuk dompet bersama ini.'),
       findsOneWidget,
     );
+    // The signed-in user IS the invitee ('user-me'), so both the invite card
+    // and their own members-section row expose the accept/reject actions.
     expect(find.text('Terima'), findsWidgets);
     expect(find.text('Tolak'), findsWidgets);
   });
@@ -174,30 +175,31 @@ void main() {
         find.text('Dompet ini punya undangan berbagi yang belum dijawab.'),
         findsOneWidget,
       );
+      // The header invite card names the invitee with a neutral waiting line…
       expect(
         find.text(
           'Undangan untuk partner@affluena.test menunggu jawaban mereka.',
         ),
         findsOneWidget,
       );
-      // The invite card itself carries no accept/reject actions for a user who
-      // is not the invitee (the members section below still shows its own).
-      final card = find
-          .ancestor(
-            of: find.text(
-              'Dompet ini punya undangan berbagi yang belum dijawab.',
-            ),
-            matching: find.byType(AffluenaCard),
-          )
-          .first;
-      expect(
-        find.descendant(of: card, matching: find.text('Terima')),
-        findsNothing,
+      // …and so does their members-section row further down the ListView
+      // (scroll so the row actually builds before asserting on it).
+      await tester.scrollUntilVisible(
+        find.text('partner@affluena.test'),
+        240,
+        scrollable: find.byType(Scrollable).first,
       );
       expect(
-        find.descendant(of: card, matching: find.text('Tolak')),
-        findsNothing,
+        find.text(
+          'Undangan untuk partner@affluena.test menunggu jawaban mereka.',
+        ),
+        findsWidgets,
       );
+      // The signed-in user is not the invitee, so NOWHERE on the screen may
+      // offer accept/reject — the API rejects a response on someone else's
+      // invitation, so those buttons could only ever error.
+      expect(find.text('Terima'), findsNothing);
+      expect(find.text('Tolak'), findsNothing);
     },
   );
 

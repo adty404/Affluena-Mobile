@@ -4,6 +4,7 @@ import 'package:affluena_mobile/features/auth/data/auth_models.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
 import 'package:affluena_mobile/features/redesign/presentation/activity_feed_screen.dart';
 import 'package:affluena_mobile/features/shared/presentation/appearance/item_appearance.dart';
+import 'package:affluena_mobile/features/shared/presentation/widgets/affluena_choice_chip.dart';
 import 'package:affluena_mobile/features/transactions/application/transactions_controller.dart';
 import 'package:affluena_mobile/features/transactions/data/split_bill_models.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
@@ -554,4 +555,39 @@ void main() {
       expect(find.text('Top-up'), findsOneWidget);
     },
   );
+
+  testWidgets('tapping an active-filter chip removes only that filter', (
+    tester,
+  ) async {
+    final repo = _RecordingRepository();
+    await _pumpWithRepo(tester, repo);
+
+    // Apply BOTH a wallet and a category filter through the sheet.
+    await tester.tap(find.byKey(const Key('activity-filter-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-wallet-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('GoPay').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-category-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Makanan').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-apply-button')));
+    await tester.pumpAndSettle();
+
+    expect(repo.lastWalletId, 'w1');
+    expect(repo.lastCategoryId, 'c-food');
+
+    // Tapping the wallet chip removes exactly the wallet filter — the
+    // category filter (and its chip) must survive.
+    await tester.tap(find.widgetWithText(AffluenaChoiceChip, 'GoPay'));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 10));
+    }
+    expect(repo.lastWalletId, isNull);
+    expect(repo.lastCategoryId, 'c-food');
+    expect(find.widgetWithText(AffluenaChoiceChip, 'Makanan'), findsOneWidget);
+    expect(find.byKey(const Key('activity-clear-filters')), findsOneWidget);
+  });
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
+import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
@@ -12,8 +13,10 @@ import '../data/wallet_models.dart';
 import 'wallet_display.dart';
 import 'wallet_invite_sheet.dart';
 
-/// Renders the members list with accept/decline affordances on any pending
-/// invitation row. Reused by both the detail screen and the sharing screen.
+/// Renders the members list with accept/decline affordances **only on the
+/// signed-in user's own pending invitation row** — the API rejects responses
+/// on someone else's invite, so other pending rows show a neutral waiting
+/// line instead. Reused by both the detail screen and the sharing screen.
 class WalletMembersSection extends ConsumerWidget {
   const WalletMembersSection({
     required this.walletId,
@@ -30,6 +33,9 @@ class WalletMembersSection extends ConsumerWidget {
     final controller = ref.read(
       walletMembersControllerProvider(walletId).notifier,
     );
+    // Only the invitee can answer their own invitation (the API rejects a
+    // response on anyone else's membership), so identify the signed-in user.
+    final meId = ref.watch(authControllerProvider).user?.id;
 
     if (members.isEmpty) {
       return _MembersEmpty(
@@ -48,6 +54,7 @@ class WalletMembersSection extends ConsumerWidget {
           for (final (index, member) in members.indexed) ...[
             WalletMemberRow(
               member: member,
+              isCurrentUser: member.userId == meId,
               isPending: action.isPending(member.userId),
               onAccept: () =>
                   controller.respond(member, WalletShareStatus.joined),
@@ -65,6 +72,7 @@ class WalletMembersSection extends ConsumerWidget {
 class WalletMemberRow extends StatelessWidget {
   const WalletMemberRow({
     required this.member,
+    required this.isCurrentUser,
     required this.isPending,
     required this.onAccept,
     required this.onReject,
@@ -72,6 +80,11 @@ class WalletMemberRow extends StatelessWidget {
   });
 
   final WalletMember member;
+
+  /// Whether this row is the signed-in user's own membership. Only the
+  /// invitee may answer an invitation — accept/reject on someone else's
+  /// pending row would always be rejected by the API.
+  final bool isCurrentUser;
 
   /// Whether this row currently has a response in flight.
   final bool isPending;
@@ -81,7 +94,8 @@ class WalletMemberRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final isInvitePending = member.status == WalletShareStatus.pending;
+    final isInvitePending =
+        isCurrentUser && member.status == WalletShareStatus.pending;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AffluenaSpacing.space3),
@@ -137,6 +151,15 @@ class WalletMemberRow extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ] else if (member.status == WalletShareStatus.pending) ...[
+            // Someone else's unanswered invite: a neutral waiting line
+            // (mirrors _PendingInviteCard) instead of buttons that the API
+            // would always reject.
+            const SizedBox(height: AffluenaSpacing.space2),
+            Text(
+              'Undangan untuk ${member.email} menunggu jawaban mereka.',
+              style: textTheme.bodySmall,
             ),
           ],
         ],
