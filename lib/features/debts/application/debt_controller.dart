@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/formatters/date_formatter.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
@@ -157,7 +158,12 @@ class DebtController extends Notifier<DebtState> {
       debt,
       DebtUpdateRequest(
         counterpartyName: debt.counterpartyName,
-        dueDate: debt.dueDate,
+        // due_date is a date-only API field; never re-send the stored RFC3339
+        // timestamp raw (the debt handler happens to tolerate it today, but
+        // the date-only wire format is the contract).
+        dueDate: debt.dueDate == null
+            ? null
+            : AffluenaDateFormatter.apiDate(debt.dueDate!),
         status: DebtStatus.cancelled,
         note: debt.note,
       ),

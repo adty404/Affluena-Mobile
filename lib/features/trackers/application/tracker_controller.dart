@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/formatters/date_formatter.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
@@ -125,7 +126,9 @@ class TrackerController extends Notifier<TrackerState> {
         monthlyAmountMinor: installment.monthlyAmountMinor,
         tenorMonths: installment.tenorMonths,
         remainingMonths: installment.remainingMonths,
-        startDate: installment.startDate,
+        // The stored value is a full RFC3339 timestamp, but start_date is a
+        // strict date-only API field — re-sending it raw 400s.
+        startDate: AffluenaDateFormatter.apiDate(installment.startDate),
         dueDay: installment.dueDay,
         status: InstallmentStatus.cancelled,
         note: installment.note,
@@ -195,7 +198,10 @@ class TrackerController extends Notifier<TrackerState> {
         categoryId: subscription.categoryId,
         amountMinor: subscription.amountMinor,
         billingCycle: subscription.billingCycle,
-        nextDueDate: subscription.nextDueDate,
+        // The stored value is a full RFC3339 timestamp, but next_due_date is a
+        // strict date-only API field — re-sending it raw 400s and the pause/
+        // resume button silently does nothing.
+        nextDueDate: AffluenaDateFormatter.apiDate(subscription.nextDueDate),
         status: status,
         note: subscription.note,
         // Re-send the stored appearance so the status change preserves it.
