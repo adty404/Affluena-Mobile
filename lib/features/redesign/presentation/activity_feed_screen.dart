@@ -167,6 +167,10 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
 
   final _searchController = TextEditingController();
 
+  /// Whether the search field is expanded. Search lives behind a header icon
+  /// (mirroring the category picker); collapsing it clears the query.
+  bool _searchVisible = false;
+
   /// What the field currently shows (drives the clear button instantly).
   String _searchQuery = '';
 
@@ -260,54 +264,73 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
         // Extra bottom padding so the last row clears the floating nav pill.
         padding: AffluenaInsets.screen.copyWith(bottom: 120),
         children: [
-          Text(
-            'Aktivitas',
-            style: TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.w700,
-              color: context.sky.ink,
-            ),
-          ),
-          const SizedBox(height: AffluenaSpacing.space4),
-          TextField(
-            key: const Key('activity-search-field'),
-            controller: _searchController,
-            autocorrect: false,
-            textInputAction: TextInputAction.search,
-            // Silently cap at the API's 100-rune limit (no counter UI) so a
-            // pasted long string can't 400 the feed into the error state.
-            maxLength: _maxSearchRunes,
-            maxLengthEnforcement: MaxLengthEnforcement.enforced,
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              hintText: 'Cari catatan, dompet, atau kategori',
-              counterText: '',
-              suffixIcon: isSearching
-                  ? IconButton(
-                      key: const Key('activity-search-clear'),
-                      tooltip: 'Hapus pencarian',
-                      icon: const Icon(Icons.close),
-                      onPressed: _clearSearch,
-                    )
-                  : null,
-            ),
-            onChanged: _onSearchChanged,
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  'Transaksi terbaru dari semua dompetmu',
-                  style: TextStyle(fontSize: 12.5, color: context.sky.muted),
+                  'Aktivitas',
+                  style: TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                    color: context.sky.ink,
+                  ),
                 ),
               ),
-              const SizedBox(width: AffluenaSpacing.space2),
+              // Search is a header icon (not an always-on field), mirroring the
+              // category picker: tapping toggles the input; collapsing clears
+              // the query so the feed snaps back to the unsearched state.
+              IconButton(
+                key: const Key('activity-search-button'),
+                tooltip: _searchVisible ? 'Tutup pencarian' : 'Cari transaksi',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => setState(() {
+                  _searchVisible = !_searchVisible;
+                  if (!_searchVisible) _clearSearch();
+                }),
+                icon: Icon(
+                  _searchVisible ? Icons.close : Icons.search,
+                  color: context.sky.muted,
+                ),
+              ),
+              const SizedBox(width: AffluenaSpacing.space1),
               _FilterButton(
                 activeCount: _filters.activeCount,
                 onTap: () => _openFilters(context, txState),
               ),
             ],
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+          if (_searchVisible) ...[
+            TextField(
+              key: const Key('activity-search-field'),
+              controller: _searchController,
+              autofocus: true,
+              autocorrect: false,
+              textInputAction: TextInputAction.search,
+              // Silently cap at the API's 100-rune limit (no counter UI) so a
+              // pasted long string can't 400 the feed into the error state.
+              maxLength: _maxSearchRunes,
+              maxLengthEnforcement: MaxLengthEnforcement.enforced,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: 'Cari catatan, dompet, atau kategori',
+                counterText: '',
+                suffixIcon: isSearching
+                    ? IconButton(
+                        key: const Key('activity-search-clear'),
+                        tooltip: 'Hapus pencarian',
+                        icon: const Icon(Icons.close),
+                        onPressed: _clearSearch,
+                      )
+                    : null,
+              ),
+              onChanged: _onSearchChanged,
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
+          ],
+          Text(
+            'Transaksi terbaru dari semua dompetmu',
+            style: TextStyle(fontSize: 12.5, color: context.sky.muted),
           ),
           if (_filters.hasActiveFilters) ...[
             const SizedBox(height: AffluenaSpacing.space3),
