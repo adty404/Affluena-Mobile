@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,17 +21,21 @@ import '../../wallets/application/wallets_controller.dart';
 import '../../wallets/data/wallet_models.dart';
 
 /// The server-side filter key for the Aktivitas feed: an optional wallet,
-/// category, and inclusive date range. All-null = today's unfiltered feed.
+/// category, inclusive date range, and free-text search. All-null = today's
+/// unfiltered feed.
 ///
 /// A record compares by value (field-equal), so the family key is stable across
-/// rebuilds — the same `(walletId, categoryId, from, to)` never respawns a
-/// fetch. The [DateTime]s are the raw pickers; the provider date-truncates them
-/// to ISO before the request.
+/// rebuilds — the same `(walletId, categoryId, from, to, search)` never
+/// respawns a fetch. The [DateTime]s are the raw pickers; the provider
+/// date-truncates them to ISO before the request. [search] is the debounced,
+/// trimmed query (null when empty) — the API matches it against the note,
+/// category name, and wallet name over the FULL history.
 typedef ActivityQuery = ({
   String? walletId,
   String? categoryId,
   DateTime? from,
   DateTime? to,
+  String? search,
 });
 
 /// Recent transactions across MY wallets, newest first — the source for the
@@ -37,9 +43,11 @@ typedef ActivityQuery = ({
 /// the legacy Transactions tab filter.
 ///
 /// Keyed by an [ActivityQuery] so the feed's own date/category/wallet filters
-/// apply SERVER-side (mirroring the ledger's [TransactionsController.load]); the
-/// all-null query is the default unfiltered feed. The client-side search
-/// (note/wallet/category) is layered on top in [ActivityFeedView].
+/// AND the search query apply SERVER-side (mirroring the ledger's
+/// [TransactionsController.load]); the all-null query is the default
+/// unfiltered feed. Search used to be a client-side `contains` over the
+/// fetched page — it now rides the API's `search=` param, so it matches the
+/// full history instead of just the latest 100 rows.
 ///
 /// Wallets shared TO me (role 'viewer') are excluded, mirroring the main
 /// ledger's [TransactionsState.visibleTransactions]: those rows are read-only
@@ -54,6 +62,7 @@ final recentActivityProvider = FutureProvider.autoDispose
             categoryId: q.categoryId,
             from: _iso(q.from),
             to: _iso(q.to),
+            search: q.search,
             limit: 100,
             offset: 0,
             sort: 'transaction_at_desc',
@@ -96,8 +105,9 @@ class ActivityFeedScreen extends StatelessWidget {
 }
 
 /// The merged Activity timeline body (no Scaffold/back) — hosted standalone or
-/// as a tab in the redesign nav shell. Stateful for the client-side search query
-/// and the server-side filters (both local to this surface).
+/// as a tab in the redesign nav shell. Stateful for the debounced search query
+/// and the server-side filters (both local to this surface; both applied
+/// server-side through [recentActivityProvider]'s [ActivityQuery] key).
 class ActivityFeedView extends ConsumerStatefulWidget {
   const ActivityFeedView({super.key});
 
@@ -106,8 +116,18 @@ class ActivityFeedView extends ConsumerStatefulWidget {
 }
 
 class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
+  /// How long typing must pause before the search query hits the API. Keeps
+  /// keystroke-per-request traffic off the server while staying responsive.
+  static const _searchDebounce = Duration(milliseconds: 350);
+
   final _searchController = TextEditingController();
+
+  /// What the field currently shows (drives the clear button instantly).
   String _searchQuery = '';
+
+  /// The debounced query the provider fetches with (server-side `search=`).
+  String _debouncedQuery = '';
+  Timer? _searchTimer;
 
   /// Server-side filters (date/category/wallet). `type`/`tagId` stay null — the
   /// Aktivitas filter is date/category/wallet only (the sheet hides Tag).
@@ -115,17 +135,39 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
 
   @override
   void dispose() {
+    _searchTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  /// The family key the current filters map to.
+  /// The family key the current filters + debounced search map to.
   ActivityQuery get _query => (
     walletId: _filters.walletId,
     categoryId: _filters.categoryId,
     from: _filters.from,
     to: _filters.to,
+    search: _debouncedQuery.isEmpty ? null : _debouncedQuery,
   );
+
+  void _onSearchChanged(String value) {
+    setState(() => _searchQuery = value);
+    _searchTimer?.cancel();
+    _searchTimer = Timer(_searchDebounce, () {
+      if (!mounted) return;
+      setState(() => _debouncedQuery = value.trim());
+    });
+  }
+
+  /// Clearing is instant (no debounce): the button should restore the
+  /// unsearched feed immediately.
+  void _clearSearch() {
+    _searchTimer?.cancel();
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+      _debouncedQuery = '';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,14 +213,11 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
                       key: const Key('activity-search-clear'),
                       tooltip: 'Hapus pencarian',
                       icon: const Icon(Icons.close),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
+                      onPressed: _clearSearch,
                     )
                   : null,
             ),
-            onChanged: (value) => setState(() => _searchQuery = value),
+            onChanged: _onSearchChanged,
           ),
           const SizedBox(height: AffluenaSpacing.space3),
           Row(
@@ -218,8 +257,7 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
               message: 'Tidak bisa memuat aktivitas. Coba lagi, ya.',
               onRetry: () => ref.invalidate(recentActivityProvider(_query)),
             ),
-            data: (txns) {
-              final visible = _applySearch(txns, walletNames, txState);
+            data: (visible) {
               if (visible.isEmpty) {
                 // Distinguish a genuinely empty feed from one narrowed to
                 // nothing by the active search/filter.
@@ -257,28 +295,6 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
     );
   }
 
-  /// The client-side search, matching [TransactionsState.visibleTransactions]:
-  /// case-insensitive `contains` over the note, wallet name, and category name.
-  /// (Viewer-wallet exclusion already happened in the provider.)
-  List<Transaction> _applySearch(
-    List<Transaction> txns,
-    Map<String, String> walletNames,
-    TransactionsState txState,
-  ) {
-    final query = _searchQuery.trim().toLowerCase();
-    if (query.isEmpty) return txns;
-    return txns
-        .where((tx) {
-          final note = tx.note.toLowerCase();
-          final wallet = (walletNames[tx.walletId] ?? '').toLowerCase();
-          final category = txState.categoryName(tx).toLowerCase();
-          return note.contains(query) ||
-              wallet.contains(query) ||
-              category.contains(query);
-        })
-        .toList(growable: false);
-  }
-
   Future<void> _openFilters(
     BuildContext context,
     TransactionsState txState,
@@ -298,9 +314,11 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
   }
 
   void _clearAll() {
+    _searchTimer?.cancel();
     _searchController.clear();
     setState(() {
       _searchQuery = '';
+      _debouncedQuery = '';
       _filters = const TransactionFilters();
     });
   }

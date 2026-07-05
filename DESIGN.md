@@ -22,7 +22,7 @@ The authenticated shell (`RedesignShell`, route `/beranda`) is an **icon-only fl
 
 #### Beranda — sectioned dashboard
 
-Beranda is a single scrollable dashboard. A `Total saldo` hero (with a month delta) sits on top, followed by money-domain **sections** — each a titled header with a "Lihat semua" link over a **2-column card grid**; tapping a card opens that item's detail. The sections, in order:
+Beranda is a single scrollable dashboard. A `Total saldo` hero (with a month delta) sits on top, then a **Ringkasan** row — a savings-rate tile (monthly cashflow ÷ income, "—" when income is 0) beside a **"Tren kekayaan bersih"** sparkline (12 custom-painted points from `buildNetWorthSeries`: anchored at the current net worth, walking backward through each month's net cashflow) — and, only when dues exist, **"Jatuh tempo terdekat"** (the nearest 3 across cicilan/langganan/utang, each row tappable to its domain screen). Below those come the money-domain **sections** — each a titled header with a "Lihat semua" link over a **2-column card grid**; tapping a card opens that item's detail. The sections, in order:
 
 1. **Dompet** — wallets (shared wallets show member avatars + a "Bersama" badge)
 2. **Anggaran** — budgets (each card shows a spend-progress track)

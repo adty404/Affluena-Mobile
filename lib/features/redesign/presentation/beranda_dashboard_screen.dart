@@ -5,12 +5,20 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/section_palette.dart';
 import '../../../app/theme/sky_palette.dart';
+import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../budgets/application/budget_controller.dart';
 import '../../budgets/data/budget_models.dart';
 import '../../budgets/presentation/budget_detail_screen.dart';
 import '../../budgets/presentation/budget_screen.dart';
 import '../../categories/data/category_models.dart';
+import '../../dashboard/application/dashboard_home_controller.dart';
+import '../../dashboard/application/net_worth_series.dart';
+// `show`: dashboard_models' BudgetSummary would clash with the budgets
+// feature's BudgetSummary used by the Anggaran cards.
+import '../../dashboard/data/dashboard_models.dart'
+    show CashflowTrendResponse, DashboardSummary;
+import '../../debts/presentation/debt_detail_screen.dart';
 import '../../goals/application/goal_controller.dart';
 import '../../goals/data/goal_models.dart';
 import '../../goals/presentation/goal_detail_screen.dart';
@@ -55,6 +63,8 @@ class BerandaDashboardView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final walletsAsync = ref.watch(walletListProvider);
+    final summaryAsync = ref.watch(dashboardSummaryProvider);
+    final trendAsync = ref.watch(berandaCashflowTrendProvider);
     final budgetState = ref.watch(budgetControllerProvider);
     final goalState = ref.watch(goalControllerProvider);
     final trackerState = ref.watch(trackerControllerProvider);
@@ -100,6 +110,15 @@ class BerandaDashboardView extends ConsumerWidget {
             loading: walletsAsync.isLoading && spending.isEmpty,
           ),
           const SizedBox(height: AffluenaSpacing.space6),
+
+          // Ringkasan — savings rate + net-worth sparkline in one calm row.
+          // Skeletons while the summary loads; hidden entirely on error (the
+          // rest of Beranda still works, and Wawasan carries the analytics).
+          ..._ringkasan(context, summaryAsync, trendAsync),
+
+          // Jatuh tempo terdekat — the nearest 3 dues across subscriptions,
+          // installments, and debts. Hidden entirely when there are none.
+          ..._dueSection(context, summaryAsync.asData?.value),
 
           _Section(
             title: 'Dompet',
@@ -221,22 +240,152 @@ class BerandaDashboardView extends ConsumerWidget {
   /// controller stores its own load error, so a failed section falls back to
   /// its inline retry tile instead of failing the whole refresh.
   Future<void> _refresh(WidgetRef ref) async {
-    final wallets = () async {
-      ref.invalidate(walletListProvider);
+    // Refreshable future providers (wallets, summary, trend): invalidate and
+    // swallow the error — each section renders its own fallback.
+    Future<void> reload(
+      Future<Object?> Function() read,
+      void Function() invalidate,
+    ) async {
+      invalidate();
       try {
-        await ref.read(walletListProvider.future);
+        await read();
       } catch (_) {
-        // The Dompet section renders its own error + retry.
+        // The section renders its own error/hidden state.
       }
-    }();
+    }
+
     await Future.wait([
-      wallets,
+      reload(
+        () => ref.read(walletListProvider.future),
+        () => ref.invalidate(walletListProvider),
+      ),
+      reload(
+        () => ref.read(dashboardSummaryProvider.future),
+        () => ref.invalidate(dashboardSummaryProvider),
+      ),
+      reload(
+        () => ref.read(berandaCashflowTrendProvider.future),
+        () => ref.invalidate(berandaCashflowTrendProvider),
+      ),
       ref.read(budgetControllerProvider.notifier).load(),
       ref.read(goalControllerProvider.notifier).load(),
       ref.read(trackerControllerProvider.notifier).load(),
       ref.read(recurringControllerProvider.notifier).load(),
       ref.read(partnerControllerProvider.notifier).load(),
     ]);
+  }
+
+  // --- Ringkasan (savings rate + net-worth trend) ---------------------------
+
+  List<Widget> _ringkasan(
+    BuildContext context,
+    AsyncValue<DashboardSummary> summaryAsync,
+    AsyncValue<CashflowTrendResponse> trendAsync,
+  ) {
+    final summary = summaryAsync.asData?.value;
+    if (summary == null) {
+      if (!summaryAsync.isLoading) return const [];
+      return const [
+        _CardGrid(children: [_SkeletonCard(), _SkeletonCard()]),
+        SizedBox(height: AffluenaSpacing.space6),
+      ];
+    }
+
+    final trend = trendAsync.asData?.value.trend;
+    final series = trend == null
+        ? const <int>[]
+        : buildNetWorthSeries(
+            summary.netWorthMinor,
+            [for (final point in trend) point.cashflowMinor],
+          );
+
+    return [
+      _CardGrid(
+        children: [
+          _SavingsRateTile(summary: summary),
+          _NetWorthTrendCard(
+            series: series,
+            loading: trendAsync.isLoading,
+          ),
+        ],
+      ),
+      const SizedBox(height: AffluenaSpacing.space6),
+    ];
+  }
+
+  // --- Jatuh tempo terdekat --------------------------------------------------
+
+  List<Widget> _dueSection(BuildContext context, DashboardSummary? summary) {
+    if (summary == null) return const [];
+    final dues = _nearestDues(summary);
+    if (dues.isEmpty) return const [];
+
+    return [
+      Padding(
+        padding: const EdgeInsets.only(bottom: AffluenaSpacing.space1),
+        child: Text(
+          'Jatuh tempo terdekat',
+          style: TextStyle(
+            fontSize: 16.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.2,
+            color: context.sky.ink,
+          ),
+        ),
+      ),
+      Container(
+        key: const Key('beranda-due-section'),
+        decoration: BoxDecoration(
+          color: context.sky.surface,
+          border: Border.all(color: context.sky.line),
+          borderRadius: BorderRadius.circular(AffluenaRadii.control),
+        ),
+        child: Column(
+          children: [
+            for (var i = 0; i < dues.length; i++) ...[
+              if (i > 0)
+                Divider(height: 1, thickness: 1, color: context.sky.line),
+              _DueRow(entry: dues[i]),
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: AffluenaSpacing.space6),
+    ];
+  }
+
+  /// Merges the summary's upcoming subscriptions/installments/debts into one
+  /// soonest-first list and keeps the nearest three.
+  static List<_DueEntry> _nearestDues(DashboardSummary summary) {
+    final entries = <_DueEntry>[
+      for (final sub in summary.upcomingSubscriptions)
+        _DueEntry(
+          kind: _DueKind.subscription,
+          name: sub.name,
+          dueDateIso: sub.nextDueDate,
+          amountMinor: sub.amountMinor,
+          location: SubscriptionDetailScreen.location(sub.id),
+        ),
+      for (final inst in summary.upcomingInstallments)
+        _DueEntry(
+          kind: _DueKind.installment,
+          name: inst.name,
+          dueDateIso: inst.dueDate,
+          amountMinor: inst.monthlyAmountMinor,
+          location: InstallmentDetailScreen.location(inst.id),
+        ),
+      for (final debt in summary.upcomingDebts)
+        _DueEntry(
+          kind: _DueKind.debt,
+          name: debt.type == 'receivable'
+              ? 'Piutang · ${debt.counterpartyName}'
+              : 'Utang · ${debt.counterpartyName}',
+          dueDateIso: debt.dueDate,
+          amountMinor: debt.remainingAmountMinor,
+          location: DebtDetailScreen.location(debt.id),
+        ),
+    ]..sort((a, b) => a.dueDateIso.compareTo(b.dueDateIso));
+    return entries.take(3).toList(growable: false);
   }
 
   // --- card builders -------------------------------------------------------
@@ -764,6 +913,325 @@ class _DashCard extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- Ringkasan: savings rate -------------------------------------------------
+
+/// This month's savings rate: `monthlyCashflowMinor / monthlyIncomeMinor`.
+/// Green when the month is net-positive, coral when negative, an em dash when
+/// there is no income yet to divide by.
+class _SavingsRateTile extends StatelessWidget {
+  const _SavingsRateTile({required this.summary});
+
+  final DashboardSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final income = summary.monthlyIncomeMinor;
+    final hasRate = income != 0;
+    final percent = hasRate
+        ? (summary.monthlyCashflowMinor * 100 / income).round()
+        : 0;
+    final tone = !hasRate
+        ? context.sky.muted
+        : (summary.monthlyCashflowMinor < 0
+              ? context.sky.danger
+              : context.sky.income);
+
+    return Container(
+      key: const Key('beranda-savings-rate'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.sky.surface,
+        border: Border.all(color: context.sky.line),
+        borderRadius: BorderRadius.circular(AffluenaRadii.control),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Rasio menabung',
+            style: TextStyle(fontSize: 11.5, color: context.sky.muted),
+          ),
+          const SizedBox(height: AffluenaSpacing.space2),
+          Text(
+            hasRate ? '$percent%' : '—',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+              color: tone,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            hasRate
+                ? 'dari pemasukan bulan ini'
+                : 'Belum ada pemasukan bulan ini',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10.5, color: context.sky.faint),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// --- Ringkasan: net-worth trend -----------------------------------------------
+
+/// A 12-point net-worth sparkline (see [buildNetWorthSeries]) with compact
+/// first/last labels. Custom-painted — no chart package.
+class _NetWorthTrendCard extends StatelessWidget {
+  const _NetWorthTrendCard({required this.series, required this.loading});
+
+  final List<int> series;
+  final bool loading;
+
+  static String _label(int minor) =>
+      '${minor < 0 ? '−' : ''}Rp ${MoneyFormatter.compactIdr(minor)}';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('beranda-networth-trend'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.sky.surface,
+        border: Border.all(color: context.sky.line),
+        borderRadius: BorderRadius.circular(AffluenaRadii.control),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Tren kekayaan bersih',
+            style: TextStyle(fontSize: 11.5, color: context.sky.muted),
+          ),
+          const SizedBox(height: AffluenaSpacing.space2),
+          if (series.length >= 2) ...[
+            SizedBox(
+              height: 34,
+              width: double.infinity,
+              child: CustomPaint(
+                painter: _SparklinePainter(
+                  values: series,
+                  line: context.sky.accent,
+                  fill: context.sky.accent.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _label(series.first),
+                  style: TextStyle(fontSize: 10, color: context.sky.faint),
+                ),
+                Text(
+                  _label(series.last),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: context.sky.ink,
+                  ),
+                ),
+              ],
+            ),
+          ] else if (loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: AffluenaSpacing.space3),
+              child: _Skeleton(width: 120, height: 22),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AffluenaSpacing.space3,
+              ),
+              child: Text(
+                'Belum ada data tren',
+                style: TextStyle(fontSize: 11, color: context.sky.faint),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A minimal line sparkline: normalized to the series' min/max (a flat series
+/// draws a centered line), a soft fill under the curve, and a dot on the
+/// newest point.
+class _SparklinePainter extends CustomPainter {
+  const _SparklinePainter({
+    required this.values,
+    required this.line,
+    required this.fill,
+  });
+
+  final List<int> values;
+  final Color line;
+  final Color fill;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.length < 2) return;
+    final min = values.reduce((a, b) => a < b ? a : b);
+    final max = values.reduce((a, b) => a > b ? a : b);
+    final span = (max - min) == 0 ? 1.0 : (max - min).toDouble();
+
+    // 2px inset so the stroke + end dot never clip at the edges.
+    const inset = 2.0;
+    final w = size.width - inset * 2;
+    final h = size.height - inset * 2;
+
+    Offset at(int i) {
+      final x = inset + w * i / (values.length - 1);
+      final y = inset + h * (1 - (values[i] - min) / span);
+      return Offset(x, y);
+    }
+
+    final path = Path()..moveTo(at(0).dx, at(0).dy);
+    for (var i = 1; i < values.length; i++) {
+      path.lineTo(at(i).dx, at(i).dy);
+    }
+
+    final area = Path.from(path)
+      ..lineTo(at(values.length - 1).dx, size.height)
+      ..lineTo(at(0).dx, size.height)
+      ..close();
+    canvas.drawPath(area, Paint()..color = fill);
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = line
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+    canvas.drawCircle(at(values.length - 1), 2.4, Paint()..color = line);
+  }
+
+  @override
+  bool shouldRepaint(_SparklinePainter oldDelegate) =>
+      oldDelegate.values != values ||
+      oldDelegate.line != line ||
+      oldDelegate.fill != fill;
+}
+
+// --- Jatuh tempo terdekat ------------------------------------------------------
+
+enum _DueKind { subscription, installment, debt }
+
+class _DueEntry {
+  const _DueEntry({
+    required this.kind,
+    required this.name,
+    required this.dueDateIso,
+    required this.amountMinor,
+    required this.location,
+  });
+
+  final _DueKind kind;
+  final String name;
+  final String dueDateIso;
+  final int amountMinor;
+
+  /// The go_router location of the item's detail screen.
+  final String location;
+}
+
+class _DueRow extends StatelessWidget {
+  const _DueRow({required this.entry});
+
+  final _DueEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final (hue, icon, label) = switch (entry.kind) {
+      _DueKind.subscription => (
+        SectionPalette.langganan.of(context),
+        Icons.subscriptions_outlined,
+        'Langganan',
+      ),
+      _DueKind.installment => (
+        SectionPalette.cicilan.of(context),
+        Icons.credit_card_outlined,
+        'Cicilan',
+      ),
+      // Debts have no Beranda section; amber reads "obligation" in the
+      // existing hue language without inventing a new colour.
+      _DueKind.debt => (
+        SectionPalette.anggaran.of(context),
+        Icons.handshake_outlined,
+        'Utang',
+      ),
+    };
+    final dateLabel = AffluenaDateFormatter.shortDate(entry.dueDateIso);
+
+    return InkWell(
+      onTap: () => context.push(entry.location),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        child: Row(
+          children: [
+            _IconTile(
+              icon: icon,
+              customColor: hue.strong,
+              customBg: hue.iconBg,
+              customBorder: Colors.transparent,
+            ),
+            const SizedBox(width: AffluenaSpacing.space3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: context.sky.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    entry.kind == _DueKind.debt
+                        ? dateLabel
+                        : '$label · $dateLabel',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.sky.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AffluenaSpacing.space2),
+            Text(
+              MoneyFormatter.idr(entry.amountMinor),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+                color: context.sky.ink,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
         ),
       ),
     );

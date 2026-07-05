@@ -95,13 +95,20 @@ class _StubTransactionsController extends TransactionsController {
 }
 
 // A fake repository that records the last listTransactions params so a test can
-// assert the feed's server-side filter maps to the right query — and returns
-// only rows matching walletId/categoryId so the shown list reflects the filter.
+// assert the feed's server-side filter/search maps to the right query — and
+// returns only matching rows (emulating the API's walletId/categoryId filters
+// and its `search=` note/category-name/wallet-name matcher) so the shown list
+// reflects the query.
 class _RecordingRepository implements TransactionRepository {
   String? lastWalletId;
   String? lastCategoryId;
   String? lastFrom;
   String? lastTo;
+  String? lastSearch;
+
+  // The server resolves names itself; mirror that here.
+  static const _walletNames = {'w1': 'GoPay'};
+  static const _categoryNames = {'c-food': 'Makanan'};
 
   @override
   Future<TransactionListResponse> listTransactions({
@@ -111,6 +118,7 @@ class _RecordingRepository implements TransactionRepository {
     String? tagId,
     String? from,
     String? to,
+    String? search,
     int? limit,
     int? offset,
     String? sort,
@@ -119,9 +127,19 @@ class _RecordingRepository implements TransactionRepository {
     lastCategoryId = categoryId;
     lastFrom = from;
     lastTo = to;
+    lastSearch = search;
+    final query = search?.toLowerCase();
     final rows = <Transaction>[_byMe, _bySarah].where((t) {
       if (walletId != null && t.walletId != walletId) return false;
       if (categoryId != null && t.categoryId != categoryId) return false;
+      if (query != null && query.isNotEmpty) {
+        final haystack = [
+          t.note,
+          _walletNames[t.walletId] ?? '',
+          _categoryNames[t.categoryId] ?? '',
+        ].join(' ').toLowerCase();
+        if (!haystack.contains(query)) return false;
+      }
       return true;
     }).toList();
     return TransactionListResponse(
@@ -275,48 +293,62 @@ void main() {
     expect(find.text('Hapus transaksi'), findsOneWidget);
   });
 
-  testWidgets('search narrows the shown rows by note/wallet/category', (
-    tester,
-  ) async {
-    await _pump(tester);
-    // Both rows show before searching.
-    expect(find.text('Top-up'), findsOneWidget);
-    expect(find.text('Nonton berdua'), findsOneWidget);
+  testWidgets(
+    'search debounces into a server-side query and narrows the rows',
+    (tester) async {
+      final repo = _RecordingRepository();
+      await _pumpWithRepo(tester, repo);
+      // Both rows show before searching, with no search param sent.
+      expect(find.text('Top-up'), findsOneWidget);
+      expect(find.text('Nonton berdua'), findsOneWidget);
+      expect(repo.lastSearch, isNull);
 
-    await tester.enterText(
-      find.byKey(const Key('activity-search-field')),
-      'nonton',
-    );
-    for (var i = 0; i < 4; i++) {
-      await tester.pump(const Duration(milliseconds: 10));
-    }
+      await tester.enterText(
+        find.byKey(const Key('activity-search-field')),
+        'nonton',
+      );
+      // Inside the debounce window nothing has been sent yet.
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(repo.lastSearch, isNull);
 
-    // Only the matching row remains.
-    expect(find.text('Nonton berdua'), findsOneWidget);
-    expect(find.text('Top-up'), findsNothing);
+      // Past the ~350ms debounce the provider re-fetches with `search=`.
+      await tester.pump(const Duration(milliseconds: 400));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+      expect(repo.lastSearch, 'nonton');
 
-    // Clearing the search restores both rows.
-    await tester.tap(find.byKey(const Key('activity-search-clear')));
-    for (var i = 0; i < 4; i++) {
-      await tester.pump(const Duration(milliseconds: 10));
-    }
-    expect(find.text('Top-up'), findsOneWidget);
-    expect(find.text('Nonton berdua'), findsOneWidget);
-  });
+      // Only the (server-)matching row remains.
+      expect(find.text('Nonton berdua'), findsOneWidget);
+      expect(find.text('Top-up'), findsNothing);
+
+      // Clearing the search is instant (no debounce) and restores both rows.
+      await tester.tap(find.byKey(const Key('activity-search-clear')));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+      expect(repo.lastSearch, isNull);
+      expect(find.text('Top-up'), findsOneWidget);
+      expect(find.text('Nonton berdua'), findsOneWidget);
+    },
+  );
 
   testWidgets('a search with no matches shows the no-results empty state', (
     tester,
   ) async {
-    await _pump(tester);
+    final repo = _RecordingRepository();
+    await _pumpWithRepo(tester, repo);
 
     await tester.enterText(
       find.byKey(const Key('activity-search-field')),
       'zzz-nope',
     );
+    await tester.pump(const Duration(milliseconds: 400));
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 10));
     }
 
+    expect(repo.lastSearch, 'zzz-nope');
     expect(find.text('Tidak ada transaksi yang cocok'), findsOneWidget);
     expect(find.text('Top-up'), findsNothing);
     expect(find.text('Nonton berdua'), findsNothing);
@@ -326,6 +358,7 @@ void main() {
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 10));
     }
+    expect(repo.lastSearch, isNull);
     expect(find.text('Top-up'), findsOneWidget);
   });
 

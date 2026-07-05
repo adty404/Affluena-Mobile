@@ -1,5 +1,8 @@
 import 'package:affluena_mobile/features/budgets/application/budget_controller.dart';
 import 'package:affluena_mobile/features/budgets/data/budget_models.dart';
+import 'package:affluena_mobile/features/dashboard/application/dashboard_home_controller.dart';
+import 'package:affluena_mobile/features/dashboard/data/dashboard_models.dart'
+    as dashboard;
 import 'package:affluena_mobile/features/goals/application/goal_controller.dart';
 import 'package:affluena_mobile/features/goals/data/goal_models.dart';
 import 'package:affluena_mobile/features/partner/application/partner_controller.dart';
@@ -147,6 +150,32 @@ class _StubPartner extends PartnerController {
   PartnerState build() => const PartnerState();
 }
 
+// Beranda's Ringkasan + due-list sources; overriding the providers directly
+// keeps the test hermetic (and skips the notification-scheduler side hook).
+const _summary = dashboard.DashboardSummary(
+  month: '2026-06',
+  netWorthMinor: 16370000,
+  monthlyIncomeMinor: 9500000,
+  monthlyExpenseMinor: 3200000,
+  monthlyCashflowMinor: 6300000,
+  budget: dashboard.BudgetSummary(
+    limitMinor: 4000000,
+    spentMinor: 1800000,
+    remainingMinor: 2200000,
+    usagePercent: 45,
+  ),
+  upcomingSubscriptions: [],
+  upcomingInstallments: [],
+  upcomingDebts: [],
+);
+
+final _summaryOverrides = [
+  dashboardSummaryProvider.overrideWith((ref) async => _summary),
+  berandaCashflowTrendProvider.overrideWith(
+    (ref) async => const dashboard.CashflowTrendResponse(trend: []),
+  ),
+];
+
 Future<void> _pump(WidgetTester tester) async {
   await tester.binding.setSurfaceSize(const Size(390, 2200));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -159,6 +188,7 @@ Future<void> _pump(WidgetTester tester) async {
         trackerControllerProvider.overrideWith(_StubTracker.new),
         recurringControllerProvider.overrideWith(_StubRecurring.new),
         partnerControllerProvider.overrideWith(_StubPartner.new),
+        ..._summaryOverrides,
       ],
       child: const MaterialApp(home: Scaffold(body: BerandaDashboardView())),
     ),
@@ -206,6 +236,7 @@ void main() {
           trackerControllerProvider.overrideWith(_StubTracker.new),
           recurringControllerProvider.overrideWith(_StubRecurring.new),
           partnerControllerProvider.overrideWith(_StubPartner.new),
+          ..._summaryOverrides,
         ],
         child: const MaterialApp(home: Scaffold(body: BerandaDashboardView())),
       ),

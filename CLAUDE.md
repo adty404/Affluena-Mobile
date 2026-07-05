@@ -115,18 +115,38 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   `TransactionActivityRow` (`transactions/presentation/transaction_activity_row.dart`); its row
   **title falls back to the category name** (then the type label) when a transaction has no note — so
   a note-less expense reads "Makanan", not "Pengeluaran".
-- **The Aktivitas feed has search + date/kategori/dompet filters**: a client-side **search field**
-  (`activity-search-field`, case-insensitive `contains` over note / wallet / category — same
-  semantics as the ledger's `visibleTransactions`) and a `Icons.tune` **filter button**
-  (`activity-filter-button`) that reuses the ledger's `showTransactionFilterSheet` with the new
-  `initialFilters:` (seed from the feed's own filters, decoupled from the ledger state) +
-  `includeTag: false` (hides the Tag row — Aktivitas filters by date/category/wallet only). The
-  filters apply **server-side**: `recentActivityProvider` is now a
+- **The Aktivitas feed has search + date/kategori/dompet filters — ALL server-side**: the
+  **search field** (`activity-search-field`) debounces ~350ms into the API's `search=` param
+  (full-history, matches note + category name + wallet name server-side — no more 100-row
+  client-side ceiling) and the `Icons.tune` **filter button** (`activity-filter-button`) reuses
+  the ledger's `showTransactionFilterSheet` with `initialFilters:` (seed from the feed's own
+  filters, decoupled from the ledger state) + `includeTag: false` (Aktivitas filters by
+  date/category/wallet only). `recentActivityProvider` is a
   **`FutureProvider.autoDispose.family`** keyed on `ActivityQuery`
-  (`{walletId, categoryId, from, to}` — a record, so the key is value-stable); the all-null query is
-  the default unfiltered feed. Active filters show as an `AffluenaChipBar` with an "Atur ulang" chip
-  (`activity-clear-filters`); a search/filter that matches nothing shows a distinct "Tidak ada
-  transaksi yang cocok" empty state, separate from the unfiltered "Belum ada transaksi".
+  (`{walletId, categoryId, from, to, search}` — a record, so the key is value-stable); the all-null
+  query is the default unfiltered feed. Active filters show as an `AffluenaChipBar` with an
+  "Atur ulang" chip (`activity-clear-filters`); a search/filter that matches nothing shows a
+  distinct "Tidak ada transaksi yang cocok" empty state, separate from "Belum ada transaksi".
+- **Device notifications are LOCAL and rules-gated (no FCM/Firebase)** —
+  `lib/features/notifications/`: `due_reminder_planner.dart` (pure: dues + rules + now →
+  `PlannedReminder` list — H-3 & H-1 at 09:00 local for upcoming installments/subscriptions/debts,
+  deterministic ids, past instants skipped, cap 50), `notification_scheduler.dart` (debounced ~3s
+  `requestResync(summary)`: fetch `notification_rules` → disabled/missing `due-reminder` rule ⇒
+  cancel-all & arm nothing; rules-fetch failure ⇒ abort quietly WITHOUT cancelling what's armed),
+  `local_device_notifications.dart` (flutter_local_notifications adapter — Android only, inexact
+  `zonedSchedule`, channel "Pengingat jatuh tempo", every call fail-quiet). The single resync hook
+  is the Beranda summary load (`dashboard_home_controller.dart` — covers app start AND every
+  financial mutation, since `dashboardSummaryProvider` is in `_balanceProviders`). Pengaturan →
+  Aturan notifikasi hosts `DeviceNotificationsCard` ("Aktifkan notifikasi perangkat", requests
+  Android 13+ POST_NOTIFICATIONS once). **This plugin is a NATIVE change: it shipped as the
+  1.4.0+7 Shorebird RELEASE** — future Dart edits are patchable again, but touching the plugin
+  set/Android config needs another release.
+- **Beranda gained three data sections**: "Jatuh tempo terdekat" (nearest 3 dues merged across
+  upcoming subscriptions/installments/debts, tappable to their domain screens, hidden when empty),
+  a savings-rate tile (monthly cashflow ÷ income, "—" when income is 0), and the "Tren kekayaan
+  bersih" sparkline (custom-painted, 12 points from `buildNetWorthSeries` in
+  `dashboard/application/net_worth_series.dart` — anchors current `net_worth_minor` and walks
+  backward subtracting each month's net cashflow).
 - **Every transaction row is tappable → the detail sheet**: tapping a transaction anywhere it's
   listed opens `showTransactionDetail(context, ref, txState, tx)` (view / edit / delete) — the ledger,
   Aktivitas, the Kalender day sheet, **room/wallet detail**, the **budget detail** list, and the

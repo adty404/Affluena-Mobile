@@ -1,12 +1,39 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/formatters/date_formatter.dart';
+import '../../notifications/application/notification_scheduler.dart';
 import '../data/dashboard_models.dart';
 import '../data/dashboard_repository.dart';
 
 // The old dashboard's aggregate provider (dashboardHomeProvider/DashboardHome)
 // was removed in the redesign final flip. The analytics providers below survive
 // because the redesign Insights screen reuses them.
+
+/// The dashboard summary (net worth, this month's cashflow, and the upcoming
+/// installment/subscription/debt dues) powering Beranda's "Ringkasan" and
+/// "Jatuh tempo terdekat" sections.
+///
+/// Every successful (re)fetch also hands the fresh dues to the
+/// [NotificationScheduler] (`requestResync`, debounced inside the scheduler).
+/// This single hook covers both required resync moments: app start/login
+/// (Beranda mounts and fetches the summary) and every money mutation
+/// (`invalidateBalances` lists this provider, so it re-runs while Beranda is
+/// alive). On the macOS test host the scheduler is a no-op (not Android).
+final dashboardSummaryProvider = FutureProvider.autoDispose<DashboardSummary>((
+  ref,
+) async {
+  final summary = await ref.watch(dashboardRepositoryProvider).summary();
+  ref.read(notificationSchedulerProvider).requestResync(summary);
+  return summary;
+});
+
+/// Twelve months of cashflow history for Beranda's "Tren kekayaan bersih"
+/// sparkline. Separate from [dashboardCashflowTrendProvider] (the Wawasan
+/// chart), which is keyed to the user-toggled granularity and a shorter window.
+final berandaCashflowTrendProvider =
+    FutureProvider.autoDispose<CashflowTrendResponse>((ref) {
+      return ref.watch(dashboardRepositoryProvider).cashflowTrend(months: 12);
+    });
 
 /// Bucket size for the cashflow trend chart. Toggled from the Insights screen.
 enum CashflowGranularity { month, week }

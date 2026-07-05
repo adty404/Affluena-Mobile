@@ -323,15 +323,21 @@ class FakeAuthRepository implements AuthRepository {
 }
 
 class FakeDashboardRepository implements DashboardRepository {
-  const FakeDashboardRepository({this.summaryResponse = seededSummary});
+  const FakeDashboardRepository({
+    this.summaryResponse = seededSummary,
+    this.trendResponse = const CashflowTrendResponse(trend: []),
+  });
 
   final DashboardSummary summaryResponse;
+  final CashflowTrendResponse trendResponse;
 
   @override
   Future<DashboardSummary> summary({String? month}) async {
     return summaryResponse;
   }
 
+  // Beranda's net-worth sparkline fetches the 12-month trend on mount; the
+  // empty default renders the card's "no data" state hermetically.
   @override
   Future<CashflowTrendResponse> cashflowTrend({
     int? months,
@@ -339,8 +345,8 @@ class FakeDashboardRepository implements DashboardRepository {
     int? weeks,
     String? from,
     String? to,
-  }) {
-    throw UnimplementedError();
+  }) async {
+    return trendResponse;
   }
 
   @override
@@ -369,6 +375,7 @@ class FakeTransactionRepository implements TransactionRepository {
     String? tagId,
     String? from,
     String? to,
+    String? search,
     int? limit,
     int? offset,
     String? sort,

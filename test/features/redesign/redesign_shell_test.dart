@@ -65,6 +65,23 @@ const _txn = Transaction(
   updatedAt: '2026-06-20T08:00:00Z',
 );
 
+const _summary = DashboardSummary(
+  month: '2026-06',
+  netWorthMinor: 16370000,
+  monthlyIncomeMinor: 9500000,
+  monthlyExpenseMinor: 3200000,
+  monthlyCashflowMinor: 6300000,
+  budget: BudgetSummary(
+    limitMinor: 4000000,
+    spentMinor: 1800000,
+    remainingMinor: 2200000,
+    usagePercent: 45,
+  ),
+  upcomingSubscriptions: [],
+  upcomingInstallments: [],
+  upcomingDebts: [],
+);
+
 const _trend = CashflowTrendResponse(
   trend: [
     CashflowTrendPoint(
@@ -151,6 +168,10 @@ Future<void> _pump(WidgetTester tester) async {
           _StubTransactionsController.new,
         ),
         recentActivityProvider.overrideWith((ref, q) async => const [_txn]),
+        // Beranda's Ringkasan + "Jatuh tempo terdekat" sources. Overriding the
+        // providers directly also skips the notification-scheduler side hook.
+        dashboardSummaryProvider.overrideWith((ref) async => _summary),
+        berandaCashflowTrendProvider.overrideWith((ref) async => _trend),
         dashboardCashflowTrendProvider.overrideWith((ref) async => _trend),
         dashboardExpenseDistributionProvider.overrideWith(
           (ref) async => _distribution,
