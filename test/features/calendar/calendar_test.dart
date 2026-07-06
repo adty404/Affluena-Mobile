@@ -320,6 +320,57 @@ void main() {
       expect(find.byKey(const Key('calendar-day-txn-t1')), findsOneWidget);
     });
 
+    testWidgets('day sheet steps to the next and previous day', (tester) async {
+      final now = DateTime.now();
+      String at(int day) {
+        final m = now.month.toString().padLeft(2, '0');
+        final d = day.toString().padLeft(2, '0');
+        return '${now.year}-$m-${d}T04:00:00Z';
+      }
+
+      // A single transaction on day 1; day 2 is empty.
+      final repo = _FakeTransactionRepository([
+        _tx(
+          id: 't1',
+          type: TransactionType.expense,
+          amountMinor: 250000,
+          transactionAt: at(1),
+          categoryId: 'c-food',
+          note: 'Makan siang',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            transactionRepositoryProvider.overrideWithValue(repo),
+            walletListProvider.overrideWith((ref) async => const [_wallet]),
+            categoryTagManagementControllerProvider.overrideWith(
+              _StubCategoriesController.new,
+            ),
+          ],
+          child: const MaterialApp(home: Scaffold(body: CalendarView())),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open day 1's sheet — it lists t1.
+      await tester.tap(find.text('−250rb').first);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('calendar-day-txn-t1')), findsOneWidget);
+
+      // Step to day 2 (empty) without closing the sheet.
+      await tester.tap(find.byKey(const Key('calendar-day-next')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('calendar-day-txn-t1')), findsNothing);
+      expect(find.text('Belum ada transaksi di tanggal ini.'), findsOneWidget);
+
+      // Step back to day 1 — t1 is listed again.
+      await tester.tap(find.byKey(const Key('calendar-day-prev')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('calendar-day-txn-t1')), findsOneWidget);
+    });
+
     testWidgets(
       'summary header stacks on narrow widths so values are never cut off',
       (tester) async {

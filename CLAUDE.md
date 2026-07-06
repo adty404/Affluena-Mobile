@@ -203,10 +203,14 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   are all in the shared `_balanceProviders` set (`shared/application/financial_refresh.dart`).
   Without this a quick-add (or any non-ledger mutation) moved balances but left those surfaces stale.
   (The quick-entry screen now calls `invalidateFinancialData()` for the same reason.)
-- **Calendar day sheet is add/edit-capable**: tapping any day in the Kalender grid opens a sheet with
-  a **"Tambah"** button (`showSkyQuickAddSheet(context, date: day)` — quick-add gained a `date` param
-  that stamps the transaction on that day, keeping the wall-clock time) and **tap-to-edit** rows
-  (`showTransactionDetail`). It watches `calendarMonthProvider`, and `invalidateBalances()` now also
+- **Calendar day sheet is add/edit-capable + day-steppable**: tapping any day in the Kalender grid
+  opens a sheet with a **"Tambah"** button (`showSkyQuickAddSheet(context, date: day)` — quick-add
+  gained a `date` param that stamps the transaction on that day, keeping the wall-clock time) and
+  **tap-to-edit** rows (`showTransactionDetail`). The title is flanked by **‹ ›** steppers
+  (`calendar-day-prev` / `calendar-day-next`) that move to the adjacent day without closing the
+  sheet — the sheet is a `ConsumerStatefulWidget` holding the shown `_day`, and `_stepDay` uses
+  `DateTime(y, m, d ± 1)` so it crosses month/year boundaries (the month-keyed
+  `calendarMonthProvider` watch re-points to the new month). "Tambah" always targets the shown day. It watches `calendarMonthProvider`, and `invalidateBalances()` now also
   invalidates that provider, so any money mutation (from anywhere) refreshes the calendar grid + open
   day sheet live.
 - **Sharing feature naming**: UI "Berbagi Dompet"; people you invite are "Pemantau" (max 5, one-way,

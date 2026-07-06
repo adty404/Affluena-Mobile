@@ -647,16 +647,32 @@ void _showDaySheet(BuildContext context, DateTime month, int day) {
 /// date" button, and tap-to-edit on each row. It watches [calendarMonthProvider]
 /// so adding/editing/deleting a transaction refreshes the list live (the shared
 /// financial-refresh invalidates that provider on every money mutation).
-class _DayTransactionsSheet extends ConsumerWidget {
+class _DayTransactionsSheet extends ConsumerStatefulWidget {
   const _DayTransactionsSheet({required this.day});
 
   final DateTime day;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final monthKey = AffluenaDateFormatter.monthKey(day);
+  ConsumerState<_DayTransactionsSheet> createState() =>
+      _DayTransactionsSheetState();
+}
+
+class _DayTransactionsSheetState extends ConsumerState<_DayTransactionsSheet> {
+  late DateTime _day = widget.day;
+
+  /// Step the shown day by ±1 without closing the sheet. `DateTime` normalises
+  /// overflow (day 0 → previous month's last day, day 32 → next month), so this
+  /// crosses month and year boundaries for free; the month-keyed provider watch
+  /// below re-points to whatever month `_day` lands in.
+  void _stepDay(int delta) {
+    setState(() => _day = DateTime(_day.year, _day.month, _day.day + delta));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final monthKey = AffluenaDateFormatter.monthKey(_day);
     final data = ref.watch(calendarMonthProvider(monthKey)).asData?.value;
-    final summary = data?.days[day.day];
+    final summary = data?.days[_day.day];
     final txns = summary?.transactions ?? const <Transaction>[];
 
     final wallets =
@@ -688,15 +704,39 @@ class _DayTransactionsSheet extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Clean title on its own line — no button crowding it.
-              Text(
-                AffluenaDateFormatter.dayHeader(day),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
-                  color: context.sky.ink,
-                ),
+              // Title flanked by prev/next-day steppers so you can browse
+              // adjacent days without reopening the sheet from the grid.
+              Row(
+                children: [
+                  IconButton(
+                    key: const Key('calendar-day-prev'),
+                    onPressed: () => _stepDay(-1),
+                    icon: const Icon(Icons.chevron_left),
+                    color: context.sky.ink,
+                    tooltip: 'Hari sebelumnya',
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  Expanded(
+                    child: Text(
+                      AffluenaDateFormatter.dayHeader(_day),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                        color: context.sky.ink,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    key: const Key('calendar-day-next'),
+                    onPressed: () => _stepDay(1),
+                    icon: const Icon(Icons.chevron_right),
+                    color: context.sky.ink,
+                    tooltip: 'Hari berikutnya',
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
               ),
               const SizedBox(height: AffluenaSpacing.space3),
               // The same responsive summary the month header uses: three columns
@@ -725,7 +765,7 @@ class _DayTransactionsSheet extends ConsumerWidget {
               // Prominent, unmistakable full-width add action.
               FilledButton.icon(
                 key: const Key('calendar-day-add'),
-                onPressed: () => showSkyQuickAddSheet(context, date: day),
+                onPressed: () => showSkyQuickAddSheet(context, date: _day),
                 icon: const Icon(Icons.add, size: 20),
                 label: const Text('Tambah transaksi'),
                 style: FilledButton.styleFrom(
