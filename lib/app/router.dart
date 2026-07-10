@@ -11,8 +11,11 @@ import '../features/debts/presentation/debt_detail_screen.dart';
 import '../features/debts/presentation/debt_screen.dart';
 import '../features/goals/presentation/goal_detail_screen.dart';
 import '../features/goals/presentation/goal_screen.dart';
+import '../features/insights/presentation/aturan_notifikasi_screen.dart';
 import '../features/insights/presentation/audit_log_screen.dart';
-import '../features/insights/presentation/insights_screen.dart';
+import '../features/insights/presentation/ekspor_screen.dart';
+import '../features/insights/presentation/laporan_screen.dart';
+import '../features/insights/presentation/peringatan_aktivitas_screen.dart';
 import '../features/onboarding/application/onboarding_controller.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/partner/presentation/partner_screen.dart';
@@ -214,15 +217,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: GoalScreen.path,
         pageBuilder: _noTransitionPage((_) => const GoalScreen()),
       ),
+      // Laporan & Notifikasi — each ex-InsightsScreen tab is its own routed
+      // screen now (the chip-tabbed single screen was retired: three settings
+      // entries used to land on the same surface differing only by chip).
       GoRoute(
-        path: InsightsScreen.path,
+        path: LaporanScreen.path,
+        pageBuilder: _noTransitionPage((_) => const LaporanScreen()),
+      ),
+      GoRoute(
+        path: EksporScreen.path,
+        pageBuilder: _noTransitionPage((_) => const EksporScreen()),
+      ),
+      GoRoute(
+        path: PeringatanAktivitasScreen.path,
         pageBuilder: _noTransitionPage(
-          (state) => InsightsScreen(
-            initialTab: InsightsScreen.tabFromQuery(
-              state.uri.queryParameters['tab'],
-            ),
-          ),
+          (_) => const PeringatanAktivitasScreen(),
         ),
+      ),
+      GoRoute(
+        path: AturanNotifikasiScreen.path,
+        pageBuilder: _noTransitionPage((_) => const AturanNotifikasiScreen()),
+      ),
+      // Legacy deep link: /insights?tab=… (the retired chip-tabbed screen)
+      // redirects to the matching standalone screen so nothing 404s.
+      GoRoute(
+        path: '/insights',
+        redirect: (context, state) {
+          return switch (state.uri.queryParameters['tab']) {
+            'exports' => EksporScreen.path,
+            'alerts' || 'activity' => PeringatanAktivitasScreen.path,
+            'rules' => AturanNotifikasiScreen.path,
+            _ => LaporanScreen.path,
+          };
+        },
       ),
       GoRoute(
         path: AuditLogScreen.path,

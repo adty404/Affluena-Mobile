@@ -9,9 +9,11 @@ import '../../auth/data/auth_models.dart';
 import '../../budgets/presentation/budget_screen.dart';
 import '../../categories/presentation/category_tag_management_screen.dart';
 import '../../goals/presentation/goal_screen.dart';
-import '../../insights/application/insights_controller.dart';
+import '../../insights/presentation/aturan_notifikasi_screen.dart';
 import '../../insights/presentation/audit_log_screen.dart';
-import '../../insights/presentation/insights_screen.dart';
+import '../../insights/presentation/ekspor_screen.dart';
+import '../../insights/presentation/laporan_screen.dart';
+import '../../insights/presentation/peringatan_aktivitas_screen.dart';
 import '../../onboarding/presentation/onboarding_screen.dart';
 import '../../partner/presentation/partner_screen.dart';
 import '../../quick_entry/presentation/quick_entry_templates_screen.dart';
@@ -21,7 +23,6 @@ import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
 import '../../trackers/presentation/tracker_screen.dart';
-import '../../transactions/presentation/transactions_screen.dart';
 import '../../wallets/presentation/wallets_screen.dart';
 import '../application/settings_controller.dart';
 import 'delete_account_sheet.dart';
@@ -155,14 +156,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onTap: () => context.push(PartnerScreen.path),
                   ),
                   const Divider(height: 1),
-                  SettingsRow(
-                    key: const Key('settings-transactions-row'),
-                    icon: Icons.list_alt_outlined,
-                    title: 'Transaksi',
-                    value: 'Riwayat lengkap dengan filter & pencarian',
-                    onTap: () => context.push(TransactionsScreen.path),
-                  ),
-                  const Divider(height: 1),
+                  // No "Transaksi" row here: the full ledger already lives on
+                  // the Aktivitas bottom-nav tab, so a settings entry was a
+                  // redundant second door to the same place.
                   SettingsRow(
                     icon: Icons.bolt_outlined,
                     title: 'Template catat cepat',
@@ -218,6 +214,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: AffluenaSpacing.space6),
             // Not "Wawasan": that name belongs to the bottom-nav insights
             // tab; this section hosts the Laporan/Peringatan/Aturan screens.
+            // Each entry opens its OWN screen — the old single chip-tabbed
+            // InsightsScreen (three rows, one surface) was retired.
             const SectionHeader(title: 'Laporan & Notifikasi'),
             const SizedBox(height: AffluenaSpacing.space3),
             AffluenaCard(
@@ -227,7 +225,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     icon: Icons.analytics_outlined,
                     title: 'Laporan',
                     value: 'Laporan pemasukan & pengeluaran bulanan',
-                    onTap: () => context.push(InsightsScreen.path),
+                    onTap: () => context.push(LaporanScreen.path),
+                  ),
+                  const Divider(height: 1),
+                  SettingsRow(
+                    icon: Icons.file_download_outlined,
+                    title: 'Ekspor CSV',
+                    value: 'Unduh atau bagikan transaksimu sebagai CSV',
+                    onTap: () => context.push(EksporScreen.path),
                   ),
                   const Divider(height: 1),
                   SettingsRow(
@@ -241,9 +246,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     icon: Icons.notifications_active_outlined,
                     title: 'Peringatan & Aktivitas',
                     value: 'Peringatan anggaran dan jejak audit akun',
-                    onTap: () => context.push(
-                      InsightsScreen.location(InsightTab.alerts),
-                    ),
+                    onTap: () => context.push(PeringatanAktivitasScreen.path),
                   ),
                   const Divider(height: 1),
                   SettingsRow(
@@ -251,8 +254,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     title: 'Aturan notifikasi',
                     value:
                         'Anggaran, jatuh tempo, berulang, keamanan, ringkasan',
-                    onTap: () =>
-                        context.push(InsightsScreen.location(InsightTab.rules)),
+                    onTap: () => context.push(AturanNotifikasiScreen.path),
                   ),
                 ],
               ),

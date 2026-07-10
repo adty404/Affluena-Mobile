@@ -16,18 +16,6 @@ const insightsPageSize = 20;
 final insightsControllerProvider =
     NotifierProvider<InsightsController, InsightsState>(InsightsController.new);
 
-enum InsightTab {
-  reports('Laporan'),
-  exports('Ekspor'),
-  alerts('Peringatan'),
-  activity('Aktivitas'),
-  rules('Aturan');
-
-  const InsightTab(this.label);
-
-  final String label;
-}
-
 class InsightsController extends Notifier<InsightsState> {
   @override
   InsightsState build() {
@@ -89,10 +77,6 @@ class InsightsController extends Notifier<InsightsState> {
     }
   }
 
-  void setTab(InsightTab tab) {
-    state = state.copyWith(selectedTab: tab, actionMessage: null);
-  }
-
   void clearActionMessage() {
     if (state.actionMessage == null) return;
     state = state.copyWith(actionMessage: null);
@@ -138,7 +122,6 @@ class InsightsController extends Notifier<InsightsState> {
       await _refreshExportJobs(repository);
       state = state.copyWith(
         isSaving: false,
-        selectedTab: InsightTab.reports,
         actionError: 'Ekspor CSV berhasil dibuat tetapi tidak dapat dibagikan.',
       );
       return;
@@ -148,7 +131,6 @@ class InsightsController extends Notifier<InsightsState> {
 
     state = state.copyWith(
       isSaving: false,
-      selectedTab: InsightTab.reports,
       actionMessage: outcome == CsvShareOutcome.shared
           ? 'Ekspor CSV dibagikan.'
           : null,
@@ -334,7 +316,6 @@ List<NotificationRule> _replaceNotificationRule(
 class InsightsState {
   const InsightsState({
     required this.month,
-    this.selectedTab = InsightTab.reports,
     this.reportKind = ReportKind.overview,
     this.report = ReportResponse.empty,
     this.exportJobs = const [],
@@ -352,7 +333,6 @@ class InsightsState {
   });
 
   final String month;
-  final InsightTab selectedTab;
   final ReportKind reportKind;
   final ReportResponse report;
   final List<ExportJob> exportJobs;
@@ -383,7 +363,6 @@ class InsightsState {
 
   InsightsState copyWith({
     String? month,
-    InsightTab? selectedTab,
     ReportKind? reportKind,
     ReportResponse? report,
     List<ExportJob>? exportJobs,
@@ -401,7 +380,6 @@ class InsightsState {
   }) {
     return InsightsState(
       month: month ?? this.month,
-      selectedTab: selectedTab ?? this.selectedTab,
       reportKind: reportKind ?? this.reportKind,
       report: report ?? this.report,
       exportJobs: exportJobs ?? this.exportJobs,
