@@ -132,8 +132,10 @@ bukan untuk anak) — pilih 18+ supaya tidak kena kebijakan Families.
 ## Prasyarat Play yang BELUM terpenuhi (jangan submit sebelum ini)
 
 1. **TLS/HTTPS** — Data Safety app finansial dengan "tidak dienkripsi" ≈ ditolak/di-flag.
-   Butuh domain (pemilik) → jalankan rencana TLS (script + config disiapkan di repo API saat
-   domain ada; lihat backlog). Mobile ikut ganti base URL (release 1.5.0).
+   Butuh domain (pemilik). **Tutorial + script SUDAH SIAP**: `Affluena-API/docs/TLS.md`
+   (langkah pemilik: beli domain → DNS A record → `bash scripts/setup-tls.sh <domain>` di
+   VPS → ikuti "Setelah script sukses"). HTTP tetap hidup selama transisi sampai release
+   1.5.0 terpasang, lalu dikunci dengan `--redirect`.
 2. **Akun developer** + verifikasi identitas (beberapa hari).
 3. **Closed testing 12 tester × 14 hari** sebelum akses production (aturan akun personal
    baru sejak Nov 2023) — kumpulkan tester lebih awal.
