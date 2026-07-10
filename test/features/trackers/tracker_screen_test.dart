@@ -270,6 +270,11 @@ class TestTrackerRepository implements TrackerRepository {
   Future<void> deleteInstallment(String id) async {}
 
   @override
+  Future<List<InstallmentPayment>> listInstallmentPayments(String id) async {
+    return const [];
+  }
+
+  @override
   Future<InstallmentPayment> payInstallment(
     String id,
     TrackerPaymentRequest request,
@@ -323,6 +328,11 @@ class TestTrackerRepository implements TrackerRepository {
 
   @override
   Future<void> deleteSubscription(String id) async {}
+
+  @override
+  Future<List<SubscriptionPayment>> listSubscriptionPayments(String id) async {
+    return const [];
+  }
 
   @override
   Future<SubscriptionPayment> paySubscription(

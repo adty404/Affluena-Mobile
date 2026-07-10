@@ -167,6 +167,16 @@ class _RecordingTrackerRepository implements TrackerRepository {
   Future<Subscription> getSubscription(String id) async => _current;
 
   @override
+  Future<List<SubscriptionPayment>> listSubscriptionPayments(String id) async {
+    return const [];
+  }
+
+  @override
+  Future<List<InstallmentPayment>> listInstallmentPayments(String id) async {
+    return const [];
+  }
+
+  @override
   Future<Subscription> createSubscription(SubscriptionRequest request) =>
       throw UnimplementedError();
 

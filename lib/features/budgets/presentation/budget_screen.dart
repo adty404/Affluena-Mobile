@@ -22,6 +22,7 @@ import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/budget_controller.dart';
 import '../data/budget_models.dart';
+import 'budget_detail_screen.dart';
 
 class BudgetScreen extends ConsumerWidget {
   const BudgetScreen({super.key});
@@ -103,6 +104,11 @@ class BudgetScreen extends ConsumerWidget {
                   category: state.categories
                       .where((category) => category.id == budget.categoryId)
                       .firstOrNull,
+                  // Tapping the card drills into the budget's detail (progress
+                  // + the month's transaction list); edit/delete stay in the
+                  // overflow menu.
+                  onOpen: () =>
+                      context.push(BudgetDetailScreen.location(budget.id)),
                   onEdit: () => _showBudgetForm(
                     context,
                     ref,
@@ -306,6 +312,7 @@ class _BudgetCard extends StatelessWidget {
   const _BudgetCard({
     required this.budget,
     required this.categoryName,
+    required this.onOpen,
     required this.onEdit,
     required this.onDelete,
     this.category,
@@ -319,6 +326,9 @@ class _BudgetCard extends StatelessWidget {
   /// The budgeted category, when loaded — its chosen icon/color take over the
   /// generic pie glyph so the row matches the category everywhere else.
   final Category? category;
+
+  /// Opens the budget's detail screen (month-scoped transaction list).
+  final VoidCallback onOpen;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -348,94 +358,101 @@ class _BudgetCard extends StatelessWidget {
           Icons.pie_chart_outline,
     );
 
-    return AffluenaCard(
-      backgroundColor: hasColor ? custom : null,
-      borderColor: hasColor ? custom : null,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (hasColor)
-                ItemOnColorIconTile(icon: icon)
-              else
-                ItemAccentIconTile(
-                  icon: icon,
-                  colorHex: budget.color.isNotEmpty
-                      ? budget.color
-                      : (category?.color ?? ''),
-                  fallback: colors.forest,
-                  fallbackBackground: colors.forestSoft,
+    // Material + InkWell so the drill-in tap ripples on the card surface (the
+    // app's standard tappable-card pattern); the overflow menu still captures
+    // its own taps.
+    return InkWell(
+      borderRadius: BorderRadius.circular(AffluenaRadii.card),
+      onTap: onOpen,
+      child: AffluenaCard(
+        backgroundColor: hasColor ? custom : null,
+        borderColor: hasColor ? custom : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (hasColor)
+                  ItemOnColorIconTile(icon: icon)
+                else
+                  ItemAccentIconTile(
+                    icon: icon,
+                    colorHex: budget.color.isNotEmpty
+                        ? budget.color
+                        : (category?.color ?? ''),
+                    fallback: colors.forest,
+                    fallbackBackground: colors.forestSoft,
+                  ),
+                const SizedBox(width: AffluenaSpacing.space3),
+                Expanded(
+                  child: Text(
+                    categoryName,
+                    style: hasColor
+                        ? textTheme.titleMedium?.copyWith(color: Colors.white)
+                        : textTheme.titleMedium,
+                  ),
                 ),
-              const SizedBox(width: AffluenaSpacing.space3),
-              Expanded(
-                child: Text(
-                  categoryName,
-                  style: hasColor
-                      ? textTheme.titleMedium?.copyWith(color: Colors.white)
-                      : textTheme.titleMedium,
+                StatusBadge(
+                  label: statusLabel,
+                  tone: statusTone,
+                  onColor: hasColor,
                 ),
-              ),
-              StatusBadge(
-                label: statusLabel,
-                tone: statusTone,
-                onColor: hasColor,
-              ),
-              PopupMenuButton<String>(
-                iconColor: hasColor ? Colors.white : null,
-                onSelected: (value) {
-                  if (value == 'edit') onEdit();
-                  if (value == 'delete') onDelete();
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Ubah')),
-                  PopupMenuItem(value: 'delete', child: Text('Hapus')),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space2),
-          SkyProgressBar(
-            value: percent,
-            height: 10,
-            fillColor: hasColor
-                ? (over ? statusColor : Colors.white)
-                : statusColor,
-            trackColor: hasColor
-                ? Colors.white.withValues(alpha: 0.25)
-                : colors.surfaceTintSoft,
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          Text(
-            '${budget.usagePercent.round()}% terpakai',
-            style: textTheme.bodyLarge?.copyWith(
-              color: hasColor ? Colors.white : statusColor,
+                PopupMenuButton<String>(
+                  iconColor: hasColor ? Colors.white : null,
+                  onSelected: (value) {
+                    if (value == 'edit') onEdit();
+                    if (value == 'delete') onDelete();
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'edit', child: Text('Ubah')),
+                    PopupMenuItem(value: 'delete', child: Text('Hapus')),
+                  ],
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: AffluenaSpacing.space1),
-          Text(
-            '${MoneyFormatter.idr(budget.spentMinor)} terpakai dari ${MoneyFormatter.idr(budget.limitMinor)}',
-            style: hasColor
-                ? textTheme.bodySmall?.copyWith(color: Colors.white70)
-                : textTheme.bodySmall,
-          ),
-          const SizedBox(height: AffluenaSpacing.space2),
-          Text(
-            '${MoneyFormatter.idr(budget.remainingMinor)} tersisa',
-            style: hasColor
-                ? textTheme.bodyLarge?.copyWith(color: Colors.white)
-                : textTheme.bodyLarge,
-          ),
-          if (report?.recommendation.isNotEmpty == true) ...[
             const SizedBox(height: AffluenaSpacing.space2),
+            SkyProgressBar(
+              value: percent,
+              height: 10,
+              fillColor: hasColor
+                  ? (over ? statusColor : Colors.white)
+                  : statusColor,
+              trackColor: hasColor
+                  ? Colors.white.withValues(alpha: 0.25)
+                  : colors.surfaceTintSoft,
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
             Text(
-              report!.recommendation,
+              '${budget.usagePercent.round()}% terpakai',
+              style: textTheme.bodyLarge?.copyWith(
+                color: hasColor ? Colors.white : statusColor,
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space1),
+            Text(
+              '${MoneyFormatter.idr(budget.spentMinor)} terpakai dari ${MoneyFormatter.idr(budget.limitMinor)}',
               style: hasColor
                   ? textTheme.bodySmall?.copyWith(color: Colors.white70)
                   : textTheme.bodySmall,
             ),
+            const SizedBox(height: AffluenaSpacing.space2),
+            Text(
+              '${MoneyFormatter.idr(budget.remainingMinor)} tersisa',
+              style: hasColor
+                  ? textTheme.bodyLarge?.copyWith(color: Colors.white)
+                  : textTheme.bodyLarge,
+            ),
+            if (report?.recommendation.isNotEmpty == true) ...[
+              const SizedBox(height: AffluenaSpacing.space2),
+              Text(
+                report!.recommendation,
+                style: hasColor
+                    ? textTheme.bodySmall?.copyWith(color: Colors.white70)
+                    : textTheme.bodySmall,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

@@ -10,9 +10,12 @@ import 'package:affluena_mobile/features/recurring/data/recurring_models.dart';
 import 'package:affluena_mobile/features/recurring/presentation/recurring_detail_screen.dart';
 import 'package:affluena_mobile/features/trackers/application/tracker_controller.dart';
 import 'package:affluena_mobile/features/trackers/data/tracker_models.dart';
+import 'package:affluena_mobile/features/trackers/data/tracker_repository.dart';
 import 'package:affluena_mobile/features/trackers/presentation/installment_detail_screen.dart';
 import 'package:affluena_mobile/features/trackers/presentation/subscription_detail_screen.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
+import 'package:affluena_mobile/features/wallets/application/wallets_controller.dart';
+import 'package:affluena_mobile/features/wallets/data/wallet_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -131,6 +134,21 @@ class _StubAuth extends AuthController {
   AuthState build() => const AuthState.unauthenticated();
 }
 
+/// Hermetic stand-in for the payments-history endpoints the tracker detail
+/// screens now fetch; the rest of the repository is never exercised here.
+class _StubTrackerRepo implements TrackerRepository {
+  @override
+  Future<List<InstallmentPayment>> listInstallmentPayments(String id) async =>
+      const [];
+
+  @override
+  Future<List<SubscriptionPayment>> listSubscriptionPayments(String id) async =>
+      const [];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 Future<void> _pump(
   WidgetTester tester,
   Widget screen,
@@ -168,10 +186,14 @@ void main() {
     await _pump(tester, const GoalDetailScreen(id: 'g1'), [
       goalControllerProvider.overrideWith(_StubGoal.new),
       authControllerProvider.overrideWith(_StubAuth.new),
+      // No goal-backing wallet in this fixture → the "Riwayat setoran"
+      // section stays hidden (covered by goal_deposit_history_test).
+      walletListProvider.overrideWith((ref) async => const <Wallet>[]),
     ]);
     expect(find.text('Liburan Bali'), findsOneWidget);
     expect(find.text('Tercapai 62%'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Setor'), findsOneWidget);
+    expect(find.text('Riwayat setoran'), findsNothing);
   });
 
   testWidgets('installment detail renders schedule + pay action', (
@@ -179,10 +201,20 @@ void main() {
   ) async {
     await _pump(tester, const InstallmentDetailScreen(id: 'i1'), [
       trackerControllerProvider.overrideWith(_StubTracker.new),
+      trackerRepositoryProvider.overrideWithValue(_StubTrackerRepo()),
     ]);
     expect(find.text('iPhone 15'), findsOneWidget);
     expect(find.text('Terbayar 33%'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Bayar cicilan'), findsOneWidget);
+    // The payments endpoint returned nothing → the section's empty state
+    // (below the 12-row schedule, so scroll it into view first).
+    await tester.scrollUntilVisible(
+      find.text('Riwayat pembayaran'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Riwayat pembayaran'), findsOneWidget);
+    expect(find.text('Belum ada pembayaran.'), findsOneWidget);
   });
 
   testWidgets('subscription detail renders pay + pause actions', (
@@ -190,6 +222,7 @@ void main() {
   ) async {
     await _pump(tester, const SubscriptionDetailScreen(id: 's1'), [
       trackerControllerProvider.overrideWith(_StubTracker.new),
+      trackerRepositoryProvider.overrideWithValue(_StubTrackerRepo()),
     ]);
     expect(find.text('Netflix'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Bayar sekarang'), findsOneWidget);
@@ -197,6 +230,15 @@ void main() {
       find.widgetWithText(OutlinedButton, 'Jeda langganan'),
       findsOneWidget,
     );
+    // The payments endpoint returned nothing → the section's empty state
+    // (below the upcoming-bills card, so scroll it into view first).
+    await tester.scrollUntilVisible(
+      find.text('Riwayat pembayaran'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Riwayat pembayaran'), findsOneWidget);
+    expect(find.text('Belum ada pembayaran.'), findsOneWidget);
   });
 
   testWidgets('recurring detail renders run action', (tester) async {

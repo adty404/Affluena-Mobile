@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
@@ -24,6 +25,8 @@ import '../../shared/presentation/widgets/status_badge.dart';
 import '../../wallets/data/wallet_models.dart';
 import '../application/tracker_controller.dart';
 import '../data/tracker_models.dart';
+import 'installment_detail_screen.dart';
+import 'subscription_detail_screen.dart';
 
 class TrackerScreen extends ConsumerWidget {
   const TrackerScreen({super.key});
@@ -188,6 +191,10 @@ class _InstallmentList extends StatelessWidget {
               item: item,
               walletName: state.walletName(item.walletId),
               categoryName: state.categoryName(item.categoryId),
+              // Tapping the card drills into the detail (schedule + payment
+              // history); actions stay on their own buttons/menu.
+              onOpen: () =>
+                  context.push(InstallmentDetailScreen.location(item.id)),
               onPay: item.canPay
                   ? () => _showTrackerPaymentSheet(
                       context,
@@ -256,6 +263,10 @@ class _SubscriptionList extends StatelessWidget {
               item: item,
               walletName: state.walletName(item.walletId),
               categoryName: state.categoryName(item.categoryId),
+              // Tapping the card drills into the detail (upcoming bills +
+              // payment history); actions stay on their own buttons/menu.
+              onOpen: () =>
+                  context.push(SubscriptionDetailScreen.location(item.id)),
               onPay: item.canPay
                   ? () => _showTrackerPaymentSheet(
                       context,
@@ -314,6 +325,7 @@ class _InstallmentCard extends StatelessWidget {
     required this.item,
     required this.walletName,
     required this.categoryName,
+    required this.onOpen,
     required this.onEdit,
     required this.onDelete,
     this.onPay,
@@ -323,6 +335,7 @@ class _InstallmentCard extends StatelessWidget {
   final Installment item;
   final String walletName;
   final String categoryName;
+  final VoidCallback onOpen;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback? onPay;
@@ -331,6 +344,7 @@ class _InstallmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _TrackerCard(
+      onOpen: onOpen,
       title: item.name,
       // The installment's own icon wins over the generic receipt glyph.
       icon: resolveEntityIcon(item.icon, Icons.receipt_long_outlined),
@@ -368,6 +382,7 @@ class _SubscriptionCard extends StatelessWidget {
     required this.item,
     required this.walletName,
     required this.categoryName,
+    required this.onOpen,
     required this.onEdit,
     required this.onDelete,
     this.onPay,
@@ -379,6 +394,7 @@ class _SubscriptionCard extends StatelessWidget {
   final Subscription item;
   final String walletName;
   final String categoryName;
+  final VoidCallback onOpen;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback? onPay;
@@ -389,6 +405,7 @@ class _SubscriptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _TrackerCard(
+      onOpen: onOpen,
       title: item.name,
       // The subscription's own icon wins over the generic renew glyph.
       icon: resolveEntityIcon(item.icon, Icons.autorenew),
@@ -426,6 +443,7 @@ class _SubscriptionCard extends StatelessWidget {
 
 class _TrackerCard extends StatelessWidget {
   const _TrackerCard({
+    required this.onOpen,
     required this.title,
     required this.icon,
     required this.colorHex,
@@ -441,6 +459,9 @@ class _TrackerCard extends StatelessWidget {
     this.onAction,
   });
 
+  /// Drills into the item's detail screen (whole-card tap with a ripple);
+  /// the pay button and overflow menu keep their own gestures.
+  final VoidCallback onOpen;
   final String title;
   final IconData icon;
 
@@ -474,7 +495,10 @@ class _TrackerCard extends StatelessWidget {
     final custom = parseItemColor(colorHex);
     final hasColor = custom != null;
 
-    return AffluenaCard(
+    // Material + InkWell so the drill-in tap ripples on the card surface (the
+    // app's standard tappable-card pattern); the pay button and overflow menu
+    // still capture their own taps.
+    final card = AffluenaCard(
       backgroundColor: hasColor ? custom : null,
       borderColor: hasColor ? custom : null,
       child: Column(
@@ -572,6 +596,12 @@ class _TrackerCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(AffluenaRadii.card),
+      onTap: onOpen,
+      child: card,
     );
   }
 }

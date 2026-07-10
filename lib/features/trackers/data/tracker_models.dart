@@ -159,13 +159,15 @@ class InstallmentPayment {
   factory InstallmentPayment.fromJson(JsonMap json) {
     return InstallmentPayment(
       id: ApiJson.readString(json, 'id'),
-      userId: ApiJson.readString(json, 'user_id'),
       installmentId: ApiJson.readString(json, 'installment_id'),
-      transactionId: ApiJson.readString(json, 'transaction_id'),
+      transactionId: ApiJson.optionalString(json, 'transaction_id'),
       amountMinor: ApiJson.readInt(json, 'amount_minor'),
       paidAt: ApiJson.readString(json, 'paid_at'),
       note: ApiJson.optionalString(json, 'note'),
-      createdAt: ApiJson.readString(json, 'created_at'),
+      // Not part of the GET /installments/:id/payments contract — parse
+      // defensively so history rows never blank the section.
+      userId: ApiJson.optionalString(json, 'user_id'),
+      createdAt: ApiJson.optionalString(json, 'created_at'),
     );
   }
 
@@ -258,13 +260,15 @@ class SubscriptionPayment {
   factory SubscriptionPayment.fromJson(JsonMap json) {
     return SubscriptionPayment(
       id: ApiJson.readString(json, 'id'),
-      userId: ApiJson.readString(json, 'user_id'),
       subscriptionId: ApiJson.readString(json, 'subscription_id'),
-      transactionId: ApiJson.readString(json, 'transaction_id'),
+      transactionId: ApiJson.optionalString(json, 'transaction_id'),
       amountMinor: ApiJson.readInt(json, 'amount_minor'),
       paidAt: ApiJson.readString(json, 'paid_at'),
       note: ApiJson.optionalString(json, 'note'),
-      createdAt: ApiJson.readString(json, 'created_at'),
+      // Not part of the GET /subscriptions/:id/payments contract — parse
+      // defensively so history rows never blank the section.
+      userId: ApiJson.optionalString(json, 'user_id'),
+      createdAt: ApiJson.optionalString(json, 'created_at'),
     );
   }
 
