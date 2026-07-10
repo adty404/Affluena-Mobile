@@ -172,11 +172,12 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   `dashboardSummaryProvider` when no summary was seen yet) — so turning the rule off cancels armed
   reminders immediately, no money mutation needed. **Logout and a discarded restored session call
   `scheduler.clear()`** (fire-and-forget: cancels the pending debounce + every armed notification)
-  so the old account's reminders can't keep firing. Pengaturan → Aturan notifikasi hosts
-  `DeviceNotificationsCard` ("Aktifkan notifikasi perangkat", requests Android 13+
-  POST_NOTIFICATIONS once). **This plugin is a NATIVE change: it shipped as the 1.4.0+7 Shorebird
-  RELEASE** — future Dart edits are patchable again, but touching the plugin set/Android config
-  needs another release.
+  so the old account's reminders can't keep firing. Pengaturan → Aturan notifikasi
+  (`AturanNotifikasiScreen`) hosts `DeviceNotificationsCard` ("Aktifkan notifikasi perangkat",
+  requests Android 13+ POST_NOTIFICATIONS once). **This plugin is a NATIVE change: it shipped as
+  the 1.4.0+7 Shorebird RELEASE**; **1.5.0+8 is another RELEASE** (image_picker added for the
+  avatar upload, local_auth/USE_BIOMETRIC/NSFaceIDUsageDescription removed) — future Dart edits
+  are patchable again, but touching the plugin set/Android config needs another release.
 - **Beranda gained three data sections**: "Jatuh tempo terdekat" (nearest 3 dues merged across
   upcoming subscriptions/installments/debts, tappable to their domain screens, hidden when empty),
   a savings-rate tile (monthly cashflow ÷ income, "—" when income is 0), and the "Tren kekayaan
@@ -202,7 +203,10 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   (`categoryTransactionsProvider`, a `(categoryId, monthIso)` family), the **Wawasan breakdown**
   (`categoryBreakdownProvider`), the **Wawasan per-category transactions** list
   (`categoryTransactionsInRangeProvider`, a `(categoryId, DateRange)` family — the screen a tapped
-  breakdown row opens), and the legacy **Laporan** controller (`insightsControllerProvider`)
+  breakdown row opens), the **"Riwayat pembayaran"** lists on the installment/subscription detail
+  screens (`installmentPaymentsProvider` / `subscriptionPaymentsProvider`, `autoDispose.family`
+  over the item id — listed bare so paying refreshes the open history in place), and the legacy
+  **Laporan** controller (`insightsControllerProvider`)
   are all in the shared `_balanceProviders` set (`shared/application/financial_refresh.dart`).
   Without this a quick-add (or any non-ledger mutation) moved balances but left those surfaces stale.
   (The quick-entry screen now calls `invalidateFinancialData()` for the same reason.)
@@ -225,6 +229,38 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   pending row** (`member.userId == authControllerProvider.user?.id`); anyone else's pending row
   shows the neutral "Undangan untuk <email> menunggu jawaban mereka." line instead — never render
   buttons the API will always reject.
+- **Avatars are uploaded photos stored as base64 data URLs** — Pengaturan → Akun replaces the old
+  "URL avatar" text field with "Pilih foto"/"Hapus foto": the pick goes through
+  `imagePickerProvider` (a Riverpod-wrapped `image_picker`, overridable in tests; the system photo
+  picker needs **no storage permission**), is downscaled to ≤256px / JPEG q80 platform-side and
+  guarded by the pure `encodeAvatarDataUrl` helper (`settings/application/avatar_picker.dart` —
+  re-downscales in Dart via `ImageDescriptor.instantiateCodec` when the pick is still too big,
+  hard cap ~120KB), then saved into the EXISTING `avatar_url` field as
+  `data:image/...;base64,...` (unbounded text column — no server change, no file storage).
+  **Render avatars only through `avatarImageProvider(url)`**
+  (`shared/presentation/widgets/avatar_image.dart`): data URL → memoized `MemoryImage`, legacy
+  http(s) → `NetworkImage`, anything else → null (fall back to the initial letter). Used by the
+  Pengaturan profile card and `SkyAvatar` (via its optional `imageUrl`).
+- **Laporan & Notifikasi are real separate screens** — the old chip-tabbed `InsightsScreen`
+  (`/insights?tab=…`, one surface for reports/exports/alerts/activity/rules) was retired because
+  three Pengaturan rows landed on the same screen differing only by selected chip. Each section is
+  its own routed screen now: `LaporanScreen` (`/laporan`, keeps the report-kind chips — those are
+  its own sub-views), `EksporScreen` (`/ekspor`), `PeringatanAktivitasScreen`
+  (`/peringatan-aktivitas`, alerts + the audit-trail activity feed stacked on one scroll — they
+  shared one Pengaturan entry), and `AturanNotifikasiScreen` (`/aturan-notifikasi`, incl.
+  `DeviceNotificationsCard`). All of them keep reading the shared `insightsControllerProvider`
+  (whose `InsightTab`/`selectedTab` were deleted); shared pieces live in
+  `insights/presentation/insight_shared_widgets.dart`. **Legacy `/insights` deep links redirect**
+  (route-level redirect in router.dart) so nothing 404s. Pengaturan also gained an "Ekspor CSV"
+  row and dropped the redundant "Transaksi" row (the ledger is the Aktivitas bottom-nav tab).
+- **List cards drill into their detail screens**: budget cards (Anggaran), installment +
+  subscription cards (Cicilan & Langganan), and goal cards (Target tabungan) are whole-card
+  tappable (InkWell ripple) → the same detail screens Beranda's dashboard cards open; edit/delete/
+  pay stay on their own buttons/menus. The tracker details show a **"Riwayat pembayaran"** section
+  (`GET /installments/:id/payments` / `GET /subscriptions/:id/payments` → `{ "payments": [...] }`
+  paid_at DESC; rows tap → fetch the `transaction_id` → `showTransactionDetail`), and the goal
+  detail shows **"Riwayat setoran"** — the transactions of the wallet whose `goalId` matches
+  (goals are funded via their backing goal wallet; section hidden when no wallet matches).
 - **Account deletion is self-service** (Google Play requirement): Pengaturan → "Hapus akun"
   (`settings-delete-account-row`) opens `delete_account_sheet.dart` — password re-entry →
   `AuthController.deleteAccount` (`DELETE /auth/account`); on success it clears tokens + armed
@@ -238,5 +274,8 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   they live under Tabungan) and wallets shared TO you (`isViewer` — they live under "Dibagikan
   untukku"), mirroring Beranda's Dompet section. Because sharing is one-way read-only, "Bersama" in
   the summary means *your* wallets you've shared to a Pemantau (`members.isNotEmpty`); "Pribadi" means
-  not shared. The card subtitle is terse (`type · Bersama|Pribadi`) so it never truncates in the
-  2-column grid; the full description shows on the wallet detail screen.
+  not shared. The header hero is a calm `Total saldo` over one row of compact soft-tinted stat
+  chips (Dompet / Bersama / Pribadi) — no explainer paragraphs, and the **Bersama chip is hidden
+  while the count is 0** so an all-private list shows no "Bersama 0" noise (golden:
+  `wallets_header`). The card subtitle is terse (`type · Bersama|Pribadi`) so it never truncates
+  in the 2-column grid; the full description shows on the wallet detail screen.
