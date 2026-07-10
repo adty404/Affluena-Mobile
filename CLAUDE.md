@@ -5,6 +5,9 @@ Personal-finance **Flutter app** (Riverpod + Dio + go_router), pinned to **Flutt
 
 Depth lives in **`DESIGN.md`** (design system), **`SHOREBIRD.md`** (release/OTA), `README.md`, and
 the pixel-level **`design/affluena-design-guide.html`** (open in a browser — visual source of truth).
+**`docs/PLAYSTORE.md`** is the single master checklist for the Google Play submission prep
+(status per item, keystore/AAB guide, the 1.5.0 release package, listing + Data Safety drafts) —
+update it in the same PR whenever any of its items changes.
 
 ## ⚠️ Read before you change anything (prod danger)
 
@@ -222,6 +225,11 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   pending row** (`member.userId == authControllerProvider.user?.id`); anyone else's pending row
   shows the neutral "Undangan untuk <email> menunggu jawaban mereka." line instead — never render
   buttons the API will always reject.
+- **Account deletion is self-service** (Google Play requirement): Pengaturan → "Hapus akun"
+  (`settings-delete-account-row`) opens `delete_account_sheet.dart` — password re-entry →
+  `AuthController.deleteAccount` (`DELETE /auth/account`); on success it clears tokens + armed
+  reminders and lands on login; on failure the user STAYS signed in and the sheet shows the API
+  error. Public web counterparts: `/privacy` + `/hapus-akun` (Affluena-WEB).
 - **Every form text field carries an Indonesian `hintText`** (see DESIGN.md "Form Field Hints"):
   `cth:`-prefixed examples for free-text, bare examples for name-like fields, and **bare id_ID-
   grouped digits for `MoneyInput` hints** (the widget hardcodes the `Rp ` prefix — `cth:` inside it

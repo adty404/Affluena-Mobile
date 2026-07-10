@@ -136,6 +136,25 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  /// Permanently deletes the account (password-confirmed server-side) and
+  /// clears the local session. Returns null on success or an Indonesian error
+  /// message; on failure the user STAYS signed in (nothing local is touched).
+  Future<String?> deleteAccount(String password) async {
+    try {
+      await ref.read(authRepositoryProvider).deleteAccount(password);
+    } catch (error) {
+      return _authErrorMessage(error);
+    }
+    await ref.read(secureTokenStoreProvider).clear();
+    // Same rationale as logout(): armed reminders carry this account's data.
+    unawaited(ref.read(notificationSchedulerProvider).clear());
+    state = const AuthState.unauthenticated(
+      message: 'Akunmu sudah dihapus. Sampai jumpa lagi.',
+      messageTone: AuthMessageTone.success,
+    );
+    return null;
+  }
+
   Future<void> logout() async {
     final currentUser = state.user;
     if (currentUser != null) {

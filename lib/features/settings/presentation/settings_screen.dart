@@ -24,6 +24,7 @@ import '../../trackers/presentation/tracker_screen.dart';
 import '../../transactions/presentation/transactions_screen.dart';
 import '../../wallets/presentation/wallets_screen.dart';
 import '../application/settings_controller.dart';
+import 'delete_account_sheet.dart';
 import 'settings_screen_widgets.dart';
 import 'settings_sheets.dart';
 import 'theme_settings_sheet.dart';
@@ -96,6 +97,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     title: 'Sesi',
                     value: 'Kelola perangkat yang masuk',
                     onTap: _openSessions,
+                  ),
+                  const Divider(height: 1),
+                  SettingsRow(
+                    key: const Key('settings-delete-account-row'),
+                    icon: Icons.delete_forever_outlined,
+                    title: 'Hapus akun',
+                    value: 'Hapus permanen akun & seluruh datamu',
+                    onTap: () => showDeleteAccountSheet(context),
                   ),
                 ],
               ),
