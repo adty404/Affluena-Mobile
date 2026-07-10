@@ -106,10 +106,12 @@ class _WalletsContent extends ConsumerWidget {
   }
 }
 
-/// The wallets-screen hero: the combined total balance as the focal number,
-/// then a clear breakdown (total wallets · shared · private) with a caption
-/// spelling out what "Bersama" means (wallets you've shared to a Pemantau),
-/// since sharing here is one-way read-only.
+/// The wallets-screen hero: a calm `Total saldo` headline over a single row
+/// of compact soft-tinted stat chips (Dompet / Bersama / Pribadi), mirroring
+/// Beranda's Ringkasan tiles. No explainer paragraphs — the chips carry the
+/// breakdown on their own, and the "Bersama" chip only appears once at least
+/// one wallet is actually shared, so an all-private list never shows
+/// "Bersama 0" noise.
 class _WalletsSummary extends StatelessWidget {
   const _WalletsSummary({required this.wallets});
 
@@ -143,7 +145,7 @@ class _WalletsSummary extends StatelessWidget {
               MoneyFormatter.idr(total),
               maxLines: 1,
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 30,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
                 color: colors.ink,
@@ -151,43 +153,29 @@ class _WalletsSummary extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 3),
-          Text(
-            'Saldo gabungan semua dompet',
-            style: TextStyle(fontSize: 11.5, color: colors.inkMuted),
-          ),
           const SizedBox(height: AffluenaSpacing.space4),
-          Divider(height: 1, thickness: 1, color: colors.borderSubtle),
-          const SizedBox(height: AffluenaSpacing.space3),
           Row(
             children: [
-              _MiniStat(
+              _SummaryStatChip(
                 icon: Icons.account_balance_wallet_outlined,
                 label: 'Dompet',
                 value: '$count',
               ),
-              _MiniStat(
-                icon: Icons.group_outlined,
-                label: 'Bersama',
-                value: '$shared',
-              ),
-              _MiniStat(
+              if (shared > 0) ...[
+                const SizedBox(width: AffluenaSpacing.space2),
+                _SummaryStatChip(
+                  icon: Icons.group_outlined,
+                  label: 'Bersama',
+                  value: '$shared',
+                ),
+              ],
+              const SizedBox(width: AffluenaSpacing.space2),
+              _SummaryStatChip(
                 icon: Icons.lock_outline,
                 label: 'Pribadi',
                 value: '$private',
               ),
             ],
-          ),
-          const SizedBox(height: AffluenaSpacing.space3),
-          Text(
-            shared > 0
-                ? 'Bersama = dompet kamu yang dibagikan ke pemantau. Pribadi = hanya kamu yang lihat.'
-                : 'Semua dompet kamu masih pribadi. Bagikan salah satu ke pemantau lewat menu Berbagi Dompet.',
-            style: TextStyle(
-              fontSize: 11,
-              height: 1.35,
-              color: colors.inkMuted,
-            ),
           ),
         ],
       ),
@@ -195,8 +183,11 @@ class _WalletsSummary extends StatelessWidget {
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({
+/// One compact soft-tinted stat chip in the wallets hero — small icon beside
+/// a bold count and a muted label, the same tonal treatment as Beranda's
+/// Ringkasan tiles but sized for a single quiet row.
+class _SummaryStatChip extends StatelessWidget {
+  const _SummaryStatChip({
     required this.icon,
     required this.label,
     required this.value,
@@ -210,44 +201,46 @@ class _MiniStat extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.affluenaColors;
     return Expanded(
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: colors.surfaceTintSoft,
-              borderRadius: BorderRadius.circular(AffluenaRadii.md),
-            ),
-            child: Icon(icon, size: 18, color: colors.inkMuted),
-          ),
-          const SizedBox(width: AffluenaSpacing.space2),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: colors.ink,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AffluenaSpacing.space3,
+          vertical: AffluenaSpacing.space3,
+        ),
+        decoration: BoxDecoration(
+          color: colors.surfaceTintSoft,
+          borderRadius: BorderRadius.circular(AffluenaRadii.lg),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: colors.forest),
+            const SizedBox(width: AffluenaSpacing.space2),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: colors.ink,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
-                ),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: colors.inkMuted),
-                ),
-              ],
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 10.5, color: colors.inkMuted),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
