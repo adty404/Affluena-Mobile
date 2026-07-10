@@ -236,6 +236,24 @@ All spacing derives from a base of 4.
   `categoryTagManagementControllerProvider` for the category catalog (overridable
   in hermetic tests).
 
+### Avatar
+
+- **Structure**: circular photo or initial letter. `SkyAvatar` (members,
+  authorship) takes an optional `imageUrl`; the Pengaturan profile card and the
+  Akun sheet preview use `CircleAvatar` with `foregroundImage`.
+- **Source resolution**: always through `avatarImageProvider(url)`
+  (`shared/presentation/widgets/avatar_image.dart`) — an uploaded avatar is a
+  **base64 `data:image/...` URL** stored in the existing `avatar_url` field
+  (→ memoized `MemoryImage`), legacy absolute http(s) URLs still resolve
+  (→ `NetworkImage`), anything else falls back to the initial letter.
+- **Upload flow**: Pengaturan → Akun → "Pilih foto" opens the system photo
+  picker (`image_picker` behind `imagePickerProvider`, no storage permission),
+  downscales to ≤256px (JPEG q80 platform-side, Dart re-downscale fallback via
+  `encodeAvatarDataUrl`, ≤~120KB) and stores the data URL; "Hapus foto" clears
+  it. There is no hand-typed URL field anymore.
+- **Accessibility**: the photo is decorative — the surrounding row carries the
+  name/email text.
+
 ### Selector Row
 
 - **Structure**: label, selected value, trailing chevron.
@@ -380,10 +398,10 @@ source of truth, but for colour the Tinta table in §2 wins.
 
 1. **Onboarding & Auth** — onboarding (shared-wallet hero), Masuk (login), Daftar (register).
 2. **Beranda** — the 6-section dashboard (Dompet → Anggaran → Tabungan → Cicilan → Langganan → Berulang).
-3. **Detail — Dompet · Anggaran · Tabungan** — wallet detail (members + access), budget detail (progress + transactions), savings-goal detail ("Liburan Bali": progress + deposits).
-4. **Detail — Cicilan · Langganan · Berulang** — installment detail (schedule), subscription detail (history, pause/pay), recurring detail ("Transfer ke Tabungan").
+3. **Detail — Dompet · Anggaran · Tabungan** — wallet detail (members + access), budget detail (progress + transactions), savings-goal detail ("Liburan Bali": progress + the **"Riwayat setoran"** deposit history — the backing goal wallet's transactions, rows = `TransactionActivityRow`, hidden when no wallet carries the goal's id). The **Dompet list hero** is a calm `Total saldo` over one row of compact soft-tinted stat chips (Dompet / Bersama / Pribadi — Bersama hidden at 0). List cards on the Anggaran/Tabungan/Cicilan & Langganan screens are **whole-card tappable** (InkWell ripple) into these details, same as Beranda's grid cards.
+4. **Detail — Cicilan · Langganan · Berulang** — installment detail (schedule + **"Riwayat pembayaran"**), subscription detail (upcoming bills + **"Riwayat pembayaran"**, pause/pay), recurring detail ("Transfer ke Tabungan"). The payment-history rows come from `GET /…/:id/payments` (newest first): amount + date (+ note), each tapping through to the backing transaction's detail sheet; empty state "Belum ada pembayaran."
 5. **Quick-add · Aktivitas · Wawasan** — the "Catat cepat" sheet (templates + keypad), the activity feed, the insights/charts screen. The Wawasan screen (`SkyInsightsView`) leads with a **"Ke mana perginya uangmu?"** category-breakdown card scoped by a **period selector** — chips for **Hari / Minggu / Bulan / Kuartal / Tahun / Semua** plus **Atur** (custom `showDateRangePicker` range) — with a prev/next pager (disabled from paging into the future; "Semua"/"Atur" don't page). Under it: a `SkySegmentedToggle` (**Pengeluaran** / **Pemasukan**) over a **ranked horizontal-bar list** — each row is the category's chosen icon (in its colour on a soft tile) + name + amount + a colour-proportion bar + %, with the selected type's total shown above. Both breakdowns are computed **client-side** from the range's transactions (the API has no income-distribution endpoint) via `categoryBreakdownProvider(DateRange)`, joined to the category catalog for icon/colour; uncategorized money falls into a neutral "Tanpa kategori" bucket. The client pages up to **5.000 transactions**; a range larger than that sets `CategoryBreakdown.truncated`, and the card shows a small amber notice ("Menampilkan 5.000 transaksi terbaru — total mungkin tidak lengkap") so the total isn't silently under-reported. **Each real category row is tappable** (a subtle ripple) → `SkyCategoryTransactionsScreen`, a `DrillInScaffold` list of that one category's transactions **scoped to the same period** (`categoryTransactionsInRangeProvider((categoryId, DateRange))` — the same widened-window / 5.000-cap fetch as the breakdown, but `categoryId`-filtered server-side and returned raw newest-first): header = the category name + the period label subtitle, body = the full range day-grouped into `TransactionActivityRow`s, each tapping through to the shared detail sheet. The "Tanpa kategori" bucket (no id) stays non-tappable. Below it sit the cashflow-trend and forecast cards (the old standalone "Ke mana uang pergi" expense-distribution card was removed as a duplicate of the breakdown).
-6. **Pengaturan** — Lainnya (settings hub), Keamanan (password, device lock, active sessions), Kategori (category hierarchy).
+6. **Pengaturan** — Lainnya (settings hub), Keamanan (password, device lock, active sessions), Kategori (category hierarchy). The **Laporan & Notifikasi** section opens REAL separate screens — `LaporanScreen` (reports, keeps its own report-kind chips), `EksporScreen` (CSV exports), `AuditLogScreen`, `PeringatanAktivitasScreen` (alerts + audit-trail activity stacked on one scroll), `AturanNotifikasiScreen` (rules + `DeviceNotificationsCard`) — the old single chip-tabbed InsightsScreen is retired (chips may only switch sub-views *within* one screen, never act as a cross-section router). The "Alat harian" card has no "Transaksi" row (the ledger is the Aktivitas tab).
 7. **State & aksi** — empty, loading (skeleton), error, the confirmation sheet (`skyConfirm`, see §5 — the mockup still shows the retired centered modal), and a dark-mode sample.
 
 When a screen's visual changes, update **both** the HTML guide and the relevant

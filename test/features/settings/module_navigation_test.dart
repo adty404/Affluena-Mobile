@@ -8,10 +8,12 @@ import 'package:affluena_mobile/features/categories/presentation/category_tag_ma
 import 'package:affluena_mobile/features/debts/data/debt_repository.dart';
 import 'package:affluena_mobile/features/debts/presentation/debt_screen.dart';
 import 'package:affluena_mobile/features/goals/presentation/goal_screen.dart';
-import 'package:affluena_mobile/features/insights/application/insights_controller.dart';
 import 'package:affluena_mobile/features/insights/data/insights_repository.dart';
+import 'package:affluena_mobile/features/insights/presentation/aturan_notifikasi_screen.dart';
 import 'package:affluena_mobile/features/insights/presentation/audit_log_screen.dart';
-import 'package:affluena_mobile/features/insights/presentation/insights_screen.dart';
+import 'package:affluena_mobile/features/insights/presentation/ekspor_screen.dart';
+import 'package:affluena_mobile/features/insights/presentation/laporan_screen.dart';
+import 'package:affluena_mobile/features/insights/presentation/peringatan_aktivitas_screen.dart';
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_screen.dart';
 import 'package:affluena_mobile/features/quick_entry/presentation/quick_entry_templates_screen.dart';
 import 'package:affluena_mobile/features/recurring/presentation/recurring_screen.dart';
@@ -35,7 +37,7 @@ import '../../helpers/auth_test_helpers.dart';
 import '../budgets/budget_screen_test.dart' as budget_fakes;
 import '../debts/debt_screen_test.dart' as debt_fakes;
 import '../goals/goal_screen_test.dart' as goal_fakes;
-import '../insights/insights_screen_test.dart' as insight_fakes;
+import '../insights/insight_screens_test.dart' as insight_fakes;
 import '../recurring/recurring_screen_test.dart' as recurring_fakes;
 import '../trackers/tracker_screen_test.dart' as tracker_fakes;
 
@@ -94,7 +96,9 @@ void main() {
       QuickEntryTemplatesScreen.path,
       SplitBillScreen.path,
       AuditLogScreen.path,
-      InsightsScreen.location(InsightTab.rules),
+      AturanNotifikasiScreen.path,
+      // Legacy chip-tab deep link still resolves (redirects) but stays gated.
+      '/insights?tab=rules',
       WalletDetailScreen.location('wallet-main'),
       WalletSharingScreen.location('wallet-main'),
     ]) {
@@ -210,11 +214,6 @@ final _settingsNavigationScenarios = [
     expected: 'Dompet',
   ),
   _NavigationScenario(
-    entry: 'Transaksi',
-    location: TransactionsScreen.path,
-    expected: 'Transaksi',
-  ),
-  _NavigationScenario(
     entry: 'Template catat cepat',
     location: QuickEntryTemplatesScreen.path,
     expected: 'Template catat cepat',
@@ -246,9 +245,15 @@ final _settingsNavigationScenarios = [
   ),
   _NavigationScenario(
     entry: 'Laporan',
-    location: InsightsScreen.location(InsightTab.reports),
+    location: LaporanScreen.path,
     // Metric label is fixture data, not a translated UI string.
     expected: 'Overview balance',
+  ),
+  _NavigationScenario(
+    entry: 'Ekspor CSV',
+    location: EksporScreen.path,
+    // Export-job row count is fixture data, not a translated UI string.
+    expected: '42 baris',
   ),
   _NavigationScenario(
     entry: 'Log audit',
@@ -257,26 +262,48 @@ final _settingsNavigationScenarios = [
   ),
   _NavigationScenario(
     entry: 'Peringatan & Aktivitas',
-    location: InsightsScreen.location(InsightTab.alerts),
+    location: PeringatanAktivitasScreen.path,
     // Alert title is fixture data, not a translated UI string.
     expected: 'Food limit reached',
   ),
   _NavigationScenario(
     entry: 'Aturan notifikasi',
-    location: InsightsScreen.location(InsightTab.rules),
+    location: AturanNotifikasiScreen.path,
     // Rule title is fixture data, not a translated UI string.
     expected: 'Budget alerts',
   ),
 ];
 
 final _directNavigationScenarios = [
-  // Split bill and Debt are hidden from the More menu but their routes still
-  // resolve (kept reachable via deep link), so cover them here, not in the
-  // settings-menu list above.
+  // Split bill, Debt, and Transaksi are hidden from the More menu but their
+  // routes still resolve (kept reachable via deep link / the Aktivitas tab),
+  // so cover them here, not in the settings-menu list above.
   _NavigationScenario(
     entry: 'Bagi tagihan',
     location: SplitBillScreen.path,
     expected: 'Bagi tagihan',
+  ),
+  _NavigationScenario(
+    entry: 'Transaksi',
+    location: TransactionsScreen.path,
+    expected: 'Transaksi',
+  ),
+  // The retired chip-tabbed /insights deep links redirect to the matching
+  // standalone screens so old locations never 404.
+  _NavigationScenario(
+    entry: 'Laporan (legacy /insights)',
+    location: '/insights',
+    expected: 'Overview balance',
+  ),
+  _NavigationScenario(
+    entry: 'Aturan notifikasi (legacy /insights?tab=rules)',
+    location: '/insights?tab=rules',
+    expected: 'Budget alerts',
+  ),
+  _NavigationScenario(
+    entry: 'Peringatan & Aktivitas (legacy /insights?tab=alerts)',
+    location: '/insights?tab=alerts',
+    expected: 'Food limit reached',
   ),
   _NavigationScenario(
     entry: 'Utang',
@@ -311,10 +338,10 @@ final _rawIdSmokeLocations = [
   RecurringScreen.path,
   GoalScreen.path,
   CategoryTagManagementScreen.path,
-  InsightsScreen.location(InsightTab.reports),
-  InsightsScreen.location(InsightTab.exports),
-  InsightsScreen.location(InsightTab.alerts),
-  InsightsScreen.location(InsightTab.rules),
+  LaporanScreen.path,
+  EksporScreen.path,
+  PeringatanAktivitasScreen.path,
+  AturanNotifikasiScreen.path,
   AuditLogScreen.path,
 ];
 

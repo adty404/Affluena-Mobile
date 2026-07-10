@@ -4,6 +4,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../auth/data/auth_models.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
+import '../../shared/presentation/widgets/avatar_image.dart';
 
 class SettingsProfileCard extends StatelessWidget {
   const SettingsProfileCard({
@@ -37,6 +38,12 @@ class SettingsProfileCard extends StatelessWidget {
     final initial = initialSource.isEmpty
         ? 'A'
         : initialSource.characters.first.toUpperCase();
+    // Uploaded avatars are stored as data:image base64 URLs; legacy http(s)
+    // URLs still resolve. Either way the initial stays as the fallback while
+    // (or if) the image can't render.
+    final avatarImage = user == null
+        ? null
+        : avatarImageProvider(user!.avatarUrl);
 
     return Semantics(
       container: true,
@@ -49,6 +56,7 @@ class SettingsProfileCard extends StatelessWidget {
                   child: CircleAvatar(
                     radius: 28,
                     backgroundColor: colors.forest,
+                    foregroundImage: avatarImage,
                     child: Text(
                       initial,
                       style: textTheme.titleLarge?.copyWith(

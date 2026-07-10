@@ -8,6 +8,7 @@ import '../../insights/application/category_breakdown_providers.dart';
 import '../../insights/application/insights_controller.dart';
 import '../../redesign/presentation/activity_feed_screen.dart';
 import '../../redesign/presentation/room_detail_screen.dart';
+import '../../trackers/application/tracker_payments_providers.dart';
 import '../../transactions/application/transactions_controller.dart';
 import '../../wallets/application/wallet_detail_controller.dart';
 import '../../wallets/application/wallets_controller.dart';
@@ -56,6 +57,11 @@ final _balanceProviders = [
   // The Wawasan per-category transactions screen (autoDispose.family) opened by
   // tapping a breakdown row — same lifecycle: refreshes only its live instance.
   categoryTransactionsInRangeProvider,
+  // The "Riwayat pembayaran" lists on the installment/subscription detail
+  // screens (autoDispose.family, listed bare) — paying from the open detail
+  // refreshes its history in place instead of leaving the new payment missing.
+  installmentPaymentsProvider,
+  subscriptionPaymentsProvider,
   // The legacy Laporan/Wawasan controller (non-autoDispose Notifier). It never
   // auto-refreshed on a money move, so it went stale across reopen; invalidating
   // re-runs its Future.microtask(load).

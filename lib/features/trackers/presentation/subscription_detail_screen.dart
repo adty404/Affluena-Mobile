@@ -9,13 +9,16 @@ import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../application/tracker_controller.dart';
+import '../application/tracker_payments_providers.dart';
 import '../data/tracker_models.dart';
+import 'tracker_payment_history.dart';
 
 /// Per-subscription detail (Langganan) in the Sky & Denim language — opened from
-/// a Beranda dashboard card. Reads the subscription from the already-loaded
-/// [trackerControllerProvider]; pay / pause reuse the existing controller actions.
-/// (The API has no payment-history endpoint, so the schedule shows the next few
-/// *upcoming* bills computed from the billing cycle.)
+/// a Beranda dashboard card or a tracker list card. Reads the subscription from
+/// the already-loaded [trackerControllerProvider]; pay / pause reuse the
+/// existing controller actions. Shows the next few *upcoming* bills computed
+/// from the billing cycle plus the recorded "Riwayat pembayaran" from
+/// `GET /subscriptions/:id/payments`.
 class SubscriptionDetailScreen extends ConsumerWidget {
   const SubscriptionDetailScreen({required this.id, super.key});
 
@@ -157,6 +160,26 @@ class SubscriptionDetailScreen extends ConsumerWidget {
               ),
             ),
           ],
+          const SizedBox(height: AffluenaSpacing.space6),
+          // Actual recorded payments (newest first) — each row opens the
+          // backing transaction. Refreshed in place after "Bayar sekarang"
+          // via _balanceProviders.
+          TrackerPaymentHistorySection(
+            payments: ref
+                .watch(subscriptionPaymentsProvider(current.id))
+                .whenData(
+                  (payments) => [
+                    for (final payment in payments)
+                      (
+                        id: payment.id,
+                        amountMinor: payment.amountMinor,
+                        paidAt: payment.paidAt,
+                        transactionId: payment.transactionId,
+                        note: payment.note,
+                      ),
+                  ],
+                ),
+          ),
         ],
       ),
     );

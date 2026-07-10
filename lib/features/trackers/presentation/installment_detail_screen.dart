@@ -10,7 +10,9 @@ import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
 import '../../shared/presentation/widgets/sky_progress_bar.dart';
 import '../application/tracker_controller.dart';
+import '../application/tracker_payments_providers.dart';
 import '../data/tracker_models.dart';
+import 'tracker_payment_history.dart';
 
 /// One month in the installment schedule. [kind]: 0 paid, 1 next-due, 2 upcoming.
 typedef _ScheduleEntry = ({int number, DateTime due, int kind});
@@ -149,6 +151,26 @@ class InstallmentDetailScreen extends ConsumerWidget {
                 ],
               ],
             ),
+          ),
+          const SizedBox(height: AffluenaSpacing.space6),
+          // Actual recorded payments (newest first) — each row opens the
+          // backing transaction. Refreshed in place after "Bayar cicilan"
+          // via _balanceProviders.
+          TrackerPaymentHistorySection(
+            payments: ref
+                .watch(installmentPaymentsProvider(current.id))
+                .whenData(
+                  (payments) => [
+                    for (final payment in payments)
+                      (
+                        id: payment.id,
+                        amountMinor: payment.amountMinor,
+                        paidAt: payment.paidAt,
+                        transactionId: payment.transactionId,
+                        note: payment.note,
+                      ),
+                  ],
+                ),
           ),
         ],
       ),

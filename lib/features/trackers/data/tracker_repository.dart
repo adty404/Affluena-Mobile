@@ -29,6 +29,10 @@ abstract interface class TrackerRepository {
     TrackerPaymentRequest request,
   );
 
+  /// GET /installments/:id/payments — the installment's recorded payments,
+  /// ordered `paid_at` DESC by the API.
+  Future<List<InstallmentPayment>> listInstallmentPayments(String id);
+
   Future<SubscriptionListResponse> listSubscriptions({
     int? limit,
     int? offset,
@@ -50,6 +54,10 @@ abstract interface class TrackerRepository {
     String id,
     TrackerPaymentRequest request,
   );
+
+  /// GET /subscriptions/:id/payments — the subscription's recorded payments,
+  /// ordered `paid_at` DESC by the API.
+  Future<List<SubscriptionPayment>> listSubscriptionPayments(String id);
 }
 
 class DioTrackerRepository implements TrackerRepository {
@@ -115,6 +123,17 @@ class DioTrackerRepository implements TrackerRepository {
   }
 
   @override
+  Future<List<InstallmentPayment>> listInstallmentPayments(String id) async {
+    final response = await _dio.get<Map<String, Object?>>(
+      '/installments/$id/payments',
+    );
+    return ApiJson.readObjectList(
+      _responseMap(response.data),
+      'payments',
+    ).map(InstallmentPayment.fromJson).toList(growable: false);
+  }
+
+  @override
   Future<SubscriptionListResponse> listSubscriptions({
     int? limit,
     int? offset,
@@ -169,6 +188,17 @@ class DioTrackerRepository implements TrackerRepository {
       data: request.toJson(),
     );
     return SubscriptionPayment.fromJson(_responseMap(response.data));
+  }
+
+  @override
+  Future<List<SubscriptionPayment>> listSubscriptionPayments(String id) async {
+    final response = await _dio.get<Map<String, Object?>>(
+      '/subscriptions/$id/payments',
+    );
+    return ApiJson.readObjectList(
+      _responseMap(response.data),
+      'payments',
+    ).map(SubscriptionPayment.fromJson).toList(growable: false);
   }
 }
 

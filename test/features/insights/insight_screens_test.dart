@@ -5,7 +5,10 @@ import 'package:affluena_mobile/features/insights/application/csv_share_service.
 import 'package:affluena_mobile/features/insights/application/insights_controller.dart';
 import 'package:affluena_mobile/features/insights/data/insight_models.dart';
 import 'package:affluena_mobile/features/insights/data/insights_repository.dart';
-import 'package:affluena_mobile/features/insights/presentation/insights_screen.dart';
+import 'package:affluena_mobile/features/insights/presentation/aturan_notifikasi_screen.dart';
+import 'package:affluena_mobile/features/insights/presentation/ekspor_screen.dart';
+import 'package:affluena_mobile/features/insights/presentation/laporan_screen.dart';
+import 'package:affluena_mobile/features/insights/presentation/peringatan_aktivitas_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,40 +34,38 @@ void main() {
     expect(state.rules.single.title, 'Budget alerts');
   });
 
-  testWidgets('renders reports from the mobile surface', (tester) async {
+  testWidgets('LaporanScreen renders the monthly report', (tester) async {
     final repository = TestInsightsRepository();
 
-    await tester.pumpWidget(insightsTestApp(repository));
+    await tester.pumpWidget(insightsTestApp(repository, const LaporanScreen()));
     await tester.pumpInsightsState();
 
-    // The pushed screen is titled after its active tab (the bottom-nav
-    // "Wawasan" is a different screen).
+    // Its own routed screen now — no cross-section chip bar; the report-kind
+    // chips remain as this screen's sub-views.
     expect(find.text('Laporan'), findsWidgets);
     expect(find.text('Overview balance'), findsOneWidget);
     expect(find.text('Rp 4.000.000'), findsOneWidget);
     expect(find.text('79%'), findsOneWidget);
     expect(find.text('Rp 79'), findsNothing);
-
-    // The CSV export ("Ekspor") tab is now offered alongside the other tabs.
-    expect(find.byKey(const Key('insights-tab-exports')), findsOneWidget);
+    expect(find.byKey(const Key('report-kind-overview')), findsOneWidget);
+    // Cross-section content (export jobs, alerts, rules) no longer leaks in.
+    expect(find.text('42 baris'), findsNothing);
+    expect(find.text('Food limit reached'), findsNothing);
   });
 
-  testWidgets('exports tab lists export jobs and exports a CSV', (
+  testWidgets('EksporScreen lists export jobs and exports a CSV', (
     tester,
   ) async {
     final repository = TestInsightsRepository();
 
-    await tester.pumpWidget(insightsTestApp(repository));
+    await tester.pumpWidget(insightsTestApp(repository, const EksporScreen()));
     await tester.pumpInsightsState();
-
-    await tester.tap(find.byKey(const Key('insights-tab-exports')));
-    await tester.pumpAndSettle();
 
     // The seeded export job renders in the "Tugas ekspor" list.
     expect(find.text('42 baris'), findsOneWidget);
 
     // Tapping "Ekspor CSV" generates + shares the month CSV via the fake share
-    // service, then returns to the reports tab with a success banner.
+    // service, then shows a success banner on this screen.
     await tester.tap(find.byKey(const Key('insights-export-button')));
     await tester.pumpAndSettle();
 
@@ -85,44 +86,52 @@ void main() {
     expect(find.text('Ekspor CSV dibagikan.'), findsOneWidget);
   });
 
-  testWidgets('opens alert and activity detail cards', (tester) async {
-    await tester.pumpWidget(insightsTestApp(TestInsightsRepository()));
-    await tester.pumpInsightsState();
+  testWidgets(
+    'PeringatanAktivitasScreen opens alert and activity detail cards',
+    (tester) async {
+      await tester.pumpWidget(
+        insightsTestApp(
+          TestInsightsRepository(),
+          const PeringatanAktivitasScreen(),
+        ),
+      );
+      await tester.pumpInsightsState();
 
-    await tester.tap(find.byKey(const Key('insights-tab-alerts')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Food limit reached'));
-    await tester.pumpAndSettle();
-    // The detail sheet now surfaces humanized Type/Module/Raised metadata and
-    // the description, not the raw actionPath ("/budgets").
-    expect(find.text('Food spending reached 100%.'), findsWidgets);
-    expect(find.text('Jenis'), findsOneWidget);
-    expect(find.text('Modul'), findsOneWidget);
-    expect(find.text('Dibuat'), findsOneWidget);
-    expect(find.text('Budget'), findsWidgets);
-    expect(find.text('/budgets'), findsNothing);
+      // Alerts and the audit-trail activity feed live together as stacked
+      // sections on ONE screen (they shared a single Pengaturan entry).
+      await tester.tap(find.text('Food limit reached'));
+      await tester.pumpAndSettle();
+      // The detail sheet surfaces humanized Type/Module/Raised metadata and
+      // the description, not the raw actionPath ("/budgets").
+      expect(find.text('Food spending reached 100%.'), findsWidgets);
+      expect(find.text('Jenis'), findsOneWidget);
+      expect(find.text('Modul'), findsOneWidget);
+      expect(find.text('Dibuat'), findsOneWidget);
+      expect(find.text('Budget'), findsWidgets);
+      expect(find.text('/budgets'), findsNothing);
 
-    // Dismiss the modal sheet by tapping the scrim before switching tabs.
-    await tester.tapAt(const Offset(20, 20));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('insights-tab-activity')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Created transaction Lunch'));
-    await tester.pumpAndSettle();
-    // The activity detail sheet de-emphasizes the raw entity id as a
-    // "Reference ID (debug)" technical row.
-    expect(find.text('ID referensi (debug)'), findsOneWidget);
-    expect(find.text('transaction-1'), findsOneWidget);
-  });
+      // Dismiss the modal sheet by tapping the scrim, then open the activity.
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Created transaction Lunch'));
+      await tester.pumpAndSettle();
+      // The activity detail sheet de-emphasizes the raw entity id as a
+      // "Reference ID (debug)" technical row.
+      expect(find.text('ID referensi (debug)'), findsOneWidget);
+      expect(find.text('transaction-1'), findsOneWidget);
+    },
+  );
 
-  testWidgets('updates notification rule toggle', (tester) async {
+  testWidgets('AturanNotifikasiScreen updates a notification rule toggle', (
+    tester,
+  ) async {
     final repository = TestInsightsRepository();
 
-    await tester.pumpWidget(insightsTestApp(repository));
+    await tester.pumpWidget(
+      insightsTestApp(repository, const AturanNotifikasiScreen()),
+    );
     await tester.pumpInsightsState();
 
-    await tester.tap(find.byKey(const Key('insights-tab-rules')));
-    await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const Key('notification-rule-budget-alert-switch')),
     );
@@ -248,7 +257,7 @@ extension on WidgetTester {
   }
 }
 
-Widget insightsTestApp(TestInsightsRepository repository) {
+Widget insightsTestApp(TestInsightsRepository repository, Widget screen) {
   return ProviderScope(
     retry: noProviderRetry,
     overrides: [
@@ -265,7 +274,7 @@ Widget insightsTestApp(TestInsightsRepository repository) {
       theme: AffluenaTheme.light,
       darkTheme: AffluenaTheme.dark,
       themeMode: ThemeMode.dark,
-      home: const Scaffold(body: InsightsScreen()),
+      home: Scaffold(body: screen),
     ),
   );
 }

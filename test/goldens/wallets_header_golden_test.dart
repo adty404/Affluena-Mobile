@@ -13,10 +13,11 @@ import 'package:flutter_test/flutter_test.dart';
 import '../features/wallets/wallets_test_helpers.dart'
     show TestWalletRepository;
 
-/// Golden of the wallets-screen hero: a prominent Total saldo over a
-/// Dompet/Bersama/Pribadi breakdown, replacing the old contradictory
-/// "Dibagikan: N dompet / Hanya pribadi" card. Text renders as the placeholder
-/// test font — a layout drift detector, not a pixel match.
+/// Golden of the wallets-screen hero: a calm Total saldo over one row of
+/// compact soft-tinted stat chips (Dompet / Bersama / Pribadi — the Bersama
+/// chip only renders when at least one wallet is shared, which the seeded
+/// wallet-with-member exercises here). No explainer paragraphs. Text renders
+/// as the placeholder test font — a layout drift detector, not a pixel match.
 Wallet _w({
   required String id,
   required String name,

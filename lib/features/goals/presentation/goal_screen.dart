@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/date_formatter.dart';
@@ -17,6 +18,7 @@ import '../../shared/presentation/widgets/status_badge.dart';
 import '../application/goal_controller.dart';
 import '../data/goal_models.dart';
 import 'goal_contribute_sheet.dart';
+import 'goal_detail_screen.dart';
 import 'goal_form_sheet.dart';
 import 'goal_invite_sheet.dart';
 import 'goal_members_section.dart';
@@ -77,6 +79,9 @@ class GoalScreen extends ConsumerWidget {
                 goal: goal,
                 currentUserId: currentUserId,
                 busy: state.isSaving,
+                // Tapping the card drills into the goal detail (progress +
+                // "Riwayat setoran"); actions keep their own buttons/menu.
+                onOpen: () => context.push(GoalDetailScreen.location(goal.id)),
                 onContribute: () => showGoalContributeSheet(context, goal),
                 onInvite: () => showGoalInviteSheet(context, goal),
                 onEdit: () => showGoalFormSheet(context, goal: goal),
@@ -175,6 +180,7 @@ class _GoalCard extends StatelessWidget {
     required this.goal,
     required this.currentUserId,
     required this.busy,
+    required this.onOpen,
     required this.onContribute,
     required this.onInvite,
     required this.onEdit,
@@ -185,6 +191,9 @@ class _GoalCard extends StatelessWidget {
   final Goal goal;
   final String? currentUserId;
   final bool busy;
+
+  /// Drills into the goal detail screen (whole-card tap with a ripple).
+  final VoidCallback onOpen;
   final VoidCallback onContribute;
   final VoidCallback onInvite;
   final VoidCallback onEdit;
@@ -203,7 +212,9 @@ class _GoalCard extends StatelessWidget {
     final hasColor = custom != null;
     final icon = resolveEntityIcon(goal.icon, Icons.savings_outlined);
 
-    return AffluenaCard(
+    // Material + InkWell so the drill-in tap ripples on the card surface;
+    // the Setor/Undang buttons and the overflow menu keep their own taps.
+    final card = AffluenaCard(
       backgroundColor: hasColor ? custom : null,
       borderColor: hasColor ? custom : null,
       child: Column(
@@ -330,6 +341,12 @@ class _GoalCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(AffluenaRadii.card),
+      onTap: onOpen,
+      child: card,
     );
   }
 }
