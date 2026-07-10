@@ -26,6 +26,11 @@ abstract interface class AuthRepository {
 
   Future<void> revokeSession(String sessionId);
 
+  /// Permanently deletes the signed-in account and ALL its data (Google Play
+  /// account-deletion requirement). Requires the current password so a stolen
+  /// access token alone can't destroy an account.
+  Future<void> deleteAccount(String password);
+
   Future<void> requestPasswordReset(String email);
 
   Future<void> resetPassword({
@@ -111,6 +116,11 @@ class DioAuthRepository implements AuthRepository {
   @override
   Future<void> revokeSession(String sessionId) async {
     await _dio.delete<void>('/auth/sessions/$sessionId');
+  }
+
+  @override
+  Future<void> deleteAccount(String password) async {
+    await _dio.delete<void>('/auth/account', data: {'password': password});
   }
 
   @override

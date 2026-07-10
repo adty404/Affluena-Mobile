@@ -223,6 +223,7 @@ class FakeAuthRepository implements AuthRepository {
     this.changePasswordSession = demoSession,
     this.listSessionsError,
     this.revokeSessionError,
+    this.deleteAccountError,
   }) {
     _seedSessions(sessions);
   }
@@ -236,6 +237,8 @@ class FakeAuthRepository implements AuthRepository {
   AuthSession changePasswordSession;
   Object? listSessionsError;
   Object? revokeSessionError;
+  Object? deleteAccountError;
+  final deleteAccountPasswords = <String>[];
   final List<AuthSessionRecord> sessions = [];
   final updateAccountRequests = <UpdateAccountRequest>[];
   final changePasswordRequests = <ChangePasswordRequest>[];
@@ -310,6 +313,12 @@ class FakeAuthRepository implements AuthRepository {
     revokedSessionIds.add(sessionId);
     if (revokeSessionError != null) throw revokeSessionError!;
     sessions.removeWhere((session) => session.id == sessionId);
+  }
+
+  @override
+  Future<void> deleteAccount(String password) async {
+    deleteAccountPasswords.add(password);
+    if (deleteAccountError != null) throw deleteAccountError!;
   }
 
   @override
