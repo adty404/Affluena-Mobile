@@ -21,9 +21,9 @@
 | 10 | **TLS/HTTPS** (prasyarat Data Safety) | 🔴 Fase 1 — **BUTUH DOMAIN dari pemilik** | API+WEB+MOBILE |
 | 11 | Akun Play Developer ($25 + verifikasi) | 🔴 Fase 1 — pemilik | — |
 | 12 | 12 tester × 14 hari closed testing (aturan akun personal baru) | 🔴 Fase 1 — pemilik | — |
-| 13 | Keystore release + flip signingConfig + AAB | 🔴 Fase 2 | repo ini (PR release 1.5.0) |
-| 14 | Buang `local_auth` + `USE_BIOMETRIC` + `NSFaceIDUsageDescription` | 🔴 Fase 2 (native → release 1.5.0) | repo ini |
-| 15 | Buang cleartext (`network_security_config.xml`) setelah HTTPS | 🔴 Fase 2 (release 1.5.0) | repo ini |
+| 13 | Keystore release + flip signingConfig + AAB | 🔴 Fase 2 | repo ini (PR release berikutnya) |
+| 14 | Buang `local_auth` + `USE_BIOMETRIC` + `NSFaceIDUsageDescription` | ✅ SELESAI di release **1.5.0+8** (PR batch UX — sekalian plugin `image_picker` masuk) | repo ini |
+| 15 | Buang cleartext (`network_security_config.xml`) setelah HTTPS | 🔴 Fase 2 (release berikutnya) | repo ini |
 | 16 | Adaptive icon (mipmap-anydpi-v26) + monochrome | 🟡 Fase 2 (disarankan) | repo ini |
 | 17 | Screenshot ≥2 (dari device) | 🔴 Fase 2 — pemilik | — |
 
@@ -33,14 +33,16 @@
   ⚠️ permanen setelah publish pertama — kalau mau ganti (mis. `com.affluena.app`), putuskan
   SEBELUM upload pertama; sesudahnya = app baru).
 - `targetSdk` = mengikuti Flutter 3.44 (API 35) ✅; build-tools 35.
-- `versionCode` dari pubspec (`1.4.0+7` saat ini). Play wajib **naik setiap upload** → rilis
-  Play pertama = `1.5.0+8` (sekalian item 13–15; version bump memang butuh Shorebird RELEASE).
+- `versionCode` dari pubspec (**`1.5.0+8` saat ini** — release batch UX: `image_picker` masuk,
+  `local_auth` keluar). Play wajib **naik setiap upload** → rilis Play pertama memakai versi
+  BERIKUTNYA (mis. `1.6.0+9`, sekalian item 13 & 15; version bump memang butuh Shorebird RELEASE).
 - **Signing**: `android/app/build.gradle.kts` release masih memakai **debug signingConfig** —
   WAJIB diganti (lihat "Keystore & signing").
 - **Permissions** (`AndroidManifest.xml`): `INTERNET` ✅ · `POST_NOTIFICATIONS` ✅ (dipakai
   pengingat jatuh tempo) · `RECEIVE_BOOT_COMPLETED` ✅ (flutter_local_notifications re-arm
-  setelah reboot) · **`USE_BIOMETRIC` ❌ TIDAK DIPAKAI** — buang di 1.5.0 (fiturnya tidak ada;
-  plugin `local_auth` ikut dibuang dari pubspec + `NSFaceIDUsageDescription` dari Info.plist).
+  setelah reboot) · **`USE_BIOMETRIC` ✅ SUDAH DIBUANG di 1.5.0+8** (plugin `local_auth` ikut
+  dibuang dari pubspec + `NSFaceIDUsageDescription` dari Info.plist). Plugin baru `image_picker`
+  (avatar) memakai Android Photo Picker → **tanpa** permission storage tambahan.
 - **Cleartext HTTP**: diizinkan tersempit via `android/app/src/main/res/xml/
   network_security_config.xml` (host API VPS + host dev). Setelah HTTPS (item 10), hapus
   domain-config VPS-nya (dev host boleh tinggal, debug-only kalau bisa).
@@ -70,15 +72,17 @@
    **Play App Signing** (Google pegang kunci final; keystore kita jadi upload key).
 5. Simpan cadangan keystore + kredensial di password manager pemilik.
 
-## Paket rilis 1.5.0 (satu PR release, JANGAN via auto-patch)
+## Paket rilis 1.5.0+8 (TERKIRIM — PR batch UX) & sisa paket Play
 
-Digabung supaya user cukup install ulang SEKALI: (a) keystore release (di atas), (b) buang
-`local_auth` dari `pubspec.yaml` + `USE_BIOMETRIC` dari manifest + `NSFaceIDUsageDescription`
-dari `ios/Runner/Info.plist`, (c) HTTPS base URL default + hapus cleartext VPS, (d) bump
-`version: 1.5.0+8`, (e) (disarankan) adaptive icon. Setelah merge: jalankan workflow
-**Mobile Shorebird → mode=release** (guard auto-patch akan gagal by design pada version bump —
-itu normal), unduh artifact, drop APK ke konvensi iCloud + buat GitHub Release, DAN build AAB
-via `scripts/build_aab.sh` untuk Play.
+Release **1.5.0+8** maju lebih cepat dari rencana karena batch UX butuh plugin native
+(`image_picker` untuk upload avatar): item (b) buang `local_auth` + `USE_BIOMETRIC` +
+`NSFaceIDUsageDescription` dan (d) bump `version: 1.5.0+8` SUDAH masuk di PR itu. Setelah merge:
+jalankan workflow **Mobile Shorebird → mode=release** (guard auto-patch akan gagal by design pada
+version bump — itu normal), unduh artifact, drop APK ke konvensi iCloud + buat GitHub Release.
+
+Sisa paket untuk rilis Play pertama (versi berikutnya, mis. `1.6.0+9`): (a) keystore release
+(di atas), (c) HTTPS base URL default + hapus cleartext VPS, (e) (disarankan) adaptive icon —
+lalu build AAB via `scripts/build_aab.sh` untuk Play.
 
 ## Store listing (draft siap tempel — Bahasa Indonesia)
 
