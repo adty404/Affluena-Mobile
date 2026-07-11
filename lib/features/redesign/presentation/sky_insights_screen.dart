@@ -258,10 +258,10 @@ class _CategoryBreakdownCardState
 
     return Container(
       margin: const EdgeInsets.only(bottom: AffluenaSpacing.space3),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.sky.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.sky.line),
       ),
       child: Column(
@@ -370,7 +370,7 @@ class _CategoryBreakdownCardState
         Text(
           MoneyFormatter.idr(total),
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
             color: totalColor,
             fontFeatures: const [FontFeature.tabularFigures()],
@@ -615,14 +615,14 @@ class _CategorySliceRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 30,
+            height: 30,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: accent.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(AffluenaRadii.md),
             ),
-            child: Icon(slice.icon, size: 18, color: accent),
+            child: Icon(slice.icon, size: 16, color: accent),
           ),
           const SizedBox(width: AffluenaSpacing.space3),
           Expanded(
@@ -714,7 +714,7 @@ class _ForecastBody extends StatelessWidget {
         Text(
           MoneyFormatter.idr(forecast.forecastedExpenseMinor),
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
             color: context.sky.ink,
             fontFeatures: const [FontFeature.tabularFigures()],
@@ -757,10 +757,10 @@ class _SkyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: AffluenaSpacing.space3),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.sky.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.sky.line),
       ),
       child: Column(

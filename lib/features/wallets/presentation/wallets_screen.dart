@@ -73,7 +73,7 @@ class _WalletsContent extends ConsumerWidget {
             ),
           ] else ...[
             _WalletsSummary(wallets: visible),
-            const SizedBox(height: AffluenaSpacing.space6),
+            const SizedBox(height: AffluenaSpacing.space5),
             const SectionHeader(title: 'Dompet kamu'),
             const SizedBox(height: AffluenaSpacing.space3),
             GridView.builder(
@@ -145,8 +145,8 @@ class _WalletsSummary extends StatelessWidget {
               MoneyFormatter.idr(total),
               maxLines: 1,
               style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
                 letterSpacing: -0.5,
                 color: colors.ink,
                 fontFeatures: const [FontFeature.tabularFigures()],

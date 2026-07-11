@@ -63,8 +63,8 @@ class SkyDetailHero extends StatelessWidget {
         Text(
           amount,
           style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w800,
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
             color: amountColor ?? context.sky.ink,
             fontFeatures: const [FontFeature.tabularFigures()],

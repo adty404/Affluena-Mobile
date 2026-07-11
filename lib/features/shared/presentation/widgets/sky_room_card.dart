@@ -38,7 +38,7 @@ class SkyRoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(16);
+    final radius = BorderRadius.circular(14);
     final titleRow = Row(
       children: [
         leading,

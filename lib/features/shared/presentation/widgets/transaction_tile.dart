@@ -39,7 +39,7 @@ class TransactionTile extends StatelessWidget {
           DecoratedBox(
             decoration: BoxDecoration(
               color: iconBackground,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Padding(
               padding: const EdgeInsets.all(AffluenaSpacing.space3),

@@ -109,7 +109,7 @@ class BerandaDashboardView extends ConsumerWidget {
             total: total,
             loading: walletsAsync.isLoading && spending.isEmpty,
           ),
-          const SizedBox(height: AffluenaSpacing.space6),
+          const SizedBox(height: AffluenaSpacing.space5),
 
           // Ringkasan — savings rate + net-worth sparkline in one calm row.
           // Skeletons while the summary loads; hidden entirely on error (the
@@ -288,7 +288,7 @@ class BerandaDashboardView extends ConsumerWidget {
       if (!summaryAsync.isLoading) return const [];
       return const [
         _CardGrid(children: [_SkeletonCard(), _SkeletonCard()]),
-        SizedBox(height: AffluenaSpacing.space6),
+        SizedBox(height: AffluenaSpacing.space5),
       ];
     }
 
@@ -321,7 +321,7 @@ class BerandaDashboardView extends ConsumerWidget {
           _NetWorthTrendCard(series: series, loading: trendAsync.isLoading),
         ],
       ),
-      const SizedBox(height: AffluenaSpacing.space6),
+      const SizedBox(height: AffluenaSpacing.space5),
     ];
   }
 
@@ -338,7 +338,7 @@ class BerandaDashboardView extends ConsumerWidget {
         child: Text(
           'Jatuh tempo terdekat',
           style: TextStyle(
-            fontSize: 16.5,
+            fontSize: 15.5,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.2,
             color: context.sky.ink,
@@ -370,7 +370,7 @@ class BerandaDashboardView extends ConsumerWidget {
           ),
         ),
       ),
-      const SizedBox(height: AffluenaSpacing.space6),
+      const SizedBox(height: AffluenaSpacing.space5),
     ];
   }
 
@@ -676,8 +676,8 @@ class _Hero extends StatelessWidget {
           Text(
             MoneyFormatter.idr(total),
             style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
               letterSpacing: -0.5,
               color: context.sky.ink,
               fontFeatures: const [FontFeature.tabularFigures()],
@@ -734,7 +734,7 @@ class _Section extends StatelessWidget {
     }
 
     return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : AffluenaSpacing.space6),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : AffluenaSpacing.space5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -743,7 +743,7 @@ class _Section extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 16.5,
+                  fontSize: 15.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.2,
                   color: context.sky.ink,
@@ -874,7 +874,7 @@ class _DashCard extends StatelessWidget {
             border: Border.all(color: borderColor ?? context.sky.line),
             borderRadius: BorderRadius.circular(AffluenaRadii.control),
           ),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -964,7 +964,7 @@ class _SavingsRateTile extends StatelessWidget {
 
     return Container(
       key: const Key('beranda-savings-rate'),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.sky.surface,
         border: Border.all(color: context.sky.line),
@@ -982,7 +982,7 @@ class _SavingsRateTile extends StatelessWidget {
           Text(
             hasRate ? '$percent%' : '—',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 19,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.4,
               color: tone,
@@ -1021,7 +1021,7 @@ class _NetWorthTrendCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: const Key('beranda-networth-trend'),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.sky.surface,
         border: Border.all(color: context.sky.line),
@@ -1219,7 +1219,7 @@ class _DueRow extends StatelessWidget {
     return InkWell(
       onTap: () => context.push(entry.location),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         child: Row(
           children: [
             _IconTile(
@@ -1291,15 +1291,15 @@ class _IconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 34,
-      height: 34,
+      width: 30,
+      height: 30,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: customBg ?? context.sky.sheet,
         borderRadius: BorderRadius.circular(11),
         border: Border.all(color: customBorder ?? context.sky.line),
       ),
-      child: Icon(icon, size: 18, color: customColor ?? context.sky.muted),
+      child: Icon(icon, size: 16, color: customColor ?? context.sky.muted),
     );
   }
 }
@@ -1321,12 +1321,12 @@ class _AvatarStack extends StatelessWidget {
 
     return SizedBox(
       width: 44,
-      height: 34,
+      height: 30,
       child: Stack(
         children: [
           Positioned(
             left: 0,
-            top: 3,
+            top: 1,
             child: SkyAvatar(
               initial: initial(members[0]),
               borderColor: ringColor,
@@ -1334,7 +1334,7 @@ class _AvatarStack extends StatelessWidget {
           ),
           Positioned(
             left: 15,
-            top: 3,
+            top: 1,
             child: SkyAvatar(
               initial: initial(members[1]),
               color: context.sky.avatarSecondary,

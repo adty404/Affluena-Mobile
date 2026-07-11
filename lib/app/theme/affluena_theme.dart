@@ -260,7 +260,7 @@ abstract final class AffluenaTheme {
         centerTitle: false,
         titleTextStyle: TextStyle(
           color: colors.ink,
-          fontSize: 22,
+          fontSize: 18,
           fontWeight: FontWeight.w700,
           height: 1.25,
         ),

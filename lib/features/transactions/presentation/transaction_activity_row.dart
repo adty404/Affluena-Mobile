@@ -63,37 +63,37 @@ class TransactionActivityRow extends StatelessWidget {
     final tileColor = appearance.color ?? context.sky.accent;
 
     // Material + InkWell (the _DashCard pattern) so the tap ripples on the
-    // card surface. The 34px tile plus 2×11px vertical padding keeps the
-    // touch target at ≥52px, clear of the 48px minimum.
+    // card surface. The 30px tile plus 2×9px vertical padding keeps the
+    // touch target at 48px — exactly the minimum, never below it.
     return Padding(
       padding: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
       child: Material(
         color: context.sky.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           child: Ink(
             padding: const EdgeInsets.symmetric(
               horizontal: AffluenaSpacing.space3,
-              vertical: 11,
+              vertical: 9,
             ),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: context.sky.line),
             ),
             child: Row(
               children: [
                 Container(
                   key: const Key('activity-row-category-icon'),
-                  width: 34,
-                  height: 34,
+                  width: 30,
+                  height: 30,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: tileColor.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(11),
                   ),
-                  child: Icon(appearance.icon, size: 18, color: tileColor),
+                  child: Icon(appearance.icon, size: 16, color: tileColor),
                 ),
                 const SizedBox(width: AffluenaSpacing.space3),
                 Expanded(
