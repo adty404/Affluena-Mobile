@@ -34,6 +34,7 @@ class Transaction {
     required this.updatedAt,
     this.toWalletId,
     this.categoryId,
+    this.feeMinor = 0,
   });
 
   factory Transaction.fromJson(JsonMap json) {
@@ -45,6 +46,9 @@ class Transaction {
       toWalletId: ApiJson.nullableString(json, 'to_wallet_id'),
       categoryId: ApiJson.nullableString(json, 'category_id'),
       amountMinor: ApiJson.readInt(json, 'amount_minor'),
+      // Optional transfer admin fee. Older rows and list responses may omit it,
+      // so default to 0 when absent.
+      feeMinor: ApiJson.optionalInt(json, 'fee_minor'),
       tagIds: ApiJson.readStringList(json, 'tag_ids'),
       transactionAt: ApiJson.readString(json, 'transaction_at'),
       note: ApiJson.optionalString(json, 'note'),
@@ -60,6 +64,11 @@ class Transaction {
   final String? toWalletId;
   final String? categoryId;
   final int amountMinor;
+
+  /// Transfer admin fee in minor units (0 when none / not a transfer). The
+  /// source wallet is charged `amountMinor + feeMinor`; the destination
+  /// receives `amountMinor`, so the fee is a net-worth reduction.
+  final int feeMinor;
   final List<String> tagIds;
   final String transactionAt;
   final String note;
@@ -97,6 +106,7 @@ class TransactionRequest {
     this.categoryId,
     this.tagIds = const [],
     this.note,
+    this.feeMinor = 0,
   });
 
   final TransactionType type;
@@ -108,12 +118,19 @@ class TransactionRequest {
   final String transactionAt;
   final String? note;
 
+  /// Optional transfer admin fee in minor units. Only meaningful for a
+  /// transfer (the source wallet is charged `amountMinor + feeMinor`); never
+  /// sent for expense/income/adjustment. Defaults to 0 = no fee.
+  final int feeMinor;
+
   JsonMap toJson() => {
     'type': type.apiValue,
     'wallet_id': walletId,
     if (toWalletId != null) 'to_wallet_id': toWalletId,
     if (categoryId != null) 'category_id': categoryId,
     'amount_minor': amountMinor,
+    // Only a transfer carries an admin fee, and only when it is > 0.
+    if (type == TransactionType.transfer && feeMinor > 0) 'fee_minor': feeMinor,
     'tag_ids': tagIds,
     'transaction_at': transactionAt,
     if (note != null) 'note': note,

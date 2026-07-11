@@ -1,4 +1,5 @@
 import 'package:affluena_mobile/core/formatters/date_formatter.dart';
+import 'package:affluena_mobile/core/formatters/money_formatter.dart';
 import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +7,56 @@ import 'package:flutter_test/flutter_test.dart';
 import 'transactions_test_helpers.dart';
 
 void main() {
+  testWidgets('transfer detail shows the admin fee row when a fee is set', (
+    tester,
+  ) async {
+    final transferWithFee = transactionFixture(
+      id: 'transfer-fee',
+      type: TransactionType.transfer,
+      walletId: gopayWallet.id,
+      toWalletId: bcaWallet.id,
+      amountMinor: 250000,
+      feeMinor: 2500,
+      note: 'Top up tabungan',
+      transactionAt: '2026-06-19T09:00:00Z',
+    );
+
+    await tester.pumpWidget(
+      transactionsTestApp(
+        transactionRepository: RecordingTransactionRepository(
+          transactions: [transferWithFee],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Top up tabungan'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Detail transaksi'), findsOneWidget);
+    expect(find.text('Biaya admin'), findsOneWidget);
+    expect(find.text(MoneyFormatter.idr(2500)), findsWidgets);
+  });
+
+  testWidgets('transfer detail hides the admin fee row when there is no fee', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      transactionsTestApp(
+        transactionRepository: RecordingTransactionRepository(
+          transactions: [transferTransaction],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Move to savings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Detail transaksi'), findsOneWidget);
+    expect(find.text('Biaya admin'), findsNothing);
+  });
+
   testWidgets('renders transaction list with wallet and category names', (
     tester,
   ) async {

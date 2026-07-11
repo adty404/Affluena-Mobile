@@ -165,6 +165,104 @@ void main() {
     expect(repository.createdRequests.single.amountMinor, 50000);
   });
 
+  testWidgets('a transfer with an admin fee carries feeMinor + toWalletId', (
+    tester,
+  ) async {
+    await _openCreateScreen(tester);
+    final repository = _repository;
+
+    // Switch to Transfer.
+    await tester.tap(find.byKey(const Key('transaction-create-type-transfer')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('transaction-create-amount-field')),
+      '100000',
+    );
+    await tester.pumpAndSettle();
+
+    // From wallet.
+    await tester.tap(
+      find.byKey(const Key('transaction-create-wallet-selector')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('GoPay').last);
+    await tester.pumpAndSettle();
+
+    // To wallet.
+    await tester.tap(
+      find.byKey(const Key('transaction-create-to-wallet-selector')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('BCA Primary').last);
+    await tester.pumpAndSettle();
+
+    // Admin fee.
+    await tester.enterText(
+      find.byKey(const Key('transaction-create-fee-field')),
+      '2500',
+    );
+    await tester.pumpAndSettle();
+
+    final submit = find.byKey(const Key('transaction-create-submit-button'));
+    await tester.scrollUntilVisible(
+      submit,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+
+    final request = repository.createdRequests.single;
+    expect(request.type, TransactionType.transfer);
+    expect(request.walletId, gopayWallet.id);
+    expect(request.toWalletId, bcaWallet.id);
+    expect(request.feeMinor, 2500);
+    expect(request.categoryId, isNull);
+  });
+
+  testWidgets(
+    'switching Transfer -> Pengeluaran clears the fee + destination',
+    (tester) async {
+      await _openCreateScreen(tester);
+
+      // Transfer: pick a destination + set a fee.
+      await tester.tap(
+        find.byKey(const Key('transaction-create-type-transfer')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('transaction-create-to-wallet-selector')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('BCA Primary').last);
+      await tester.pumpAndSettle();
+      // 7.500 is distinct from the field's "2.500" placeholder, so an empty
+      // field after the reset can't be mistaken for the typed value.
+      await tester.enterText(
+        find.byKey(const Key('transaction-create-fee-field')),
+        '7500',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('BCA Primary'), findsOneWidget);
+      expect(find.text('7.500'), findsWidgets);
+
+      // Switch away to Pengeluaran, then back to Transfer.
+      await tester.tap(
+        find.byKey(const Key('transaction-create-type-expense')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('transaction-create-type-transfer')),
+      );
+      await tester.pumpAndSettle();
+
+      // Both the chosen destination and the typed fee were reset.
+      expect(find.text('BCA Primary'), findsNothing);
+      expect(find.text('7.500'), findsNothing);
+    },
+  );
+
   testWidgets('blocks submit and creates nothing when required fields are '
       'missing', (tester) async {
     await _openCreateScreen(tester);

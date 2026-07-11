@@ -12,11 +12,13 @@ import '../../quick_entry/data/quick_entry_models.dart';
 import '../../quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
+import '../../shared/presentation/widgets/money_input.dart';
 import '../../shared/presentation/widgets/quick_amount_chips.dart';
 import '../../shared/presentation/widgets/sky_calc_keypad.dart';
 import '../../shared/presentation/widgets/sky_segmented_toggle.dart';
 import '../../transactions/application/transaction_create_controller.dart';
 import '../../transactions/data/transaction_models.dart';
+import '../../transactions/presentation/transaction_create_screen.dart';
 import '../../wallets/data/wallet_models.dart';
 
 /// Redesign Tahap 3 — the fast "quick-add" capture sheet. Opens from the Home
@@ -55,8 +57,15 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
   TransactionType _type = TransactionType.expense;
   final _calc = MoneyCalculator();
   String? _walletId;
+  String? _toWalletId;
   String? _categoryId;
+
+  /// Optional transfer admin fee in minor units (null/0 = no fee). Only used
+  /// when [_isTransfer]; reset when switching away from a transfer.
+  int? _feeMinor;
   String? _error;
+
+  bool get _isTransfer => _type == TransactionType.transfer;
 
   CategoryType get _categoryType => _type == TransactionType.income
       ? CategoryType.income
@@ -102,13 +111,19 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
   void _onBackspace() => _run(_calc.backspace);
 
   Future<void> _selectWallet(TransactionCreateState state) async {
+    // In transfer mode this is the "Dari dompet" source: restrict to wallets a
+    // transfer can move between (writable, non-goal) and exclude the chosen
+    // destination so the two can never coincide.
+    final wallets = _isTransfer
+        ? state.wallets.where((w) => w.canRecordTo && w.id != _toWalletId)
+        : state.wallets;
     final selected = await showLookupSelectorSheet<String>(
       context: context,
-      title: 'Pilih dompet',
+      title: _isTransfer ? 'Dari dompet' : 'Pilih dompet',
       searchHint: 'Cari dompet',
       selectedValue: _walletId,
       options: [
-        for (final wallet in state.wallets)
+        for (final wallet in wallets)
           LookupSelectorOption(
             value: wallet.id,
             label: wallet.name,
@@ -119,6 +134,29 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
     if (selected == null) return;
     setState(() {
       _walletId = selected;
+      _error = null;
+    });
+  }
+
+  Future<void> _selectToWallet(TransactionCreateState state) async {
+    final selected = await showLookupSelectorSheet<String>(
+      context: context,
+      title: 'Ke dompet',
+      searchHint: 'Cari dompet',
+      selectedValue: _toWalletId,
+      options: [
+        for (final wallet in state.wallets)
+          if (wallet.canRecordTo && wallet.id != _walletId)
+            LookupSelectorOption(
+              value: wallet.id,
+              label: wallet.name,
+              subtitle: wallet.type.name,
+            ),
+      ],
+    );
+    if (selected == null) return;
+    setState(() {
+      _toWalletId = selected;
       _error = null;
     });
   }
@@ -144,8 +182,17 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
   }
 
   String? _validate() {
-    if (_walletId == null) return 'Pilih dompet dulu.';
+    if (_walletId == null) {
+      return _isTransfer ? 'Pilih dompet asal dulu.' : 'Pilih dompet dulu.';
+    }
     if (_calc.amountMinor <= 0) return 'Masukkan jumlah lebih dari nol.';
+    if (_isTransfer) {
+      if (_toWalletId == null) return 'Pilih dompet tujuan dulu.';
+      if (_toWalletId == _walletId) {
+        return 'Dompet tujuan harus berbeda dari asal.';
+      }
+      return null;
+    }
     if (_categoryId == null) return 'Pilih kategori dulu.';
     return null;
   }
@@ -159,8 +206,10 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
     final request = TransactionRequest(
       type: _type,
       walletId: _walletId!,
-      categoryId: _categoryId,
+      toWalletId: _isTransfer ? _toWalletId : null,
+      categoryId: _isTransfer ? null : _categoryId,
       amountMinor: _calc.amountMinor,
+      feeMinor: _isTransfer ? (_feeMinor ?? 0) : 0,
       transactionAt: _transactionAtIso(),
     );
     final saved = await ref
@@ -259,151 +308,230 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
                 ),
               ),
             ),
-            Text(
-              scopedWallet == null
-                  ? 'Catat cepat'
-                  : 'Catat cepat · ${scopedWallet.name}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: context.sky.ink,
-              ),
-            ),
-            const SizedBox(height: AffluenaSpacing.space4),
-            Padding(
-              padding: const EdgeInsets.only(left: 2, bottom: 6),
-              child: Text(
-                'PAKAI TEMPLATE',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                  color: context.sky.faint,
-                ),
-              ),
-            ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const ClampingScrollPhysics(),
-              child: Row(
-                children: [
-                  for (final template in templates) ...[
-                    _TemplateChip(
-                      name: template.name,
-                      amount: MoneyFormatter.idr(template.amountMinor),
-                      onTap: templatesState.isSaving
-                          ? null
-                          : () => _useTemplate(template),
+            // Everything above the keypad scrolls so the transfer fee field (or
+            // a tall template row) never overflows the sheet; the keypad and
+            // "Opsi lengkap" link stay pinned so they're always reachable.
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      scopedWallet == null
+                          ? 'Catat cepat'
+                          : 'Catat cepat · ${scopedWallet.name}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: context.sky.ink,
+                      ),
                     ),
-                    const SizedBox(width: AffluenaSpacing.space2),
-                  ],
-                  _TemplateChip(
-                    name: 'Kelola',
-                    amount: 'Atur',
-                    muted: true,
-                    onTap: _manageTemplates,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AffluenaSpacing.space4),
-            SkySegmentedToggle<TransactionType>(
-              selected: _type,
-              enabled: !state.isSaving,
-              onChanged: (value) => setState(() {
-                _type = value;
-                _categoryId = null;
-                _error = null;
-              }),
-              options: const [
-                SkySegmentOption(
-                  value: TransactionType.expense,
-                  label: 'Pengeluaran',
-                ),
-                SkySegmentOption(
-                  value: TransactionType.income,
-                  label: 'Pemasukan',
-                ),
-              ],
-            ),
-            const SizedBox(height: AffluenaSpacing.space5),
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (preview != null)
+                    const SizedBox(height: AffluenaSpacing.space4),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 2),
+                      padding: const EdgeInsets.only(left: 2, bottom: 6),
                       child: Text(
-                        preview,
+                        'PAKAI TEMPLATE',
                         style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
                           color: context.sky.faint,
-                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                     ),
-                  Text(
-                    MoneyFormatter.idr(_calc.displayValue.round()),
-                    style: TextStyle(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w700,
-                      color: context.sky.ink,
-                      letterSpacing: -0.5,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const ClampingScrollPhysics(),
+                      child: Row(
+                        children: [
+                          for (final template in templates) ...[
+                            _TemplateChip(
+                              name: template.name,
+                              amount: MoneyFormatter.idr(template.amountMinor),
+                              onTap: templatesState.isSaving
+                                  ? null
+                                  : () => _useTemplate(template),
+                            ),
+                            const SizedBox(width: AffluenaSpacing.space2),
+                          ],
+                          _TemplateChip(
+                            name: 'Kelola',
+                            amount: 'Atur',
+                            muted: true,
+                            onTap: _manageTemplates,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AffluenaSpacing.space3),
-            // One-tap presets under the amount: SETS the value (replaces any
-            // typed/derived entry), same chips as the transaction forms.
-            Center(
-              child: QuickAmountChips(
-                selectedMinor: _calc.isEmpty ? null : _calc.amountMinor,
-                enabled: !state.isSaving,
-                onSelected: (minor) => _run(() => _calc.setAmountMinor(minor)),
-              ),
-            ),
-            const SizedBox(height: AffluenaSpacing.space3),
-            Row(
-              children: [
-                Expanded(
-                  child: _PickerChip(
-                    icon: Icons.account_balance_wallet_outlined,
-                    label: state.walletName(_walletId),
-                    isPlaceholder: _walletId == null,
-                    onTap: state.isSaving ? null : () => _selectWallet(state),
-                  ),
+                    const SizedBox(height: AffluenaSpacing.space4),
+                    SkySegmentedToggle<TransactionType>(
+                      selected: _type,
+                      enabled: !state.isSaving,
+                      onChanged: (value) => setState(() {
+                        _type = value;
+                        _categoryId = null;
+                        // Leaving transfer clears its source-only fields.
+                        if (value != TransactionType.transfer) {
+                          _toWalletId = null;
+                          _feeMinor = null;
+                        }
+                        _error = null;
+                      }),
+                      options: const [
+                        SkySegmentOption(
+                          value: TransactionType.expense,
+                          label: 'Pengeluaran',
+                        ),
+                        SkySegmentOption(
+                          value: TransactionType.income,
+                          label: 'Pemasukan',
+                        ),
+                        SkySegmentOption(
+                          value: TransactionType.transfer,
+                          label: 'Transfer',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AffluenaSpacing.space5),
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (preview != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 2),
+                              child: Text(
+                                preview,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.sky.faint,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          Text(
+                            MoneyFormatter.idr(_calc.displayValue.round()),
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w700,
+                              color: context.sky.ink,
+                              letterSpacing: -0.5,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AffluenaSpacing.space3),
+                    // One-tap presets under the amount: SETS the value (replaces any
+                    // typed/derived entry), same chips as the transaction forms.
+                    Center(
+                      child: QuickAmountChips(
+                        selectedMinor: _calc.isEmpty ? null : _calc.amountMinor,
+                        enabled: !state.isSaving,
+                        onSelected: (minor) =>
+                            _run(() => _calc.setAmountMinor(minor)),
+                      ),
+                    ),
+                    const SizedBox(height: AffluenaSpacing.space3),
+                    if (_isTransfer) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _PickerChip(
+                              icon: Icons.account_balance_wallet_outlined,
+                              label: state.walletName(_walletId),
+                              isPlaceholder: _walletId == null,
+                              onTap: state.isSaving
+                                  ? null
+                                  : () => _selectWallet(state),
+                            ),
+                          ),
+                          const SizedBox(width: AffluenaSpacing.space2),
+                          Expanded(
+                            child: _PickerChip(
+                              icon: Icons.swap_horiz_rounded,
+                              label: _toWalletId == null
+                                  ? 'Ke dompet'
+                                  : state.walletName(_toWalletId),
+                              isPlaceholder: _toWalletId == null,
+                              onTap: state.isSaving
+                                  ? null
+                                  : () => _selectToWallet(state),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AffluenaSpacing.space3),
+                      // Optional admin fee: the source wallet is charged amount + fee.
+                      MoneyInput(
+                        key: const Key('quick-add-fee-field'),
+                        label: 'Biaya admin (opsional)',
+                        hint: '2.500',
+                        initialValue: _feeMinor,
+                        enabled: !state.isSaving,
+                        onChanged: (value) => setState(() {
+                          _feeMinor = value;
+                          _error = null;
+                        }),
+                      ),
+                    ] else
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _PickerChip(
+                              icon: Icons.account_balance_wallet_outlined,
+                              label: state.walletName(_walletId),
+                              isPlaceholder: _walletId == null,
+                              onTap: state.isSaving
+                                  ? null
+                                  : () => _selectWallet(state),
+                            ),
+                          ),
+                          const SizedBox(width: AffluenaSpacing.space2),
+                          Expanded(
+                            child: _PickerChip(
+                              icon: Icons.category_outlined,
+                              label: state.categoryName(_categoryId),
+                              isPlaceholder: _categoryId == null,
+                              onTap: state.isSaving
+                                  ? null
+                                  : () => _selectCategory(state),
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (_error != null) ...[
+                      const SizedBox(height: AffluenaSpacing.space3),
+                      Text(
+                        _error!,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: context.sky.danger,
+                        ),
+                      ),
+                    ] else if (_validate() != null) ...[
+                      // Surface why the save will fail BEFORE the tap — muted, not
+                      // alarmed, so the sheet never feels broken on open.
+                      const SizedBox(height: AffluenaSpacing.space3),
+                      Text(
+                        _validate()!,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: context.sky.faint,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(width: AffluenaSpacing.space2),
-                Expanded(
-                  child: _PickerChip(
-                    icon: Icons.category_outlined,
-                    label: state.categoryName(_categoryId),
-                    isPlaceholder: _categoryId == null,
-                    onTap: state.isSaving ? null : () => _selectCategory(state),
-                  ),
-                ),
-              ],
+              ),
             ),
-            if (_error != null) ...[
-              const SizedBox(height: AffluenaSpacing.space3),
-              Text(
-                _error!,
-                style: TextStyle(fontSize: 12.5, color: context.sky.danger),
-              ),
-            ] else if (_validate() != null) ...[
-              // Surface why the save will fail BEFORE the tap — muted, not
-              // alarmed, so the sheet never feels broken on open.
-              const SizedBox(height: AffluenaSpacing.space3),
-              Text(
-                _validate()!,
-                style: TextStyle(fontSize: 12.5, color: context.sky.faint),
-              ),
-            ],
             const SizedBox(height: AffluenaSpacing.space4),
             SkyCalcKeypad(
               onDigit: _onDigit,
@@ -415,10 +543,35 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
               onConfirm: _save,
               isSaving: state.isSaving,
             ),
+            const SizedBox(height: AffluenaSpacing.space2),
+            // Escape hatch to the full form (date/time, notes, tags, transfer)
+            // for anything the fast path deliberately omits.
+            Center(
+              child: TextButton(
+                key: const Key('quick-add-full-form-link'),
+                onPressed: state.isSaving ? null : _openFullForm,
+                child: Text(
+                  'Opsi lengkap',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: context.sky.muted,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  /// Close the sheet and open the full transaction form — the fast path keeps a
+  /// door to date/time, notes, tags, and every transaction type.
+  void _openFullForm() {
+    final router = GoRouter.of(context);
+    Navigator.of(context).pop();
+    router.push(TransactionCreateScreen.path);
   }
 }
 

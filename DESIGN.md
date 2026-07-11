@@ -35,7 +35,7 @@ Cicilan, Langganan, and Berulang stay **separate** — deliberately *not* merged
 
 #### Quick-add — "Catat cepat"
 
-Logging is a fast bottom-sheet: a **template row inside the sheet** (one-tap presets like *Kopi · Rp 25.000*), an expense/income segment, an `Rp` amount with a calculator keypad, and wallet + category pickers — the wallet is pre-set when the sheet is opened from a wallet context. Templates live **inside** the sheet, not as chips on top of Beranda.
+Logging is a fast bottom-sheet: a **template row inside the sheet** (one-tap presets like *Kopi · Rp 25.000*), an **expense / income / transfer** segment, an `Rp` amount with a calculator keypad, and wallet + category pickers — the wallet is pre-set when the sheet is opened from a wallet context. Templates live **inside** the sheet, not as chips on top of Beranda. Selecting **Transfer** swaps the category picker for **"Dari dompet"** + **"Ke dompet"** selectors (both writable non-goal wallets, kept distinct) plus an optional **"Biaya admin"** field. A quiet **"Opsi lengkap"** link under the keypad opens the full transaction form for everything the fast path omits (date/time, notes, tags, penyesuaian). The content above the keypad scrolls so the taller transfer layout never overflows; the keypad + link stay pinned.
 
 > **Build note:** the 6-section dashboard is the **live** Beranda (the first nav tab, `BerandaDashboardView`). Tapping a card opens that item's detail screen (§8). The older wallet-**"rooms"** home (`RoomsHomeView`) remains only behind the `/rooms` deep-link route + the wallet detail. Aktivitas, Wawasan, Lainnya→Pengaturan, and the quick-add flow are unchanged in intent.
 
