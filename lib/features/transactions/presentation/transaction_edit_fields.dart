@@ -9,6 +9,8 @@ class _TransactionEditFields extends StatelessWidget {
     required this.categoryLabel,
     required this.walletOptions,
     required this.isTransfer,
+    required this.initialFeeMinor,
+    required this.onFeeChanged,
     required this.isAdjustment,
     required this.decrease,
     required this.needsCategory,
@@ -32,6 +34,10 @@ class _TransactionEditFields extends StatelessWidget {
   final String categoryLabel;
   final List<_NamedOption> walletOptions;
   final bool isTransfer;
+
+  /// The stored admin fee (transfer only; 0 = none) seeding the fee field.
+  final int initialFeeMinor;
+  final ValueChanged<int?> onFeeChanged;
   final bool isAdjustment;
   final bool decrease;
   final bool needsCategory;
@@ -96,6 +102,19 @@ class _TransactionEditFields extends StatelessWidget {
                   DropdownMenuItem(value: option.id, child: Text(option.label)),
             ],
             onChanged: isSaving ? null : onToWalletChanged,
+          ),
+          const SizedBox(height: AffluenaSpacing.space3),
+          // Preserve + edit the stored admin fee: omitting it here would zero
+          // the fee on every edit (the API treats an absent fee_minor as 0 and
+          // refunds the old fee to the source wallet).
+          MoneyInput(
+            key: const Key('transaction-edit-fee-field'),
+            label: 'Biaya admin (opsional)',
+            // Bare digits: MoneyInput hardcodes the 'Rp ' prefix.
+            hint: '2.500',
+            initialValue: initialFeeMinor > 0 ? initialFeeMinor : null,
+            enabled: !isSaving,
+            onChanged: onFeeChanged,
           ),
         ],
         if (needsCategory) ...[

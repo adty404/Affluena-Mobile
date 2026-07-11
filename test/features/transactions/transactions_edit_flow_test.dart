@@ -1,4 +1,5 @@
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
+import 'package:affluena_mobile/features/transactions/data/transaction_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -285,5 +286,47 @@ void main() {
     expect(repository.updatedRequests, isEmpty);
     expect(find.text('Dompet tujuan wajib diisi.'), findsOneWidget);
     expect(find.text('Ubah transaksi'), findsOneWidget);
+  });
+
+  testWidgets('editing a transfer preserves its stored admin fee', (
+    tester,
+  ) async {
+    // The regression this guards: an edit that never touches the fee field
+    // must still send the stored fee back — an absent fee_minor zeroes the
+    // fee server-side and silently refunds it to the source wallet.
+    final feeTransfer = transactionFixture(
+      id: 'transfer-with-fee',
+      type: TransactionType.transfer,
+      walletId: gopayWallet.id,
+      toWalletId: bcaWallet.id,
+      amountMinor: 250000,
+      feeMinor: 2500,
+      note: 'Move to savings',
+      transactionAt: '2026-06-19T09:00:00Z',
+    );
+    final repository = RecordingTransactionRepository(
+      transactions: [feeTransfer],
+    );
+
+    await tester.pumpWidget(
+      transactionsTestApp(transactionRepository: repository),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Move to savings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ubah transaksi'));
+    await tester.pumpAndSettle();
+    // Touch only the note — the fee must ride along untouched.
+    await tester.enterText(
+      find.byKey(const Key('transaction-edit-note-field')),
+      'Move to savings (fixed)',
+    );
+    await tester.tap(find.byKey(const Key('transaction-edit-save-button')));
+    await tester.pumpAndSettle();
+
+    expect(repository.updatedIds, [feeTransfer.id]);
+    expect(repository.updatedRequests.single.feeMinor, 2500);
+    expect(repository.updatedRequests.single.note, 'Move to savings (fixed)');
   });
 }

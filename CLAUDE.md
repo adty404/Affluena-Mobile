@@ -248,8 +248,10 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   since older rows / list responses may omit it). Both the **full form** (`transaction_create_screen.dart`,
   key `transaction-create-fee-field`) and the **quick-add sheet** (key `quick-add-fee-field`) show an
   optional **"Biaya admin (opsional)"** `MoneyInput` below "Ke dompet" when the type is transfer, reset
-  when switching away from transfer. NOTE: the **edit sheet does not yet expose the fee** — editing a
-  transfer omits `fee_minor`.
+  when switching away from transfer. The **edit sheet** (`transaction-edit-fee-field`) seeds from the
+  stored `feeMinor` and always sends it back on a transfer update — an edit that never touches the
+  field preserves the fee (an absent `fee_minor` would zero it server-side); clearing the field to
+  0 removes the fee (omitted-on-zero, which the API update reads as 0).
 - **Quick-add now has a Transfer segment + an "Opsi lengkap" escape hatch** (`sky_quick_add_sheet.dart`):
   the "Catat cepat" segmented control gained a third **Transfer** option. Selecting Transfer hides the
   category picker and shows **"Dari dompet"** (`_walletId`) + **"Ke dompet"** (`_toWalletId`) selectors —
