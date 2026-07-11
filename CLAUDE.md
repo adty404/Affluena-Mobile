@@ -238,7 +238,29 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   even though their rows come from a feature-local provider. The detail sheet is a polished hero
   (category icon + type pill + big signed amount) over a details card; **editing a transaction can
   change its date & time** (the edit form has a `Tanggal & waktu` selector wiring `showDatePicker` +
-  `showTimePicker` into `transactionAt`).
+  `showTimePicker` into `transactionAt`). For a **transfer with an admin fee** the details card adds
+  a **"Biaya admin"** row (formatted Rp); it's hidden for non-transfers and zero-fee transfers.
+- **Transfer admin fee (`fee_minor`)**: transfers carry an optional admin fee — `TransactionRequest`
+  and `Transaction` both hold `feeMinor` (minor units, default 0). Semantics: the **source wallet is
+  charged `amount + fee`**, the destination receives `amount`, so the fee is a net-worth reduction.
+  `TransactionRequest.toJson` emits `fee_minor` **only for a transfer AND only when > 0** (never on
+  expense/income/adjustment); `Transaction.fromJson` reads it via `ApiJson.optionalInt` (absent → 0,
+  since older rows / list responses may omit it). Both the **full form** (`transaction_create_screen.dart`,
+  key `transaction-create-fee-field`) and the **quick-add sheet** (key `quick-add-fee-field`) show an
+  optional **"Biaya admin (opsional)"** `MoneyInput` below "Ke dompet" when the type is transfer, reset
+  when switching away from transfer. The **edit sheet** (`transaction-edit-fee-field`) seeds from the
+  stored `feeMinor` and always sends it back on a transfer update — an edit that never touches the
+  field preserves the fee (an absent `fee_minor` would zero it server-side); clearing the field to
+  0 removes the fee (omitted-on-zero, which the API update reads as 0).
+- **Quick-add now has a Transfer segment + an "Opsi lengkap" escape hatch** (`sky_quick_add_sheet.dart`):
+  the "Catat cepat" segmented control gained a third **Transfer** option. Selecting Transfer hides the
+  category picker and shows **"Dari dompet"** (`_walletId`) + **"Ke dompet"** (`_toWalletId`) selectors —
+  both filtered through `Wallet.canRecordTo` (writable + non-goal) with the destination excluding the
+  source (distinct + amount>0 gate the submit) — plus the optional admin-fee field; the request is built
+  with no `categoryId`. A subtle **"Opsi lengkap"** text button (key `quick-add-full-form-link`) under the
+  keypad closes the sheet and `context.push(TransactionCreateScreen.path)` to reach the full form
+  (date/time, notes, tags, adjustment). The sheet's content above the keypad now scrolls (keypad + link
+  stay pinned) so the extra transfer fields never overflow the fast-path sheet.
 - **`invalidateBalances()` also refreshes the standalone transaction-list surfaces** the main ledger
   controller doesn't own — the cross-wallet **Aktivitas** feed (`recentActivityProvider`, an
   `autoDispose.family` over `ActivityQuery` — listed bare so every alive keyed instance refreshes),

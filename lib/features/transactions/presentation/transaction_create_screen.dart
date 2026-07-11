@@ -39,6 +39,10 @@ class _TransactionCreateScreenState
   bool _decrease = false;
   String? _walletId;
   String? _toWalletId;
+
+  /// Optional transfer admin fee in minor units (null/0 = no fee). Only used
+  /// when [_isTransfer]; reset when switching away from a transfer.
+  int? _feeMinor;
   String? _categoryId;
   String? _tagId;
   DateTime _date = DateTime.now();
@@ -144,6 +148,21 @@ class _TransactionCreateScreenState
                     enabled: state.wallets.length > 1 && !state.isSaving,
                     onTap: state.wallets.length > 1 ? _selectToWallet : null,
                   ),
+                  const Divider(height: 1),
+                  const SizedBox(height: AffluenaSpacing.space3),
+                  MoneyInput(
+                    key: const Key('transaction-create-fee-field'),
+                    label: 'Biaya admin (opsional)',
+                    // Bare digits: MoneyInput hardcodes the 'Rp ' prefix. The
+                    // source wallet is charged the amount plus this fee.
+                    hint: '2.500',
+                    initialValue: _feeMinor,
+                    enabled: !state.isSaving,
+                    onChanged: (value) => setState(() {
+                      _feeMinor = value;
+                      _validationError = null;
+                    }),
+                  ),
                 ],
                 if (_needsCategory) ...[
                   const Divider(height: 1),
@@ -237,7 +256,10 @@ class _TransactionCreateScreenState
     setState(() {
       _type = type;
       _categoryId = null;
-      if (!_isTransfer) _toWalletId = null;
+      if (!_isTransfer) {
+        _toWalletId = null;
+        _feeMinor = null;
+      }
       if (!_isAdjustment) _decrease = false;
       _clearErrors();
     });
@@ -337,6 +359,7 @@ class _TransactionCreateScreenState
       toWalletId: _isTransfer ? _toWalletId : null,
       categoryId: _needsCategory ? _categoryId : null,
       amountMinor: signed,
+      feeMinor: _isTransfer ? (_feeMinor ?? 0) : 0,
       transactionAt: _transactionAt(_date),
       note: note.isEmpty ? null : note,
       tagIds: _tagId == null ? const [] : [_tagId!],

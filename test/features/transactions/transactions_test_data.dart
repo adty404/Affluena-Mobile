@@ -11,6 +11,7 @@ Transaction transactionFixture({
   required String transactionAt,
   String? categoryId,
   String? toWalletId,
+  int feeMinor = 0,
 }) {
   return Transaction(
     id: id,
@@ -20,6 +21,7 @@ Transaction transactionFixture({
     toWalletId: toWalletId,
     categoryId: categoryId,
     amountMinor: amountMinor,
+    feeMinor: feeMinor,
     tagIds: const [],
     transactionAt: transactionAt,
     note: note,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/sky_palette.dart';
 import '../../../core/formatters/date_formatter.dart';
+import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/sky_detail.dart';
@@ -146,6 +147,11 @@ class _TransactionDetailSheet extends ConsumerWidget {
                       _InfoRow(
                         label: 'Ke dompet',
                         value: state.walletName(transaction.toWalletId!),
+                      ),
+                    if (isTransfer && transaction.feeMinor > 0)
+                      _InfoRow(
+                        label: 'Biaya admin',
+                        value: MoneyFormatter.idr(transaction.feeMinor),
                       ),
                     if (!isTransfer)
                       _InfoRow(

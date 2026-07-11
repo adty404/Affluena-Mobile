@@ -45,6 +45,7 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
   late bool _decrease;
   late String? _walletId;
   late String? _toWalletId;
+  late int? _feeMinor;
   late String? _categoryId;
   // The transaction's local date+time, editable via the date/time pickers.
   late DateTime _transactionAt;
@@ -65,6 +66,9 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
     _noteController = TextEditingController(text: transaction.note);
     _walletId = transaction.walletId;
     _toWalletId = transaction.toWalletId;
+    // Seed from the stored fee so an edit that doesn't touch the field
+    // preserves it (an absent fee_minor would zero the fee server-side).
+    _feeMinor = transaction.feeMinor > 0 ? transaction.feeMinor : null;
     _categoryId = transaction.categoryId;
     _transactionAt = DateTime.parse(transaction.transactionAt).toLocal();
   }
@@ -120,6 +124,11 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
                 categoryLabel: categoryLabel,
                 walletOptions: walletOptions,
                 isTransfer: isTransfer,
+                initialFeeMinor: widget.transaction.feeMinor,
+                onFeeChanged: (value) {
+                  _feeMinor = value;
+                  _clearError();
+                },
                 isAdjustment: isAdjustment,
                 decrease: _decrease,
                 needsCategory: needsCategory,
@@ -240,6 +249,9 @@ class _TransactionEditSheetState extends ConsumerState<_TransactionEditSheet> {
           ? null
           : _categoryId,
       amountMinor: signed,
+      feeMinor: transaction.type == TransactionType.transfer
+          ? (_feeMinor ?? 0)
+          : 0,
       transactionAt: _transactionAt.toUtc().toIso8601String(),
       note: note.isEmpty ? null : note,
       tagIds: transaction.tagIds,

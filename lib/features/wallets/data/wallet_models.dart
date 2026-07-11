@@ -160,6 +160,11 @@ class Wallet {
 
   /// Whether the current user may record/edit transactions in this wallet.
   bool get canWrite => !isViewer;
+
+  /// Whether this wallet can be a source or destination of a transfer: it must
+  /// be writable (not a read-only viewer share) and not a goal-backing wallet
+  /// (goals are funded via contributions, not direct wallet-to-wallet moves).
+  bool get canRecordTo => canWrite && !isGoal;
 }
 
 class WalletListResponse {
