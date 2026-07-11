@@ -3,6 +3,7 @@ library;
 
 import 'package:affluena_mobile/app/theme/affluena_theme.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
+import 'package:affluena_mobile/core/formatters/money_formatter.dart';
 import 'package:affluena_mobile/features/calendar/presentation/calendar_screen.dart';
 import 'package:affluena_mobile/features/categories/application/category_tag_management_controller.dart';
 import 'package:affluena_mobile/features/categories/data/category_models.dart';
@@ -182,8 +183,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Open the day sheet for the 1st (its net cell reads the summed values).
-    await tester.tap(find.text('+8,5jt'));
+    // Open the day sheet for the 1st — compact cells show only the NET
+    // (8.500.000 − 1.250.000 − 320.000 = 6.930.000).
+    await tester.tap(find.text(MoneyFormatter.compactIdr(6930000)));
     await tester.pumpAndSettle();
 
     await expectLater(

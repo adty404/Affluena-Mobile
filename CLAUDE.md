@@ -275,6 +275,12 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   are all in the shared `_balanceProviders` set (`shared/application/financial_refresh.dart`).
   Without this a quick-add (or any non-ledger mutation) moved balances but left those surfaces stale.
   (The quick-entry screen now calls `invalidateFinancialData()` for the same reason.)
+- **The Kalender month grid is a compact bordered card, not a page-filling grid**: week rows have a
+  FIXED 50px height (they used to be `Expanded`, stretching each day cell to ~1/6 of the screen on a
+  5–6-week month), the weekday header lives inside the card, and a day cell shows only the day
+  number + 4px income/expense dots + the NET amount — the ± breakdown lives in the day sheet.
+  Active days get a soft `sheet` tint; today keeps the accent ring. The page below the card stays a
+  scroll viewport for pull-to-refresh.
 - **Calendar day sheet is add/edit-capable + day-steppable**: tapping any day in the Kalender grid
   opens a sheet with a **"Tambah"** button (`showSkyQuickAddSheet(context, date: day)` — quick-add
   gained a `date` param that stamps the transaction on that day, keeping the wall-clock time) and
