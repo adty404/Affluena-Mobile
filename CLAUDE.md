@@ -75,7 +75,11 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
 - The palette is **monochrome ink**: accent = ink (near-black, flips to WHITE in dark mode);
   colour only for meaning (income green, danger coral, amber warning, user wallet colours).
   Anything rendered ON an accent fill must use `context.sky.onAccent` — hardcoding
-  `Colors.white` there is a dark-mode bug. (The design-guide HTML mockups still show the
+  `Colors.white` there is a dark-mode bug. Corollaries: **never pass an explicit
+  `textTheme.*` style to a `FilledButton`/`ElevatedButton` label** (it OVERRIDES the button's
+  onAccent foreground → ink-on-ink, the "only the icon is visible" bug), and never pin
+  `foregroundColor: Colors.white` on a coral/danger fill (dark-mode coral is lighter; let the
+  theme supply onPrimary, like skyConfirm's danger button). (The design-guide HTML mockups still show the
   retired denim-blue colours; §2 of DESIGN.md is the colour source of truth.)
 - **Two token accessors, same theme** (`lib/app/theme/`): the older `context.affluenaColors.*`
   (forest/ink/inkMuted/coral/…) used by list/form screens, and the newer `context.sky.*`
