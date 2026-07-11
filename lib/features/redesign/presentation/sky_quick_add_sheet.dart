@@ -12,6 +12,7 @@ import '../../quick_entry/data/quick_entry_models.dart';
 import '../../quick_entry/presentation/quick_entry_templates_screen.dart';
 import '../../shared/presentation/widgets/category_tree_picker_sheet.dart';
 import '../../shared/presentation/widgets/lookup_selector_sheet.dart';
+import '../../shared/presentation/widgets/quick_amount_chips.dart';
 import '../../shared/presentation/widgets/sky_calc_keypad.dart';
 import '../../shared/presentation/widgets/sky_segmented_toggle.dart';
 import '../../transactions/application/transaction_create_controller.dart';
@@ -356,7 +357,17 @@ class _SkyQuickAddSheetState extends ConsumerState<_SkyQuickAddSheet> {
                 ],
               ),
             ),
-            const SizedBox(height: AffluenaSpacing.space4),
+            const SizedBox(height: AffluenaSpacing.space3),
+            // One-tap presets under the amount: SETS the value (replaces any
+            // typed/derived entry), same chips as the transaction forms.
+            Center(
+              child: QuickAmountChips(
+                selectedMinor: _calc.isEmpty ? null : _calc.amountMinor,
+                enabled: !state.isSaving,
+                onSelected: (minor) => _run(() => _calc.setAmountMinor(minor)),
+              ),
+            ),
+            const SizedBox(height: AffluenaSpacing.space3),
             Row(
               children: [
                 Expanded(

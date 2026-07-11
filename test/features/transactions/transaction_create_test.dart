@@ -118,6 +118,53 @@ void main() {
     expect(find.text('buka'), findsOneWidget);
   });
 
+  testWidgets('a quick-amount chip SETS the amount and submit carries it', (
+    tester,
+  ) async {
+    await _openCreateScreen(tester);
+    final repository = _repository;
+
+    // Type one value first, then tap a chip — the chip must REPLACE it.
+    await tester.enterText(
+      find.byKey(const Key('transaction-create-amount-field')),
+      '12345',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('amount-chip-50000')));
+    await tester.pumpAndSettle();
+
+    // The MoneyInput now shows the grouped preset, not the typed value.
+    // (find.text matches both the EditableText and its inner render — use
+    // findsWidgets and assert the typed value is fully gone.)
+    expect(find.text('50.000'), findsWidgets);
+    expect(find.text('12.345'), findsNothing);
+
+    await tester.tap(
+      find.byKey(const Key('transaction-create-wallet-selector')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('GoPay').last);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('transaction-create-category-selector')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Food & Dining').last);
+    await tester.pumpAndSettle();
+
+    final submit = find.byKey(const Key('transaction-create-submit-button'));
+    await tester.scrollUntilVisible(
+      submit,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+
+    // The request carries the chip's value — replaced, never added.
+    expect(repository.createdRequests.single.amountMinor, 50000);
+  });
+
   testWidgets('blocks submit and creates nothing when required fields are '
       'missing', (tester) async {
     await _openCreateScreen(tester);

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/clock.dart';
 import '../../../core/formatters/date_formatter.dart';
 import '../../notifications/application/notification_scheduler.dart';
 import '../data/dashboard_models.dart';
@@ -24,8 +25,30 @@ final dashboardSummaryProvider = FutureProvider.autoDispose<DashboardSummary>((
 ) async {
   final summary = await ref.watch(dashboardRepositoryProvider).summary();
   ref.read(notificationSchedulerProvider).requestResync(summary);
+  // Stamp when this data ARRIVED (Beranda's "Diperbarui HH.mm"). Set only
+  // here, in the real fetch path: tests that override this provider directly
+  // never mark it, so the stamp stays hidden and can't flake goldens — the
+  // full-app harness pins clockProvider instead.
+  ref.read(dashboardRefreshedAtProvider.notifier).mark();
   return summary;
 });
+
+/// When the dashboard summary last landed (null until the first successful
+/// fetch). Deliberately NOT autoDispose: the stamp survives Beranda unmounts
+/// and only moves when fresh data actually arrives.
+final dashboardRefreshedAtProvider =
+    NotifierProvider<DashboardRefreshedAtNotifier, DateTime?>(
+      DashboardRefreshedAtNotifier.new,
+    );
+
+class DashboardRefreshedAtNotifier extends Notifier<DateTime?> {
+  @override
+  DateTime? build() => null;
+
+  /// Records "now" (via the overridable [clockProvider]) as the moment the
+  /// summary arrived.
+  void mark() => state = ref.read(clockProvider)();
+}
 
 /// Twelve months of cashflow history for Beranda's "Tren kekayaan bersih"
 /// sparkline. Separate from [dashboardCashflowTrendProvider] (the Wawasan

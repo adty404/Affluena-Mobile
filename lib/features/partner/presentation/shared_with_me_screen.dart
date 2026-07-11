@@ -6,6 +6,7 @@ import '../../../app/theme/affluena_theme.dart';
 import '../../../app/theme/section_palette.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../redesign/presentation/room_detail_screen.dart';
+import '../../shared/application/amount_visibility.dart';
 import '../../shared/presentation/widgets/affluena_skeleton.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
 import '../../shared/presentation/widgets/section_header.dart';
@@ -79,7 +80,10 @@ class SharedWithMeScreen extends ConsumerWidget {
                   const SizedBox(height: AffluenaSpacing.space3),
                   for (var i = 0; i < byOwner[ownerId]!.length; i++) ...[
                     if (i > 0) const SizedBox(height: AffluenaSpacing.space3),
-                    _SharedWalletCard(wallet: byOwner[ownerId]![i]),
+                    _SharedWalletCard(
+                      wallet: byOwner[ownerId]![i],
+                      amountsVisible: ref.watch(amountVisibilityProvider),
+                    ),
                   ],
                 ],
               ],
@@ -96,9 +100,10 @@ class SharedWithMeScreen extends ConsumerWidget {
 /// wallet's own colour, solid, when set), its icon, name, type, and balance.
 /// Tapping opens the read-only room detail.
 class _SharedWalletCard extends StatelessWidget {
-  const _SharedWalletCard({required this.wallet});
+  const _SharedWalletCard({required this.wallet, required this.amountsVisible});
 
   final Wallet wallet;
+  final bool amountsVisible;
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +166,10 @@ class _SharedWalletCard extends StatelessWidget {
               ),
               const SizedBox(height: AffluenaSpacing.space3),
               Text(
-                MoneyFormatter.idr(wallet.balanceMinor),
+                MoneyFormatter.maskedIdr(
+                  wallet.balanceMinor,
+                  visible: amountsVisible,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

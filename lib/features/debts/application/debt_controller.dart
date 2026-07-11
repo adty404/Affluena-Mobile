@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/calc/due_window.dart';
 import '../../../core/formatters/date_formatter.dart';
+import '../../../core/haptics.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
@@ -145,6 +146,7 @@ class DebtController extends Notifier<DebtState> {
       // family the balance set deliberately doesn't cover; refresh it directly.
       ref.invalidate(debtDetailProvider(debt.id));
       state = state.copyWith(isSaving: false);
+      hapticSuccess();
       await load();
     } catch (_) {
       state = state.copyWith(

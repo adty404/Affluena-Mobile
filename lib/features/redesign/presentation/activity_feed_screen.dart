@@ -270,7 +270,7 @@ class _ActivityFeedViewState extends ConsumerState<ActivityFeedView> {
                 child: Text(
                   'Aktivitas',
                   style: TextStyle(
-                    fontSize: 21,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: context.sky.ink,
                   ),

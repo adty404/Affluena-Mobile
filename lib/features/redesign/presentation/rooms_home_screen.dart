@@ -205,8 +205,8 @@ class _IconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 34,
-      height: 34,
+      width: 30,
+      height: 30,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: accent ? context.sky.accentSoft : context.sky.sheet,
@@ -217,7 +217,7 @@ class _IconTile extends StatelessWidget {
       ),
       child: Icon(
         icon,
-        size: 18,
+        size: 16,
         color: accent ? context.sky.accent : context.sky.muted,
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/haptics.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
@@ -70,6 +71,7 @@ class TransactionCreateController extends Notifier<TransactionCreateState> {
       await ref.read(transactionRepositoryProvider).createTransaction(request);
       ref.invalidateFinancialData();
       state = state.copyWith(isSaving: false);
+      hapticSuccess();
       return true;
     } catch (_) {
       state = state.copyWith(

@@ -29,6 +29,7 @@ import '../../recurring/application/recurring_controller.dart';
 import '../../recurring/data/recurring_models.dart';
 import '../../recurring/presentation/recurring_detail_screen.dart';
 import '../../recurring/presentation/recurring_screen.dart';
+import '../../shared/application/amount_visibility.dart';
 import '../../shared/presentation/widgets/empty_state.dart';
 import '../../shared/presentation/widgets/error_state.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
@@ -97,6 +98,11 @@ class BerandaDashboardView extends ConsumerWidget {
     final subscriptions = trackerState.subscriptions;
     final recurring = recurringState.rules;
 
+    // Saldo masking: one global switch (the hero's eye toggle). Balances and
+    // summaries mask to `Rp ••••••`; the working ledger (transaction rows,
+    // detail sheets, Wawasan breakdown) deliberately stays visible.
+    final visible = ref.watch(amountVisibilityProvider);
+
     return RefreshIndicator(
       onRefresh: () => _refresh(ref),
       child: ListView(
@@ -109,7 +115,7 @@ class BerandaDashboardView extends ConsumerWidget {
             total: total,
             loading: walletsAsync.isLoading && spending.isEmpty,
           ),
-          const SizedBox(height: AffluenaSpacing.space6),
+          const SizedBox(height: AffluenaSpacing.space5),
 
           // Ringkasan — savings rate + net-worth sparkline in one calm row.
           // Skeletons while the summary loads; hidden entirely on error (the
@@ -130,7 +136,7 @@ class BerandaDashboardView extends ConsumerWidget {
             onEmptyTap: () => context.push(WalletsScreen.path),
             cards: [
               for (final wallet in spending.take(_previewCount))
-                _walletCard(context, wallet),
+                _walletCard(context, wallet, visible),
             ],
           ),
 
@@ -149,6 +155,7 @@ class BerandaDashboardView extends ConsumerWidget {
                     context,
                     wallet,
                     sharerName[wallet.userId],
+                    visible,
                   ),
               ],
             ),
@@ -171,6 +178,7 @@ class BerandaDashboardView extends ConsumerWidget {
                   category: budgetState.categories
                       .where((category) => category.id == budget.categoryId)
                       .firstOrNull,
+                  visible: visible,
                 ),
             ],
           ),
@@ -185,7 +193,7 @@ class BerandaDashboardView extends ConsumerWidget {
             onEmptyTap: () => context.push(GoalScreen.path),
             cards: [
               for (final goal in savings.take(_previewCount))
-                _goalCard(context, goal),
+                _goalCard(context, goal, visible),
             ],
           ),
 
@@ -199,7 +207,7 @@ class BerandaDashboardView extends ConsumerWidget {
             onEmptyTap: () => context.push(TrackerScreen.path),
             cards: [
               for (final item in installments.take(_previewCount))
-                _installmentCard(context, item),
+                _installmentCard(context, item, visible),
             ],
           ),
 
@@ -213,7 +221,7 @@ class BerandaDashboardView extends ConsumerWidget {
             onEmptyTap: () => context.push(TrackerScreen.path),
             cards: [
               for (final item in subscriptions.take(_previewCount))
-                _subscriptionCard(context, item),
+                _subscriptionCard(context, item, visible),
             ],
           ),
 
@@ -228,7 +236,7 @@ class BerandaDashboardView extends ConsumerWidget {
             isLast: true,
             cards: [
               for (final rule in recurring.take(_previewCount))
-                _recurringCard(context, rule),
+                _recurringCard(context, rule, visible),
             ],
           ),
         ],
@@ -288,7 +296,7 @@ class BerandaDashboardView extends ConsumerWidget {
       if (!summaryAsync.isLoading) return const [];
       return const [
         _CardGrid(children: [_SkeletonCard(), _SkeletonCard()]),
-        SizedBox(height: AffluenaSpacing.space6),
+        SizedBox(height: AffluenaSpacing.space5),
       ];
     }
 
@@ -321,7 +329,7 @@ class BerandaDashboardView extends ConsumerWidget {
           _NetWorthTrendCard(series: series, loading: trendAsync.isLoading),
         ],
       ),
-      const SizedBox(height: AffluenaSpacing.space6),
+      const SizedBox(height: AffluenaSpacing.space5),
     ];
   }
 
@@ -338,7 +346,7 @@ class BerandaDashboardView extends ConsumerWidget {
         child: Text(
           'Jatuh tempo terdekat',
           style: TextStyle(
-            fontSize: 16.5,
+            fontSize: 15.5,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.2,
             color: context.sky.ink,
@@ -370,7 +378,7 @@ class BerandaDashboardView extends ConsumerWidget {
           ),
         ),
       ),
-      const SizedBox(height: AffluenaSpacing.space6),
+      const SizedBox(height: AffluenaSpacing.space5),
     ];
   }
 
@@ -410,7 +418,7 @@ class BerandaDashboardView extends ConsumerWidget {
 
   // --- card builders -------------------------------------------------------
 
-  Widget _walletCard(BuildContext context, Wallet wallet) {
+  Widget _walletCard(BuildContext context, Wallet wallet, bool visible) {
     final shared =
         wallet.members.isNotEmpty ||
         (wallet.role != null && wallet.role != 'owner');
@@ -446,7 +454,7 @@ class BerandaDashboardView extends ConsumerWidget {
           : (shared ? const _Badge(label: 'BERSAMA') : null),
       title: wallet.name,
       subtitle: walletTypeLabel(wallet.type),
-      value: MoneyFormatter.idr(wallet.balanceMinor),
+      value: MoneyFormatter.maskedIdr(wallet.balanceMinor, visible: visible),
       onTap: () => context.push(RoomDetailScreen.location(wallet.id)),
       onLongPress: () => showSkyQuickAddSheet(context, wallet: wallet),
     );
@@ -458,6 +466,7 @@ class BerandaDashboardView extends ConsumerWidget {
     BuildContext context,
     Wallet wallet,
     String? ownerName,
+    bool visible,
   ) {
     final colorHex = wallet.color;
     final color = parseWalletColor(colorHex);
@@ -480,7 +489,7 @@ class BerandaDashboardView extends ConsumerWidget {
       subtitle: ownerName != null
           ? 'dari $ownerName'
           : walletTypeLabel(wallet.type),
-      value: MoneyFormatter.idr(wallet.balanceMinor),
+      value: MoneyFormatter.maskedIdr(wallet.balanceMinor, visible: visible),
       onTap: () => context.push(RoomDetailScreen.location(wallet.id)),
     );
   }
@@ -489,6 +498,7 @@ class BerandaDashboardView extends ConsumerWidget {
     BuildContext context, {
     required String name,
     required BudgetSummary budget,
+    required bool visible,
     Category? category,
   }) {
     final over = budget.usagePercent >= 100;
@@ -516,8 +526,9 @@ class BerandaDashboardView extends ConsumerWidget {
         customBorder: Colors.transparent,
       ),
       title: name,
-      subtitle:
-          '${MoneyFormatter.idr(budget.spentMinor)} / ${MoneyFormatter.idr(budget.limitMinor)}',
+      subtitle: visible
+          ? '${MoneyFormatter.idr(budget.spentMinor)} / ${MoneyFormatter.idr(budget.limitMinor)}'
+          : MoneyFormatter.masked,
       progress: budget.usagePercent / 100,
       progressColor: over
           ? context.sky.danger
@@ -533,7 +544,7 @@ class BerandaDashboardView extends ConsumerWidget {
     );
   }
 
-  Widget _goalCard(BuildContext context, Goal goal) {
+  Widget _goalCard(BuildContext context, Goal goal, bool visible) {
     final hue = SectionPalette.tabungan.of(context);
     final color = parseItemColor(goal.color);
     final hasColor = color != null;
@@ -549,8 +560,9 @@ class BerandaDashboardView extends ConsumerWidget {
         customBorder: Colors.transparent,
       ),
       title: goal.name,
-      subtitle:
-          '${MoneyFormatter.idr(goal.collectedAmountMinor)} / ${MoneyFormatter.idr(goal.targetAmountMinor)}',
+      subtitle: visible
+          ? '${MoneyFormatter.idr(goal.collectedAmountMinor)} / ${MoneyFormatter.idr(goal.targetAmountMinor)}'
+          : MoneyFormatter.masked,
       progress: goal.progressPercent / 100,
       progressColor: hasColor ? Colors.white : hue.strong,
       progressTrackColor: hasColor
@@ -562,7 +574,11 @@ class BerandaDashboardView extends ConsumerWidget {
     );
   }
 
-  Widget _installmentCard(BuildContext context, Installment item) {
+  Widget _installmentCard(
+    BuildContext context,
+    Installment item,
+    bool visible,
+  ) {
     final paid = item.tenorMonths - item.remainingMonths;
     final hue = SectionPalette.cicilan.of(context);
     final color = parseItemColor(item.color);
@@ -585,12 +601,17 @@ class BerandaDashboardView extends ConsumerWidget {
       progressTrackColor: hasColor
           ? Colors.white.withValues(alpha: 0.25)
           : null,
-      value: '${MoneyFormatter.idr(item.monthlyAmountMinor)}/bln',
+      value:
+          '${MoneyFormatter.maskedIdr(item.monthlyAmountMinor, visible: visible)}/bln',
       onTap: () => context.push(InstallmentDetailScreen.location(item.id)),
     );
   }
 
-  Widget _subscriptionCard(BuildContext context, Subscription item) {
+  Widget _subscriptionCard(
+    BuildContext context,
+    Subscription item,
+    bool visible,
+  ) {
     final hue = SectionPalette.langganan.of(context);
     final color = parseItemColor(item.color);
     final hasColor = color != null;
@@ -607,12 +628,16 @@ class BerandaDashboardView extends ConsumerWidget {
       ),
       title: item.name,
       subtitle: item.billingCycle.label,
-      value: MoneyFormatter.idr(item.amountMinor),
+      value: MoneyFormatter.maskedIdr(item.amountMinor, visible: visible),
       onTap: () => context.push(SubscriptionDetailScreen.location(item.id)),
     );
   }
 
-  Widget _recurringCard(BuildContext context, RecurringRule rule) {
+  Widget _recurringCard(
+    BuildContext context,
+    RecurringRule rule,
+    bool visible,
+  ) {
     final income = rule.type == RecurringType.income;
     final hue = SectionPalette.berulang.of(context);
     final color = parseItemColor(rule.color);
@@ -630,7 +655,7 @@ class BerandaDashboardView extends ConsumerWidget {
       ),
       title: rule.name,
       subtitle: rule.type.label,
-      value: MoneyFormatter.idr(rule.amountMinor),
+      value: MoneyFormatter.maskedIdr(rule.amountMinor, visible: visible),
       valueColor: hasColor
           ? Colors.white
           : (income ? context.sky.income : context.sky.ink),
@@ -650,34 +675,59 @@ IconData _recurringIcon(RecurringType type) {
 
 // --- hero --------------------------------------------------------------------
 
-class _Hero extends StatelessWidget {
+class _Hero extends ConsumerWidget {
   const _Hero({required this.total, required this.loading});
 
   final int total;
   final bool loading;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final visible = ref.watch(amountVisibilityProvider);
+    // Null until the summary's first real fetch lands (see
+    // dashboardRefreshedAtProvider) — the stamp simply stays hidden, so
+    // hermetic tests that override dashboardSummaryProvider never render it.
+    final refreshedAt = ref.watch(dashboardRefreshedAtProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Total saldo',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: context.sky.muted,
-          ),
+        Row(
+          children: [
+            Text(
+              'Total saldo',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: context.sky.muted,
+              ),
+            ),
+            const SizedBox(width: AffluenaSpacing.space1),
+            // The finance-standard "sembunyikan saldo" eye: flips the global
+            // amountVisibilityProvider, so every masked surface follows.
+            IconButton(
+              key: const Key('beranda-amount-visibility-toggle'),
+              tooltip: visible ? 'Sembunyikan saldo' : 'Tampilkan saldo',
+              onPressed: () =>
+                  ref.read(amountVisibilityProvider.notifier).toggle(),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              iconSize: 17,
+              icon: Icon(
+                visible ? Icons.visibility : Icons.visibility_off,
+                color: context.sky.faint,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 3),
         if (loading)
           _Skeleton(width: 180, height: 30)
         else
           Text(
-            MoneyFormatter.idr(total),
+            MoneyFormatter.maskedIdr(total, visible: visible),
             style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
               letterSpacing: -0.5,
               color: context.sky.ink,
               fontFeatures: const [FontFeature.tabularFigures()],
@@ -685,8 +735,10 @@ class _Hero extends StatelessWidget {
           ),
         const SizedBox(height: 5),
         Text(
-          'Saldo gabungan semua dompet',
-          style: TextStyle(fontSize: 11.5, color: context.sky.faint),
+          'Saldo gabungan semua dompet'
+          '${refreshedAt != null ? ' · Diperbarui ${AffluenaDateFormatter.clockTime(refreshedAt)}' : ''}',
+          key: const Key('beranda-updated-stamp'),
+          style: TextStyle(fontSize: 10.5, color: context.sky.faint),
         ),
       ],
     );
@@ -734,7 +786,7 @@ class _Section extends StatelessWidget {
     }
 
     return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : AffluenaSpacing.space6),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : AffluenaSpacing.space5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -743,7 +795,7 @@ class _Section extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 16.5,
+                  fontSize: 15.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.2,
                   color: context.sky.ink,
@@ -874,7 +926,7 @@ class _DashCard extends StatelessWidget {
             border: Border.all(color: borderColor ?? context.sky.line),
             borderRadius: BorderRadius.circular(AffluenaRadii.control),
           ),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -964,7 +1016,7 @@ class _SavingsRateTile extends StatelessWidget {
 
     return Container(
       key: const Key('beranda-savings-rate'),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.sky.surface,
         border: Border.all(color: context.sky.line),
@@ -982,7 +1034,7 @@ class _SavingsRateTile extends StatelessWidget {
           Text(
             hasRate ? '$percent%' : '—',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 19,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.4,
               color: tone,
@@ -1008,20 +1060,24 @@ class _SavingsRateTile extends StatelessWidget {
 
 /// A 12-point net-worth sparkline (see [buildNetWorthSeries]) with compact
 /// first/last labels. Custom-painted — no chart package.
-class _NetWorthTrendCard extends StatelessWidget {
+class _NetWorthTrendCard extends ConsumerWidget {
   const _NetWorthTrendCard({required this.series, required this.loading});
 
   final List<int> series;
   final bool loading;
 
-  static String _label(int minor) =>
-      '${minor < 0 ? '−' : ''}Rp ${MoneyFormatter.compactIdr(minor)}';
+  static String _label(int minor, {required bool visible}) => visible
+      ? '${minor < 0 ? '−' : ''}Rp ${MoneyFormatter.compactIdr(minor)}'
+      : MoneyFormatter.masked;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Mask the rupiah figures only — the sparkline shape may stay (it carries
+    // no absolute amounts).
+    final visible = ref.watch(amountVisibilityProvider);
     return Container(
       key: const Key('beranda-networth-trend'),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.sky.surface,
         border: Border.all(color: context.sky.line),
@@ -1056,7 +1112,7 @@ class _NetWorthTrendCard extends StatelessWidget {
               children: [
                 Flexible(
                   child: Text(
-                    _label(series.first),
+                    _label(series.first, visible: visible),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 10, color: context.sky.faint),
@@ -1065,7 +1121,7 @@ class _NetWorthTrendCard extends StatelessWidget {
                 const SizedBox(width: AffluenaSpacing.space2),
                 Flexible(
                   child: Text(
-                    _label(series.last),
+                    _label(series.last, visible: visible),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.end,
@@ -1188,13 +1244,14 @@ class _DueEntry {
   final String location;
 }
 
-class _DueRow extends StatelessWidget {
+class _DueRow extends ConsumerWidget {
   const _DueRow({required this.entry});
 
   final _DueEntry entry;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final visible = ref.watch(amountVisibilityProvider);
     final (hue, icon, label) = switch (entry.kind) {
       _DueKind.subscription => (
         SectionPalette.langganan.of(context),
@@ -1219,7 +1276,7 @@ class _DueRow extends StatelessWidget {
     return InkWell(
       onTap: () => context.push(entry.location),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         child: Row(
           children: [
             _IconTile(
@@ -1257,7 +1314,7 @@ class _DueRow extends StatelessWidget {
             ),
             const SizedBox(width: AffluenaSpacing.space2),
             Text(
-              MoneyFormatter.idr(entry.amountMinor),
+              MoneyFormatter.maskedIdr(entry.amountMinor, visible: visible),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
@@ -1291,15 +1348,15 @@ class _IconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 34,
-      height: 34,
+      width: 30,
+      height: 30,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: customBg ?? context.sky.sheet,
         borderRadius: BorderRadius.circular(11),
         border: Border.all(color: customBorder ?? context.sky.line),
       ),
-      child: Icon(icon, size: 18, color: customColor ?? context.sky.muted),
+      child: Icon(icon, size: 16, color: customColor ?? context.sky.muted),
     );
   }
 }
@@ -1321,12 +1378,12 @@ class _AvatarStack extends StatelessWidget {
 
     return SizedBox(
       width: 44,
-      height: 34,
+      height: 30,
       child: Stack(
         children: [
           Positioned(
             left: 0,
-            top: 3,
+            top: 1,
             child: SkyAvatar(
               initial: initial(members[0]),
               borderColor: ringColor,
@@ -1334,7 +1391,7 @@ class _AvatarStack extends StatelessWidget {
           ),
           Positioned(
             left: 15,
-            top: 3,
+            top: 1,
             child: SkyAvatar(
               initial: initial(members[1]),
               color: context.sky.avatarSecondary,

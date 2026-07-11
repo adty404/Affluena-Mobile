@@ -8,6 +8,7 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/application/category_tag_management_controller.dart';
 import '../../categories/data/category_models.dart';
+import '../../shared/application/amount_visibility.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
 import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
@@ -79,6 +80,9 @@ class _RoomDetailContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final wallet = detail.wallet;
     final txAsync = ref.watch(walletTransactionsProvider(walletId));
+    // Saldo masking (the Beranda eye toggle); the transaction list below
+    // stays visible — it's the working ledger.
+    final amountsVisible = ref.watch(amountVisibilityProvider);
 
     return ListView(
       padding: AffluenaInsets.screen,
@@ -109,9 +113,12 @@ class _RoomDetailContent extends ConsumerWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          MoneyFormatter.idr(wallet.balanceMinor),
+          MoneyFormatter.maskedIdr(
+            wallet.balanceMinor,
+            visible: amountsVisible,
+          ),
           style: TextStyle(
-            fontSize: 30,
+            fontSize: 24,
             fontWeight: FontWeight.w700,
             color: context.sky.ink,
             letterSpacing: -0.4,
@@ -297,7 +304,7 @@ class _TransactionRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AffluenaSpacing.space2),
       decoration: BoxDecoration(
         color: context.sky.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.sky.line),
       ),
       clipBehavior: Clip.antiAlias,
@@ -306,12 +313,12 @@ class _TransactionRow extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 Container(
-                  width: 34,
-                  height: 34,
+                  width: 30,
+                  height: 30,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: appearance.color != null
@@ -324,7 +331,7 @@ class _TransactionRow extends StatelessWidget {
                           : context.sky.line,
                     ),
                   ),
-                  child: Icon(appearance.icon, size: 18, color: tileColor),
+                  child: Icon(appearance.icon, size: 16, color: tileColor),
                 ),
                 const SizedBox(width: AffluenaSpacing.space3),
                 Expanded(
@@ -379,10 +386,10 @@ class _MembersCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.sky.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.sky.line),
       ),
       child: Column(

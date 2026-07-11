@@ -89,6 +89,16 @@ class MoneyCalculator {
     _startNew = true;
   }
 
+  /// Replaces the current entry with a preset amount (the quick-amount
+  /// chips): any pending operation is dropped and [minor] becomes the shown
+  /// value. The next digit starts a fresh operand, mirroring `=`.
+  void setAmountMinor(int minor) {
+    _display = minor.toString();
+    _stored = null;
+    _op = null;
+    _startNew = true;
+  }
+
   void applyOperator(String op) {
     if (_op != null && !_startNew) {
       // Chain: fold the previous operation before starting the next one.

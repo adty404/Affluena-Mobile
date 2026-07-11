@@ -85,7 +85,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                     child: Text(
                       AffluenaDateFormatter.monthLabelFull(_month),
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3,
                         color: context.sky.ink,

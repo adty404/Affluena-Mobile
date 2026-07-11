@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
+import '../../shared/application/amount_visibility.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
@@ -52,6 +53,10 @@ class _WalletsContent extends ConsumerWidget {
         .where((w) => !w.isGoal && !w.isViewer)
         .toList(growable: false);
 
+    // Saldo masking (the Beranda eye toggle): the hero total and every card
+    // balance follow the same global switch.
+    final amountsVisible = ref.watch(amountVisibilityProvider);
+
     return DrillInScaffold(
       title: 'Dompet',
       actions: [
@@ -72,8 +77,8 @@ class _WalletsContent extends ConsumerWidget {
               onAction: () => _showWalletForm(context, ref),
             ),
           ] else ...[
-            _WalletsSummary(wallets: visible),
-            const SizedBox(height: AffluenaSpacing.space6),
+            _WalletsSummary(wallets: visible, amountsVisible: amountsVisible),
+            const SizedBox(height: AffluenaSpacing.space5),
             const SectionHeader(title: 'Dompet kamu'),
             const SizedBox(height: AffluenaSpacing.space3),
             GridView.builder(
@@ -91,6 +96,7 @@ class _WalletsContent extends ConsumerWidget {
                 final wallet = visible[index];
                 return _WalletCard(
                   wallet: wallet,
+                  amountsVisible: amountsVisible,
                   onOpen: () =>
                       context.push(WalletDetailScreen.location(wallet.id)),
                   onEdit: (wallet.isGoal || wallet.isViewer)
@@ -113,9 +119,10 @@ class _WalletsContent extends ConsumerWidget {
 /// one wallet is actually shared, so an all-private list never shows
 /// "Bersama 0" noise.
 class _WalletsSummary extends StatelessWidget {
-  const _WalletsSummary({required this.wallets});
+  const _WalletsSummary({required this.wallets, required this.amountsVisible});
 
   final List<Wallet> wallets;
+  final bool amountsVisible;
 
   @override
   Widget build(BuildContext context) {
@@ -142,11 +149,11 @@ class _WalletsSummary extends StatelessWidget {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
-              MoneyFormatter.idr(total),
+              MoneyFormatter.maskedIdr(total, visible: amountsVisible),
               maxLines: 1,
               style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
                 letterSpacing: -0.5,
                 color: colors.ink,
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -247,9 +254,15 @@ class _SummaryStatChip extends StatelessWidget {
 }
 
 class _WalletCard extends StatelessWidget {
-  const _WalletCard({required this.wallet, required this.onOpen, this.onEdit});
+  const _WalletCard({
+    required this.wallet,
+    required this.amountsVisible,
+    required this.onOpen,
+    this.onEdit,
+  });
 
   final Wallet wallet;
+  final bool amountsVisible;
   final VoidCallback onOpen;
   final VoidCallback? onEdit;
 
@@ -342,7 +355,10 @@ class _WalletCard extends StatelessWidget {
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
-                MoneyFormatter.idr(wallet.balanceMinor),
+                MoneyFormatter.maskedIdr(
+                  wallet.balanceMinor,
+                  visible: amountsVisible,
+                ),
                 maxLines: 1,
                 style: hasColor
                     ? textTheme.titleMedium?.copyWith(color: Colors.white)

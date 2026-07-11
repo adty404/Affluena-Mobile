@@ -316,8 +316,8 @@ class _TxnRow extends ConsumerWidget {
           child: Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 30,
+                height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: tinted
@@ -328,7 +328,7 @@ class _TxnRow extends ConsumerWidget {
                     color: tinted ? Colors.transparent : context.sky.line,
                   ),
                 ),
-                child: Icon(appearance.icon, size: 18, color: tileColor),
+                child: Icon(appearance.icon, size: 16, color: tileColor),
               ),
               const SizedBox(width: AffluenaSpacing.space3),
               Expanded(

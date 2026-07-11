@@ -71,6 +71,8 @@ class _TransactionEditFields extends StatelessWidget {
           hint: '50.000',
           initialValue: initialAmountMinor,
           enabled: !isSaving,
+          // Quick chips (10rb … 1jt) — same affordance as the create form.
+          showQuickAmounts: true,
           onChanged: onAmountChanged,
         ),
         const SizedBox(height: AffluenaSpacing.space3),
