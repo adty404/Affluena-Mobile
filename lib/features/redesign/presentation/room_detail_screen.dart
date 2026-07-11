@@ -8,6 +8,7 @@ import '../../../core/formatters/date_formatter.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../categories/application/category_tag_management_controller.dart';
 import '../../categories/data/category_models.dart';
+import '../../shared/application/amount_visibility.dart';
 import '../../shared/presentation/widgets/sky_avatar.dart';
 import '../../transactions/application/transactions_controller.dart';
 import '../../transactions/data/transaction_models.dart';
@@ -79,6 +80,9 @@ class _RoomDetailContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final wallet = detail.wallet;
     final txAsync = ref.watch(walletTransactionsProvider(walletId));
+    // Saldo masking (the Beranda eye toggle); the transaction list below
+    // stays visible — it's the working ledger.
+    final amountsVisible = ref.watch(amountVisibilityProvider);
 
     return ListView(
       padding: AffluenaInsets.screen,
@@ -109,7 +113,10 @@ class _RoomDetailContent extends ConsumerWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          MoneyFormatter.idr(wallet.balanceMinor),
+          MoneyFormatter.maskedIdr(
+            wallet.balanceMinor,
+            visible: amountsVisible,
+          ),
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w700,

@@ -7,6 +7,18 @@ abstract final class MoneyFormatter {
     decimalDigits: 0,
   );
 
+  /// The masked-balance placeholder shown when amounts are hidden (the
+  /// Beranda eye toggle — see `amountVisibilityProvider`). One fixed string,
+  /// so a masked value never leaks the amount's magnitude via its width.
+  static const String masked = 'Rp ••••••';
+
+  /// [idr], or the [masked] placeholder when balances are hidden. Use at
+  /// masked SURFACES only (balances/summaries — see DESIGN.md "Saldo
+  /// masking"); the working ledger always renders real amounts.
+  static String maskedIdr(int amountMinor, {required bool visible}) {
+    return visible ? idr(amountMinor) : masked;
+  }
+
   static String idr(int amountMinor) {
     return _idr.format(amountMinor);
   }

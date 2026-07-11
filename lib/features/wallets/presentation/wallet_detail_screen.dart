@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme/affluena_theme.dart';
 import '../../../core/formatters/money_formatter.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../shared/application/amount_visibility.dart';
 import '../../shared/application/financial_refresh.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/affluena_card.dart';
@@ -85,7 +86,10 @@ class _WalletDetailContent extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            MoneyFormatter.idr(wallet.balanceMinor),
+                            MoneyFormatter.maskedIdr(
+                              wallet.balanceMinor,
+                              visible: ref.watch(amountVisibilityProvider),
+                            ),
                             style: textTheme.displaySmall,
                           ),
                           const SizedBox(height: AffluenaSpacing.space1),

@@ -8,6 +8,7 @@ import '../../auth/application/auth_controller.dart';
 import '../../categories/application/category_tag_management_controller.dart';
 import '../../redesign/presentation/room_detail_screen.dart'
     show walletTransactionsProvider;
+import '../../shared/application/amount_visibility.dart';
 import '../../shared/presentation/appearance/item_appearance.dart';
 import '../../shared/presentation/widgets/affluena_banner.dart';
 import '../../shared/presentation/widgets/drill_in_scaffold.dart';
@@ -64,6 +65,9 @@ class GoalDetailScreen extends ConsumerWidget {
     // its income-green semantics.
     final itemColor = parseItemColor(current.color);
     final accent = itemColor ?? context.sky.accent;
+    // Saldo masking (the Beranda eye toggle) covers the hero's saved/target
+    // figures; the "Riwayat setoran" ledger below stays visible.
+    final amountsVisible = ref.watch(amountVisibilityProvider);
     final currentUserId = ref.watch(
       authControllerProvider.select((auth) => auth.user?.id),
     );
@@ -75,8 +79,12 @@ class GoalDetailScreen extends ConsumerWidget {
         children: [
           SkyDetailHero(
             label: 'Terkumpul',
-            amount: MoneyFormatter.idr(current.collectedAmountMinor),
-            sub: 'dari ${MoneyFormatter.idr(current.targetAmountMinor)}',
+            amount: MoneyFormatter.maskedIdr(
+              current.collectedAmountMinor,
+              visible: amountsVisible,
+            ),
+            sub:
+                'dari ${MoneyFormatter.maskedIdr(current.targetAmountMinor, visible: amountsVisible)}',
             accent: itemColor,
           ),
           const SizedBox(height: AffluenaSpacing.space5),
