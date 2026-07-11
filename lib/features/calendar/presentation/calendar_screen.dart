@@ -107,8 +107,6 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
               const SizedBox(height: AffluenaSpacing.space3),
               _MonthSummaryCard(data: data, loading: dataAsync.isLoading),
               const SizedBox(height: AffluenaSpacing.space3),
-              const _WeekdayHeader(),
-              const SizedBox(height: AffluenaSpacing.space1),
             ],
           ),
         ),
@@ -440,6 +438,12 @@ class _MonthGrid extends ConsumerWidget {
         ? now.day
         : null;
 
+    // Fixed-height week rows: the grid takes only the space it needs instead
+    // of stretching each day cell to fill the page (a 5–6 week month used to
+    // blow every cell up to ~1/6 of the screen — exactly the "tanggalnya
+    // panjang ke bawah" complaint). Day details live one tap away in the
+    // day sheet, so the cell only needs number + dots + net.
+    const cellHeight = 50.0;
     final rows = <Widget>[];
     var day = 1 - leadingBlanks;
     while (day <= daysInMonth) {
@@ -461,7 +465,12 @@ class _MonthGrid extends ConsumerWidget {
           );
         }
       }
-      rows.add(Expanded(child: Row(children: cells)));
+      rows.add(
+        SizedBox(
+          height: cellHeight,
+          child: Row(children: cells),
+        ),
+      );
     }
 
     return _RefreshableMonthPage(
@@ -474,7 +483,29 @@ class _MonthGrid extends ConsumerWidget {
           AffluenaSpacing.space4,
           96,
         ),
-        child: Column(children: rows),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // The month grid as a calm bordered card (web-calendar parity):
+            // weekday header + compact rows, top-aligned; the rest of the page
+            // just breathes (it stays a scroll viewport for pull-to-refresh).
+            Container(
+              padding: const EdgeInsets.fromLTRB(6, 10, 6, 8),
+              decoration: BoxDecoration(
+                color: context.sky.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: context.sky.line),
+              ),
+              child: Column(
+                children: [
+                  const _WeekdayHeader(),
+                  const SizedBox(height: AffluenaSpacing.space1),
+                  ...rows,
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -533,32 +564,31 @@ class _DayCell extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(AffluenaSpacing.space1 / 2),
       child: Material(
-        color: loading
-            ? context.sky.sheet
-            : (hasActivity ? context.sky.surface : Colors.transparent),
-        borderRadius: BorderRadius.circular(10),
+        // Soft sheet tint marks active days inside the surface-colored card.
+        color: loading || !hasActivity ? Colors.transparent : context.sky.sheet,
+        borderRadius: BorderRadius.circular(8),
         child: InkWell(
           // Every day is tappable: the sheet shows the day's transactions and
           // lets the user add a new one on that date (or edit an existing one).
           onTap: loading ? null : () => _showDaySheet(context, month, day),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           child: Container(
             decoration: BoxDecoration(
               border: Border.all(
-                color: isToday
-                    ? context.sky.accent
-                    : (hasActivity && !loading
-                          ? context.sky.line
-                          : Colors.transparent),
-                width: isToday ? 1.4 : 1,
+                color: isToday ? context.sky.accent : Colors.transparent,
+                width: 1.4,
               ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.symmetric(
               horizontal: AffluenaSpacing.space1 / 2,
-              vertical: AffluenaSpacing.space1,
+              vertical: 3,
             ),
+            // Compact cell: number + income/expense dots + net. The ± breakdown
+            // moved into the day sheet — three stacked amounts never fit a calm
+            // 50px cell.
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   '$day',
@@ -568,34 +598,48 @@ class _DayCell extends StatelessWidget {
                     color: isToday ? context.sky.accent : context.sky.muted,
                   ),
                 ),
-                if (summary != null) ...[
-                  const Spacer(),
-                  if (summary!.incomeMinor > 0)
-                    _CellAmount(
-                      text:
-                          '+${MoneyFormatter.compactIdr(summary!.incomeMinor)}',
-                      color: context.sky.income,
-                    ),
-                  if (summary!.expenseMinor > 0)
-                    _CellAmount(
-                      text:
-                          '−${MoneyFormatter.compactIdr(summary!.expenseMinor)}',
-                      color: context.sky.danger,
-                    ),
+                if (hasActivity) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (summary!.incomeMinor > 0)
+                        _ActivityDot(color: context.sky.income),
+                      if (summary!.incomeMinor > 0 && summary!.expenseMinor > 0)
+                        const SizedBox(width: 2.5),
+                      if (summary!.expenseMinor > 0)
+                        _ActivityDot(color: context.sky.danger),
+                    ],
+                  ),
+                  const SizedBox(height: 1.5),
                   _CellAmount(
                     text:
                         '${summary!.netMinor < 0 ? '−' : ''}${MoneyFormatter.compactIdr(summary!.netMinor)}',
                     color: context.sky.ink,
                     bold: true,
                   ),
-                  const Spacer(),
-                ] else
-                  const Spacer(),
+                ],
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A 4px income/expense marker under the day number.
+class _ActivityDot extends StatelessWidget {
+  const _ActivityDot({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 4,
+      height: 4,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

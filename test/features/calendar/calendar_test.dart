@@ -216,11 +216,15 @@ void main() {
       expect(find.text('Pengeluaran'), findsOneWidget);
       expect(find.text('Selisih'), findsOneWidget);
       expect(find.text('Sen'), findsOneWidget);
-      expect(find.text('+8jt'), findsOneWidget);
-      expect(find.text('−250rb'), findsOneWidget);
+      // Compact cells show only the NET amount (the ± breakdown lives in the
+      // day sheet): 8.000.000 income − 250.000 expense = 7.750.000 net.
+      final net = MoneyFormatter.compactIdr(7750000);
+      expect(find.text(net), findsOneWidget);
+      expect(find.text('+8jt'), findsNothing);
+      expect(find.text('−250rb'), findsNothing);
 
       // Tapping the active day opens the day sheet with its transactions.
-      await tester.tap(find.text('+8jt'));
+      await tester.tap(find.text(net));
       await tester.pumpAndSettle();
       expect(find.text('Pemasukan'), findsWidgets);
     });
