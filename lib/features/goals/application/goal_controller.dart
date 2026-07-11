@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/haptics.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../shared/application/financial_refresh.dart';
 import '../../transactions/data/transaction_models.dart';
@@ -119,6 +120,7 @@ class GoalController extends Notifier<GoalState> {
     // success. _mutate already reloaded the goals list.
     if (success) {
       ref.invalidateFinancialData();
+      hapticSuccess();
     }
     return success;
   }

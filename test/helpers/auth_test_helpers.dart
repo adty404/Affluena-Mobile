@@ -2,6 +2,7 @@ import 'package:affluena_mobile/app/affluena_app.dart';
 import 'package:affluena_mobile/app/provider_retry.dart';
 import 'package:affluena_mobile/core/api/api_error.dart';
 import 'package:affluena_mobile/core/api/pagination.dart';
+import 'package:affluena_mobile/core/clock.dart';
 import 'package:affluena_mobile/core/storage/secure_token_store.dart';
 import 'package:affluena_mobile/features/auth/data/auth_models.dart';
 import 'package:affluena_mobile/features/auth/data/auth_repository.dart';
@@ -95,6 +96,10 @@ Widget authTestApp({
       onboardingControllerProvider.overrideWith(
         CompletedOnboardingController.new,
       ),
+      // Pin the wall clock so time-bearing UI (Beranda's "Diperbarui 14.32"
+      // stamp, set by the summary's real fetch path) renders the same instant
+      // in every run — goldens stay deterministic.
+      clockProvider.overrideWithValue(() => DateTime(2026, 6, 21, 14, 32)),
       ...extraOverrides,
     ],
     child: const AffluenaApp(),

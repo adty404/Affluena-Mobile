@@ -11,6 +11,7 @@ abstract final class AffluenaDateFormatter {
   static final DateFormat _monthLabel = DateFormat('MMM yyyy', 'id_ID');
   static final DateFormat _monthLabelFull = DateFormat('MMMM yyyy', 'id_ID');
   static final DateFormat _time = DateFormat('HH:mm');
+  static final DateFormat _clockTime = DateFormat('HH.mm', 'id_ID');
   static final DateFormat _dayHeader = DateFormat('EEE, d MMM yyyy', 'id_ID');
 
   static String shortDate(String isoString) {
@@ -25,6 +26,12 @@ abstract final class AffluenaDateFormatter {
   /// Local time-of-day, e.g. "14:05".
   static String time(String isoString) {
     return _time.format(DateTime.parse(isoString).toLocal());
+  }
+
+  /// A wall-clock stamp in the Indonesian dot convention, e.g. "14.32"
+  /// (Beranda's "Diperbarui 14.32").
+  static String clockTime(DateTime value) {
+    return _clockTime.format(value.toLocal());
   }
 
   /// The local calendar day (midnight) for grouping transactions by day.

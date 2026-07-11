@@ -39,6 +39,29 @@ void main() {
     expect(find.byKey(const Key('sky-calc-confirm')), findsOneWidget);
   });
 
+  testWidgets('quick-add sheet: a quick-amount chip sets the calc amount', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await pumpAuthTestApp(tester, tokenStore: authenticatedTokenStore());
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    // Tapping a preset chip SETS the display value (replaces the entry).
+    await tester.tap(find.byKey(const Key('amount-chip-100000')));
+    await tester.pump();
+    expect(find.text('Rp 100.000'), findsOneWidget);
+
+    // A second chip replaces again — never adds.
+    await tester.tap(find.byKey(const Key('amount-chip-10000')));
+    await tester.pump();
+    expect(find.text('Rp 100.000'), findsNothing);
+    expect(find.text('Rp 10.000'), findsOneWidget);
+  });
+
   testWidgets('quick-add sheet lists templates and records one on tap', (
     tester,
   ) async {

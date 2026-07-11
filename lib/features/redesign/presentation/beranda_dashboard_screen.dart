@@ -684,6 +684,10 @@ class _Hero extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final visible = ref.watch(amountVisibilityProvider);
+    // Null until the summary's first real fetch lands (see
+    // dashboardRefreshedAtProvider) — the stamp simply stays hidden, so
+    // hermetic tests that override dashboardSummaryProvider never render it.
+    final refreshedAt = ref.watch(dashboardRefreshedAtProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -731,8 +735,10 @@ class _Hero extends ConsumerWidget {
           ),
         const SizedBox(height: 5),
         Text(
-          'Saldo gabungan semua dompet',
-          style: TextStyle(fontSize: 11.5, color: context.sky.faint),
+          'Saldo gabungan semua dompet'
+          '${refreshedAt != null ? ' · Diperbarui ${AffluenaDateFormatter.clockTime(refreshedAt)}' : ''}',
+          key: const Key('beranda-updated-stamp'),
+          style: TextStyle(fontSize: 10.5, color: context.sky.faint),
         ),
       ],
     );

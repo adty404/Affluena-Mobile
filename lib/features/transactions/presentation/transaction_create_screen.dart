@@ -117,6 +117,9 @@ class _TransactionCreateScreenState
                   hint: '50.000',
                   initialValue: _amountMinor,
                   enabled: !state.isSaving,
+                  // Quick chips (10rb … 1jt): a fresh amount is typically
+                  // entered here, so one tap beats typing.
+                  showQuickAmounts: true,
                   onChanged: (value) => setState(() {
                     _amountMinor = value;
                     _validationError = null;

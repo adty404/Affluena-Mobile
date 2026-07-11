@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/formatters/date_formatter.dart';
+import '../../../core/haptics.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
@@ -222,6 +223,7 @@ class TransactionsController extends Notifier<TransactionsState> {
     try {
       await ref.read(transactionRepositoryProvider).createTransaction(request);
       ref.invalidateBalances();
+      hapticSuccess();
       await load(reset: true);
       return true;
     } catch (_) {
@@ -244,6 +246,7 @@ class TransactionsController extends Notifier<TransactionsState> {
     try {
       await repository.updateTransaction(transaction.id, request);
       ref.invalidateBalances();
+      hapticSuccess();
       await load(reset: true);
       return true;
     } catch (_) {
@@ -259,6 +262,7 @@ class TransactionsController extends Notifier<TransactionsState> {
           .read(transactionRepositoryProvider)
           .deleteTransaction(transaction.id);
       ref.invalidateBalances();
+      hapticSuccess();
       await load(reset: true);
       return true;
     } catch (_) {

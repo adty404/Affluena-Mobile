@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/affluena_theme.dart';
 import '../../../../app/theme/sky_palette.dart';
+import '../../../../core/haptics.dart';
 
 /// Shared building blocks for the Sky & Denim per-item **detail** screens
 /// (budget / goal / installment / subscription / recurring). They give every
@@ -191,7 +192,10 @@ class _SkyConfirmSheet extends StatelessWidget {
               style: danger
                   ? FilledButton.styleFrom(backgroundColor: sky.danger)
                   : null,
-              onPressed: () => Navigator.of(context).pop(true),
+              onPressed: () {
+                hapticTap();
+                Navigator.of(context).pop(true);
+              },
               child: Text(confirmLabel),
             ),
             const SizedBox(height: AffluenaSpacing.space2),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/calc/due_window.dart';
 import '../../../core/formatters/date_formatter.dart';
+import '../../../core/haptics.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
@@ -114,6 +115,8 @@ class TrackerController extends Notifier<TrackerState> {
           .payInstallment(installment.id, request),
       errorMessage: 'Pembayaran cicilan gagal dicatat.',
     );
+    // _save swallows failures into actionError; only a clean run buzzes.
+    if (state.actionError == null) hapticSuccess();
   }
 
   Future<void> cancelInstallment(Installment installment) async {
@@ -175,6 +178,8 @@ class TrackerController extends Notifier<TrackerState> {
           .paySubscription(subscription.id, request),
       errorMessage: 'Pembayaran langganan gagal dicatat.',
     );
+    // _save swallows failures into actionError; only a clean run buzzes.
+    if (state.actionError == null) hapticSuccess();
   }
 
   Future<void> deleteSubscription(Subscription subscription) async {

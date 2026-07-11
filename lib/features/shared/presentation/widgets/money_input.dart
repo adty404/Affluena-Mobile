@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../app/theme/affluena_theme.dart';
+import 'quick_amount_chips.dart';
+
 /// A currency text field that displays grouped IDR (`Rp 1.234.567`) while the
 /// user types and reports the value back as an integer in minor units.
 ///
@@ -20,6 +23,7 @@ class MoneyInput extends StatefulWidget {
     this.focusNode,
     this.hint,
     this.helperText,
+    this.showQuickAmounts = false,
     super.key,
   });
 
@@ -40,6 +44,12 @@ class MoneyInput extends StatefulWidget {
   /// Persistent helper line under the field (e.g. to explain what the amount
   /// means), shown via [InputDecoration.helperText].
   final String? helperText;
+
+  /// Renders a [QuickAmountChips] strip under the field (`10rb … 1jt`);
+  /// tapping a chip REPLACES the amount and reports it through [onChanged].
+  /// Opt in on forms where a fresh amount is typically entered (transaction
+  /// create/edit); leave off for odd fields like the adjustment "saldo baru".
+  final bool showQuickAmounts;
 
   @override
   State<MoneyInput> createState() => _MoneyInputState();
@@ -72,9 +82,18 @@ class _MoneyInputState extends State<MoneyInput> {
     return int.tryParse(digits);
   }
 
+  /// A quick-amount chip SETS the field (replaces, never adds) and reports the
+  /// value exactly as if it had been typed.
+  void _applyQuickAmount(int minor) {
+    setState(() {
+      _controller.text = _ThousandsFormatter.grouped(minor);
+    });
+    widget.onChanged(minor);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    final field = TextFormField(
       controller: _controller,
       enabled: widget.enabled,
       autofocus: widget.autofocus,
@@ -94,7 +113,21 @@ class _MoneyInputState extends State<MoneyInput> {
           ? null
           : (raw) => widget.validator!(_parse(raw ?? '')),
       autovalidateMode: widget.autovalidateMode,
-      onChanged: (raw) => widget.onChanged(_parse(raw)),
+      // setState keeps the chip strip's selected state in sync while typing.
+      onChanged: (raw) => setState(() => widget.onChanged(_parse(raw))),
+    );
+    if (!widget.showQuickAmounts) return field;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        field,
+        const SizedBox(height: AffluenaSpacing.space2),
+        QuickAmountChips(
+          onSelected: _applyQuickAmount,
+          selectedMinor: _parse(_controller.text),
+          enabled: widget.enabled,
+        ),
+      ],
     );
   }
 }

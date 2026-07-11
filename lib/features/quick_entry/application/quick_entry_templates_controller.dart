@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/formatters/tag_formatter.dart';
+import '../../../core/haptics.dart';
 import '../../../core/state/copy_with_sentinel.dart';
 import '../../categories/data/category_models.dart';
 import '../../categories/data/category_repository.dart';
@@ -159,6 +160,7 @@ class QuickEntryTemplatesController extends Notifier<QuickEntryTemplatesState> {
         isSaving: false,
         message: '${template.name} dicatat.',
       );
+      hapticSuccess();
       return true;
     } catch (_) {
       state = state.copyWith(
