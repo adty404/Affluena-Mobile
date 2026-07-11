@@ -89,10 +89,11 @@ class _DeleteAccountSheetState extends ConsumerState<_DeleteAccountSheet> {
             const SizedBox(height: AffluenaSpacing.space4),
             FilledButton.icon(
               key: const Key('settings-delete-account-button'),
-              style: FilledButton.styleFrom(
-                backgroundColor: coral,
-                foregroundColor: Colors.white,
-              ),
+              // No foregroundColor: the theme supplies onPrimary (white in
+              // light, near-black in dark) — hardcoding Colors.white washes
+              // out on dark-mode's lighter coral (same pattern as skyConfirm's
+              // danger button).
+              style: FilledButton.styleFrom(backgroundColor: coral),
               onPressed: _isDeleting ? null : _delete,
               icon: _isDeleting
                   ? const SizedBox.square(

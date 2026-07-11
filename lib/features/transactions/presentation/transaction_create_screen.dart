@@ -70,7 +70,6 @@ class _TransactionCreateScreenState
   Widget build(BuildContext context) {
     final state = ref.watch(transactionCreateControllerProvider);
     final controller = ref.read(transactionCreateControllerProvider.notifier);
-    final textTheme = Theme.of(context).textTheme;
 
     if (state.isLoading && state.wallets.isEmpty) {
       return const _TransactionCreateLoading();
@@ -240,10 +239,11 @@ class _TransactionCreateScreenState
               key: const Key('transaction-create-submit-button'),
               onPressed: state.isSaving ? null : () => _submit(state),
               icon: const Icon(Icons.check),
-              label: Text(
-                state.isSaving ? 'Menyimpan...' : 'Simpan transaksi',
-                style: textTheme.labelLarge,
-              ),
+              // No explicit style: a textTheme style would OVERRIDE the
+              // FilledButton's onAccent foreground, rendering theme-ink on the
+              // accent fill — black-on-black in light mode (only the icon,
+              // which keeps the button foreground, stayed visible).
+              label: Text(state.isSaving ? 'Menyimpan...' : 'Simpan transaksi'),
             ),
           ),
         ],
