@@ -58,6 +58,20 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
 
 ## Design system — "Tinta" monochrome (see DESIGN.md + design/affluena-design-guide.html)
 
+- **Text scaling is clamped at 1.1×** at the app root (`AffluenaApp`'s
+  `MaterialApp.router` `builder:` wraps a `MediaQuery` with
+  `textScaler.clamp(maxScaleFactor: 1.1)`, no minimum) — the standard
+  finance-app behaviour so huge system fonts can't break money layouts. Never
+  bypass it per-widget. Locked by `test/app/text_scale_clamp_test.dart`.
+- **"Tinta Compact" density (2026-07)** — the agreed compaction: hero money
+  24/w700 (was 28–30/w800), secondary big numbers 18–19 (was 20–22), screen
+  h1s + the `DrillInScaffold`/AppBar title 18 (was 21–22), Beranda section
+  titles 15.5, content-card padding 12 (was 14), card/row radius 14 (was the
+  literal 16 — sheets/pills untouched), leading icon tiles 30×30 w/ 16px glyph
+  (was 34×34/18), between-section gap `space5` (was `space6`), list-row
+  vertical padding 9 (was 11). Meta text never below 10.5; tappable rows never
+  below a 48px touch target; money keeps tabular figures. Match these numbers
+  on new surfaces — see DESIGN.md §3/§4.
 - The palette is **monochrome ink**: accent = ink (near-black, flips to WHITE in dark mode);
   colour only for meaning (income green, danger coral, amber warning, user wallet colours).
   Anything rendered ON an accent fill must use `context.sky.onAccent` — hardcoding
@@ -82,6 +96,35 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
 
 - **Money = integer minor units**; format with `MoneyFormatter` (Rp grouping). Locale is `id_ID`
   (initialized in `main`); date widgets use `AffluenaDateFormatter`.
+- **Saldo masking**: the Beranda hero's eye toggle
+  (`beranda-amount-visibility-toggle`) flips the global, persisted
+  `amountVisibilityProvider` (`shared/application/amount_visibility.dart`,
+  key `affluena.amounts_visible`, default visible). Masked surfaces render
+  `MoneyFormatter.maskedIdr(minor, visible:)` → the fixed `Rp ••••••`.
+  Scope = balances/summaries only (Beranda hero + Ringkasan rupiah labels +
+  all section-card amounts + dues, WalletsScreen hero/cards, room + wallet
+  detail balances, SharedWithMe cards, goal detail saved/target); the
+  **working ledger — transaction rows, detail sheets, Wawasan breakdown —
+  always shows real amounts**. See DESIGN.md "Saldo masking".
+- **Quick amount chips**: money-entry forms where a fresh amount is typed show
+  the shared `QuickAmountChips` (`10rb · 50rb · 100rb · 500rb · 1jt`, keys
+  `amount-chip-<minor>`); tapping SETS (replaces) the amount + a selection
+  haptic. `MoneyInput(showQuickAmounts: true)` on the transaction create/edit
+  forms; the quick-add sheet wires it to `MoneyCalculator.setAmountMinor`.
+  Don't add chips to odd fields (adjustment "saldo baru", starting balances).
+- **Haptics** (`lib/core/haptics.dart`): `hapticSuccess()` on the SUCCESS path
+  of money mutations (tx create/edit/delete, quick-add save, template run,
+  installment/subscription/debt payment, goal contribution — lives in the
+  controllers) and `hapticTap()` on the `skyConfirm` accept + quick-amount
+  chips. Never vibrate on errors. Platform-channel no-op in tests.
+- **Beranda "Diperbarui HH.mm" stamp**: the hero sub-line appends the time the
+  dashboard summary last ARRIVED — `dashboardRefreshedAtProvider`
+  (non-autoDispose, null = hidden) is marked only in
+  `dashboardSummaryProvider`'s real fetch path, timed by the overridable
+  `clockProvider` (`core/clock.dart`). Tests that stub the summary provider
+  never show the stamp; `authTestApp` pins the clock to 14:32 so full-app
+  tests/goldens are deterministic. Format via
+  `AffluenaDateFormatter.clockTime` (id-ID `HH.mm`).
 - **API dates are full RFC3339 timestamps even for `DATE` columns** — a budget's `month` arrives as
   `"2026-06-01T00:00:00Z"`, not `"2026-06"`. Parse defensively (take the `YYYY-MM` prefix); assuming a
   short date throws and blanks the screen.

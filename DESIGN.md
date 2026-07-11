@@ -22,7 +22,7 @@ The authenticated shell (`RedesignShell`, route `/beranda`) is an **icon-only fl
 
 #### Beranda — sectioned dashboard
 
-Beranda is a single scrollable dashboard. A `Total saldo` hero (with a month delta) sits on top, then a **Ringkasan** row — a savings-rate tile (monthly cashflow ÷ income, "—" when income is 0) beside a **"Tren kekayaan bersih"** sparkline (12 custom-painted points from `buildNetWorthSeries`: anchored at the current net worth, walking backward through each month's net cashflow) — and, only when dues exist, **"Jatuh tempo terdekat"** (the nearest 3 across cicilan/langganan/utang, each row tappable to its domain screen). Below those come the money-domain **sections** — each a titled header with a "Lihat semua" link over a **2-column card grid**; tapping a card opens that item's detail. The sections, in order:
+Beranda is a single scrollable dashboard. A `Total saldo` hero (with a month delta) sits on top — its label carries the saldo-masking eye toggle (see §5 "Saldo masking"), and its sub-line appends **`· Diperbarui HH.mm`** (10.5px faint, `AffluenaDateFormatter.clockTime`, Indonesian dot convention) once the dashboard summary has actually arrived: `dashboardRefreshedAtProvider` is null until `dashboardSummaryProvider`'s real fetch path marks it via the overridable `clockProvider` (`core/clock.dart`), so hermetic tests that stub the summary never render the stamp and the full-app harness pins the clock for deterministic goldens. Then then a **Ringkasan** row — a savings-rate tile (monthly cashflow ÷ income, "—" when income is 0) beside a **"Tren kekayaan bersih"** sparkline (12 custom-painted points from `buildNetWorthSeries`: anchored at the current net worth, walking backward through each month's net cashflow) — and, only when dues exist, **"Jatuh tempo terdekat"** (the nearest 3 across cicilan/langganan/utang, each row tappable to its domain screen). Below those come the money-domain **sections** — each a titled header with a "Lihat semua" link over a **2-column card grid**; tapping a card opens that item's detail. The sections, in order:
 
 1. **Dompet** — wallets (shared wallets show member avatars + a "Bersama" badge)
 2. **Anggaran** — budgets (each card shows a spend-progress track)
@@ -72,18 +72,29 @@ The redesign surfaces read colours from **`SkyColors`** (`lib/app/theme/sky_pale
 
 ## 3. Typography
 
-### Scale
+### Scale — "Tinta Compact" (2026-07 density pass)
 
 | Level | Size | Weight | Line Height | Tracking | Usage |
 |-------|------|--------|-------------|----------|-------|
-| Display | 34 | 800 | 1.12 | -0.02em | Hero money values (`Total saldo`, detail balances) |
-| H1 | 28 | 800 | 1.18 | -0.02em | Screen titles |
-| H2 | 22 | 800 | 1.25 | -0.02em | Onboarding headline, large section headers |
-| H3 | 18 | 700 | 1.30 | 0 | Card titles |
+| Hero money | 24 | 700 | 1.12 | -0.02em | Hero money values (`Total saldo`, detail balances) — was 28–30/w800 |
+| Big number | 18–19 | 700–800 | 1.18 | -0.02em | Secondary big numbers (Wawasan totals 18, savings-rate 19) — was 20–22 |
+| H1 | 18 | 700–800 | 1.25 | -0.02em | Screen titles (tab h1s *and* the `DrillInScaffold` AppBar) — was 21–22 |
+| Section title | 15.5 | 800 | 1.30 | -0.2px | Beranda section headers — was 16.5 |
 | Body/lg | 16 | 500 | 1.45 | 0 | Prominent row text |
 | Body | 14 | 400 | 1.45 | 0 | Default mobile body |
 | Body/sm | 13 | 400 | 1.40 | 0 | Secondary metadata |
 | Caption | 12 | 600 | 1.35 | 0 | Labels, chips, nav text |
+
+Meta/tertiary text never drops below **10.5**. The onboarding headline (22)
+and the quick-add calculator display (34) are deliberate exceptions; the
+legacy `displaySmall` (34) theme token survives only on non-compacted legacy
+surfaces (debt detail, auth titles, quick-entry display).
+
+**Text scaling is clamped at 1.1×** at the app root
+(`AffluenaApp` `builder:` — `textScaler.clamp(maxScaleFactor: 1.1)`, no
+minimum clamp). The standard finance-app behaviour (BCA/Gojek): huge system
+fonts must not break money layouts. Never bypass it with a per-widget
+`MediaQuery` override.
 
 ### Font Stack
 
@@ -137,6 +148,23 @@ All spacing derives from a base of 4.
 - Cards: 16 to 20 inner padding, 16 to 24 vertical gaps.
 - Bottom navigation: a **floating pill** hovering over the content — 3 tabs (Beranda/Aktivitas/Wawasan) plus "Lainnya" and a center quick-add FAB.
 
+### Density ("Tinta Compact")
+
+The 2026-07 density pass on the redesign surfaces (Beranda, Aktivitas,
+Kalender, Wawasan, room/wallet detail, shared list rows):
+
+- **Content-card padding 12** (was 14) — never shrink a tappable row below a
+  **48px** total touch target.
+- **Card/row corner radius 14** (was the literal 16); sheet top corners
+  (`radiusSheet` 24) and pills are untouched.
+- **Leading icon tiles 30×30 with an 16px glyph** (was 34×34/18) on
+  transaction/due/slice rows; the 40×40 `ItemAccentIconTile` on domain list
+  cards keeps its size.
+- **Between-section gap `space5`** (was `space6`) on Beranda and list screens
+  — other `space6` uses (padding, detail screens) are not affected.
+- **List-row vertical padding 9** (was 11) — with the 30px tile that is
+  exactly the 48px minimum.
+
 ### Rules
 
 - No dense desktop tables on mobile. Lists become readable mobile rows/cards.
@@ -167,6 +195,30 @@ All spacing derives from a base of 4.
 - **Spacing**: `space2` internal rhythm.
 - **States**: neutral, positive, warning.
 - **Accessibility**: value is text, never image-only.
+
+### Saldo masking (the eye toggle)
+
+- **Control**: an eye icon (`Icons.visibility`/`visibility_off`, key
+  `beranda-amount-visibility-toggle`) beside the Beranda hero's "Total saldo"
+  label flips the global `amountVisibilityProvider`
+  (`shared/application/amount_visibility.dart` — `Notifier<bool>`, default
+  visible, persisted via `SharedPreferencesAsync` under
+  `affluena.amounts_visible`, survives restarts).
+- **Masked rendering**: `MoneyFormatter.masked` / `MoneyFormatter.maskedIdr`
+  → the fixed `Rp ••••••` (constant width, so a masked value never leaks its
+  magnitude).
+- **Scope — balances & summaries mask**: the Beranda hero total, the
+  net-worth sparkline's rupiah labels (the sparkline shape and the
+  savings-rate **%** stay — they carry no absolute amounts), every Beranda
+  section-card amount (Dompet, Dibagikan untukku, Anggaran, Tabungan,
+  Cicilan, Langganan, Berulang) and "Jatuh tempo terdekat" amounts, the
+  WalletsScreen hero + wallet cards, room/wallet detail balances,
+  SharedWithMe cards, and the goal detail saved/target figures.
+- **The working ledger stays VISIBLE by design**: transaction rows, the
+  transaction detail sheet, and the Wawasan breakdown always show real
+  amounts — the user is actively working with those numbers, and masking a
+  ledger makes it useless. Masking protects glanceable balances from
+  shoulder-surfing, not the editing flow the user deliberately opened.
 
 ### Transaction Row
 
@@ -291,6 +343,7 @@ All spacing derives from a base of 4.
 
 - **Structure**: text field with an `Rp` prefix that groups thousands (`Rp 1.234.567`) as the user types.
 - **Usage**: every money amount field. Stores and reports an integer in minor units; users never read or type a bare unformatted integer. For balance adjustments an Increase/Decrease control supplies the sign.
+- **Quick amount chips**: forms where a *fresh* amount is typically entered show a `QuickAmountChips` strip — `10rb · 50rb · 100rb · 500rb · 1jt` (minor 10000…1000000) as an `AffluenaChipBar` of `AffluenaChoiceChip`s, keys `amount-chip-<minor>`. Tapping **SETS** the amount (replaces, never adds) with a selection haptic; the chip matching the current amount renders selected. `MoneyInput` renders it via the opt-in `showQuickAmounts:` (on: transaction create + edit); the quick-add calculator wires the same widget through `MoneyCalculator.setAmountMinor`. Odd fields (adjustment "saldo baru", starting balances) stay chip-less.
 - **Hints**: pass `hint:` as **bare id_ID-grouped digits** (`'50.000'`, `'10.000.000'`) — the widget hardcodes the `Rp ` prefix, so a `cth:` prefix would render "Rp cth: 50.000". A descriptive sentence hint (e.g. `'Saldo dompet saat ini'`) is allowed where a numeric example adds nothing.
 - **States**: default, focused, disabled, error (validator).
 - **Accessibility**: numeric keyboard; the grouped value is plain text.
@@ -372,6 +425,18 @@ All spacing derives from a base of 4.
 - Animate opacity and transform only.
 - Navigation should feel calm and predictable.
 - Reduced-motion mode should keep all flows usable without decorative animation.
+
+### Haptics
+
+Two accents only, via `lib/core/haptics.dart`:
+
+- `hapticSuccess()` (light impact) fires **only on the SUCCESS path** of money
+  actions — transaction create/edit/delete, quick-add save, template
+  execution, installment/subscription/debt payments, goal contributions.
+- `hapticTap()` (selection click) marks deliberate primary taps — the
+  `skyConfirm` accept button and the quick-amount chips.
+- **Never vibrate on errors** — the banner/SnackBar is enough; buzzing reads
+  as alarm. Keep haptics rare so they stay meaningful.
 
 ## 7. Depth & Surface
 
