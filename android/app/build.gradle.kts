@@ -4,6 +4,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Play release signing: reads android/key.properties (gitignored — never
+// commit it or the keystore). When absent (fresh clone), release falls back to
+// the debug signingConfig so local builds still work; Play uploads need it.
+val keystoreProperties = java.util.Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
 android {
     namespace = "com.affluena.affluena_mobile"
     compileSdk = flutter.compileSdkVersion
@@ -28,11 +37,26 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Internal release builds use debug signing only; production signing
-            // must be injected by release automation and is not stored here.
-            signingConfig = signingConfigs.getByName("debug")
+            // Real release keystore when android/key.properties exists (Play
+            // uploads); debug fallback otherwise so local builds keep working.
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

@@ -223,8 +223,10 @@ bash scripts/build_apk.sh                        # sideload APK (bakes the API U
   (`AturanNotifikasiScreen`) hosts `DeviceNotificationsCard` ("Aktifkan notifikasi perangkat",
   requests Android 13+ POST_NOTIFICATIONS once). **This plugin is a NATIVE change: it shipped as
   the 1.4.0+7 Shorebird RELEASE**; **1.5.0+8 is another RELEASE** (image_picker added for the
-  avatar upload, local_auth/USE_BIOMETRIC/NSFaceIDUsageDescription removed) — future Dart edits
-  are patchable again, but touching the plugin set/Android config needs another release.
+  avatar upload, local_auth/USE_BIOMETRIC/NSFaceIDUsageDescription removed); **1.6.0+9 is
+  another RELEASE** (HTTPS base URL default, VPS cleartext exception removed, Play release
+  signing via `android/key.properties`) — future Dart edits are patchable again, but touching
+  the plugin set/Android config needs another release.
 - **Beranda gained three data sections**: "Jatuh tempo terdekat" (nearest 3 dues merged across
   upcoming subscriptions/installments/debts, tappable to their domain screens, hidden when empty),
   a savings-rate tile (monthly cashflow ÷ income, "—" when income is 0), and the "Tren kekayaan
