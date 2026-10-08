@@ -18,12 +18,12 @@
 | 7 | Draft listing + Data Safety + rating konten | ✅ Fase 0 | bagian "Store listing" & "Data Safety" |
 | 8 | `scripts/build_aab.sh` + panduan keystore | ✅ Fase 0 | repo ini |
 | 9 | Feature graphic 1024×500 (sumber) | ✅ Fase 0 | `store/feature_graphic.html` (cara render di bawah) |
-| 10 | **TLS/HTTPS** (prasyarat Data Safety) | 🔴 Fase 1 — **BUTUH DOMAIN dari pemilik** | API+WEB+MOBILE |
+| 10 | **TLS/HTTPS** (prasyarat Data Safety) | ✅ 2026-10-08 — `https://affluena.adityabuild.codes` live; kunci `--redirect` setelah build mobile ber-HTTPS (1.6.0+9) terpasang | API+WEB+MOBILE |
 | 11 | Akun Play Developer ($25 + verifikasi) | 🔴 Fase 1 — pemilik | — |
 | 12 | 12 tester × 14 hari closed testing (aturan akun personal baru) | 🔴 Fase 1 — pemilik | — |
-| 13 | Keystore release + flip signingConfig + AAB | 🔴 Fase 2 | repo ini (PR release berikutnya) |
+| 13 | Keystore release + flip signingConfig + AAB | 🟢 Keystore + signingConfig ✅ di PR 1.6.0+9; sisa: build AAB + upload Play | repo ini |
 | 14 | Buang `local_auth` + `USE_BIOMETRIC` + `NSFaceIDUsageDescription` | ✅ SELESAI di release **1.5.0+8** (PR batch UX — sekalian plugin `image_picker` masuk) | repo ini |
-| 15 | Buang cleartext (`network_security_config.xml`) setelah HTTPS | 🔴 Fase 2 (release berikutnya) | repo ini |
+| 15 | Buang cleartext (`network_security_config.xml`) setelah HTTPS | ✅ Release **1.6.0+9** (host dev saja yang tetap diizinkan) | repo ini |
 | 16 | Adaptive icon (mipmap-anydpi-v26) + monochrome | 🟡 Fase 2 (disarankan) | repo ini |
 | 17 | Screenshot ≥2 (dari device) | 🔴 Fase 2 — pemilik | — |
 
@@ -33,23 +33,29 @@
   ⚠️ permanen setelah publish pertama — kalau mau ganti (mis. `com.affluena.app`), putuskan
   SEBELUM upload pertama; sesudahnya = app baru).
 - `targetSdk` = mengikuti Flutter 3.44 (API 35) ✅; build-tools 35.
-- `versionCode` dari pubspec (**`1.5.0+8` saat ini** — release batch UX: `image_picker` masuk,
-  `local_auth` keluar). Play wajib **naik setiap upload** → rilis Play pertama memakai versi
-  BERIKUTNYA (mis. `1.6.0+9`, sekalian item 13 & 15; version bump memang butuh Shorebird RELEASE).
-- **Signing**: `android/app/build.gradle.kts` release masih memakai **debug signingConfig** —
-  WAJIB diganti (lihat "Keystore & signing").
+- `versionCode` dari pubspec (**`1.6.0+9`** — release Play: HTTPS default, cleartext VPS
+  dibuang, signing via `key.properties`; 1.5.0+8 = batch UX sebelumnya). Play wajib **naik
+  setiap upload**; version bump = Shorebird RELEASE, bukan OTA patch.
+- **Signing**: ✅ `android/app/build.gradle.kts` membaca `android/key.properties` →
+  `signingConfigs.release` (fallback ke debug hanya bila file tak ada, untuk dev). Keystore:
+  `android/keystore/affluena-release.jks` — keduanya gitignored; cadangkan ke password manager.
 - **Permissions** (`AndroidManifest.xml`): `INTERNET` ✅ · `POST_NOTIFICATIONS` ✅ (dipakai
   pengingat jatuh tempo) · `RECEIVE_BOOT_COMPLETED` ✅ (flutter_local_notifications re-arm
   setelah reboot) · **`USE_BIOMETRIC` ✅ SUDAH DIBUANG di 1.5.0+8** (plugin `local_auth` ikut
   dibuang dari pubspec + `NSFaceIDUsageDescription` dari Info.plist). Plugin baru `image_picker`
   (avatar) memakai Android Photo Picker → **tanpa** permission storage tambahan.
-- **Cleartext HTTP**: diizinkan tersempit via `android/app/src/main/res/xml/
-  network_security_config.xml` (host API VPS + host dev). Setelah HTTPS (item 10), hapus
-  domain-config VPS-nya (dev host boleh tinggal, debug-only kalau bisa).
+- **Cleartext HTTP**: ✅ exception VPS dibuang; `network_security_config.xml` hanya menyisakan
+  host dev (`localhost`, `10.0.2.2`) — rilis memakai HTTPS murni (default Android 9+).
 - **Shorebird**: kebijakan Play mengizinkan code-push Dart — TIDAK menghalangi rilis. Alur
   patch/release tetap seperti `SHOREBIRD.md`.
 
 ## Keystore & signing (Fase 2 — langkah persis)
+
+> ✅ **Dilaksanakan di PR 1.6.0+9** — keystore + `key.properties` sudah dibuat (keduanya
+> gitignored) dan `build.gradle.kts` sudah membacanya. Sisa untuk Play: `bash
+> scripts/build_aab.sh` → upload `app-release.aab`. **Cadangkan keystore + kredensial ke
+> password manager sekarang** — hilang = tidak bisa update app selamanya kecuali lewat
+> Play App Signing (yang memang kita pakai).
 
 1. Generate (SEKALI, simpan baik-baik — hilang = tidak bisa update app selamanya kecuali pakai
    Play App Signing, yang memang kita pakai):
@@ -72,17 +78,18 @@
    **Play App Signing** (Google pegang kunci final; keystore kita jadi upload key).
 5. Simpan cadangan keystore + kredensial di password manager pemilik.
 
-## Paket rilis 1.5.0+8 (TERKIRIM — PR batch UX) & sisa paket Play
+## Paket rilis 1.6.0+9 (PR — siap untuk Play)
 
-Release **1.5.0+8** maju lebih cepat dari rencana karena batch UX butuh plugin native
-(`image_picker` untuk upload avatar): item (b) buang `local_auth` + `USE_BIOMETRIC` +
-`NSFaceIDUsageDescription` dan (d) bump `version: 1.5.0+8` SUDAH masuk di PR itu. Setelah merge:
-jalankan workflow **Mobile Shorebird → mode=release** (guard auto-patch akan gagal by design pada
-version bump — itu normal), unduh artifact, drop APK ke konvensi iCloud + buat GitHub Release.
+- ✅ (a) Keystore release + `signingConfig` via `android/key.properties`
+- ✅ (c) HTTPS base URL default (`https://affluena.adityabuild.codes/api/v1` di workflow +
+  scripts) + exception cleartext VPS dibuang
+- ⏳ (e) Adaptive icon (disarankan, tidak menghalangi upload)
+- ⏳ Langkah operator setelah merge: jalankan workflow **Mobile Shorebird → mode=release**
+  (guard auto-patch gagal by design pada version bump — itu normal), unduh APK artifact,
+  lalu build AAB via `scripts/build_aab.sh` di mesin yang memegang keystore → upload Play Console.
 
-Sisa paket untuk rilis Play pertama (versi berikutnya, mis. `1.6.0+9`): (a) keystore release
-(di atas), (c) HTTPS base URL default + hapus cleartext VPS, (e) (disarankan) adaptive icon —
-lalu build AAB via `scripts/build_aab.sh` untuk Play.
+Release **1.5.0+8** (batch UX: `image_picker` masuk, `local_auth` keluar) sudah terkirim di PR
+sebelumnya.
 
 ## Store listing (draft siap tempel — Bahasa Indonesia)
 
@@ -135,11 +142,10 @@ bukan untuk anak) — pilih 18+ supaya tidak kena kebijakan Families.
 
 ## Prasyarat Play yang BELUM terpenuhi (jangan submit sebelum ini)
 
-1. **TLS/HTTPS** — Data Safety app finansial dengan "tidak dienkripsi" ≈ ditolak/di-flag.
-   Butuh domain (pemilik). **Tutorial + script SUDAH SIAP**: `Affluena-API/docs/TLS.md`
-   (langkah pemilik: beli domain → DNS A record → `bash scripts/setup-tls.sh <domain>` di
-   VPS → ikuti "Setelah script sukses"). HTTP tetap hidup selama transisi sampai release
-   1.5.0 terpasang, lalu dikunci dengan `--redirect`.
+1. ~~TLS/HTTPS~~ ✅ **Selesai (2026-10-08)** — `https://affluena.adityabuild.codes` live
+   (API + WEB sudah HTTPS; detail `Affluena-API/docs/TLS.md`). HTTP masih hidup untuk APK
+   lama; kunci dengan `bash scripts/setup-tls.sh affluena.adityabuild.codes --redirect`
+   setelah build mobile ber-HTTPS (1.6.0+9) terpasang.
 2. **Akun developer** + verifikasi identitas (beberapa hari).
 3. **Closed testing 12 tester × 14 hari** sebelum akses production (aturan akun personal
    baru sejak Nov 2023) — kumpulkan tester lebih awal.

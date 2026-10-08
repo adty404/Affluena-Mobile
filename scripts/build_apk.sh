@@ -9,7 +9,7 @@
 # Override the URL by exporting AFFLUENA_API_BASE_URL before running.
 set -euo pipefail
 
-API_BASE_URL="${AFFLUENA_API_BASE_URL:-http://43.133.147.101/api/v1}"
+API_BASE_URL="${AFFLUENA_API_BASE_URL:-https://affluena.adityabuild.codes/api/v1}"
 
 echo "Building release APK against API: $API_BASE_URL"
 fvm flutter build apk --release \

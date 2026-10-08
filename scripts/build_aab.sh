@@ -16,7 +16,7 @@
 # RELEASE (not an OTA patch) — see SHOREBIRD.md.
 set -euo pipefail
 
-API_BASE_URL="${AFFLUENA_API_BASE_URL:-http://43.133.147.101/api/v1}"
+API_BASE_URL="${AFFLUENA_API_BASE_URL:-https://affluena.adityabuild.codes/api/v1}"
 
 if [[ "$API_BASE_URL" == http://* ]]; then
   echo "⚠️  WARNING: building a Play bundle against a plain-HTTP API URL."

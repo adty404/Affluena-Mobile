@@ -29,4 +29,4 @@ export SHOREBIRD_FLUTTER_VERSION="3.44.2"
 # It must be baked into BOTH the release and every patch via --dart-define, or
 # the app falls back to localhost and shows "Tidak bisa terhubung ke Affluena".
 # Override by exporting AFFLUENA_API_BASE_URL before running a script.
-export AFFLUENA_API_BASE_URL="${AFFLUENA_API_BASE_URL:-http://43.133.147.101/api/v1}"
+export AFFLUENA_API_BASE_URL="${AFFLUENA_API_BASE_URL:-https://affluena.adityabuild.codes/api/v1}"

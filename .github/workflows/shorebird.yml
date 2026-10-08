@@ -9,7 +9,7 @@ name: Mobile Shorebird
 #
 # Requires repo secret SHOREBIRD_TOKEN (Shorebird Console -> Account -> API Keys,
 # "Release & Patch only" scope). Optional repo variable AFFLUENA_API_BASE_URL
-# (defaults to the VPS URL below) — baked in at build time so the app reaches the
+# (defaults to the HTTPS domain below) — baked in at build time so the app reaches the
 # API instead of falling back to localhost.
 
 on:
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
-      API_URL: ${{ vars.AFFLUENA_API_BASE_URL || 'http://43.133.147.101/api/v1' }}
+      API_URL: ${{ vars.AFFLUENA_API_BASE_URL || 'https://affluena.adityabuild.codes/api/v1' }}
     steps:
       # fetch-depth: 2 so the version-bump guard below can diff HEAD^..HEAD.
       - uses: actions/checkout@v4
